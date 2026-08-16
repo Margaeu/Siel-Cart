@@ -65,4 +65,9 @@ class Customer extends Authenticatable
     {
         return $this->orders()->count();
     }
+
+    public function getNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
+    }
 }

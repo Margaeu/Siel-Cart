@@ -168,7 +168,7 @@ class Product extends Model
         });
 
         static::updating(function ($product) {
-            if ($product->isDirty('name') && empty($product->slug)) {
+            if ($product->isDirty('name') && !$product->isDirty('slug')) {
                 $product->slug = Str::slug($product->name);
             }
         });
