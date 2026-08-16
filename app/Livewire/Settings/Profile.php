@@ -10,7 +10,9 @@ use Livewire\Component;
 
 class Profile extends Component
 {
-    public string $name = '';
+    public string $first_name = '';
+
+    public string $last_name = '';
 
     public string $email = '';
 
@@ -19,19 +21,21 @@ class Profile extends Component
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
+        $this->first_name = Auth::user()->first_name;
+        $this->last_name = Auth::user()->last_name;
         $this->email = Auth::user()->email;
     }
 
     /**
-     * Update the profile information for the currently authenticated user.
+     * Update the profile information for the currently authenticated staff user.
      */
     public function updateProfileInformation(): void
     {
         $user = Auth::user();
 
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
 
             'email' => [
                 'required',

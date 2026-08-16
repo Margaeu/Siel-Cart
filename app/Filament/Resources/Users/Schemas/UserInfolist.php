@@ -12,7 +12,8 @@ class UserInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('name'),
+                TextEntry::make('first_name'),
+                TextEntry::make('last_name'),
                 TextEntry::make('role')
                     ->label('Role')
                     ->disabled()

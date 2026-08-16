@@ -19,24 +19,13 @@ class CustomerSeeder extends Seeder
     {
         // Create a test customer
         $testCustomer = Customer::create([
-            'name' => 'Test Customer',
+            'first_name' => 'Test',
+            'last_name' => 'Customer',
             'email' => 'customer@test.com',
             'password' => Hash::make('password'),
             'phone' => '+1234567890',
-            'date_of_birth' => '1990-01-01',
-            'gender' => 'male',
             'is_active' => true,
             'email_verified_at' => now(),
-        ]);
-
-        // Create default address for test customer
-        Address::factory()->default()->create([
-            'customer_id' => $testCustomer->id,
-        ]);
-
-        // Create additional address
-        Address::factory()->create([
-            'customer_id' => $testCustomer->id,
         ]);
 
         // Create 50 more customers
@@ -45,17 +34,6 @@ class CustomerSeeder extends Seeder
 
         for ($i = 0; $i < 50; $i++) {
             $customer = Customer::factory()->create();
-
-            // Create 1-3 addresses per customer
-            Address::factory()->default()->create([
-                'customer_id' => $customer->id,
-            ]);
-
-            if (rand(0, 100) > 50) {
-                Address::factory()->create([
-                    'customer_id' => $customer->id,
-                ]);
-            }
 
             // Create 0-3 reviews per customer
             $reviewCount = rand(0, 3);

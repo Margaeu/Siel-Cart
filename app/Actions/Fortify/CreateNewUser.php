@@ -2,7 +2,7 @@
 
 namespace App\Actions\Fortify;
 
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -12,11 +12,11 @@ class CreateNewUser implements CreatesNewUsers
     use PasswordValidationRules;
 
     /**
-     * Validate and create a newly registered user.
+     * Validate and create a newly registered customer (storefront signup).
      *
      * @param  array<string, string>  $input
      */
-    public function create(array $input): User
+    public function create(array $input): Customer
     {
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
@@ -26,14 +26,14 @@ class CreateNewUser implements CreatesNewUsers
                 'string',
                 'email',
                 'max:255',
-                Rule::unique(User::class),
+                Rule::unique(Customer::class),
             ],
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
+        return Customer::create([
             'first_name' => $input['first_name'],
-            'last_name' => $input['first_name'],
+            'last_name' => $input['last_name'],
             'email' => $input['email'],
             'password' => $input['password'],
         ]);

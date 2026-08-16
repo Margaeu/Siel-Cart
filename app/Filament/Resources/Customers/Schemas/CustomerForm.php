@@ -19,7 +19,9 @@ class CustomerForm
             ->components([
                 Section::make('Customer Information')
                 ->schema([
-                    TextInput::make('name')
+                    TextInput::make('first_name')
+                    ->required(),
+                    TextInput::make('last_name')
                     ->required(),
                     TextInput::make('email')
                         ->label('Email address')

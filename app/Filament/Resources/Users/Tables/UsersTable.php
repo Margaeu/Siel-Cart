@@ -17,7 +17,8 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->label('Name')
+                    ->searchable(['first_name', 'last_name']),
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),

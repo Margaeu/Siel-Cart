@@ -17,8 +17,7 @@ class SettingSeeder extends Seeder
             // General Settings
             ['key' => 'store_name', 'value' => 'My E-Commerce Store', 'type' => 'string', 'group' => 'general'],
             ['key' => 'store_email', 'value' => 'store@example.com', 'type' => 'string', 'group' => 'general'],
-            ['key' => 'store_phone', 'value' => '+1234567890', 'type' => 'string', 'group' => 'general'],
-            ['key' => 'store_address', 'value' => '123 Main Street, City, Country', 'type' => 'string', 'group' => 'general'],
+            ['key' => 'store_phone', 'value' => '+1234567890', 'type' => 'string', 'group' => 'general'],            
             
             // Shipping Settings
             ['key' => 'flat_shipping_rate', 'value' => '10', 'type' => 'number', 'group' => 'shipping'],
