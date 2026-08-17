@@ -16,7 +16,7 @@
         <!-- Badges -->
         <div class="absolute top-2 left-2 flex flex-col gap-2">
             @if($product->is_featured)
-                <span class="bg-yellow-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                <span class="bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded">
                     Featured
                 </span>
             @endif
@@ -38,14 +38,16 @@
             <p class="text-xs text-gray-500 mb-1">{{ $product->category->name }}</p>
 
             <!-- Product Name -->
-            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition">
+            <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 transition"
+                onmouseover="this.style.color='#1E6031'" 
+                onmouseout="this.style.color=''">
                 {{ $product->name }}
             </h3>
 
             <!-- Rating -->
             @if($product->reviews_count > 0)
                 <div class="flex items-center gap-1 mb-2">
-                    <div class="flex text-yellow-400">
+                    <div class="flex text-amber-400">
                         @for($i = 1; $i <= 5; $i++)
                             @if($i <= floor($product->average_rating))
                                 <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -80,7 +82,8 @@
     @if($product->stock_status === 'in_stock')
         <div class="p-4 pt-0">
             <button wire:click="addToCart"
-                    class="w-full cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition font-medium">
+                    style="background-color: #1E6031;"
+                    class="w-full cursor-pointer text-white py-2 px-4 rounded-lg hover:opacity-90 transition font-medium">
                 Add to Cart
             </button>
         </div>
