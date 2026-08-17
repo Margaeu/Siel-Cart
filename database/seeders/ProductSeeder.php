@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Brand;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductImage;
@@ -18,7 +17,6 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $categories = Category::all();
-        $brands = Brand::all();
 
         // Create 100 products
         $this->command->info('Creating products...');
@@ -27,7 +25,6 @@ class ProductSeeder extends Seeder
         for ($i = 0; $i < 100; $i++) {
             $product = Product::factory()->create([
                 'category_id' => $categories->random()->id,
-                'brand_id' => $brands->random()->id,
             ]);
 
             // Create 2-4 images per product

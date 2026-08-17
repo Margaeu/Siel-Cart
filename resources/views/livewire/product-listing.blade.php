@@ -13,8 +13,6 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2">
                 @if($category)
                     {{ \App\Models\Category::where('slug', $category)->first()?->name }}
-                @elseif($brand)
-                    {{ \App\Models\Brand::where('slug', $brand)->first()?->name }}
                 @elseif($search)
                     Search Results for "{{ $search }}"
                 @else
@@ -29,7 +27,7 @@
             <aside class="hidden lg:block">
                 <div class="sticky top-24 space-y-6">
                     <!-- Active Filters -->
-                    @if($search || $category || $brand || $minPrice || $featured)
+                    @if($search || $category || $minPrice || $featured)
                         <div class="bg-white p-4 rounded-lg shadow-sm">
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="font-semibold text-gray-900">Active Filters</h3>
@@ -49,12 +47,6 @@
                                     <span class="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm">
                                         Category
                                         <button wire:click="$set('category', '')" class="hover:text-indigo-900">×</button>
-                                    </span>
-                                @endif
-                                @if($brand)
-                                    <span class="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm">
-                                        Brand
-                                        <button wire:click="$set('brand', '')" class="hover:text-indigo-900">×</button>
                                     </span>
                                 @endif
                                 @if($featured)
@@ -83,28 +75,6 @@
                                             class="w-full text-left px-3 py-2 rounded {{ $category === $cat->slug ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
                                         {{ $cat->name }}
                                         <span class="text-sm text-gray-500">({{ $cat->products_count }})</span>
-                                    </button>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    <!-- Brands -->
-                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 class="font-semibold text-gray-900 mb-3">Brands</h3>
-                        <ul class="space-y-2 max-h-64 overflow-y-auto">
-                            <li>
-                                <button wire:click="$set('brand', '')"
-                                        class="w-full text-left px-3 py-2 rounded {{ !$brand ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
-                                    All Brands
-                                </button>
-                            </li>
-                            @foreach($brands as $br)
-                                <li>
-                                    <button wire:click="$set('brand', '{{ $br->slug }}')"
-                                            class="w-full text-left px-3 py-2 rounded {{ $brand === $br->slug ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
-                                        {{ $br->name }}
-                                        <span class="text-sm text-gray-500">({{ $br->products_count }})</span>
                                     </button>
                                 </li>
                             @endforeach

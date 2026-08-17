@@ -6,12 +6,12 @@
     <title>Login - {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50">
+<body class="bg-green-50">
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full">
             <!-- Logo -->
             <div class="text-center mb-8">
-                <a href="{{ route('home') }}" class="text-3xl font-bold text-blue-600">
+                <a href="{{ route('home') }}" class="text-3xl font-bold text-[#1E6031]">
                     {{ config('app.name') }}
                 </a>
                 <h2 class="mt-6 text-3xl font-bold text-gray-900">
@@ -19,16 +19,16 @@
                 </h2>
                 <p class="mt-2 text-sm text-gray-600">
                     Don't have an account?
-                    <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-indigo-500">
+                    <a href="{{ route('register') }}" class="font-semibold text-[#E0A70D] hover:underline">
                         Sign up
                     </a>
                 </p>
             </div>
 
-            <!-- Login Form -->
-            <div class="bg-white py-8 px-6 shadow-lg rounded-lg">
+            <!-- Login Form Card -->
+            <div class="bg-white py-8 px-6 shadow-lg rounded-lg border-t-4 border-[#E0A70D]">
                 @if (session('status'))
-                    <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    <div class="mb-4 bg-green-50 border border-[#1E6031] text-[#1E6031] px-4 py-3 rounded-lg text-sm">
                         {{ session('status') }}
                     </div>
                 @endif
@@ -47,7 +47,7 @@
                                value="{{ old('email') }}"
                                required 
                                autofocus
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0A70D] focus:border-[#1E6031] outline-none transition">
                         @error('email')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -62,39 +62,39 @@
                                type="password" 
                                name="password" 
                                required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0A70D] focus:border-[#1E6031] outline-none transition">
                         @error('password')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Remember Me -->
+                    <!-- Remember Me & Forgot Password -->
                     <div class="flex items-center justify-between mb-6">
-                        <label class="flex items-center">
+                        <label class="flex items-center cursor-pointer">
                             <input type="checkbox" 
                                    name="remember" 
-                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-indigo-500">
+                                   class="w-4 h-4 text-[#1E6031] border-gray-300 rounded focus:ring-[#E0A70D]">
                             <span class="ml-2 text-sm text-gray-600">Remember me</span>
                         </label>
 
                         <a href="{{ route('password.request') }}" 
-                           class="text-sm font-medium text-blue-600 hover:text-indigo-500">
+                           class="text-sm font-medium text-[#1E6031] hover:text-[#E0A70D] transition">
                             Forgot password?
                         </a>
                     </div>
 
                     <!-- Submit Button -->
                     <button type="submit" 
-                            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                            class="w-full bg-[#1E6031] text-white py-3 px-4 rounded-lg hover:bg-[#164724] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2 transition font-semibold shadow-md">
                         Sign In
                     </button>
                 </form>
 
-                <!-- Social Login (Optional) -->
+                <!-- Social Login -->
                 <div class="mt-6">
                     <div class="relative">
                         <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-gray-300"></div>
+                            <div class="w-full border-t border-gray-200"></div>
                         </div>
                         <div class="relative flex justify-center text-sm">
                             <span class="px-2 bg-white text-gray-500">Or continue with</span>
@@ -103,11 +103,11 @@
 
                     <div class="mt-6 grid grid-cols-2 gap-3">
                         <a href="{{ route('home') }}" 
-                           class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                           class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:border-[#E0A70D] hover:text-[#1E6031] transition">
                             <span>Google</span>
                         </a>
                         <a href="{{ route('home') }}" 
-                           class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                           class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:border-[#E0A70D] hover:text-[#1E6031] transition">
                             <span>Facebook</span>
                         </a>
                     </div>
@@ -116,7 +116,7 @@
 
             <!-- Back to Home -->
             <p class="mt-6 text-center text-sm text-gray-600">
-                <a href="{{ route('home') }}" class="font-medium text-blue-600 hover:text-indigo-500">
+                <a href="{{ route('home') }}" class="font-medium text-[#1E6031] hover:text-[#E0A70D] transition">
                     ← Back to Home
                 </a>
             </p>
