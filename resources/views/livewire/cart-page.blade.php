@@ -3,7 +3,7 @@
         <!-- Breadcrumb -->
         <nav class="mb-6 text-sm">
             <ol class="flex items-center gap-2">
-                <li><a href="{{ route('home') }}" class="text-gray-500 hover:text-blue-600">Home</a></li>
+                <li><a href="{{ route('home') }}" class="text-gray-500 hover:text-[#1E6031]">Home</a></li>
                 <li class="text-gray-400">/</li>
                 <li class="text-gray-900 font-medium">Shopping Cart</li>
             </ol>
@@ -47,7 +47,7 @@
                                     @if($item['variant_name'])
                                         <p class="text-sm text-gray-600 mb-2">{{ $item['variant_name'] }}</p>
                                     @endif
-                                    <p class="text-lg font-bold text-blue-600">${{ number_format($item['price'], 2) }}</p>
+                                    <p class="text-lg font-bold text-[#1E6031]">${{ number_format($item['price'], 2) }}</p>
                                 </div>
 
                                 <!-- Quantity & Actions -->
@@ -91,7 +91,7 @@
                             Clear Cart
                         </button>
                         <a href="{{ route('products.index') }}" 
-                           class="text-blue-600 hover:text-indigo-700 font-medium">
+                           class="text-[#1E6031] hover:text-[#164824] font-medium">
                             ← Continue Shopping
                         </a>
                     </div>
@@ -116,7 +116,7 @@
                         <div class="border-t pt-4 mb-6">
                             <div class="flex justify-between items-center">
                                 <span class="text-lg font-semibold">Total</span>
-                                <span class="text-2xl font-bold text-blue-600">
+                                <span class="text-2xl font-bold text-[#1E6031]">
                                     ${{ number_format($this->subtotal, 2) }}
                                 </span>
                             </div>
@@ -124,16 +124,16 @@
 
                         @auth('customer')
                             <a href="{{ route('checkout') }}"
-                               class="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                               class="block w-full bg-[#1E6031] text-white text-center py-3 px-6 rounded-lg hover:bg-[#164824] transition font-semibold">
                                 Proceed to Checkout
                             </a>
                         @else
                             <a href="{{ route('login') }}"
-                               class="block w-full bg-blue-600 text-white text-center py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                               class="block w-full bg-[#1E6031] text-white text-center py-3 px-6 rounded-lg hover:bg-[#164824] transition font-semibold">
                                 Login to Checkout
                             </a>
                             <p class="text-sm text-gray-600 text-center mt-3">
-                                Or <a href="{{ route('register') }}" class="text-blue-600 hover:text-indigo-700">create an account</a>
+                                Or <a href="{{ route('register') }}" class="text-[#1E6031] hover:text-[#164824]">create an account</a>
                             </p>
                         @endauth
 
@@ -141,19 +141,19 @@
                         <div class="mt-6 pt-6 border-t">
                             <div class="space-y-3 text-sm text-gray-600">
                                 <div class="flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-[#1E6031]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span>Secure Checkout</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-[#1E6031]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span>Free Shipping on orders over $100</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 text-[#1E6031]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
                                     <span>Easy Returns</span>
@@ -172,7 +172,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
                 <p class="text-gray-600 mb-6">Add some products to get started!</p>
                 <a href="{{ route('products.index') }}" 
-                   class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                   class="inline-block bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold">
                     Start Shopping
                 </a>
             </div>
