@@ -64,7 +64,6 @@ class ProductForm
                                     ])
                             ]),
                         Tab::make('Pricing & Inventory')
-                            ->prefix('₱')
                             ->schema([
                                 Section::make('Pricing')
                                     ->schema([
@@ -259,12 +258,6 @@ class ProductForm
                                     ])
                             ])
                     ]),
-
-
-
-
-
-
             ]);
     }
 }

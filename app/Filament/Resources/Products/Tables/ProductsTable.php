@@ -7,6 +7,11 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -16,9 +21,51 @@ class ProductsTable
     {
         return $table
             ->columns([
-                //
+                ImageColumn::make('primaryImage.image_path')
+                    ->label('')
+                    ->disk('public')
+                    ->square(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('sku')
+                    ->label('SKU')
+                    ->searchable()
+                    ->copyable(),
+                TextColumn::make('category.name')
+                    ->label('Category')
+                    ->badge()
+                    ->sortable(),
+                TextColumn::make('price')
+                    ->money('PHP')
+                    ->sortable(),
+                TextColumn::make('cost_price')
+                    ->label('Cost')
+                    ->money('PHP')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('stock_quantity')
+                    ->label('Stock')
+                    ->numeric()
+                    ->sortable(),
+                IconColumn::make('is_active')
+                    ->label('Active')
+                    ->boolean(),
+                IconColumn::make('is_featured')
+                    ->label('Featured')
+                    ->boolean()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('category_id')
+                    ->label('Category')
+                    ->relationship('category', 'name'),
+                TernaryFilter::make('is_active')
+                    ->label('Active'),
                 TrashedFilter::make(),
             ])
             ->recordActions([
