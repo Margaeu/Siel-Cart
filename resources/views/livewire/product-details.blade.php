@@ -22,7 +22,7 @@
                     <!-- Main Image -->
                     <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
                         @if($selectedImage)
-                            <img src="{{ asset('storage/' . $selectedImage) }}" 
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('r2')->url($selectedImage) }}"
                                  alt="{{ $product->name }}"
                                  class="w-full h-full object-cover">
                         @else

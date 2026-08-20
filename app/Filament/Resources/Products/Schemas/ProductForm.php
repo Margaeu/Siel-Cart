@@ -137,23 +137,31 @@ class ProductForm
                                             ->multiple()
                                             ->image()
                                             ->directory('products')
-                                            ->imageEditor()
                                             ->maxSize(2048)
                                             ->reorderable()
                                             ->columnSpanFull()
+                                            ->orientImagesFromExif(false)
+                                            ->imagePreviewHeight('250')
+                                            // Bypass client-side size calculation checks in FilePond
+                                            ->extraAttributes([
+                                                'data-filepond-type' => 'image',
+                                            ])
+                                            ->extraInputAttributes([
+                                                'data-filepond-item-property-size' => 'false',
+                                            ])
                                             ->helperText('You can drag and drop to reorder images')
                                             ->saveRelationshipsUsing(function ($component, $state, $record) {
-                                                // Delete existing image files from Cloudflare R2
+                                                // 1. Delete existing image files from Cloudflare R2
                                                 foreach ($record->images as $existingImage) {
                                                     if ($existingImage->image_path) {
                                                         Storage::disk('r2')->delete($existingImage->image_path);
                                                     }
                                                 }
 
-                                                // Delete existing database records
+                                                // 2. Delete existing database records
                                                 $record->images()->delete();
 
-                                                // Save new images
+                                                // 3. Save new images
                                                 if (is_array($state)) {
                                                     foreach ($state as $index => $imagePath) {
                                                         $record->images()->create([
@@ -174,7 +182,7 @@ class ProductForm
                                     ->live()
                                     ->required(),
                                 Section::make('Product Variants')
-                                    ->description('Add variants like different sizez or colors')
+                                    ->description('Add variants like different sizes or colors')
                                     ->schema([
                                         Repeater::make('variants')
                                             ->relationship('variants')
@@ -234,11 +242,10 @@ class ProductForm
                                     ->visible(fn(callable $get) => $get('has_variants'))
                                     ->columnSpanFull()
                             ]),
-                        // settings
                         Tab::make('Settings')
                             ->icon(Heroicon::Cog6Tooth)
                             ->schema([
-                                Section::make('Poduct status')
+                                Section::make('Product status')
                                     ->schema([
                                         Toggle::make('is_active')
                                             ->required(),
@@ -258,7 +265,7 @@ class ProductForm
                         Tab::make('SEO')
                             ->icon(Heroicon::MagnifyingGlass)
                             ->schema([
-                                Section::make('Search Engine Optimazation')
+                                Section::make('Search Engine Optimization')
                                     ->schema([
                                         TextInput::make('meta_title')
                                             ->default(null),

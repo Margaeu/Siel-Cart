@@ -3,8 +3,8 @@
         <!-- Product Image -->
         <div class="aspect-square overflow-hidden bg-gray-200">
             @if($product->primaryImage)
-                <img src="{{ asset('storage/' . $product->primaryImage->image_path) }}" 
-                     alt="{{ $product->name }}"
+                 <img src="{{ $product->primaryImage->url }}"
+                    alt="{{ $product->name }}"
                      class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
             @else
                 <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
