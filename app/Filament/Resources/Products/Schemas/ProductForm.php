@@ -2,21 +2,21 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
-use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Tabs;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\RichEditor;
+use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\ToggleButtons;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductForm
@@ -70,8 +70,8 @@ class ProductForm
                                         TextInput::make('sku')
                                             ->label('SKU')
                                             ->unique(ignoreRecord: true)
-                                            ->default(fn() => 'SKU-'. strtoupper(Str::random(8)))
-                                            ->helperText('Stock keeping Unit -  unique identifier')
+                                            ->default(fn() => 'SKU-' . strtoupper(Str::random(8)))
+                                            ->helperText('Stock keeping Unit - unique identifier')
                                             ->required(),
 
                                         TextInput::make('price')
@@ -79,13 +79,13 @@ class ProductForm
                                             ->numeric()
                                             ->minValue(0)
                                             ->step(0.01)
-                                            ->helperText('Selling Price') 
+                                            ->helperText('Selling Price')
                                             ->prefix('₱'),
                                         TextInput::make('compare_price')
                                             ->numeric()
                                             ->minValue(0)
                                             ->step(0.01)
-                                            ->helperText('Original price to show discount') 
+                                            ->helperText('Original price to show discount')
                                             ->prefix('₱'),
                                         TextInput::make('cost_price')
                                             ->numeric()
@@ -131,6 +131,8 @@ class ProductForm
                                     ->description('Upload multiple images. The first image will be the primary image.')
                                     ->schema([
                                         FileUpload::make('images')
+                                            ->disk('r2')
+                                            ->visibility('public')
                                             ->label('Product Images')
                                             ->multiple()
                                             ->image()
@@ -141,15 +143,23 @@ class ProductForm
                                             ->columnSpanFull()
                                             ->helperText('You can drag and drop to reorder images')
                                             ->saveRelationshipsUsing(function ($component, $state, $record) {
-                                                // delete exisiting images
+                                                // Delete existing image files from Cloudflare R2
+                                                foreach ($record->images as $existingImage) {
+                                                    if ($existingImage->image_path) {
+                                                        Storage::disk('r2')->delete($existingImage->image_path);
+                                                    }
+                                                }
+
+                                                // Delete existing database records
                                                 $record->images()->delete();
 
+                                                // Save new images
                                                 if (is_array($state)) {
                                                     foreach ($state as $index => $imagePath) {
                                                         $record->images()->create([
                                                             'image_path' => $imagePath,
                                                             'is_primary' => $index === 0,
-                                                            'sort_order' => $index
+                                                            'sort_order' => $index,
                                                         ]);
                                                     }
                                                 }
@@ -177,7 +187,7 @@ class ProductForm
                                                 TextInput::make('sku')
                                                     ->label('SKU')
                                                     ->unique(ignoreRecord: true)
-                                                    ->helperText('Stock keeping Unit -  unique identifier')
+                                                    ->helperText('Stock keeping Unit - unique identifier')
                                                     ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
                                                     ->required()
                                                     ->columnSpan(2),
@@ -242,7 +252,7 @@ class ProductForm
                                             ->content(fn($record) => $record?->views_count ?? 0),
                                         Placeholder::make('created_at')
                                             ->label('Created')
-                                            ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-')
+                                            ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
                             ]),
                         Tab::make('SEO')

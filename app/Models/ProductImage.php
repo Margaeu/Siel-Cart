@@ -47,6 +47,6 @@ class ProductImage extends Model
     // Helper Methods
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->image_path);
-    }
+        return Storage::disk('r2')->url($this->image_path);
+}
 }
