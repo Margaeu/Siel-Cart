@@ -39,7 +39,7 @@
                                 <button wire:click="selectImage('{{ $image->image_path }}')"
                                         style="{{ $selectedImage === $image->image_path ? 'border-color: #1E6031;' : '' }}"
                                         class="aspect-square rounded-lg overflow-hidden border-2 {{ $selectedImage === $image->image_path ? '' : 'border-gray-200' }} hover:opacity-80 transition">
-                                    <img src="{{ asset('storage/' . $image->image_path) }}" 
+                                    <img src="{{ $image->url }}"
                                          alt="{{ $product->name }}"
                                          class="w-full h-full object-cover">
                                 </button>
