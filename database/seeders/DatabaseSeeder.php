@@ -19,5 +19,9 @@ class DatabaseSeeder extends Seeder
             SystemSetupSeeder::class,
             PermanentProductSeeder::class,
         ]);
+        $this->call(CategoriesTableSeeder::class);
+        $this->call(ProductsTableSeeder::class);
+        $this->call(ProductImagesTableSeeder::class);
+        $this->call(ProductVariantsTableSeeder::class);
     }
 }
