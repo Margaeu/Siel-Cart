@@ -15,29 +15,36 @@ use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Customer\OrderDetails;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Api\ChatController;
 
 Route::get('/', HomePage::class)->name('home');
 
+Route::get('products', ProductListing::class)->name('products.index');
+Route::get('product/{slug}', ProductDetails::class)->name('products.show');
+Route::get('/cart', CartPage::class)->name('cart.index');
 
-Route::get('products',ProductListing::class)->name('products.index');
-Route::get('product/{slug}',ProductDetails::class)->name('products.show');
-Route::get('/cart',CartPage::class)->name('cart.index');
+// API Route for the AI Chatbot
+Route::post('/api/chat', [ChatController::class, 'store']);
 
-//protected customer routes
+// protected customer routes
 Route::middleware('auth:customer')->group(function(){
-    Route::get('/checkout',CheckoutPage::class)->name('checkout');
-    Route::get('/my-account',Dashboard::class)->name('customer.dashboard');
+    Route::get('/checkout', CheckoutPage::class)->name('checkout');
+    Route::get('/my-account', Dashboard::class)->name('customer.dashboard');
 
-    Route::get('/my-account/orders',Orders::class)->name('customer.orders');
-    Route::get('/my-account/orders/{id}',OrderDetails::class)->name('customer.orders.show');
-    Route::get('/my-account/profile',\App\Livewire\Customer\Profile::class)->name('customer.profile');
+    Route::get('/my-account/orders', Orders::class)->name('customer.orders');
+    Route::get('/my-account/orders/{id}', OrderDetails::class)->name('customer.orders.show');
+    Route::get('/my-account/profile', \App\Livewire\Customer\Profile::class)->name('customer.profile');
 
-    //checkout success/cancel routes
-    Route::get('/checkout/success/{order}', [CheckoutController::class,'success'])->name('checkout.success');
-    Route::get('/checkout/cancel/{order}', [CheckoutController::class,'cancel'])->name('checkout.cancel');
-    //logout
+    // checkout success/cancel routes
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+    
+    // logout
     Route::post('/logout', function(){
-        auth('customer')->logout();
+        /** @var \Illuminate\Contracts\Auth\StatefulGuard $guard */
+        $guard = auth('customer');
+        $guard->logout();
+        
         request()->session()->invalidate();
         request()->session()->regenerateToken();
         return redirect('/');

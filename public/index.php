@@ -17,4 +17,8 @@ require __DIR__.'/../../CLSU-Shop/vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../../CLSU-Shop/bootstrap/app.php';
 
-$app->handleRequest(Request::capture());
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$request = Illuminate\Http\Request::capture();
+$response = $kernel->handle($request);
+$response->send();
+$kernel->terminate($request, $response);
