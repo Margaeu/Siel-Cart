@@ -45,18 +45,8 @@ class ProductImage extends Model
     }
 
     // Helper Methods
-   // Helper Methods
     public function getUrlAttribute()
     {
-<<<<<<< Updated upstream
         return asset('storage/' . $this->image_path);
     }
 }
-=======
-        /** @var \Illuminate\Contracts\Filesystem\Cloud $disk */
-        $disk = Storage::disk('r2');
-
-        return $disk->url($this->image_path);
-    }
-}
->>>>>>> Stashed changes
