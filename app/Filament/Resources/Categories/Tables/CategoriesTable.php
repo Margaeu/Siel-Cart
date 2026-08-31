@@ -19,7 +19,7 @@ class CategoriesTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('')
-                    ->disk('public')
+                    ->disk('r2')
                     ->square(),
                 TextColumn::make('name')
                     ->searchable()

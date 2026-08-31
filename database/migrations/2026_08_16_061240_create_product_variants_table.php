@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('name'); // e.g., "Red - Large"
             $table->json('options'); // {"color": "Red", "size": "Large"}
             $table->decimal('price', 10, 2);
-            $table->decimal('compare_price', 10, 2)->nullable();
             $table->integer('stock_quantity')->default(0);
             $table->enum('stock_status', ['in_stock', 'out_of_stock', 'on_backorder'])->default('in_stock');
             $table->boolean('is_active')->default(true);

@@ -70,7 +70,7 @@ class ProductForm
                                         TextInput::make('sku')
                                             ->label('SKU')
                                             ->unique(ignoreRecord: true)
-                                            ->default(fn() => 'SKU-' . strtoupper(Str::random(8)))
+                                            //->default(fn() => 'SKU-' . strtoupper(Str::random(8)))
                                             ->helperText('Stock keeping Unit - unique identifier')
                                             ->required(),
 

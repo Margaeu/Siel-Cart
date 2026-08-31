@@ -23,7 +23,7 @@ class ProductsTable
             ->columns([
                 ImageColumn::make('primaryImage.image_path')
                     ->label('')
-                    ->disk('public')
+                    ->disk('r2')
                     ->square(),
                 TextColumn::make('name')
                     ->searchable()
