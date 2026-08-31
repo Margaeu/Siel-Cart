@@ -38,8 +38,6 @@ class CategoryFactory extends Factory
             'description' => fake()->paragraph(),
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 100),
-            'meta_title' => $name . ' - Shop Online',
-            'meta_description' => fake()->sentence(20),
         ];
     }
 }

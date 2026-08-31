@@ -27,7 +27,6 @@ class ProductVariantFactory extends Factory
             'product_id' => Product::factory(),
             'sku' => 'VAR-' . strtoupper(Str::random(8)),
             'name' => $name,
-            'options' => json_encode(['color' => $color, 'size' => $size]),
             'price' => $price,
             'compare_price' => fake()->boolean(30) ? $price * 1.3 : null,
             'stock_quantity' => fake()->numberBetween(0, 100),

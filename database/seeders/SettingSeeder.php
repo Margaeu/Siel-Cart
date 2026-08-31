@@ -27,10 +27,11 @@ class SettingSeeder extends Seeder
             ['key' => 'notification_email', 'value' => 'admin@example.com', 'type' => 'string', 'group' => 'email'],
             ['key' => 'order_confirmation_message', 'value' => 'Thank you for your order! We will process it shortly.', 'type' => 'string', 'group' => 'email'],
             
-            // SEO Settings
+            /* SEO Settings
             ['key' => 'seo_title', 'value' => 'Best Online Store - Quality Products', 'type' => 'string', 'group' => 'seo'],
             ['key' => 'seo_description', 'value' => 'Shop the best products at great prices. Free shipping on orders over $100.', 'type' => 'string', 'group' => 'seo'],
             ['key' => 'seo_keywords', 'value' => 'online shopping, ecommerce, quality products, best deals', 'type' => 'string', 'group' => 'seo'],
+            */
         ];
 
         foreach ($settings as $setting) {

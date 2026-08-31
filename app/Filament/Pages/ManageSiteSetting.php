@@ -18,7 +18,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
-class ManageSiteSettings extends Page implements HasSchemas
+class ManageSiteSetting extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
 
@@ -28,7 +28,7 @@ class ManageSiteSettings extends Page implements HasSchemas
     protected static ?string $navigationLabel = 'Site Branding & Theme';
     protected static ?string $title = 'Site Branding & Theme';
 
-    protected string $view = 'filament.pages.manage-site-settings';
+    protected string $view = 'filament.pages.manage-site-setting';
 
     /**
      * Keys this page is allowed to read/write in the settings table.

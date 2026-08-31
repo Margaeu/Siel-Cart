@@ -74,25 +74,12 @@ class ProductForm
                                             ->default(fn() => 'SKU-'. strtoupper(Str::random(8)))
                                             ->helperText('Stock keeping Unit -  unique identifier')
                                             ->required(),
-
                                         TextInput::make('price')
                                             ->required()
                                             ->numeric()
                                             ->minValue(0)
                                             ->step(0.01)
                                             ->helperText('Selling Price') 
-                                            ->prefix('₱'),
-                                        TextInput::make('compare_price')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->step(0.01)
-                                            ->helperText('Original price to show discount') 
-                                            ->prefix('₱'),
-                                        TextInput::make('cost_price')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->step(0.01)
-                                            ->helperText('cost from supplier (for profit calculations)')
                                             ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
@@ -174,7 +161,6 @@ class ProductForm
                                                     ->required()
                                                     ->label('Variant Name')
                                                     ->placeholder('e.g., Red - Large'),
-                                                KeyValue::make('options'),
                                                 TextInput::make('sku')
                                                     ->label('SKU')
                                                     ->unique(ignoreRecord: true)
@@ -188,7 +174,6 @@ class ProductForm
                                                     ->prefix('$')
                                                     ->minValue(0)
                                                     ->step(0.01),
-
                                                 TextInput::make('compare_price')
                                                     ->label('Compare Price')
                                                     ->numeric()
@@ -246,6 +231,7 @@ class ProductForm
                                             ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-')
                                     ])
                             ]),
+                        /*
                         Tab::make('SEO')
                             ->icon(Heroicon::MagnifyingGlass)
                             ->schema([
@@ -258,12 +244,8 @@ class ProductForm
                                             ->columnSpanFull(),
                                     ])
                             ])
+                        */
                     ]),
-
-
-
-
-
 
             ]);
     }

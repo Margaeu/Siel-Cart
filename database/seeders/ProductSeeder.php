@@ -50,7 +50,6 @@ class ProductSeeder extends Seeder
                             ProductVariant::factory()->create([
                                 'product_id' => $product->id,
                                 'name' => "$color - $size",
-                                'options' => json_encode(['color' => $color, 'size' => $size]),
                                 'price' => $product->price + rand(0, 20),
                                 'sort_order' => ($colorIndex * count($sizes)) + $sizeIndex,
                             ]);
