@@ -33,8 +33,6 @@ class CategorySeeder extends Seeder
                 'description' => $category['description'],
                 'is_active' => true,
                 'sort_order' => $index,
-                'meta_title' => $category['name'] . ' - Shop Online',
-                'meta_description' => $category['description'],
             ]);
         }
 

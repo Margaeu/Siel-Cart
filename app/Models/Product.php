@@ -21,8 +21,6 @@ class Product extends Model
         'short_description',
         'description',
         'price',
-        'compare_price',
-        'cost_price',
         'stock_quantity',
         'low_stock_threshold',
         'manage_stock',
@@ -30,9 +28,6 @@ class Product extends Model
         'is_active',
         'is_featured',
         'has_variants',
-        'weight',
-        'meta_title',
-        'meta_description',
         'views_count',
     ];
 
@@ -40,8 +35,6 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
-            'compare_price' => 'decimal:2',
-            'cost_price' => 'decimal:2',
             'stock_quantity' => 'integer',
             'low_stock_threshold' => 'integer',
             'views_count' => 'integer',

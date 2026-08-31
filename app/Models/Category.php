@@ -18,8 +18,6 @@ class Category extends Model
         'image',
         'is_active',
         'sort_order',
-        'meta_title',
-        'meta_description',
     ];
 
     #[Scope()]

@@ -48,15 +48,6 @@ class CategoryForm
                             ->numeric()
                             ->default(0),
                     ]),
-                Section::make('SEO')
-                    ->schema([
-                        TextInput::make('meta_title')
-                            ->default(null),
-                        Textarea::make('meta_description')
-                            ->default(null)
-                            ->columnSpanFull(),
-                    ]),
-
 
             ]);
     }

@@ -22,7 +22,6 @@ class ProductFactory extends Factory
         $name = fake()->words(3, true);
         $name = ucwords($name);
         $price = fake()->randomFloat(2, 10, 500);
-        $comparePrice = fake()->boolean(30) ? $price * fake()->randomFloat(2, 1.1, 1.5) : null;
 
         return [
             'category_id' => Category::inRandomOrder()->first()?->id ?? Category::factory(),
@@ -32,8 +31,6 @@ class ProductFactory extends Factory
             'short_description' => fake()->sentence(15),
             'description' => '<p>' . fake()->paragraph(10) . '</p><p>' . fake()->paragraph(8) . '</p>',
             'price' => $price,
-            'compare_price' => $comparePrice,
-            'cost_price' => $price * 0.6,
             'stock_quantity' => fake()->numberBetween(0, 500),
             'low_stock_threshold' => 10,
             'manage_stock' => true,
@@ -41,8 +38,6 @@ class ProductFactory extends Factory
             'is_active' => fake()->boolean(95),
             'is_featured' => fake()->boolean(20),
             'has_variants' => fake()->boolean(30),
-            'meta_title' => $name,
-            'meta_description' => fake()->sentence(20),
             'views_count' => fake()->numberBetween(0, 1000),
         ];
     }

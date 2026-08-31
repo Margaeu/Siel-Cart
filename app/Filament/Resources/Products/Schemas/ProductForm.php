@@ -81,18 +81,6 @@ class ProductForm
                                             ->step(0.01)
                                             ->helperText('Selling Price')
                                             ->prefix('₱'),
-                                        TextInput::make('compare_price')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->step(0.01)
-                                            ->helperText('Original price to show discount')
-                                            ->prefix('₱'),
-                                        TextInput::make('cost_price')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->step(0.01)
-                                            ->helperText('cost from supplier (for profit calculations)')
-                                            ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
                                     ->schema([
@@ -191,12 +179,11 @@ class ProductForm
                                                     ->required()
                                                     ->label('Variant Name')
                                                     ->placeholder('e.g., Red - Large'),
-                                                KeyValue::make('options'),
                                                 TextInput::make('sku')
                                                     ->label('SKU')
                                                     ->unique(ignoreRecord: true)
                                                     ->helperText('Stock keeping Unit - unique identifier')
-                                                    ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
+                                                    // ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
                                                     ->required()
                                                     ->columnSpan(2),
                                                 TextInput::make('price')
@@ -205,14 +192,6 @@ class ProductForm
                                                     ->prefix('$')
                                                     ->minValue(0)
                                                     ->step(0.01),
-
-                                                TextInput::make('compare_price')
-                                                    ->label('Compare Price')
-                                                    ->numeric()
-                                                    ->prefix('$')
-                                                    ->minValue(0)
-                                                    ->step(0.01),
-
                                                 TextInput::make('stock_quantity')
                                                     ->label('Stock')
                                                     ->numeric()
@@ -262,19 +241,7 @@ class ProductForm
                                             ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
                             ]),
-                        Tab::make('SEO')
-                            ->icon(Heroicon::MagnifyingGlass)
-                            ->schema([
-                                Section::make('Search Engine Optimization')
-                                    ->schema([
-                                        TextInput::make('meta_title')
-                                            ->default(null),
-                                        Textarea::make('meta_description')
-                                            ->default(null)
-                                            ->columnSpanFull(),
-                                    ])
-                            ])
-                    ]),
+                    ])
             ]);
     }
 }

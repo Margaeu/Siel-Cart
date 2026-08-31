@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CategoriesTableSeeder extends Seeder
 {
@@ -16,9 +17,9 @@ class CategoriesTableSeeder extends Seeder
     {
         
 
-        \DB::table('categories')->delete();
+        DB::table('categories')->delete();
         
-        \DB::table('categories')->insert(array (
+        DB::table('categories')->insert(array (
             0 => 
             array (
                 'id' => 1,
@@ -28,8 +29,6 @@ class CategoriesTableSeeder extends Seeder
                 'image' => 'categories/51701eba-e694-4118-9e31-473997fd2436-v1.jpg',
                 'is_active' => 1,
                 'sort_order' => 0,
-                'meta_title' => NULL,
-                'meta_description' => NULL,
                 'created_at' => '2026-08-20 13:25:05',
                 'updated_at' => '2026-08-20 13:40:02',
             ),
@@ -42,8 +41,6 @@ class CategoriesTableSeeder extends Seeder
                 'image' => NULL,
                 'is_active' => 1,
                 'sort_order' => 0,
-                'meta_title' => NULL,
-                'meta_description' => NULL,
                 'created_at' => '2026-08-20 13:25:05',
                 'updated_at' => '2026-08-20 13:25:05',
             ),
@@ -56,8 +53,6 @@ class CategoriesTableSeeder extends Seeder
                 'image' => NULL,
                 'is_active' => 1,
                 'sort_order' => 0,
-                'meta_title' => NULL,
-                'meta_description' => NULL,
                 'created_at' => '2026-08-20 13:25:05',
                 'updated_at' => '2026-08-20 13:25:05',
             ),
@@ -70,8 +65,6 @@ class CategoriesTableSeeder extends Seeder
                 'image' => NULL,
                 'is_active' => 1,
                 'sort_order' => 0,
-                'meta_title' => NULL,
-                'meta_description' => NULL,
                 'created_at' => '2026-08-20 13:25:05',
                 'updated_at' => '2026-08-20 13:25:05',
             ),

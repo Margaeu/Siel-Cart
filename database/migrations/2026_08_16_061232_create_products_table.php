@@ -20,7 +20,6 @@ return new class extends Migration
             $table->text('short_description')->nullable();
             $table->longText('description')->nullable();
             $table->decimal('price', 10, 2);
-            $table->decimal('cost_price', 10, 2)->nullable();
             $table->integer('stock_quantity')->default(0);
             $table->integer('low_stock_threshold')->default(10);
             $table->boolean('manage_stock')->default(value: true);
@@ -28,10 +27,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->boolean('has_variants')->default(false);
-            /*
-            $table->string('meta_title')->nullable();
-            $table->text('meta_description')->nullable();
-            */
             $table->integer('views_count')->default(0);
             $table->timestamps();
             $table->softDeletes();

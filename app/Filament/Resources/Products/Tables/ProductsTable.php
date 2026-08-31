@@ -39,11 +39,6 @@ class ProductsTable
                 TextColumn::make('price')
                     ->money('PHP')
                     ->sortable(),
-                TextColumn::make('cost_price')
-                    ->label('Cost')
-                    ->money('PHP')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('stock_quantity')
                     ->label('Stock')
                     ->numeric()
