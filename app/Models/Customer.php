@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Customer extends Authenticatable
 {
@@ -38,7 +39,7 @@ class Customer extends Authenticatable
     }
 
     /**
-     * Scope to only active customers
+     * Scope to only active customers.
      */
     #[Scope]
     protected function active(Builder $query): void
@@ -58,8 +59,19 @@ class Customer extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Get the customer's permanent shopping cart.
+     *
+     * Each customer has one cart stored in the database.
+     * The cart remains available when the customer logs in again.
+     */
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class);
+    }
+
     // Helper Methods
-    
+
     /**
      * Get the customer's initials.
      */

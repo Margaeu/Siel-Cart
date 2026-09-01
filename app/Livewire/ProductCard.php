@@ -3,45 +3,46 @@
 namespace App\Livewire;
 
 use App\Models\Product;
+use App\Services\CartService;
 use Livewire\Component;
 
 class ProductCard extends Component
 {
     public Product $product;
-    public function addToCart(){
-        if ($this->product->stock_status !== 'in_stock') {
-            session()->flash('error','This product is current;y out of stock');
+
+    /**
+     * Add the product to the customer's permanent cart.
+     *
+     * CartService handles the database cart and stock validation.
+     */
+    public function addToCart(CartService $cartService)
+    {
+        // Add one quantity of the selected product.
+        // The cart is saved in the database instead of the session.
+        $result = $cartService->addItem(
+            $this->product->id,
+            null,
+            1
+        );
+
+        // If the product cannot be added because of stock
+        // or another validation problem, show the error.
+        if (!$result['success']) {
+            session()->flash('error', $result['message']);
             return;
         }
-         // Get current cart from session
-         $cart = session()->get('cart', []);
-        
-         $cartKey = 'product_' . $this->product->id;
- 
-         // If product already in cart, increment quantity
-         if (isset($cart[$cartKey])) {
-             $cart[$cartKey]['quantity']++;
-         } else {
-             // Add new product to cart
-             $cart[$cartKey] = [
-                 'product_id' => $this->product->id,
-                 'variant_id' => null,
-                 'name' => $this->product->name,
-                 'variant_name' => null,
-                 'price' => $this->product->price,
-                 'image' => $this->product->primaryImage?->image_path,
-                 'quantity' => 1,
-             ];
-         }
- 
-         // Save cart to session
-         session()->put('cart', $cart);
- 
-         // Dispatch event to update cart icon
-         $this->dispatch('cart-updated');
 
-         session()->flash('success',$this->product->name . ' has been added to your cart.');
+        // Tell the cart icon that the cart contents changed.
+        $this->dispatch('cart-updated');
+
+        // Trigger the Add to Cart popup on the current page.
+        // This does not redirect the customer to the cart.
+        $this->dispatch(
+            'cart-added',
+            message: $this->product->name . ' has been added to your cart.'
+        );
     }
+
     public function render()
     {
         return view('livewire.product-card');
