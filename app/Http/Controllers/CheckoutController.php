@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Stripe\Stripe;
 use App\Models\Order;
+use App\Services\CartService;
 use Illuminate\Http\Request;
 use Stripe\Checkout\Session as StripeSession;
 
@@ -28,8 +29,8 @@ class CheckoutController extends Controller
                         'status' => 'processing',
                     ]);
 
-                    // Clear cart
-                    session()->forget('cart');
+                    // Clear the customer's database cart
+                    app(CartService::class)->clearCart();
                 }
             } catch (\Exception $e) {
                 logger()->error('Stripe session verification failed: ' . $e->getMessage());

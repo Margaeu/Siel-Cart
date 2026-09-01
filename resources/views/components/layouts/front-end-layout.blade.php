@@ -93,6 +93,9 @@
     </main>
     @livewire('notifications')
 
+    <!-- Cart notification popup (shown once per page) -->
+    <x-cart-toast />
+
 
     <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-16">

@@ -172,17 +172,11 @@
                         </div>
                     </div>
 
-                    <!-- Flash Messages -->
-                    @if (session()->has('success'))
-                        <div class="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded mb-4">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session()->has('error'))
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                            {{ session('error') }}
-                        </div>
-                    @endif
+                    {{--
+                        Add to Cart feedback is shown by the shared popup
+                        in the layout (<x-cart-toast />), so no flash
+                        message block is needed here.
+                    --}}
 
                     <!-- Add to Cart -->
                     @if($product->stock_status === 'in_stock')

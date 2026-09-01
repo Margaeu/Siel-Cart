@@ -161,10 +161,20 @@ class CartService
             ];
         }
 
-        // Get the latest available stock.
-        $availableStock = $cartItem->variant
-            ? $cartItem->variant->stock_quantity
-            : $cartItem->product->stock_quantity;
+        // A product that is deleted, deactivated or flagged out of stock
+        // cannot have its quantity changed at all. Only removing it works.
+        // Without this a deleted product with stock left on its row would
+        // still accept quantity changes.
+        if (!$cartItem->is_purchasable) {
+            return [
+                'success' => false,
+                'message' => 'This product is no longer available. Please remove it from your cart.',
+            ];
+        }
+
+        // Get the latest available stock. The accessor uses the variant's
+        // stock when the item has a variant, and the product's otherwise.
+        $availableStock = $cartItem->available_stock;
 
         // Do not allow the customer to request more
         // than what is currently available.
@@ -222,30 +232,20 @@ class CartService
             return false;
         }
 
-        foreach ($cart->items()->with(['product', 'variant'])->get() as $item) {
-
-            // Get the latest stock amount.
-            $stock = $item->variant
-                ? $item->variant->stock_quantity
-                : $item->product->stock_quantity;
-
-            // The item is unavailable if:
-            // 1. Product is out of stock, OR
-            // 2. Requested quantity is greater than current stock.
-            if (
-                $stock <= 0 ||
-                $item->quantity > $stock ||
-                $item->product->stock_status === 'out_of_stock'
-            ) {
-                return true;
-            }
-        }
-
-        return false;
+        // CartItem decides what "unavailable" means so this check and
+        // the notice shown on the cart page always use the same rule.
+        return $cart->items()
+            ->with(['product', 'variant'])
+            ->get()
+            ->contains(fn ($item) => $item->is_unavailable);
     }
 
     /**
      * Get the subtotal of all cart items.
+     *
+     * Each item is priced by CartItem's subtotal accessor, which uses
+     * the variant price for items with a variant and the product price
+     * for items without one.
      */
     public function getSubtotal(): float
     {
@@ -256,11 +256,9 @@ class CartService
         }
 
         return (float) $cart->items()
-            ->with('product')
+            ->with(['product', 'variant'])
             ->get()
-            ->sum(function ($item) {
-                return $item->product->price * $item->quantity;
-            });
+            ->sum(fn ($item) => $item->subtotal);
     }
 
     /**

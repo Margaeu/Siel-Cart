@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Services\CartService;
 use Livewire\Component;
 
 class ProductDetails extends Component
@@ -48,49 +48,43 @@ class ProductDetails extends Component
         }
     }
 
-    public function addToCart(){
+    /**
+     * Add the selected product/variant to the customer's permanent cart.
+     *
+     * CartService handles the database cart and stock validation.
+     */
+    public function addToCart(CartService $cartService){
+        // A cart belongs to a customer account, so guests are sent
+        // to the login page first and returned here afterwards.
+        if (!auth('customer')->check()) {
+            session()->put('url.intended', route('products.show', $this->product->slug));
+            session()->flash('status', 'Please log in to add products to your cart.');
+
+            return $this->redirect(route('login'));
+        }
+
         if ($this->product->has_variants && !$this->selectedVariant) {
-            session()->flash('error','Please select a variant');
+            $this->dispatch('cart-error', message: 'Please select a variant.');
             return;
         }
 
-        $cart = session()->get('cart',[]);
+        $result = $cartService->addItem(
+            $this->product->id,
+            $this->selectedVariant,
+            (int) $this->quantity
+        );
 
-        $cartKey = $this->selectedVariant
-            ? 'variant_' . $this->selectedVariant
-            : 'product_' . $this->product->id;
-
-        if (isset($cart[$cartKey])) {
-            $cart[$cartKey]['quantity'] += $this->quantity;
-        }else{
-            if ($this->selectedVariant) {
-                $variant = ProductVariant::find($this->selectedVariant);
-                $cart[$cartKey] = [
-                    'product_id' => $this->product->id,
-                    'variant_id' => $variant->id,
-                    'name' => $this->product->name,
-                    'variant_name' => $variant->name,
-                    'price' => $variant->price,
-                    'image' => $this->selectedImage,
-                    'quantity' => $this->quantity,
-                ];
-            }else {
-               $cart[$cartKey] = [
-                    'product_id' => $this->product->id,
-                    'variant_id' => null,
-                    'name' => $this->product->name,
-                    'variant_name' => null,
-                    'price' => $this->product->price,
-                    'image' => $this->selectedImage,
-                    'quantity' => $this->quantity,
-               ]; 
-            }
+        // Stock validation failed.
+        if (!$result['success']) {
+            $this->dispatch('cart-error', message: $result['message']);
+            return;
         }
 
-        session()->put('cart',$cart);
+        // Update the cart icon in the header.
         $this->dispatch('cart-updated');
 
-        session()->flash('success','Product added to cart1');
+        // Show the shared Add to Cart popup.
+        $this->dispatch('cart-added', message: $result['message']);
     }
     public function render()
     {

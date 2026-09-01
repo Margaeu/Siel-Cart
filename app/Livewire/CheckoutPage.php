@@ -9,6 +9,7 @@ use App\Models\Address;
 use App\Models\Setting;
 use Livewire\Component;
 use App\Models\OrderItem;
+use App\Services\CartService;
 use App\Mail\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -35,12 +36,19 @@ class CheckoutPage extends Component
     public $paymentMethod = 'stripe';
     public $customerNotes = '';
 
-    public function mount()
+    public function mount(CartService $cartService)
     {
-        $this->cart = session()->get('cart', []);
-        
+        // Load the customer's permanent cart from the database.
+        $this->cart = $this->buildCartFromDatabase($cartService);
+
         if (empty($this->cart)) {
             return redirect()->route('cart.index');
+        }
+
+        // Never allow checkout to start with out-of-stock items.
+        if ($cartService->hasUnavailableItems()) {
+            return redirect()->route('cart.index')
+                ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
         }
 
         // Pre-fill with customer data
@@ -53,6 +61,42 @@ class CheckoutPage extends Component
         if ($defaultAddress) {
             $this->selectedAddressId = $defaultAddress->id;
         }
+    }
+
+    /**
+     * Convert the database cart into the flat array the
+     * checkout view and order creation already expect.
+     *
+     * Pricing comes from CartItem's price accessor, which is the same
+     * one the cart page uses. That keeps the amount shown in the cart
+     * and the amount actually charged in sync.
+     */
+    protected function buildCartFromDatabase(CartService $cartService): array
+    {
+        $cart = $cartService->getCart();
+
+        if (!$cart) {
+            return [];
+        }
+
+        $cart->load([
+            'items.product.primaryImage',
+            'items.variant',
+        ]);
+
+        return $cart->items->map(function ($item) {
+            return [
+                'cart_item_id' => $item->id,
+                'product_id'   => $item->product_id,
+                'variant_id'   => $item->product_variant_id,
+                'name'         => $item->product->name,
+                'variant_name' => $item->variant?->name,
+                'sku'          => $item->variant?->sku ?? $item->product->sku,
+                'price'        => $item->price,
+                'image'        => $item->product->primaryImage?->url,
+                'quantity'     => $item->quantity,
+            ];
+        })->all();
     }
 
     public function selectAddress($addressId)
@@ -118,7 +162,20 @@ class CheckoutPage extends Component
         }
     }
 
-    public function placeOrder(){
+    public function placeOrder(CartService $cartService){
+        // Re-check the cart against the database before charging.
+        // The page may have been open while stock changed.
+        $this->cart = $this->buildCartFromDatabase($cartService);
+
+        if (empty($this->cart)) {
+            return redirect()->route('cart.index');
+        }
+
+        if ($cartService->hasUnavailableItems()) {
+            return redirect()->route('cart.index')
+                ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
+        }
+
         try {
             DB::beginTransaction();
             // Get shipping address
@@ -176,9 +233,7 @@ class CheckoutPage extends Component
                     'product_id' => $item['product_id'],
                     'product_variant_id' => $item['variant_id'],
                     'product_name' => $item['name'],
-                    'product_sku' => $item['variant_id'] 
-                        ? \App\Models\ProductVariant::find($item['variant_id'])->sku 
-                        : \App\Models\Product::find($item['product_id'])->sku,
+                    'product_sku' => $item['sku'],
                     'variant_name' => $item['variant_name'],
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
@@ -205,7 +260,9 @@ class CheckoutPage extends Component
                 return $this->processStripePayment($order);
             } else {
                 // Cash on delivery
-                session()->forget('cart');
+                $cartService->clearCart();
+                $this->dispatch('cart-updated');
+
                 return redirect()->route('customer.orders.show', $order->id)
                     ->with('success', 'Order placed successfully!');
             }

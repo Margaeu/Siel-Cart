@@ -1,30 +1,8 @@
-<div
-    class="group relative bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden"
-
-    {{-- 
-        Listen for the successful Add to Cart event.
-        This only shows a temporary popup and does not redirect the customer.
-    --}}
-    x-data="{
-        showCartPopup: false,
-        cartMessage: '',
-        popupTimer: null,
-
-        showPopup(event) {
-            this.cartMessage = event.detail.message;
-            this.showCartPopup = true;
-
-            // Reset the timer if Add to Cart is clicked again.
-            clearTimeout(this.popupTimer);
-
-            // Automatically close the popup after 3 seconds.
-            this.popupTimer = setTimeout(() => {
-                this.showCartPopup = false;
-            }, 3000);
-        }
-    }"
-    @cart-added.window="showPopup($event)"
->
+{{--
+    The Add to Cart popup lives in the front-end layout (<x-cart-toast />)
+    so that only one popup is shown per page instead of one per card.
+--}}
+<div class="group relative bg-white rounded-lg shadow-sm hover:shadow-lg transition duration-300 overflow-hidden">
     <a href="{{ route('products.show', $product->slug) }}" class="block">
 
         <!-- Product Image -->
@@ -129,29 +107,51 @@
     <!-- Add to Cart Button -->
     @if($product->stock_status === 'in_stock')
 
-        <div class="p-4 pt-0">
+        @if($product->has_variants)
 
-            <button
-                wire:click="addToCart"
-                wire:loading.attr="disabled"
-                wire:target="addToCart"
-                style="background-color: #1E6031;"
-                class="w-full cursor-pointer text-white py-2 px-4 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            {{--
+                Products sold by variant need a variant chosen before they
+                can be added, and the picker only exists on the product
+                page. Send the customer there instead.
+            --}}
+            <div class="p-4 pt-0">
 
-                <!-- Normal Button Text -->
-                <span wire:loading.remove wire:target="addToCart">
-                    Add to Cart
-                </span>
+                <a href="{{ route('products.show', $product->slug) }}"
+                   wire:navigate
+                   style="background-color: #1E6031;"
+                   class="block w-full text-center text-white py-2 px-4 rounded-lg hover:opacity-90 transition font-medium">
+                    Add To Cart
+                </a>
 
-                <!-- Display while Laravel is adding the item -->
-                <span wire:loading wire:target="addToCart">
-                    Adding...
-                </span>
+            </div>
 
-            </button>
+        @else
 
-        </div>
+            <div class="p-4 pt-0">
+
+                <button
+                    wire:click="addToCart"
+                    wire:loading.attr="disabled"
+                    wire:target="addToCart"
+                    style="background-color: #1E6031;"
+                    class="w-full cursor-pointer text-white py-2 px-4 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+
+                    <!-- Normal Button Text -->
+                    <span wire:loading.remove wire:target="addToCart">
+                        Add to Cart
+                    </span>
+
+                    <!-- Display while Laravel is adding the item -->
+                    <span wire:loading wire:target="addToCart">
+                        Adding...
+                    </span>
+
+                </button>
+
+            </div>
+
+        @endif
 
     @else
 
@@ -167,80 +167,5 @@
         </div>
 
     @endif
-
-
-    <!-- =====================================================
-         ADD TO CART SUCCESS POPUP
-         =====================================================
-         This appears only after ProductCard.php dispatches
-         the "cart-added" event.
-
-         It is fixed on the screen, so it does not affect
-         the existing product card layout or design.
-         ===================================================== -->
-    <div
-        x-cloak
-        x-show="showCartPopup"
-        x-transition
-        class="fixed top-24 right-6 z-[100] max-w-sm"
-    >
-        <div class="bg-white border border-gray-200 shadow-lg rounded-lg p-4 flex items-start gap-3">
-
-            <!-- Success Icon -->
-            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-
-                <svg
-                    class="w-5 h-5 text-[#1E6031]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                    />
-                </svg>
-
-            </div>
-
-            <!-- Message -->
-            <div class="flex-1">
-
-                <p class="font-semibold text-gray-900">
-                    Added to Cart
-                </p>
-
-                <p
-                    class="text-sm text-gray-600 mt-1"
-                    x-text="cartMessage"
-                ></p>
-
-            </div>
-
-            <!-- Manual Close Button -->
-            <button
-                type="button"
-                @click="showCartPopup = false"
-                class="text-gray-400 hover:text-gray-600"
-            >
-                <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                    />
-                </svg>
-            </button>
-
-        </div>
-    </div>
 
 </div>

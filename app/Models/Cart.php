@@ -48,16 +48,16 @@ class Cart extends Model
     /**
      * Get the total price of all products in the cart.
      *
-     * The price comes from the related product because
-     * cart_items does not have its own price column.
+     * cart_items does not have its own price column, so the amount
+     * comes from CartItem's subtotal accessor. That accessor uses the
+     * variant price when a variant was selected and the product price
+     * otherwise.
      */
     public function getTotalAttribute(): float
     {
         return (float) $this->items()
-            ->with('product')
+            ->with(['product', 'variant'])
             ->get()
-            ->sum(function ($item) {
-                return $item->product->price * $item->quantity;
-            });
+            ->sum(fn ($item) => $item->subtotal);
     }
 }

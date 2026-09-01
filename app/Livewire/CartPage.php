@@ -50,8 +50,8 @@ class CartPage extends Component
     /**
      * Update the quantity of a cart item.
      *
-     * This is used by the direct quantity input on the
-     * shopping cart page.
+     * This is used by the minus and plus quantity controls
+     * on the shopping cart page.
      */
     public function updateQuantity(
         CartService $cartService,
@@ -133,14 +133,16 @@ class CartPage extends Component
 
     /**
      * Calculate the cart subtotal.
+     *
+     * Each item prices itself through CartItem's subtotal accessor,
+     * so variant items use the variant price and everything else
+     * uses the product price.
      */
     #[Computed]
     public function subtotal()
     {
         return $this->cart
-            ? $this->cart->items->sum(function ($item) {
-                return $item->product->price * $item->quantity;
-            })
+            ? $this->cart->items->sum(fn ($item) => $item->subtotal)
             : 0;
     }
 

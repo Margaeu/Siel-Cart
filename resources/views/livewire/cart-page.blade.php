@@ -47,32 +47,36 @@
 
                         @php
                             /*
-                             * Get the latest stock information.
-                             *
-                             * If the item has a variant, use the variant stock.
-                             * Otherwise, use the main product stock.
+                             * Stock and availability both come from the CartItem
+                             * model, which is the same rule CartService uses to
+                             * decide whether checkout may proceed.
                              */
-                            $availableStock = $item->variant
-                                ? $item->variant->stock_quantity
-                                : $item->product->stock_quantity;
+                            $availableStock = $item->available_stock;
+                            $isUnavailable  = $item->is_unavailable;
 
                             /*
-                             * Determine whether this cart item is unavailable.
-                             *
-                             * An item is unavailable when:
-                             * - Its stock is zero or below
-                             * - Its current quantity is greater than available stock
-                             * - The product itself is marked as out of stock
+                             * An over-stock item is still sold, the cart just
+                             * holds more than is left. The customer can fix that
+                             * by lowering the quantity, so the minus control
+                             * stays usable for it.
                              */
-                            $isUnavailable =
-                                $availableStock <= 0 ||
-                                $item->quantity > $availableStock ||
-                                $item->product->stock_status === 'out_of_stock';
+                            $isOverStock = $item->is_over_stock;
                         @endphp
 
                         <!-- Cart Item -->
-                        <div class="bg-white rounded-lg shadow-sm p-6
-                            {{ $isUnavailable ? 'opacity-50 bg-gray-100' : '' }}">
+                        {{--
+                            wire:key lets Livewire track each row so that
+                            removing one does not leave the next row showing
+                            the removed row's values.
+                        --}}
+                        {{--
+                            Only a row the customer cannot fix is dimmed. An
+                            over-stock row stays fully legible because they are
+                            expected to act on it.
+                        --}}
+                        <div wire:key="cart-item-{{ $item->id }}"
+                             class="bg-white rounded-lg shadow-sm p-6
+                            {{ $isUnavailable && !$isOverStock ? 'opacity-50 bg-gray-100' : '' }}">
 
                             <div class="flex gap-4">
 
@@ -85,7 +89,7 @@
                                             <img src="{{ $item->product->primaryImage->url }}"
                                                  alt="{{ $item->product->name }}"
                                                  class="w-full h-full object-cover
-                                                 {{ $isUnavailable ? 'grayscale' : '' }}">
+                                                 {{ $isUnavailable && !$isOverStock ? 'grayscale' : '' }}">
 
                                         @else
 
@@ -113,15 +117,30 @@
                                         </p>
                                     @endif
 
+                                    {{--
+                                        $item->price is the variant price when the
+                                        item has a variant, and the product price
+                                        when it does not.
+                                    --}}
                                     <p class="text-lg font-bold text-[#1E6031]">
-                                        ${{ number_format($item->product->price, 2) }}
+                                        ${{ number_format($item->price, 2) }}
                                     </p>
 
-                                    <!-- Out of Stock Notice -->
-                                    @if($isUnavailable)
+                                    <!-- Availability Notice -->
+                                    @if($isOverStock)
+
+                                        {{-- Fixable: tell them what is left. --}}
+                                        <p class="text-sm font-semibold text-amber-600 mt-2">
+                                            Only {{ $availableStock }} left in stock.
+                                            Lower the quantity to continue.
+                                        </p>
+
+                                    @elseif($isUnavailable)
+
                                         <p class="text-sm font-semibold text-red-600 mt-2">
                                             This product is currently unavailable.
                                         </p>
+
                                     @endif
 
                                 </div>
@@ -148,23 +167,48 @@
                                         </svg>
                                     </button>
 
-                                    <!-- Direct Quantity Input -->
-                                    <div class="flex items-center gap-2">
+                                    <!-- Quantity Stepper -->
+                                    <div class="flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
+                                        {{--
+                                            For an over-stock row, one press drops
+                                            straight to what is actually left rather
+                                            than stepping down one at a time into
+                                            repeated "only N available" errors.
+                                        --}}
+                                        <button
+                                            type="button"
+                                            wire:click="updateQuantity({{ $item->id }}, {{ min($item->quantity - 1, $availableStock) }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="updateQuantity"
+                                            @disabled($item->quantity <= 1 || ($isUnavailable && !$isOverStock))
+                                            class="flex h-10 w-10 items-center justify-center text-xl font-semibold text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1E6031] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+                                            aria-label="Decrease quantity of {{ $item->product->name }}">
+                                            &minus;
+                                        </button>
 
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="{{ max(1, $availableStock) }}"
-                                            value="{{ $item->quantity }}"
-                                            wire:change="updateQuantity({{ $item->id }}, $event.target.value)"
-                                            class="w-16 h-8 text-center font-medium border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]"
+                                        <span
+                                            wire:key="cart-item-qty-{{ $item->id }}-{{ $item->quantity }}"
+                                            class="flex h-10 min-w-12 items-center justify-center border-x border-gray-200 px-3 text-center font-semibold text-gray-900"
+                                            aria-live="polite"
                                             aria-label="Quantity">
+                                            {{ $item->quantity }}
+                                        </span>
 
+                                        <button
+                                            type="button"
+                                            wire:click="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="updateQuantity"
+                                            @disabled($item->quantity >= $availableStock || $isUnavailable)
+                                            class="flex h-10 w-10 items-center justify-center text-xl font-semibold text-[#1E6031] transition hover:bg-[#f2f7f4] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1E6031] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+                                            aria-label="Increase quantity of {{ $item->product->name }}">
+                                            +
+                                        </button>
                                     </div>
 
                                     <!-- Item Subtotal -->
                                     <p class="text-lg font-bold text-gray-900">
-                                        ${{ number_format($item->product->price * $item->quantity, 2) }}
+                                        ${{ number_format($item->subtotal, 2) }}
                                     </p>
 
                                 </div>
