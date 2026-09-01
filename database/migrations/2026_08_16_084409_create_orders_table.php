@@ -18,20 +18,11 @@ return new class extends Migration
 
             // Order amounts (pickup only)
             $table->decimal('subtotal', 10, 2);
-<<<<<<< HEAD
-            $table->decimal('total', 10, 2);
-
-            // Pickup details
-            $table->string('pickup_contact_name'); // who picked up the order
-            $table->string('pickup_contact_phone'); // number who picked up the order
-=======
-            // $table->decimal('tax_amount', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
 
             // Pickup details
             $table->string('pickup_contact_name'); // who received the order
             $table->string('pickup_contact_phone'); // number of the claimant
->>>>>>> origin/frontend
             $table->date('pickup_date')->nullable();
             $table->string('pickup_location')->nullable();
             $table->string('claim_number')->unique()->nullable();

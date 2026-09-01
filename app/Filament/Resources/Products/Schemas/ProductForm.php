@@ -70,7 +70,6 @@ class ProductForm
                                         TextInput::make('sku')
                                             ->label('SKU')
                                             ->unique(ignoreRecord: true)
-                                            //->default(fn() => 'SKU-' . strtoupper(Str::random(8)))
                                             ->helperText('Stock keeping Unit - unique identifier')
                                             ->required(),
                                         TextInput::make('price')
@@ -78,11 +77,7 @@ class ProductForm
                                             ->numeric()
                                             ->minValue(0)
                                             ->step(0.01)
-<<<<<<< HEAD
-                                            ->helperText('Selling Price') 
-=======
                                             ->helperText('Selling Price')
->>>>>>> origin/frontend
                                             ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
@@ -133,7 +128,6 @@ class ProductForm
                                             ->columnSpanFull()
                                             ->orientImagesFromExif(false)
                                             ->imagePreviewHeight('250')
-                                            // Bypass client-side size calculation checks in FilePond
                                             ->extraAttributes([
                                                 'data-filepond-type' => 'image',
                                             ])
@@ -142,17 +136,14 @@ class ProductForm
                                             ])
                                             ->helperText('You can drag and drop to reorder images')
                                             ->saveRelationshipsUsing(function ($component, $state, $record) {
-                                                // 1. Delete existing image files from Cloudflare R2
                                                 foreach ($record->images as $existingImage) {
                                                     if ($existingImage->image_path) {
                                                         Storage::disk('r2')->delete($existingImage->image_path);
                                                     }
                                                 }
 
-                                                // 2. Delete existing database records
                                                 $record->images()->delete();
 
-                                                // 3. Save new images
                                                 if (is_array($state)) {
                                                     foreach ($state as $index => $imagePath) {
                                                         $record->images()->create([
@@ -186,7 +177,6 @@ class ProductForm
                                                     ->label('SKU')
                                                     ->unique(ignoreRecord: true)
                                                     ->helperText('Stock keeping Unit - unique identifier')
-                                                    // ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
                                                     ->required()
                                                     ->columnSpan(2),
                                                 TextInput::make('price')
@@ -195,16 +185,12 @@ class ProductForm
                                                     ->prefix('$')
                                                     ->minValue(0)
                                                     ->step(0.01),
-<<<<<<< HEAD
                                                 TextInput::make('compare_price')
                                                     ->label('Compare Price')
                                                     ->numeric()
                                                     ->prefix('$')
                                                     ->minValue(0)
                                                     ->step(0.01),
-
-=======
->>>>>>> origin/frontend
                                                 TextInput::make('stock_quantity')
                                                     ->label('Stock')
                                                     ->numeric()
@@ -220,7 +206,6 @@ class ProductForm
                                                     ->default('in_stock')
                                                     ->required()
                                                     ->native(false),
-
                                                 Toggle::make('is_active')
                                                     ->label('Active')
                                                     ->default(true),
@@ -254,26 +239,7 @@ class ProductForm
                                             ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
                             ]),
-<<<<<<< HEAD
-                        /*
-                        Tab::make('SEO')
-                            ->icon(Heroicon::MagnifyingGlass)
-                            ->schema([
-                                Section::make('Search Engine Optimazation')
-                                    ->schema([
-                                        TextInput::make('meta_title')
-                                            ->default(null),
-                                        Textarea::make('meta_description')
-                                            ->default(null)
-                                            ->columnSpanFull(),
-                                    ])
-                            ])
-                        */
                     ]),
-
-=======
-                    ])
->>>>>>> origin/frontend
             ]);
     }
 }

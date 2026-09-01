@@ -15,8 +15,6 @@ class ProductVariantsTableSeeder extends Seeder
      */
     public function run()
     {
-        
-
         DB::table('product_variants')->delete();
         
         DB::table('product_variants')->insert(array (
@@ -137,6 +135,7 @@ class ProductVariantsTableSeeder extends Seeder
                 'id' => 10,
                 'product_id' => 12,
                 'sku' => 'PERM-012-S',
+                'name' => 'Permanent System Product 12 - Small',
                 'price' => '89.99',
                 'stock_quantity' => 50,
                 'stock_status' => 'in_stock',
@@ -150,6 +149,7 @@ class ProductVariantsTableSeeder extends Seeder
                 'id' => 11,
                 'product_id' => 12,
                 'sku' => 'PERM-012-M',
+                'name' => 'Permanent System Product 12 - Medium',
                 'price' => '89.99',
                 'stock_quantity' => 50,
                 'stock_status' => 'in_stock',
@@ -677,7 +677,5 @@ class ProductVariantsTableSeeder extends Seeder
                 'updated_at' => '2026-08-20 16:10:00',
             ),
         ));
-        
-        
     }
 }

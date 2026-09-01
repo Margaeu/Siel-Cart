@@ -48,11 +48,7 @@ class ProductSeeder extends Seeder
                         if (rand(0, 100) > 50) {
                             ProductVariant::factory()->create([
                                 'product_id' => $product->id,
-<<<<<<< HEAD
-                                'name' => "$color - $size",
-=======
                                 'name' => "{$color} - {$size}",
->>>>>>> origin/frontend
                                 'price' => $product->price + rand(0, 20),
                                 'sort_order' => ($colorIndex * count($sizes)) + $sizeIndex,
                             ]);

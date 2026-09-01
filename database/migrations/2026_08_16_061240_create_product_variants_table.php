@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('sku')->unique();
             $table->string('name'); // e.g., "Red - Large"
+            $table->json('options')->nullable(); // Stores key-value options like {"size": "S"}
             $table->decimal('price', 10, 2);
             $table->integer('stock_quantity')->default(0);
             $table->enum('stock_status', ['in_stock', 'out_of_stock'])->default('in_stock');
@@ -33,5 +34,3 @@ return new class extends Migration
         Schema::dropIfExists('product_variants');
     }
 };
-
-
