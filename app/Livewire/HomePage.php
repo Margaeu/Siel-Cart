@@ -13,7 +13,7 @@ class HomePage extends Component
         $featuredProducts = Product::active()
             ->featured()
             ->inStock()
-            ->with(['category', 'brand', 'primaryImage'])
+            ->with(['category', 'primaryImage'])
             ->limit(8)
             ->get();
 
@@ -24,7 +24,7 @@ class HomePage extends Component
             ->get(); 
         $newArrivals = Product::active()
             ->inStock()
-            ->with(['category', 'brand', 'primaryImage'])
+            ->with(['category', 'primaryImage'])
             ->latest()
             ->limit(8)
             ->get();

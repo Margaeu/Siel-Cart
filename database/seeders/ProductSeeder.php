@@ -2,13 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Brand;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class ProductSeeder extends Seeder
 {
@@ -18,38 +16,43 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $categories = Category::all();
-        $brands = Brand::all();
+        $totalProducts = 30; // Adjusted for 30 products
 
-        // Create 100 products
-        $this->command->info('Creating products...');
-        $bar = $this->command->getOutput()->createProgressBar(100);
+        $this->command->info("Creating {$totalProducts} products with R2 images...");
+        $bar = $this->command->getOutput()->createProgressBar($totalProducts);
 
-        for ($i = 0; $i < 100; $i++) {
+        for ($i = 1; $i <= $totalProducts; $i++) {
             $product = Product::factory()->create([
                 'category_id' => $categories->random()->id,
-                'brand_id' => $brands->random()->id,
             ]);
 
-            // Create 2-4 images per product
-            for ($j = 0; $j < rand(2, 4); $j++) {
-                ProductImage::factory()->create([
+            // Assigns images specifically matching product number (e.g., product-1-1.jpg, product-1-2.jpg)
+            $imageCount = rand(2, 4); // 2 to 4 images per product
+
+            for ($j = 1; $j <= $imageCount; $j++) {
+                ProductImage::create([
                     'product_id' => $product->id,
-                    'is_primary' => $j === 0,
-                    'sort_order' => $j,
+                    'image_path' => "products/product-{$i}-{$j}.jpg",
+                    'is_primary' => $j === 1,
+                    'sort_order' => $j - 1,
                 ]);
             }
 
-            // Create variants for 30% of products
+            // Create variants for products with variants enabled
             if ($product->has_variants) {
-                $colors = ['Red', 'Blue', 'Black', 'White', 'Green'];
-                $sizes = ['S', 'M', 'L', 'XL'];
+                $colors = ['Red', 'Blue', 'Black', 'White'];
+                $sizes = ['S', 'M', 'L'];
 
                 foreach ($colors as $colorIndex => $color) {
                     foreach ($sizes as $sizeIndex => $size) {
-                        if (rand(0, 100) > 50) { // Randomly skip some combinations
+                        if (rand(0, 100) > 50) {
                             ProductVariant::factory()->create([
                                 'product_id' => $product->id,
+<<<<<<< HEAD
                                 'name' => "$color - $size",
+=======
+                                'name' => "{$color} - {$size}",
+>>>>>>> origin/frontend
                                 'price' => $product->price + rand(0, 20),
                                 'sort_order' => ($colorIndex * count($sizes)) + $sizeIndex,
                             ]);
@@ -63,6 +66,6 @@ class ProductSeeder extends Seeder
 
         $bar->finish();
         $this->command->newLine();
-        $this->command->info('Products created successfully!');
+        $this->command->info('30 Products seeded successfully with custom R2 image paths!');
     }
 }

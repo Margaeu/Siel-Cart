@@ -3,12 +3,12 @@
         <!-- Breadcrumb -->
         <nav class="mb-6 text-sm">
             <ol class="flex items-center gap-2">
-                <li><a href="{{ route('home') }}" class="text-gray-500 hover:text-blue-600">Home</a></li>
+                <li><a href="{{ route('home') }}" class="text-gray-500 hover:opacity-80 transition">Home</a></li>
                 <li class="text-gray-400">/</li>
-                <li><a href="{{ route('products.index') }}" class="text-gray-500 hover:text-blue-600">Shop</a></li>
+                <li><a href="{{ route('products.index') }}" class="text-gray-500 hover:opacity-80 transition">Shop</a></li>
                 <li class="text-gray-400">/</li>
                 <li><a href="{{ route('products.index', ['category' => $product->category->slug]) }}" 
-                       class="text-gray-500 hover:text-blue-600">{{ $product->category->name }}</a></li>
+                       class="text-gray-500 hover:opacity-80 transition">{{ $product->category->name }}</a></li>
                 <li class="text-gray-400">/</li>
                 <li class="text-gray-900 font-medium">{{ $product->name }}</li>
             </ol>
@@ -22,7 +22,7 @@
                     <!-- Main Image -->
                     <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
                         @if($selectedImage)
-                            <img src="{{ asset('storage/' . $selectedImage) }}" 
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('r2')->url($selectedImage) }}"
                                  alt="{{ $product->name }}"
                                  class="w-full h-full object-cover">
                         @else
@@ -37,8 +37,9 @@
                         <div class="grid grid-cols-4 gap-4">
                             @foreach($product->images as $image)
                                 <button wire:click="selectImage('{{ $image->image_path }}')"
-                                        class="aspect-square rounded-lg overflow-hidden border-2 {{ $selectedImage === $image->image_path ? 'border-blue-600' : 'border-gray-200' }} hover:border-indigo-400 transition">
-                                    <img src="{{ asset('storage/' . $image->image_path) }}" 
+                                        style="{{ $selectedImage === $image->image_path ? 'border-color: #1E6031;' : '' }}"
+                                        class="aspect-square rounded-lg overflow-hidden border-2 {{ $selectedImage === $image->image_path ? '' : 'border-gray-200' }} hover:opacity-80 transition">
+                                    <img src="{{ $image->url }}"
                                          alt="{{ $product->name }}"
                                          class="w-full h-full object-cover">
                                 </button>
@@ -52,12 +53,12 @@
                     <!-- Badges -->
                     <div class="flex flex-wrap gap-2 mb-4">
                         @if($product->is_featured)
-                            <span class="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded">
+                            <span class="bg-amber-100 text-amber-800 text-sm font-semibold px-3 py-1 rounded">
                                 Featured
                             </span>
                         @endif
                         @if($product->stock_status === 'in_stock')
-                            <span class="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded">
+                            <span class="bg-emerald-100 text-emerald-800 text-sm font-semibold px-3 py-1 rounded">
                                 In Stock
                             </span>
                         @else
@@ -78,7 +79,7 @@
                     <!-- Rating -->
                     @if($product->reviews_count > 0)
                         <div class="flex items-center gap-2 mb-4">
-                            <div class="flex text-yellow-400">
+                            <div class="flex text-amber-400">
                                 @for($i = 1; $i <= 5; $i++)
                                     @if($i <= floor($product->average_rating))
                                         <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
@@ -135,10 +136,11 @@
                             <div class="grid grid-cols-2 gap-3">
                                 @foreach($product->variants->where('is_active', true) as $variant)
                                     <button wire:click="selectVariant({{ $variant->id }})"
-                                            class="border-2 rounded-lg p-3 text-left transition {{ $selectedVariant === $variant->id ? 'border-blue-600 bg-indigo-50' : 'border-gray-300 hover:border-indigo-400' }}">
+                                            style="{{ $selectedVariant === $variant->id ? 'border-color: #1E6031; background-color: #f2f7f4;' : '' }}"
+                                            class="border-2 rounded-lg p-3 text-left transition {{ $selectedVariant === $variant->id ? '' : 'border-gray-300 hover:border-gray-400' }}">
                                         <p class="font-medium text-gray-900">{{ $variant->name }}</p>
                                         <p class="text-sm text-gray-600">${{ number_format($variant->price, 2) }}</p>
-                                        <p class="text-xs {{ $variant->stock_status === 'in_stock' ? 'text-green-600' : 'text-red-600' }}">
+                                        <p class="text-xs {{ $variant->stock_status === 'in_stock' ? 'text-emerald-600' : 'text-red-600' }}">
                                             {{ $variant->stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock' }}
                                         </p>
                                     </button>
@@ -172,7 +174,7 @@
 
                     <!-- Flash Messages -->
                     @if (session()->has('success'))
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                        <div class="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded mb-4">
                             {{ session('success') }}
                         </div>
                     @endif
@@ -185,7 +187,8 @@
                     <!-- Add to Cart -->
                     @if($product->stock_status === 'in_stock')
                         <button wire:click="addToCart"
-                                class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-semibold text-lg">
+                                style="background-color: #1E6031;"
+                                class="w-full text-white py-3 px-6 rounded-lg hover:opacity-90 transition font-semibold text-lg">
                             Add to Cart
                         </button>
                     @else
@@ -204,7 +207,8 @@
                         <div class="flex justify-between">
                             <span class="text-gray-600">Category:</span>
                             <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" 
-                               class="font-medium text-blue-600 hover:text-indigo-700">
+                               style="color: #1E6031;"
+                               class="font-medium hover:underline">
                                 {{ $product->category->name }}
                             </a>
                         </div>
@@ -212,7 +216,8 @@
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Brand:</span>
                                 <a href="{{ route('products.index', ['brand' => $product->brand->slug]) }}" 
-                                   class="font-medium text-blue-600 hover:text-indigo-700">
+                                   style="color: #1E6031;"
+                                   class="font-medium hover:underline">
                                     {{ $product->brand->name }}
                                 </a>
                             </div>
@@ -228,13 +233,13 @@
             <div class="border-b">
                 <nav class="flex">
                     <button @click="activeTab = 'description'"
-                            :class="{ 'border-blue-600 text-blue-600': activeTab === 'description' }"
-                            class="px-6 py-4 border-b-2 font-medium transition">
+                            :style="activeTab === 'description' ? 'border-color: #1E6031; color: #1E6031;' : ''"
+                            class="px-6 py-4 border-b-2 font-medium transition text-gray-500">
                         Description
                     </button>
                     <button @click="activeTab = 'reviews'"
-                            :class="{ 'border-blue-600 text-blue-600': activeTab === 'reviews' }"
-                            class="px-6 py-4 border-b-2 font-medium transition">
+                            :style="activeTab === 'reviews' ? 'border-color: #1E6031; color: #1E6031;' : ''"
+                            class="px-6 py-4 border-b-2 font-medium transition text-gray-500">
                         Reviews ({{ $product->reviews_count }})
                     </button>
                 </nav>
@@ -257,7 +262,7 @@
                                 <div class="border-b pb-6 last:border-b-0">
                                     <div class="flex items-start gap-4">
                                         <div class="flex-shrink-0">
-                                            <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                                            <div style="background-color: #1E6031;" class="w-12 h-12 text-white rounded-full flex items-center justify-center font-bold">
                                                 {{ substr($review->customer->name, 0, 1) }}
                                             </div>
                                         </div>
@@ -265,13 +270,13 @@
                                             <div class="flex items-center gap-2 mb-2">
                                                 <h4 class="font-semibold">{{ $review->customer->name }}</h4>
                                                 @if($review->is_verified_purchase)
-                                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                                    <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded">
                                                         Verified Purchase
                                                     </span>
                                                 @endif
                                             </div>
                                             <div class="flex items-center gap-2 mb-2">
-                                                <div class="flex text-yellow-400">
+                                                <div class="flex text-amber-400">
                                                     @for($i = 1; $i <= 5; $i++)
                                                         @if($i <= $review->rating)
                                                             <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -312,7 +317,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach($relatedProducts as $relatedProduct)
-                        <livewire:product-card :product="$relatedProduct" :key="'related-' . $relatedProduct->id"  />
+                        <livewire:product-card :product="$relatedProduct" :key="'related-' . $relatedProduct->id" />
                     @endforeach
                 </div>
             </section>

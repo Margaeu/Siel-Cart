@@ -35,14 +35,15 @@ class CustomerSeeder extends Seeder
         for ($i = 0; $i < 50; $i++) {
             $customer = Customer::factory()->create();
 
-            // Create 0-3 reviews per customer
-            $reviewCount = rand(0, 3);
-            for ($j = 0; $j < $reviewCount; $j++) {
-                Review::factory()->create([
+            // Create 0-3 reviews per customer, each for a distinct product
+                $reviewCount = rand(0, 3);
+                    $productIds = Product::inRandomOrder()->limit($reviewCount)->pluck('id');
+                        foreach ($productIds as $productId) {
+                        Review::factory()->create([
                     'customer_id' => $customer->id,
-                    'product_id' => Product::inRandomOrder()->first()->id,
-                ]);
-            }
+                    'product_id' => $productId,
+                    ]);
+                    }
 
             $bar->advance();
         }

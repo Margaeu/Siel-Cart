@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Brand;
+
 use App\Models\Category;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,11 +22,9 @@ class ProductFactory extends Factory
         $name = fake()->words(3, true);
         $name = ucwords($name);
         $price = fake()->randomFloat(2, 10, 500);
-        $comparePrice = fake()->boolean(30) ? $price * fake()->randomFloat(2, 1.1, 1.5) : null;
 
         return [
             'category_id' => Category::inRandomOrder()->first()?->id ?? Category::factory(),
-            'brand_id' => fake()->boolean(80) ? (Brand::inRandomOrder()->first()?->id ?? Brand::factory()) : null,
             'name' => $name,
             'slug' => Str::slug($name) . '-' . fake()->unique()->numberBetween(1000, 9999),
             'sku' => 'SKU-' . strtoupper(Str::random(8)),
@@ -40,7 +38,10 @@ class ProductFactory extends Factory
             'is_active' => fake()->boolean(95),
             'is_featured' => fake()->boolean(20),
             'has_variants' => fake()->boolean(30),
+<<<<<<< HEAD
             'weight' => fake()->randomFloat(2, 0.1, 50),
+=======
+>>>>>>> origin/frontend
             'views_count' => fake()->numberBetween(0, 1000),
         ];
     }

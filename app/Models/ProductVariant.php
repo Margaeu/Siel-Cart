@@ -17,7 +17,6 @@ class ProductVariant extends Model
         'sku',
         'name',
         'price',
-        'compare_price',
         'stock_quantity',
         'stock_status',
         'is_active',
@@ -28,7 +27,6 @@ class ProductVariant extends Model
     {
         return [
             'price' => 'decimal:2',
-            'compare_price' => 'decimal:2',
             'stock_quantity' => 'integer',
             'is_active' => 'boolean',
             'sort_order' => 'integer',

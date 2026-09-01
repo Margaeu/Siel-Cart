@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProductImage extends Model
 {
@@ -47,6 +48,6 @@ class ProductImage extends Model
     // Helper Methods
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->image_path);
-    }
+        return Storage::disk('r2')->url($this->image_path);
+}
 }

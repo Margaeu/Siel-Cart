@@ -11,11 +11,11 @@ if (file_exists($maintenance = __DIR__.'/../../CLSU-Shop/storage/framework/maint
 }
 
 // Register the Composer autoloader...
-require __DIR__.'/../../CLSU-Shop/vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 // Bootstrap Laravel and handle the request...
 /** @var Application $app */
-$app = require_once __DIR__.'/../../CLSU-Shop/bootstrap/app.php';
+$app = require_once __DIR__.'/../bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $request = Illuminate\Http\Request::capture();

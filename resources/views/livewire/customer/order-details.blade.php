@@ -70,9 +70,9 @@
                             <div class="flex gap-4 pb-4 border-b last:border-b-0">
                                 <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                                     @if($item->product && $item->product->primaryImage)
-                                        <img src="{{ asset('storage/' . $item->product->primaryImage->image_path) }}" 
-                                             alt="{{ $item->product_name }}"
-                                             class="w-full h-full object-cover">
+                                        <img src="{{ $image->url }}" 
+                                            alt="{{ $product->name }}"
+                                            class="w-full h-full object-cover">
                                     @endif
                                 </div>
                                 <div class="flex-1">

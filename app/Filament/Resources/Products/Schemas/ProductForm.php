@@ -2,21 +2,21 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
-use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Tabs;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\RichEditor;
+use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\ToggleButtons;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductForm
@@ -64,22 +64,25 @@ class ProductForm
                                     ])
                             ]),
                         Tab::make('Pricing & Inventory')
-                            ->prefix('₱')
                             ->schema([
                                 Section::make('Pricing')
                                     ->schema([
                                         TextInput::make('sku')
                                             ->label('SKU')
                                             ->unique(ignoreRecord: true)
-                                            ->default(fn() => 'SKU-'. strtoupper(Str::random(8)))
-                                            ->helperText('Stock keeping Unit -  unique identifier')
+                                            //->default(fn() => 'SKU-' . strtoupper(Str::random(8)))
+                                            ->helperText('Stock keeping Unit - unique identifier')
                                             ->required(),
                                         TextInput::make('price')
                                             ->required()
                                             ->numeric()
                                             ->minValue(0)
                                             ->step(0.01)
+<<<<<<< HEAD
                                             ->helperText('Selling Price') 
+=======
+                                            ->helperText('Selling Price')
+>>>>>>> origin/frontend
                                             ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
@@ -119,25 +122,43 @@ class ProductForm
                                     ->description('Upload multiple images. The first image will be the primary image.')
                                     ->schema([
                                         FileUpload::make('images')
+                                            ->disk('r2')
+                                            ->visibility('public')
                                             ->label('Product Images')
                                             ->multiple()
                                             ->image()
                                             ->directory('products')
-                                            ->imageEditor()
                                             ->maxSize(2048)
                                             ->reorderable()
                                             ->columnSpanFull()
+                                            ->orientImagesFromExif(false)
+                                            ->imagePreviewHeight('250')
+                                            // Bypass client-side size calculation checks in FilePond
+                                            ->extraAttributes([
+                                                'data-filepond-type' => 'image',
+                                            ])
+                                            ->extraInputAttributes([
+                                                'data-filepond-item-property-size' => 'false',
+                                            ])
                                             ->helperText('You can drag and drop to reorder images')
                                             ->saveRelationshipsUsing(function ($component, $state, $record) {
-                                                // delete exisiting images
+                                                // 1. Delete existing image files from Cloudflare R2
+                                                foreach ($record->images as $existingImage) {
+                                                    if ($existingImage->image_path) {
+                                                        Storage::disk('r2')->delete($existingImage->image_path);
+                                                    }
+                                                }
+
+                                                // 2. Delete existing database records
                                                 $record->images()->delete();
 
+                                                // 3. Save new images
                                                 if (is_array($state)) {
                                                     foreach ($state as $index => $imagePath) {
                                                         $record->images()->create([
                                                             'image_path' => $imagePath,
                                                             'is_primary' => $index === 0,
-                                                            'sort_order' => $index
+                                                            'sort_order' => $index,
                                                         ]);
                                                     }
                                                 }
@@ -152,7 +173,7 @@ class ProductForm
                                     ->live()
                                     ->required(),
                                 Section::make('Product Variants')
-                                    ->description('Add variants like different sizez or colors')
+                                    ->description('Add variants like different sizes or colors')
                                     ->schema([
                                         Repeater::make('variants')
                                             ->relationship('variants')
@@ -164,8 +185,8 @@ class ProductForm
                                                 TextInput::make('sku')
                                                     ->label('SKU')
                                                     ->unique(ignoreRecord: true)
-                                                    ->helperText('Stock keeping Unit -  unique identifier')
-                                                    ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
+                                                    ->helperText('Stock keeping Unit - unique identifier')
+                                                    // ->default(fn() => 'VAR-' . strtoupper(Str::random(8)))
                                                     ->required()
                                                     ->columnSpan(2),
                                                 TextInput::make('price')
@@ -174,6 +195,7 @@ class ProductForm
                                                     ->prefix('$')
                                                     ->minValue(0)
                                                     ->step(0.01),
+<<<<<<< HEAD
                                                 TextInput::make('compare_price')
                                                     ->label('Compare Price')
                                                     ->numeric()
@@ -181,6 +203,8 @@ class ProductForm
                                                     ->minValue(0)
                                                     ->step(0.01),
 
+=======
+>>>>>>> origin/frontend
                                                 TextInput::make('stock_quantity')
                                                     ->label('Stock')
                                                     ->numeric()
@@ -210,11 +234,10 @@ class ProductForm
                                     ->visible(fn(callable $get) => $get('has_variants'))
                                     ->columnSpanFull()
                             ]),
-                        // settings
                         Tab::make('Settings')
                             ->icon(Heroicon::Cog6Tooth)
                             ->schema([
-                                Section::make('Poduct status')
+                                Section::make('Product status')
                                     ->schema([
                                         Toggle::make('is_active')
                                             ->required(),
@@ -228,9 +251,10 @@ class ProductForm
                                             ->content(fn($record) => $record?->views_count ?? 0),
                                         Placeholder::make('created_at')
                                             ->label('Created')
-                                            ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-')
+                                            ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
                             ]),
+<<<<<<< HEAD
                         /*
                         Tab::make('SEO')
                             ->icon(Heroicon::MagnifyingGlass)
@@ -247,6 +271,9 @@ class ProductForm
                         */
                     ]),
 
+=======
+                    ])
+>>>>>>> origin/frontend
             ]);
     }
 }

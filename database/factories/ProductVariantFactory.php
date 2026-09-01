@@ -28,7 +28,6 @@ class ProductVariantFactory extends Factory
             'sku' => 'VAR-' . strtoupper(Str::random(8)),
             'name' => $name,
             'price' => $price,
-            'compare_price' => fake()->boolean(30) ? $price * 1.3 : null,
             'stock_quantity' => fake()->numberBetween(0, 100),
             'stock_status' => fake()->randomElement(['in_stock', 'in_stock', 'out_of_stock']),
             'is_active' => true,

@@ -30,7 +30,7 @@ class CategoryForm
                             ->default(null)
                             ->columnSpanFull(),
                         FileUpload::make('image')
-                            ->disk('public')
+                            ->disk('r2')
                             ->directory('categories')
                             ->imageEditor()
                             ->preserveFilenames()
@@ -39,7 +39,7 @@ class CategoryForm
                     ]),
 
                 Section::make('Display Settings')
-                ->columns(2)
+                    ->columns(2)
                     ->schema([
                         Toggle::make('is_active')
                             ->required(),
@@ -48,16 +48,6 @@ class CategoryForm
                             ->numeric()
                             ->default(0),
                     ]),
-                /*
-                Section::make('SEO')
-                    ->schema([
-                        TextInput::make('meta_title')
-                            ->default(null),
-                        Textarea::make('meta_description')
-                            ->default(null)
-                            ->columnSpanFull(),
-                    ]),
-                */
 
             ]);
     }

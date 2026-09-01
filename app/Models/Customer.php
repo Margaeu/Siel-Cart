@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Customer extends Authenticatable
 {
     use HasFactory, SoftDeletes;
+
     protected $fillable = [
         'first_name',
         'last_name',
@@ -21,6 +22,7 @@ class Customer extends Authenticatable
         'remember_token',
         'email_verified_at',
     ];
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -57,6 +59,20 @@ class Customer extends Authenticatable
     }
 
     // Helper Methods
+    
+    /**
+     * Get the customer's initials.
+     */
+    public function initials(): string
+    {
+        $firstName = mb_substr($this->first_name ?? '', 0, 1);
+        $lastName = mb_substr($this->last_name ?? '', 0, 1);
+
+        $initials = strtoupper($firstName . $lastName);
+
+        return $initials ?: 'CU';
+    }
+
     public function getTotalSpentAttribute()
     {
         return $this->orders()->where('payment_status', 'paid')->sum('total');

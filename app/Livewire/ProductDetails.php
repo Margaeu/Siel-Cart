@@ -15,7 +15,7 @@ class ProductDetails extends Component
 
     public function mount($slug){
         $this->product = Product::where('slug',$slug)
-        ->with(['category','brand','images','variants','approvedReviews.customer'])
+        ->with(['category','images','variants','approvedReviews.customer'])
         ->firstOrFail();
 
         // increment the views
