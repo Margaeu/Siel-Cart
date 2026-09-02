@@ -11,10 +11,10 @@ class OrderDetails extends Component
     public Order $order;
 
     public function mount($id){
-        $this->order = Order::where('id',$id)
-        ->where('customer_id',auth('customer')->id())
-        ->with(['items.product.primaryImage','statusHistories'])
-        ->firstOrFail();
+        $this->order = Order::where('id', $id)
+            ->where('customer_id', auth('customer')->id())
+            ->with(['customer', 'items.product.primaryImage','statusHistories',])
+            ->firstOrFail();
     }
     public function render()
     {

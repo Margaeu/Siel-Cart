@@ -21,11 +21,9 @@ return new class extends Migration
             $table->decimal('total', 10, 2);
 
             // Pickup details
-            $table->string('pickup_contact_name'); // who received the order
-            $table->string('pickup_contact_phone'); // number of the claimant
             $table->date('pickup_date')->nullable();
-            $table->string('pickup_location')->nullable();
-            $table->string('claim_number')->unique()->nullable();
+            $table->string('pickup_location')->default('UBAP Office');; 
+            $table->string('claim_number')->unique()->nullable(); // can only be generated when it is ready for pickup
 
             // Payment & Status
             $table->enum('payment_method', ['cash_on_pickup'])->default('cash_on_pickup');
@@ -33,6 +31,13 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->enum('status', ['pending', 'processing', 'ready_for_pickup', 'completed', 'cancelled'])->default('pending');
             $table->text('admin_notes')->nullable();
+
+            // for claiming the orders
+            // Both are nullable because the claimant is designated after the
+            // order is placed, not at checkout. The person collecting the
+            // order is not necessarily the person who bought it.
+            $table->string('pickup_contact_name')->nullable(); // who received the order
+            $table->string('pickup_contact_phone')->nullable(); // number of the claimant
 
             $table->timestamps();
             $table->softDeletes();

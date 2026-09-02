@@ -89,12 +89,12 @@
             <div class="flex items-center gap-2">
 
                 <span class="text-xl font-bold text-gray-900">
-                    ${{ number_format($product->price, 2) }}
+                    ₱{{ number_format($product->price, 2) }}
                 </span>
 
                 @if($product->compare_price)
                     <span class="text-sm text-gray-500 line-through">
-                        ${{ number_format($product->compare_price, 2) }}
+                        ₱{{ number_format($product->compare_price, 2) }}
                     </span>
                 @endif
 

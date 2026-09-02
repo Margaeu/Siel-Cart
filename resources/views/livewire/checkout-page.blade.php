@@ -1,376 +1,166 @@
 <div class="bg-gray-50 py-8">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
-        <!-- Progress Steps -->
+        {{-- Header --}}
         <div class="mb-8">
-            <div class="flex items-center justify-center">
-                <div class="flex items-center">
-                    <div class="flex items-center {{ $step >= 1 ? 'text-[#1E6031]' : 'text-gray-400' }}">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full border-2 {{ $step >= 1 ? 'border-[#1E6031] bg-[#1E6031] text-white' : 'border-gray-300' }}">
-                            @if($step > 1)
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            @else
-                                <span class="font-semibold">1</span>
-                            @endif
-                        </div>
-                        <span class="ml-2 font-medium">Shipping</span>
-                    </div>
-                    <div class="w-24 h-1 mx-4 {{ $step >= 2 ? 'bg-[#1E6031]' : 'bg-gray-300' }}"></div>
-                    <div class="flex items-center {{ $step >= 2 ? 'text-[#1E6031]' : 'text-gray-400' }}">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full border-2 {{ $step >= 2 ? 'border-[#1E6031] bg-[#1E6031] text-white' : 'border-gray-300' }}">
-                            @if($step > 2)
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            @else
-                                <span class="font-semibold">2</span>
-                            @endif
-                        </div>
-                        <span class="ml-2 font-medium">Review</span>
-                    </div>
-                    <div class="w-24 h-1 mx-4 {{ $step >= 3 ? 'bg-[#1E6031]' : 'bg-gray-300' }}"></div>
-                    <div class="flex items-center {{ $step >= 3 ? 'text-[#1E6031]' : 'text-gray-400' }}">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-full border-2 {{ $step >= 3 ? 'border-[#1E6031] bg-[#1E6031] text-white' : 'border-gray-300' }}">
-                            <span class="font-semibold">3</span>
-                        </div>
-                        <span class="ml-2 font-medium">Payment</span>
-                    </div>
-                </div>
-            </div>
+            <h1 class="text-3xl font-bold text-gray-900">Checkout</h1>
+            <p class="text-gray-600 mt-1">
+                Everything in your cart will be ordered. To change what you are buying,
+                <a href="{{ route('cart.index') }}" class="text-[#1E6031] font-medium hover:underline">go back to your cart</a>.
+            </p>
         </div>
 
-        <div class="lg:grid lg:grid-cols-3 lg:gap-8">
-            <!-- Main Content -->
-            <div class="lg:col-span-2">
-                @if (session()->has('error'))
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                        {{ session('error') }}
-                    </div>
-                @endif
-
-                <!-- Step 1: Shipping Address -->
-                @if($step === 1)
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-xl font-bold text-gray-900 mb-6">Shipping Address</h2>
-
-                        <!-- Use Existing Address -->
-                        @if($addresses->count() > 0)
-                            <div class="mb-6">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" 
-                                           wire:model.live="useExistingAddress"
-                                           class="w-4 h-4 text-[#1E6031] rounded focus:ring-[#1E6031]">
-                                    <span class="font-medium">Use saved address</span>
-                                </label>
-                            </div>
-
-                            @if($useExistingAddress)
-                                <div class="grid gap-4 mb-6">
-                                    @foreach($addresses as $address)
-                                        <label class="relative cursor-pointer">
-                                            <input type="radio" 
-                                                   wire:model="selectedAddressId"
-                                                   value="{{ $address->id }}"
-                                                   class="peer sr-only">
-                                            <div class="border-2 rounded-lg p-4 peer-checked:border-[#1E6031] peer-checked:bg-[#f2f7f4] hover:border-[#1E6031] transition">
-                                                <div class="flex items-start justify-between">
-                                                    <div>
-                                                        <p class="font-semibold text-gray-900">{{ $address->full_name }}</p>
-                                                        <p class="text-gray-600">{{ $address->phone }}</p>
-                                                        <p class="text-gray-600 mt-2">{{ $address->full_address }}</p>
-                                                        @if($address->is_default)
-                                                            <span class="inline-block mt-2 bg-[#f2f7f4] text-[#1E6031] text-xs px-2 py-1 rounded font-medium">
-                                                                Default
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @endif
-                        @endif
-
-                        <!-- New Address Form -->
-                        @if(!$useExistingAddress || $addresses->count() === 0)
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                                    <input type="text" 
-                                           wire:model="full_name"
-                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                    @error('full_name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                                    <input type="tel" 
-                                           wire:model="phone"
-                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                    @error('phone') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
-                                    <input type="text" 
-                                           wire:model="address_line_1"
-                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                    @error('address_line_1') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Address Line 2</label>
-                                    <input type="text" 
-                                           wire:model="address_line_2"
-                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                                        <input type="text" 
-                                               wire:model="city"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                        @error('city') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                                        <input type="text" 
-                                               wire:model="state"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
-                                        <input type="text" 
-                                               wire:model="postal_code"
-                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                        @error('postal_code') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Country *</label>
-                                        <select wire:model="country"
-                                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                            <option value="US">United States</option>
-                                            <option value="CA">Canada</option>
-                                            <option value="UK">United Kingdom</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <div class="flex justify-between mt-6 pt-6 border-t">
-                            <a href="{{ route('cart.index') }}" 
-                               class="text-gray-600 hover:text-gray-900 font-medium">
-                                ← Back to Cart
-                            </a>
-                            <button wire:click="nextStep"
-                                    class="bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold">
-                                Continue to Review
-                            </button>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Step 2: Review Order -->
-                @if($step === 2)
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-xl font-bold text-gray-900 mb-6">Review Your Order</h2>
-
-                        <!-- Order Items -->
-                        <div class="space-y-4 mb-6">
-                            @foreach($cart as $item)
-                                <div class="flex gap-4 pb-4 border-b">
-                                    <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                        @if($item['image'])
-                                            <img src="{{ $item['image'] }}"
-                                                 alt="{{ $item['name'] }}"
-                                                 class="w-full h-full object-cover">
-                                        @endif
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="font-semibold text-gray-900">{{ $item['name'] }}</h3>
-                                        @if($item['variant_name'])
-                                            <p class="text-sm text-gray-600">{{ $item['variant_name'] }}</p>
-                                        @endif
-                                        <p class="text-sm text-gray-600">Quantity: {{ $item['quantity'] }}</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-gray-900">${{ number_format($item['price'] * $item['quantity'], 2) }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        <!-- Customer Notes -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Order Notes (Optional)</label>
-                            <textarea wire:model="customerNotes"
-                                      rows="3"
-                                      placeholder="Special instructions for your order..."
-                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]"></textarea>
-                        </div>
-
-                        <div class="flex justify-between pt-6 border-t">
-                            <button wire:click="previousStep"
-                                    class="text-gray-600 hover:text-gray-900 font-medium">
-                                ← Back to Shipping
-                            </button>
-                            <button wire:click="nextStep"
-                                    class="bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold">
-                                Continue to Payment
-                            </button>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Step 3: Payment -->
-                @if($step === 3)
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h2 class="text-xl font-bold text-gray-900 mb-6">Payment Method</h2>
-
-                        <div class="space-y-4 mb-6">
-                            <label class="relative cursor-pointer">
-                                <input type="radio" 
-                                       wire:model="paymentMethod"
-                                       value="stripe"
-                                       class="peer sr-only">
-                                <div class="border-2 rounded-lg p-4 peer-checked:border-[#1E6031] peer-checked:bg-[#f2f7f4] hover:border-[#1E6031] transition">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                            </svg>
-                                            <div>
-                                                <p class="font-semibold text-gray-900">Credit/Debit Card</p>
-                                                <p class="text-sm text-gray-600">Pay securely with Stripe</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-
-                            <label class="relative cursor-pointer">
-                                <input type="radio" 
-                                       wire:model="paymentMethod"
-                                       value="cash_on_delivery"
-                                       class="peer sr-only">
-                                <div class="border-2 rounded-lg p-4 peer-checked:border-[#1E6031] peer-checked:bg-[#f2f7f4] hover:border-[#1E6031] transition">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                            </svg>
-                                            <div>
-                                                <p class="font-semibold text-gray-900">Cash on Delivery</p>
-                                                <p class="text-sm text-gray-600">Pay when you receive your order</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-
-                        <div class="flex justify-between pt-6 border-t">
-                            <button wire:click="previousStep"
-                                    class="text-gray-600 hover:text-gray-900 font-medium">
-                                ← Back to Review
-                            </button>
-                            <button wire:click="placeOrder"
-                                    class="bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold">
-                                Place Order
-                            </button>
-                        </div>
-                    </div>
-                @endif
+        @if (session()->has('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                {{ session('error') }}
             </div>
+        @endif
 
-            <!-- Order Summary -->
-            <div>
-                <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-                    
-                    <div class="space-y-3 mb-6">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Subtotal</span>
-                            <span class="font-medium">${{ number_format($subtotal, 2) }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Shipping</span>
-                            <span class="font-medium">
-                                @if($shippingCost > 0)
-                                    ${{ number_format($shippingCost, 2) }}
-                                @else
-                                    <span class="text-[#1E6031]">FREE</span>
-                                @endif
-                            </span>
-                        </div>
-                        @if($discountAmount > 0)
-                            <div class="flex justify-between text-[#1E6031]">
-                                <span>Discount</span>
-                                <span class="font-medium">-${{ number_format($discountAmount, 2) }}</span>
-                            </div>
-                        @endif
+        <div class="space-y-6">
+
+            {{-- ── Section 1: Customer Information ───────────────────────── --}}
+            <section class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[#1E6031] text-white font-semibold text-sm">1</span>
+                    <h2 class="text-xl font-bold text-gray-900">Customer Information</h2>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <p class="text-sm text-gray-600">Name</p>
+                        <p class="font-semibold text-gray-900">{{ $customer->name }}</p>
                     </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Email</p>
+                        <p class="font-semibold text-gray-900">{{ $customer->email }}</p>
+                    </div>
+                </div>
 
-                    <!-- Coupon Code -->
-                    @if(!$appliedCoupon)
-                        <div class="mb-6 pb-6 border-b">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Coupon Code</label>
-                            <div class="flex gap-2">
-                                <input type="text" 
-                                       wire:model="couponCode"
-                                       placeholder="Enter code"
-                                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031]">
-                                <button wire:click="applyCoupon"
-                                        class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition">
-                                    Apply
-                                </button>
-                            </div>
-                            @if (session()->has('coupon_error'))
-                                <p class="text-red-600 text-sm mt-2">{{ session('coupon_error') }}</p>
-                            @endif
-                            @if (session()->has('coupon_success'))
-                                <p class="text-[#1E6031] text-sm mt-2">{{ session('coupon_success') }}</p>
-                            @endif
-                        </div>
-                    @else
-                        <div class="mb-6 pb-6 border-b">
-                            <div class="flex items-center justify-between bg-[#f2f7f4] p-3 rounded-lg">
-                                <div>
-                                    <p class="text-sm font-medium text-[#1E6031]">Coupon Applied</p>
-                                    <p class="text-xs text-[#1E6031]">{{ $appliedCoupon->code }}</p>
-                                </div>
-                                <button wire:click="removeCoupon"
-                                        class="text-red-600 hover:text-red-700">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    @endif
+                <p class="text-sm text-gray-500 mt-4">
+                    This comes from your account. Update it in your
+                    <a href="{{ route('customer.profile') }}" class="text-[#1E6031] hover:underline">profile</a>.
+                </p>
+            </section>
 
-                    <div class="border-t pt-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-lg font-semibold">Total</span>
-                            <span class="text-2xl font-bold text-[#1E6031]">
-                                ${{ number_format($total, 2) }}
-                            </span>
+            {{-- ── Section 2: Products Ordered ───────────────────────────── --}}
+            <section class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[#1E6031] text-white font-semibold text-sm">2</span>
+                    <h2 class="text-xl font-bold text-gray-900">Products Ordered</h2>
+                </div>
+
+                <div class="divide-y divide-gray-200">
+                    @foreach($cart as $item)
+                        <div wire:key="checkout-item-{{ $item['cart_item_id'] }}" class="flex gap-4 py-4 first:pt-0 last:pb-0">
+                            <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                @if($item['image'])
+                                    <img src="{{ $item['image'] }}"
+                                         alt="{{ $item['name'] }}"
+                                         class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-gray-400 text-2xl font-semibold">
+                                        {{ substr($item['name'], 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-gray-900">{{ $item['name'] }}</h3>
+                                @if($item['variant_name'])
+                                    <p class="text-sm text-gray-600 mt-0.5">Variation: {{ $item['variant_name'] }}</p>
+                                @endif
+                                <p class="text-sm text-gray-500 mt-0.5">SKU: {{ $item['sku'] }}</p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    ₱{{ number_format($item['price'], 2) }} × {{ $item['quantity'] }}
+                                </p>
+                            </div>
+
+                            <div class="text-right flex-shrink-0">
+                                <p class="font-bold text-gray-900">
+                                    ₱{{ number_format($item['price'] * $item['quantity'], 2) }}
+                                </p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+
+            {{-- ── Section 3: Fulfilment, Payment & Placement ────────────── --}}
+            <section class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[#1E6031] text-white font-semibold text-sm">3</span>
+                    <h2 class="text-xl font-bold text-gray-900">Fulfilment &amp; Payment</h2>
+                </div>
+
+                {{-- Fulfilment method: fixed, nothing to choose --}}
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Fulfilment Method</h3>
+                    <div class="border-2 border-[#1E6031] bg-[#f2f7f4] rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-[#1E6031] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-gray-900">Pickup</p>
+                                <p class="text-sm text-gray-600">Collect your order at the {{ $pickupLocation }} once it is ready.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                {{-- Payment method: fixed, nothing to choose --}}
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Payment Method</h3>
+                    <div class="border-2 border-[#1E6031] bg-[#f2f7f4] rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-[#1E6031] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold text-gray-900">{{ $paymentMethod }}</p>
+                                <p class="text-sm text-gray-600">Pay in cash when you collect your order.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Order total --}}
+                <div class="border-t pt-6">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Order Total</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Merchandise Subtotal ({{ count($cart) }} {{ Str::plural('item', count($cart)) }})</span>
+                            <span class="font-medium text-gray-900">₱{{ number_format($subtotal, 2) }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-center border-t pt-3">
+                            <span class="text-lg font-semibold text-gray-900">Order Total</span>
+                            <span class="text-2xl font-bold text-[#1E6031]">₱{{ number_format($total, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Placement --}}
+                <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 mt-6 pt-6 border-t">
+                    <a href="{{ route('cart.index') }}"
+                       class="text-gray-600 hover:text-gray-900 font-medium text-center sm:text-left">
+                        ← Back to Cart
+                    </a>
+
+                    <button type="button"
+                            wire:click="placeOrder"
+                            wire:target="placeOrder"
+                            wire:loading.attr="disabled"
+                            @disabled($placingOrder)
+                            class="bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="placeOrder">Place Order</span>
+                        <span wire:loading wire:target="placeOrder">Placing order…</span>
+                    </button>
+                </div>
+            </section>
         </div>
     </div>
 </div>

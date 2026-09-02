@@ -103,9 +103,9 @@
                                 $variant = $product->variants->find($selectedVariant);
                             @endphp
                             <div class="flex items-center gap-3">
-                                <span class="text-3xl font-bold text-gray-900">${{ number_format($variant->price, 2) }}</span>
+                                <span class="text-3xl font-bold text-gray-900">₱{{ number_format($variant->price, 2) }}</span>
                                 @if($variant->compare_price)
-                                    <span class="text-xl text-gray-500 line-through">${{ number_format($variant->compare_price, 2) }}</span>
+                                    <span class="text-xl text-gray-500 line-through">₱{{ number_format($variant->compare_price, 2) }}</span>
                                     <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
                                         -{{ $variant->discount_percentage }}%
                                     </span>
@@ -113,9 +113,9 @@
                             </div>
                         @else
                             <div class="flex items-center gap-3">
-                                <span class="text-3xl font-bold text-gray-900">${{ number_format($product->price, 2) }}</span>
+                                <span class="text-3xl font-bold text-gray-900">₱{{ number_format($product->price, 2) }}</span>
                                 @if($product->compare_price)
-                                    <span class="text-xl text-gray-500 line-through">${{ number_format($product->compare_price, 2) }}</span>
+                                    <span class="text-xl text-gray-500 line-through">₱{{ number_format($product->compare_price, 2) }}</span>
                                     <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
                                         -{{ $product->discount_percentage }}%
                                     </span>
@@ -139,7 +139,7 @@
                                             style="{{ $selectedVariant === $variant->id ? 'border-color: #1E6031; background-color: #f2f7f4;' : '' }}"
                                             class="border-2 rounded-lg p-3 text-left transition {{ $selectedVariant === $variant->id ? '' : 'border-gray-300 hover:border-gray-400' }}">
                                         <p class="font-medium text-gray-900">{{ $variant->name }}</p>
-                                        <p class="text-sm text-gray-600">${{ number_format($variant->price, 2) }}</p>
+                                        <p class="text-sm text-gray-600">₱{{ number_format($variant->price, 2) }}</p>
                                         <p class="text-xs {{ $variant->stock_status === 'in_stock' ? 'text-emerald-600' : 'text-red-600' }}">
                                             {{ $variant->stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock' }}
                                         </p>

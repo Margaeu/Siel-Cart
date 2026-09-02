@@ -43,7 +43,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-600 text-sm font-medium">Total Spent</p>
-                        <p class="text-3xl font-bold text-[#1E6031]">${{ number_format($stats['total_spent'], 2) }}</p>
+                        <p class="text-3xl font-bold text-[#1E6031]">₱{{ number_format($stats['total_spent'], 2) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-emerald-50 text-[#1E6031] rounded-full flex items-center justify-center">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@
                                             <p class="text-sm text-gray-600">{{ $order->created_at->format('M d, Y') }}</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-bold text-[#1E6031]">${{ number_format($order->total, 2) }}</p>
+                                            <p class="font-bold text-[#1E6031]">₱{{ number_format($order->total, 2) }}</p>
                                             <span class="inline-block px-2.5 py-1 text-xs font-medium rounded-full {{ 
                                                 $order->status === 'delivered' ? 'bg-emerald-100 text-[#1E6031]' : 
                                                 ($order->status === 'cancelled' ? 'bg-red-100 text-red-800' : 

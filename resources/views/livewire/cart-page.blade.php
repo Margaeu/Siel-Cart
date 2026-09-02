@@ -123,7 +123,7 @@
                                         when it does not.
                                     --}}
                                     <p class="text-lg font-bold text-[#1E6031]">
-                                        ${{ number_format($item->price, 2) }}
+                                        ₱{{ number_format($item->price, 2) }}
                                     </p>
 
                                     <!-- Availability Notice -->
@@ -208,7 +208,7 @@
 
                                     <!-- Item Subtotal -->
                                     <p class="text-lg font-bold text-gray-900">
-                                        ${{ number_format($item->subtotal, 2) }}
+                                        ₱{{ number_format($item->subtotal, 2) }}
                                     </p>
 
                                 </div>
@@ -257,19 +257,7 @@
                                 </span>
 
                                 <span class="font-medium">
-                                    ${{ number_format($this->subtotal, 2) }}
-                                </span>
-
-                            </div>
-
-                            <div class="flex justify-between">
-
-                                <span class="text-gray-600">
-                                    Shipping
-                                </span>
-
-                                <span class="font-medium">
-                                    Calculated at checkout
+                                    ₱{{ number_format($this->subtotal, 2) }}
                                 </span>
 
                             </div>
@@ -286,7 +274,7 @@
                                 </span>
 
                                 <span class="text-2xl font-bold text-[#1E6031]">
-                                    ${{ number_format($this->subtotal, 2) }}
+                                    ₱{{ number_format($this->subtotal, 2) }}
                                 </span>
 
                             </div>

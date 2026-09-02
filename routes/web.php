@@ -14,7 +14,6 @@ use App\Livewire\Settings\TwoFactor;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Customer\OrderDetails;
-use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Api\ChatController;
 
 Route::get('/', HomePage::class)->name('home');
@@ -34,10 +33,6 @@ Route::middleware('auth:customer')->group(function(){
     Route::get('/my-account/orders', Orders::class)->name('customer.orders');
     Route::get('/my-account/orders/{id}', OrderDetails::class)->name('customer.orders.show');
     Route::get('/my-account/profile', \App\Livewire\Customer\Profile::class)->name('customer.profile');
-
-    // checkout success/cancel routes
-    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/cancel/{order}', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
     
     // logout
     Route::post('/logout', function(){

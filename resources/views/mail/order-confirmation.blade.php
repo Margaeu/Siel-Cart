@@ -14,7 +14,7 @@
             padding: 20px;
         }
         .header {
-            background: rgb(43, 43, 228);
+            background: #1E6031;
             color: white;
             padding: 30px;
             text-align: center;
@@ -31,6 +31,13 @@
             border-radius: 8px;
             margin: 20px 0;
         }
+        .pickup-box {
+            background: #f2f7f4;
+            border: 1px solid #1E6031;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
         .item {
             border-bottom: 1px solid #e5e7eb;
             padding: 15px 0;
@@ -39,7 +46,7 @@
             border-bottom: none;
         }
         .total {
-            background: #4F46E5;
+            background: #1E6031;
             color: white;
             padding: 15px;
             border-radius: 8px;
@@ -47,20 +54,19 @@
         }
         .button {
             display: inline-block;
-            background: #4F46E5;
+            background: #1E6031;
             color: white;
             padding: 12px 30px;
             text-decoration: none;
             border-radius: 6px;
             margin: 20px 0;
         }
-        .footer {
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
+        .claim-code {
+            font-family: monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #1E6031;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -71,15 +77,18 @@
 
     <div class="content">
         <p>Hi {{ $order->customer->name }},</p>
-        
-        <p>We've received your order and are getting it ready. We'll notify you when it's on its way!</p>
+
+        <p>
+            We've received your order and are getting it ready. We'll let you know
+            once it is ready to collect at the {{ Str::headline($order->pickup_location) }}.
+        </p>
 
         <div class="order-details">
             <h2 style="margin-top: 0;">Order Details</h2>
             <p><strong>Order Number:</strong> {{ $order->order_number }}</p>
             <p><strong>Order Date:</strong> {{ $order->created_at->format('M d, Y h:i A') }}</p>
-            <p><strong>Payment Method:</strong> {{ $order->payment_method === 'stripe' ? 'Credit/Debit Card' : 'Cash on Delivery' }}</p>
-            <p><strong>Payment Status:</strong> {{ ucfirst($order->payment_status) }}</p>
+            <p><strong>Payment Method:</strong> Cash on Pickup</p>
+            <p style="margin-bottom: 0;"><strong>Payment Status:</strong> {{ ucfirst($order->payment_status) }}</p>
         </div>
 
         <h3>Order Items</h3>
@@ -87,77 +96,65 @@
             <div class="item">
                 <strong>{{ $item->product_name }}</strong>
                 @if($item->variant_name)
-                    <br><span style="color: #6b7280;">{{ $item->variant_name }}</span>
+                    <br><span style="color: #6b7280;">Variation: {{ $item->variant_name }}</span>
                 @endif
-                <br>Quantity: {{ $item->quantity }} × ${{ number_format($item->price, 2) }}
-                <br><strong>${{ number_format($item->subtotal, 2) }}</strong>
+                <br>Quantity: {{ $item->quantity }} &times; &#8369;{{ number_format($item->price, 2) }}
+                <br><strong>&#8369;{{ number_format($item->subtotal, 2) }}</strong>
             </div>
         @endforeach
 
         <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
             <table width="100%" style="margin-top: 10px;">
                 <tr>
-                    <td>Subtotal:</td>
-                    <td align="right">${{ number_format($order->subtotal, 2) }}</td>
+                    <td>Merchandise Subtotal:</td>
+                    <td align="right">&#8369;{{ number_format($order->subtotal, 2) }}</td>
                 </tr>
-                @if($order->discount_amount > 0)
-                <tr>
-                    <td style="color: #059669;">Discount:</td>
-                    <td align="right" style="color: #059669;">-${{ number_format($order->discount_amount, 2) }}</td>
-                </tr>
-                @endif
-                <tr>
-                    <td>Shipping:</td>
-                    <td align="right">
-                        @if($order->shipping_cost > 0)
-                            ${{ number_format($order->shipping_cost, 2) }}
-                        @else
-                            <span style="color: #059669;">FREE</span>
-                        @endif
-                    </td>
-                </tr>
-                @if($order->tax_amount > 0)
-                <tr>
-                    <td>Tax:</td>
-                    <td align="right">${{ number_format($order->tax_amount, 2) }}</td>
-                </tr>
-                @endif
             </table>
         </div>
 
         <div class="total">
             <table width="100%">
                 <tr>
-                    <td><strong style="font-size: 18px;">Total:</strong></td>
-                    <td align="right"><strong style="font-size: 24px;">${{ number_format($order->total, 2) }}</strong></td>
+                    <td><strong style="font-size: 18px;">Order Total:</strong></td>
+                    <td align="right"><strong style="font-size: 24px;">&#8369;{{ number_format($order->total, 2) }}</strong></td>
                 </tr>
             </table>
         </div>
 
-        <h3>Shipping Address</h3>
-        <p>
-            {{ $order->shipping_full_name }}<br>
-            {{ $order->shipping_phone }}<br>
-            {{ $order->shipping_address_line_1 }}<br>
-            @if($order->shipping_address_line_2)
-                {{ $order->shipping_address_line_2 }}<br>
+        <div class="pickup-box">
+            <h3 style="margin-top: 0;">Pickup Details</h3>
+            <p style="margin: 0;"><strong>Location:</strong> {{ Str::headline($order->pickup_location) }}</p>
+            <p style="margin: 6px 0 0;"><strong>Claimed by:</strong> {{ $order->pickup_contact_name }}</p>
+            <p style="margin: 6px 0 0;"><strong>Contact number:</strong> {{ $order->pickup_contact_phone }}</p>
+            <p style="margin: 6px 0 0;">
+                <strong>Pickup date:</strong>
+                @if($order->pickup_date)
+                    {{ $order->pickup_date->format('M d, Y') }}
+                @else
+                    To be scheduled
+                @endif
+            </p>
+
+            {{-- A claim number only exists once the order is ready to collect,
+                 so it is normally absent from this confirmation. --}}
+            @if($order->claim_number)
+                <p style="margin: 14px 0 0;"><strong>Claim number:</strong></p>
+                <p style="margin: 2px 0 0;" class="claim-code">{{ $order->claim_number }}</p>
+                <p style="margin: 6px 0 0; font-size: 14px; color: #6b7280;">
+                    Present this when you collect your order.
+                </p>
+            @else
+                <p style="margin: 14px 0 0; font-size: 14px; color: #6b7280;">
+                    Your claim number will be sent once the order is ready to collect.
+                </p>
             @endif
-            {{ $order->shipping_city }}, {{ $order->shipping_state }} {{ $order->shipping_postal_code }}<br>
-            {{ $order->shipping_country }}
-        </p>
+        </div>
 
         <div style="text-align: center;">
             <a href="{{ route('customer.orders.show', $order->id) }}" class="button">
                 View Order Details
             </a>
         </div>
-
-        @if($order->customer_notes)
-            <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                <strong>Your Notes:</strong><br>
-                {{ $order->customer_notes }}
-            </div>
-        @endif
     </div>
 </body>
 </html>

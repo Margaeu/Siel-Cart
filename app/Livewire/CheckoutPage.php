@@ -2,39 +2,38 @@
 
 namespace App\Livewire;
 
-use Stripe\Stripe;
 use App\Models\Order;
-use App\Models\Coupon;
-use App\Models\Address;
-use App\Models\Setting;
+use App\Models\Product;
 use Livewire\Component;
 use App\Models\OrderItem;
+use App\Models\ProductVariant;
 use App\Services\CartService;
-use App\Mail\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Stripe\Checkout\Session as StripeSession;
 
 class CheckoutPage extends Component
 {
-    public $cart = [];
-    public $step = 1; // 1: Address, 2: Review, 3: Payment
-     // Address fields
-     public $useExistingAddress = true;
-     public $selectedAddressId = null;
-     public $full_name = '';
-     public $phone = '';
-     public $address_line_1 = '';
-     public $address_line_2 = '';
-     public $city = '';
-     public $state = '';
-     public $postal_code = '';
-     public $country = 'US';
-     // Order details
-    public $couponCode = '';
-    public $appliedCoupon = null;
-    public $paymentMethod = 'stripe';
-    public $customerNotes = '';
+    /**
+     * Orders are always collected in person and always paid in cash at
+     * the counter, so there is nothing for the customer to choose. These
+     * are written by the server and never read from the request.
+     */
+    public const PICKUP_LOCATION = 'UBAP_office';
+    public const PICKUP_LOCATION_LABEL = 'UBAP Office';
+    public const PAYMENT_METHOD = 'cash_on_pickup';
+    public const PAYMENT_METHOD_LABEL = 'Cash on Pickup';
+
+    /**
+     * The cart as shown on the page. It is rebuilt from the database
+     * before the order is written, so nothing coming back from the
+     * browser is ever used to price an order.
+     */
+    public array $cart = [];
+
+    /**
+     * Stops a second order being created when the customer double-taps
+     * Place Order before the first request has redirected away.
+     */
+    public bool $placingOrder = false;
 
     public function mount(CartService $cartService)
     {
@@ -51,16 +50,6 @@ class CheckoutPage extends Component
                 ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
         }
 
-        // Pre-fill with customer data
-        $customer = auth('customer')->user();
-        $this->full_name = $customer->name;
-        $this->phone = $customer->phone ?? '';
-
-        // Load default address if exists
-        $defaultAddress = $customer->addresses()->where('is_default', true)->first();
-        if ($defaultAddress) {
-            $this->selectedAddressId = $defaultAddress->id;
-        }
     }
 
     /**
@@ -99,281 +88,169 @@ class CheckoutPage extends Component
         })->all();
     }
 
-    public function selectAddress($addressId)
+    /**
+     * Add up the merchandise total for a cart.
+     *
+     * Nothing is added to or taken off this figure. There is no shipping,
+     * no tax and no discount, so the order total is the same number.
+     */
+    protected function subtotalFor(array $cart): float
     {
-        $this->selectedAddressId = $addressId;
+        return round(array_sum(array_map(
+            fn ($item) => $item['price'] * $item['quantity'],
+            $cart,
+        )), 2);
     }
-    public function applyCoupon()
-    {
-        $coupon = Coupon::where('code', strtoupper($this->couponCode))
-            ->valid()
-            ->first();
 
-        if (!$coupon) {
-            session()->flash('coupon_error', 'Invalid or expired coupon code');
+    public function placeOrder(CartService $cartService)
+    {
+        if ($this->placingOrder) {
             return;
         }
 
-        if (!$coupon->canBeUsedByCustomer(auth('customer')->id())) {
-            session()->flash('coupon_error', 'You have already used this coupon');
-            return;
-        }
+        $this->placingOrder = true;
 
-        $this->appliedCoupon = $coupon;
-        session()->flash('coupon_success', 'Coupon applied successfully!');
-    }
+        // Price the order from the database rather than from $this->cart.
+        // That property round-trips through the browser, and the page may
+        // also have sat open while stock or prices changed.
+        $cart = $this->buildCartFromDatabase($cartService);
+        $this->cart = $cart;
 
-    public function removeCoupon()
-    {
-        $this->appliedCoupon = null;
-        $this->couponCode = '';
-    }
-
-    public function nextStep()
-    {
-        if ($this->step === 1) {
-            $this->validateAddress();
-            $this->step = 2;
-        } elseif ($this->step === 2) {
-            $this->step = 3;
-        }
-    }
-
-    public function previousStep()
-    {
-        if ($this->step > 1) {
-            $this->step--;
-        }
-    }
-
-    protected function validateAddress()
-    {
-        if (!$this->useExistingAddress) {
-            $this->validate([
-                'full_name' => 'required|string|max:255',
-                'phone' => 'required|string|max:255',
-                'address_line_1' => 'required|string|max:255',
-                'city' => 'required|string|max:255',
-                'postal_code' => 'required|string|max:20',
-                'country' => 'required|string|max:2',
-            ]);
-        } elseif (!$this->selectedAddressId) {
-            throw new \Exception('Please select an address');
-        }
-    }
-
-    public function placeOrder(CartService $cartService){
-        // Re-check the cart against the database before charging.
-        // The page may have been open while stock changed.
-        $this->cart = $this->buildCartFromDatabase($cartService);
-
-        if (empty($this->cart)) {
+        if (empty($cart)) {
+            $this->placingOrder = false;
             return redirect()->route('cart.index');
         }
 
         if ($cartService->hasUnavailableItems()) {
+            $this->placingOrder = false;
             return redirect()->route('cart.index')
                 ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
         }
 
         try {
-            DB::beginTransaction();
-            // Get shipping address
-            if ($this->useExistingAddress && $this->selectedAddressId) {
-                $address = Address::find($this->selectedAddressId);
-                $shippingData = [
-                    'shipping_full_name' => $address->full_name,
-                    'shipping_phone' => $address->phone,
-                    'shipping_address_line_1' => $address->address_line_1,
-                    'shipping_address_line_2' => $address->address_line_2,
-                    'shipping_city' => $address->city,
-                    'shipping_state' => $address->state,
-                    'shipping_postal_code' => $address->postal_code,
-                    'shipping_country' => $address->country,
-                ];
-            } else {
-                $shippingData = [
-                    'shipping_full_name' => $this->full_name,
-                    'shipping_phone' => $this->phone,
-                    'shipping_address_line_1' => $this->address_line_1,
-                    'shipping_address_line_2' => $this->address_line_2,
-                    'shipping_city' => $this->city,
-                    'shipping_state' => $this->state,
-                    'shipping_postal_code' => $this->postal_code,
-                    'shipping_country' => $this->country,
-                ];
-            }
+            $order = DB::transaction(function () use ($cart, $cartService) {
+                $subtotal = $this->subtotalFor($cart);
 
-            // Calculate totals
-            $subtotal = $this->getSubtotal();
-            $shippingCost = $this->getShippingCost();
-            $discountAmount = $this->getDiscountAmount();
-            $taxAmount = 0; // You can calculate tax here if needed
-            $total = $subtotal + $shippingCost + $taxAmount - $discountAmount;
-
-            //create order
-            $order = Order::create([
-                'customer_id' => auth('customer')->id(),
-                'coupon_id' => $this->appliedCoupon?->id,
-                'subtotal' => $subtotal,
-                'discount_amount' => $discountAmount,
-                'shipping_cost' => $shippingCost,
-                'tax_amount' => $taxAmount,
-                'total' => $total,
-                'payment_method' => $this->paymentMethod,
-                'payment_status' => 'pending',
-                'status' => 'pending',
-                'customer_notes' => $this->customerNotes,
-            ] + $shippingData);
-
-            // create order items
-            foreach ($this->cart as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'product_variant_id' => $item['variant_id'],
-                    'product_name' => $item['name'],
-                    'product_sku' => $item['sku'],
-                    'variant_name' => $item['variant_name'],
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $item['price'] * $item['quantity'],
+                $order = Order::create([
+                    'customer_id'          => auth('customer')->id(),
+                    'subtotal'             => $subtotal,
+                    'total'                => $subtotal,
+                    'pickup_location'      => self::PICKUP_LOCATION,
+                    // pickup_date is left null on purpose. The UBAP admins
+                    // schedule it later, once the order is ready to claim.
+                    'payment_method'       => self::PAYMENT_METHOD,
+                    // Cash changes hands at the counter, so the order is
+                    // only marked paid when staff release it.
+                    'payment_status'       => 'pending',
+                    'status'               => 'pending',
                 ]);
-            }
 
-            //record the coupon usage
-            if ($this->appliedCoupon) {
-                $this->appliedCoupon->usages()->create([
-                    'customer_id' => auth('customer')->id(),
-                    'order_id' => $order->id,
-                ]);
-            }
+                foreach ($cart as $item) {
+                    OrderItem::create([
+                        'order_id'           => $order->id,
+                        'product_id'         => $item['product_id'],
+                        'product_variant_id' => $item['variant_id'],
+                        // Name, SKU and price are copied instead of looked
+                        // up later, so the order still reads correctly once
+                        // the product is renamed, repriced or deleted.
+                        'product_name'       => $item['name'],
+                        'product_sku'        => $item['sku'],
+                        'variant_name'       => $item['variant_name'],
+                        'price'              => $item['price'],
+                        'quantity'           => $item['quantity'],
+                        'subtotal'           => round($item['price'] * $item['quantity'], 2),
+                    ]);
+                }
 
-            DB::commit();
+                $this->reserveStock($cart);
 
-            //send order confirmation
-            Mail::to($order->customer->email)
-            ->queue(new OrderConfirmation($order));
-
-            //proccessing the payment
-            if ($this->paymentMethod === 'stripe') {
-                return $this->processStripePayment($order);
-            } else {
-                // Cash on delivery
+                // Clearing inside the transaction means an order can never
+                // end up existing alongside the cart that produced it.
                 $cartService->clearCart();
-                $this->dispatch('cart-updated');
 
-                return redirect()->route('customer.orders.show', $order->id)
-                    ->with('success', 'Order placed successfully!');
-            }
-
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error','Error placing order: '. $e->getMessage());
+                return $order;
+            });
+        } catch (\DomainException $e) {
+            // Raised by reserveStock. The message names the product and is
+            // written for the customer, so it is safe to show.
+            $this->placingOrder = false;
+            session()->flash('error', $e->getMessage());
+            return;
+        } catch (\Throwable $e) {
+            $this->placingOrder = false;
+            report($e);
+            session()->flash('error', 'We could not place your order. Please try again.');
             return;
         }
-    }
 
-    protected function processStripePayment($order){
-        Stripe::setApiKey(config('services.stripe.secret'));
+        $this->dispatch('cart-updated');
 
-        $lineItems = [];
-        foreach ($order->items as $item) {
-            $lineItems[] = [
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => $item->product_name . ($item->variant_name ? ' - ' . $item->variant_name : ''),
-                    ],
-                    'unit_amount' => $item->price * 100, // Convert to cents
-                ],
-                'quantity' => $item->quantity,
-            ];   
-        }
-        // Add shipping
-        if ($order->shipping_cost > 0) {
-            $lineItems[] = [
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => 'Shipping',
-                    ],
-                    'unit_amount' => $order->shipping_cost * 100,
-                ],
-                'quantity' => 1,
-            ];
+        // No claim number is quoted here. One is only issued once the order
+        // is ready to be collected, so the customer is told to wait for it.
+        return redirect()
+            ->route('customer.orders.show', $order->id)
+            ->with([
+                'order_success_title' => 'Order placed successfully!',
+                'order_success_message' => 'Thank you for your purchase! Please wait for an email confirmation to know when your order is being processed.',
+            ]);
         }
 
-        // Add discount
-        if ($order->discount_amount > 0) {
-            $lineItems[] = [
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => 'Discount',
-                    ],
-                    'unit_amount' => -($order->discount_amount * 100),
-                ],
-                'quantity' => 1,
-            ];
-
-        }
-
-        $session = StripeSession::create([
-            'payment_method_types' => ['card'],
-            'line_items' => $lineItems,
-            'mode' => 'payment',
-            'success_url' => route('checkout.success', ['order' => $order->id]) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('checkout.cancel', ['order' => $order->id]),
-            'customer_email' => auth('customer')->user()->email,
-            'metadata' => [
-                'order_id' => $order->id,
-            ],
-        ]);
-
-        $order->update(['transaction_id' => $session->id]);
-
-        return redirect($session->url);
-
-    }
-
-    protected function getSubtotal()
+    /**
+     * Take the ordered quantities out of stock.
+     *
+     * Rows are locked before they are read, so two customers checking out
+     * at the same moment cannot both pass the stock check and sell the
+     * same last unit twice. The lock is held until the transaction commits.
+     *
+     * Locks are always taken in the same order, so two concurrent
+     * checkouts can never each hold the row the other is waiting for.
+     */
+    protected function reserveStock(array $cart): void
     {
-        return array_sum(array_map(function ($item) {
-            return $item['price'] * $item['quantity'];
-        }, $this->cart));
-    }
+        $lines = collect($cart)
+            ->sortBy(fn ($line) => sprintf(
+                '%s-%012d',
+                $line['variant_id'] ? 'v' : 'p',
+                $line['variant_id'] ?? $line['product_id'],
+            ))
+            ->values();
 
-    protected function getShippingCost()
-    {
-        $subtotal = $this->getSubtotal();
-        $freeShippingThreshold = Setting::get('free_shipping_threshold', 100);
-        $flatRate = Setting::get('flat_shipping_rate', 10);
+        foreach ($lines as $line) {
+            // A variant carries its own stock, so that is the row to lock
+            // whenever the customer picked one.
+            $stockHolder = $line['variant_id']
+                ? ProductVariant::whereKey($line['variant_id'])->lockForUpdate()->first()
+                : Product::whereKey($line['product_id'])->lockForUpdate()->first();
 
-        if ($freeShippingThreshold && $subtotal >= $freeShippingThreshold) {
-            return 0;
+            if (!$stockHolder) {
+                throw new \DomainException(
+                    "{$line['name']} is no longer available. Please remove it from your cart."
+                );
+            }
+
+            if ($stockHolder->stock_quantity < $line['quantity']) {
+                throw new \DomainException(
+                    "Only {$stockHolder->stock_quantity} left of {$line['name']}. Please lower the quantity in your cart."
+                );
+            }
+
+            $stockHolder->decrement('stock_quantity', $line['quantity']);
         }
-
-        return $flatRate;
     }
-    protected function getDiscountAmount()
-    {
-        if (!$this->appliedCoupon) {
-            return 0;
-        }
 
-        return $this->appliedCoupon->calculateDiscount($this->getSubtotal());
-    }
     public function render()
     {
-        $addresses = auth('customer')->user()->addresses;
-        return view('livewire.checkout-page',[
-            'addresses' => $addresses,
-            'subtotal' => $this->getSubtotal(),
-            'shippingCost' => $this->getShippingCost(),
-            'discountAmount' => $this->getDiscountAmount(),
-            'total' => $this->getSubtotal() + $this->getShippingCost() - $this->getDiscountAmount(),
+        $subtotal = $this->subtotalFor($this->cart);
+
+        return view('livewire.checkout-page', [
+            // Section 1 shows these read-only. The account is the source of
+            // truth for who bought the order, which is a separate question
+            // from who is going to collect it.
+            'customer'       => auth('customer')->user(),
+            'subtotal'       => $subtotal,
+            'total'          => $subtotal,
+            'pickupLocation' => self::PICKUP_LOCATION_LABEL,
+            'paymentMethod'  => self::PAYMENT_METHOD_LABEL,
         ])->layout('components.layouts.front-end-layout', ['title' => 'Checkout']);
     }
 }
