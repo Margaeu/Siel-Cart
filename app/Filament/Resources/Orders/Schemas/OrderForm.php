@@ -6,6 +6,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TimePicker;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -40,24 +41,29 @@ class OrderForm
                                 'paid'     => 'Paid',
                                 'cancelled'   => 'Cancelled',
                                 'refunded' => 'Refunded',
-                                 'failed' => 'Failed',
+                                'failed' => 'Failed',
                             ])
                             ->native(false)
                             ->required()
                             ->default('pending'),
 
-                                 TextInput::make('pickup_contact_name')
+                                 TextInput::make('claimant_name')
                                     ->label('Claimed By (Name)')
                                     ->placeholder('Name of person receiving order')
                                     ->default(null),
 
-                                TextInput::make('pickup_contact_phone')
+                                TextInput::make('claimant_phone')
                                     ->label('Claimant Contact Number')
                                     ->placeholder('Phone number of person receiving order')
                                     ->default(null),
 
                                 DatePicker::make('pickup_date')
                                     ->label('Scheduled Pickup Date')
+                                    ->nullable(),
+
+                                TimePicker::make('pickup_slot')
+                                    ->label('Scheduled Pickup Time')
+                                    ->seconds(false)
                                     ->nullable(),
 
                                 Textarea::make('admin_notes')

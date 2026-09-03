@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->string('product_sku');
             $table->string('variant_name')->nullable();
+            $table->string('product_image')->nullable();
             $table->decimal('price', 10, 2);
             $table->integer('quantity');
             $table->decimal('subtotal', 10, 2);

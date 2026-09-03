@@ -17,15 +17,16 @@ class Order extends Model
         'customer_id',
         'subtotal',
         'total',
-        'pickup_contact_name',
-        'pickup_contact_phone',
         'pickup_date',
+        'pickup_slot',
         'pickup_location',
         'claim_number',
         'payment_method',
         'payment_status',
         'paid_at',
         'status',
+        'claimant_name',
+        'claimant_phone',
         'admin_notes',
     ];
 

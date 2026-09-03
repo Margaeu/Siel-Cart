@@ -27,8 +27,8 @@ class RequestRefundPage extends Component
     {
         $this->order = $order;
 
-        // Verify eligibility: completed status and within the 15-day window
-        if ($order->status !== 'completed' || !$order->completed_at || now()->gt($order->completed_at->addDays(15))) {
+        // Verify eligibility: completed status and within the 3-day window
+        if ($order->status !== 'completed' || !$order->completed_at || now()->gt($order->completed_at->addDays(3))) {
             abort(403, 'This order is no longer eligible for a return or refund.');
         }
     }

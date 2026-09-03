@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Mail\OrderProcessingMail;
 use App\Mail\OrderReadyForPickupMail;
 use App\Mail\OrderCompletedMail;
+use Filament\Actions\ViewAction;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
@@ -15,13 +16,14 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\TimePicker;
 use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
+use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class OrdersTable
@@ -40,9 +42,9 @@ class OrdersTable
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('pickup_contact_name')
+                Tables\Columns\TextColumn::make('claimant_name')
                     ->label('Claimed By')
-                    ->placeholder('N/A')
+                    ->placeholder('Name')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('total')
@@ -80,8 +82,10 @@ class OrdersTable
                             ->fromTable(),
                     ]),
             ])
-            ->actions([
+            ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
+                
 
                 // 1. Pending -> Processing
                 Action::make('mark_processing')
@@ -99,14 +103,15 @@ class OrdersTable
                     ->label('Ready for Pickup')
                     ->color('info')
                     ->icon('heroicon-o-building-storefront')
-                    ->form([
+                    ->schema([
                         TextInput::make('claim_number')
                             ->required()
                             ->default(fn () => 'CLM-' . strtoupper(Str::random(6))),
                         DatePicker::make('pickup_date')
                             ->required(),
-                        TextInput::make('pickup_slot')
-                            ->placeholder('e.g. 1:00 PM - 3:00 PM')
+                        TimePicker::make('pickup_slot')
+                            ->label('Pickup Time')
+                            ->seconds(false)
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
@@ -125,12 +130,12 @@ class OrdersTable
                     ->label('Complete Pickup')
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
-                    ->form([
-                        TextInput::make('pickup_contact_name')
+                    ->schema([
+                        TextInput::make('claimant_name')
                             ->label('Name of Person Receiving/Claiming Order')
                             ->placeholder('e.g. Juan Dela Cruz')
                             ->required(),
-                        TextInput::make('pickup_contact_phone')
+                        TextInput::make('claimant_phone')
                             ->label('Contact Phone Number of Receiver')
                             ->placeholder('e.g. 09171234567')
                             ->required(),
@@ -141,8 +146,8 @@ class OrdersTable
                             'payment_status'       => 'paid',
                             'paid_at'              => now(),
                             'completed_at'         => now(),
-                            'pickup_contact_name'  => $data['pickup_contact_name'],
-                            'pickup_contact_phone' => $data['pickup_contact_phone'],
+                            'claimant_name'  => $data['claimant_name'],
+                            'claimant_phone' => $data['claimant_phone'],
                         ]);
 
                         Mail::to($record->customer->email)->send(new OrderCompletedMail($record));
@@ -155,7 +160,7 @@ class OrdersTable
                     })
                     ->visible(fn (Order $record) => in_array(strtolower($record->status), ['ready_for_pickup', 'ready for pickup'])),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     ExportBulkAction::make(),
                     DeleteBulkAction::make(),

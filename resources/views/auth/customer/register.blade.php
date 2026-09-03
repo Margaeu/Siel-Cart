@@ -145,17 +145,6 @@
                         Create Account
                     </button>
                 </form>
-
-                <!-- Benefits -->
-                <div class="mt-6 p-4 bg-emerald-50/60 border border-emerald-100 rounded-lg">
-                    <p class="text-sm font-semibold text-[#1E6031] mb-2">Why join us?</p>
-                    <ul class="text-sm text-gray-700 space-y-1">
-                        <li><span class="text-[#E0A70D] font-bold">✓</span> Track your orders easily</li>
-                        <li><span class="text-[#E0A70D] font-bold">✓</span> Save multiple addresses</li>
-                        <li><span class="text-[#E0A70D] font-bold">✓</span> Get exclusive member offers</li>
-                        <li><span class="text-[#E0A70D] font-bold">✓</span> Faster checkout process</li>
-                    </ul>
-                </div>
             </div>
 
             <!-- Back to Home -->
