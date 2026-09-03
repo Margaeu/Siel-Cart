@@ -3,8 +3,6 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -16,8 +14,10 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use App\Models\Product;
+use Filament\Infolists\Components\TextEntry;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductForm
 {
@@ -102,7 +102,6 @@ class ProductForm
                                             ->options([
                                                 'in_stock' => 'In Stock',
                                                 'out_of_stock' => 'Out of Stock',
-                                                'on_backorder' => 'On Backorder',
                                             ])
                                             ->native(false)
                                             ->default('in_stock')
@@ -128,6 +127,7 @@ class ProductForm
                                             ->columnSpanFull()
                                             ->orientImagesFromExif(false)
                                             ->imagePreviewHeight('250')
+                                            ->fetchFileInformation(false)
                                             ->extraAttributes([
                                                 'data-filepond-type' => 'image',
                                             ])
@@ -135,24 +135,56 @@ class ProductForm
                                                 'data-filepond-item-property-size' => 'false',
                                             ])
                                             ->helperText('You can drag and drop to reorder images')
-                                            ->saveRelationshipsUsing(function ($component, $state, $record) {
-                                                foreach ($record->images as $existingImage) {
-                                                    if ($existingImage->image_path) {
-                                                        Storage::disk('r2')->delete($existingImage->image_path);
-                                                    }
+                                            ->afterStateHydrated(function (FileUpload $component, ?Product $record): void {
+                                                // `images` is a relationship, not a column, so Filament's
+                                                // `attributesToArray()` fill leaves this field empty.
+                                                //
+                                                // This deliberately replaces BaseFileUpload::hydrateFiles(),
+                                                // whose `$disk->exists()` check drops paths whose R2 object is
+                                                // missing and treats an unreachable R2 as "missing". An empty
+                                                // state would then read as "cleared the gallery" on save.
+                                                $component->state(
+                                                    $record?->images
+                                                        ->pluck('image_path')
+                                                        ->filter()
+                                                        ->values()
+                                                        ->all() ?? [],
+                                                );
+                                            })
+                                            ->saveRelationshipsUsing(function ($state, ?Product $record): void {
+                                                if (! $record) {
+                                                    return;
                                                 }
 
-                                                $record->images()->delete();
+                                                // Uploads are already persisted and cast to path strings by
+                                                // `saveUploadedFiles()`, which runs before this callback.
+                                                $paths = collect(Arr::wrap($state))
+                                                    ->filter(fn ($path): bool => is_string($path) && filled($path))
+                                                    ->values()
+                                                    ->all();
 
-                                                if (is_array($state)) {
-                                                    foreach ($state as $index => $imagePath) {
-                                                        $record->images()->create([
-                                                            'image_path' => $imagePath,
+                                                // Remove only what left the field, so images that survived the
+                                                // edit keep their existing R2 object and row.
+                                                foreach ($record->images()->get() as $existingImage) {
+                                                    if (in_array($existingImage->image_path, $paths, true)) {
+                                                        continue;
+                                                    }
+
+                                                    Storage::disk('r2')->delete($existingImage->image_path);
+                                                    $existingImage->delete();
+                                                }
+
+                                                foreach ($paths as $index => $imagePath) {
+                                                    $record->images()->updateOrCreate(
+                                                        ['image_path' => $imagePath],
+                                                        [
                                                             'is_primary' => $index === 0,
                                                             'sort_order' => $index,
-                                                        ]);
-                                                    }
+                                                        ],
+                                                    );
                                                 }
+
+                                                $record->unsetRelation('images')->unsetRelation('primaryImage');
                                             })
                                             ->dehydrated(false)
                                     ])
@@ -182,13 +214,7 @@ class ProductForm
                                                 TextInput::make('price')
                                                     ->required()
                                                     ->numeric()
-                                                    ->prefix('$')
-                                                    ->minValue(0)
-                                                    ->step(0.01),
-                                                TextInput::make('compare_price')
-                                                    ->label('Compare Price')
-                                                    ->numeric()
-                                                    ->prefix('$')
+                                                    ->prefix('₱')
                                                     ->minValue(0)
                                                     ->step(0.01),
                                                 TextInput::make('stock_quantity')
@@ -232,11 +258,11 @@ class ProductForm
                                     ->columns(2),
                                 Section::make('statistics')
                                     ->schema([
-                                        Placeholder::make('views_count')
-                                            ->content(fn($record) => $record?->views_count ?? 0),
-                                        Placeholder::make('created_at')
+                                        TextEntry::make('views_count')
+                                            ->state(fn($record) => $record?->views_count ?? 0),
+                                        TextEntry::make('created_at')
                                             ->label('Created')
-                                            ->content(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
+                                            ->state(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
                             ]),
                     ]),

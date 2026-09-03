@@ -10,13 +10,15 @@ use Flowframe\Trend\TrendValue;
 class RevenueChart extends ChartWidget
 {
     protected static ?int $sort = 2;
-    protected ?string $heading = 'Revenue Chart';
+    protected ?string $heading = 'Paid Product Revenue';
     public ?string $filter = 'week';
 
     protected function getData(): array
     {
         $activeFilter = $this->filter;
-        $data = Trend::model(Order::class)
+        $data = Trend::query(
+            Order::query()->where('payment_status', 'paid')
+        )
             ->between(
                 start: match ($activeFilter) {
                     'week' => now()->subWeek(),

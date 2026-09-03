@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class ProductImagesTableSeeder extends Seeder
 {
@@ -16,9 +17,9 @@ class ProductImagesTableSeeder extends Seeder
     {
         
 
-        \DB::table('product_images')->delete();
+        DB::table('product_images')->delete();
         
-        \DB::table('product_images')->insert(array (
+        DB::table('product_images')->insert(array (
             0 => 
             array (
                 'id' => 17,
