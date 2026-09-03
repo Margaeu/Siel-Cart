@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation</title>
     <style>
-         body {
+        body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
@@ -60,6 +60,7 @@
             text-decoration: none;
             border-radius: 6px;
             margin: 20px 0;
+            font-weight: bold;
         }
         .claim-code {
             font-family: monospace;
@@ -76,11 +77,11 @@
     </div>
 
     <div class="content">
-        <p>Hi {{ $order->customer->name }},</p>
+        <p>Hi {{ $order->customer?->name ?? 'Valued Customer' }},</p>
 
         <p>
             We've received your order and are getting it ready. We'll let you know
-            once it is ready to collect at the {{ Str::headline($order->pickup_location) }}.
+            once it is ready to collect at the {{ \App\Livewire\CheckoutPage::PICKUP_LOCATION_LABEL ?? 'Store Pickup Location' }}.
         </p>
 
         <div class="order-details">
@@ -88,7 +89,7 @@
             <p><strong>Order Number:</strong> {{ $order->order_number }}</p>
             <p><strong>Order Date:</strong> {{ $order->created_at->format('M d, Y h:i A') }}</p>
             <p><strong>Payment Method:</strong> Cash on Pickup</p>
-            <p style="margin-bottom: 0;"><strong>Payment Status:</strong> {{ ucfirst($order->payment_status) }}</p>
+            <p style="margin-bottom: 0;"><strong>Payment Status:</strong> {{ ucfirst($order->payment_status ?? 'pending') }}</p>
         </div>
 
         <h3>Order Items</h3>
@@ -123,9 +124,9 @@
 
         <div class="pickup-box">
             <h3 style="margin-top: 0;">Pickup Details</h3>
-            <p style="margin: 0;"><strong>Location:</strong> {{ Str::headline($order->pickup_location) }}</p>
-            <p style="margin: 6px 0 0;"><strong>Claimed by:</strong> {{ $order->pickup_contact_name }}</p>
-            <p style="margin: 6px 0 0;"><strong>Contact number:</strong> {{ $order->pickup_contact_phone }}</p>
+            <p style="margin: 0;"><strong>Location:</strong> {{ \App\Livewire\CheckoutPage::PICKUP_LOCATION_LABEL ?? 'Store Pickup Location' }}</p>
+            <p style="margin: 6px 0 0;"><strong>Claimed by:</strong> {{ $order->pickup_contact_name ?? 'To be designated' }}</p>
+            <p style="margin: 6px 0 0;"><strong>Contact number:</strong> {{ $order->pickup_contact_phone ?? 'To be designated' }}</p>
             <p style="margin: 6px 0 0;">
                 <strong>Pickup date:</strong>
                 @if($order->pickup_date)
@@ -135,8 +136,6 @@
                 @endif
             </p>
 
-            {{-- A claim number only exists once the order is ready to collect,
-                 so it is normally absent from this confirmation. --}}
             @if($order->claim_number)
                 <p style="margin: 14px 0 0;"><strong>Claim number:</strong></p>
                 <p style="margin: 2px 0 0;" class="claim-code">{{ $order->claim_number }}</p>

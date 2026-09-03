@@ -8,7 +8,9 @@ use Livewire\Component;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Services\CartService;
+use App\Mail\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class CheckoutPage extends Component
 {
@@ -49,7 +51,6 @@ class CheckoutPage extends Component
             return redirect()->route('cart.index')
                 ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
         }
-
     }
 
     /**
@@ -130,12 +131,15 @@ class CheckoutPage extends Component
         try {
             $order = DB::transaction(function () use ($cart, $cartService) {
                 $subtotal = $this->subtotalFor($cart);
+                $customer = auth('customer')->user();
 
                 $order = Order::create([
-                    'customer_id'          => auth('customer')->id(),
+                    'customer_id'          => $customer->id,
                     'subtotal'             => $subtotal,
                     'total'                => $subtotal,
                     'pickup_location'      => self::PICKUP_LOCATION,
+                    'pickup_contact_name'  => $customer->name,
+                    'pickup_contact_phone' => $customer->phone ?? 'N/A',
                     // pickup_date is left null on purpose. The UBAP admins
                     // schedule it later, once the order is ready to claim.
                     'payment_method'       => self::PAYMENT_METHOD,
@@ -150,12 +154,12 @@ class CheckoutPage extends Component
                         'order_id'           => $order->id,
                         'product_id'         => $item['product_id'],
                         'product_variant_id' => $item['variant_id'],
-                        // Name, SKU and price are copied instead of looked
-                        // up later, so the order still reads correctly once
-                        // the product is renamed, repriced or deleted.
+                        // Name, SKU, price, and image are copied instead of looked
+                        // up later, so the order history stays intact if deleted.
                         'product_name'       => $item['name'],
                         'product_sku'        => $item['sku'],
                         'variant_name'       => $item['variant_name'],
+                        'product_image'      => $item['image'],
                         'price'              => $item['price'],
                         'quantity'           => $item['quantity'],
                         'subtotal'           => round($item['price'] * $item['quantity'], 2),
@@ -167,6 +171,9 @@ class CheckoutPage extends Component
                 // Clearing inside the transaction means an order can never
                 // end up existing alongside the cart that produced it.
                 $cartService->clearCart();
+
+                // Dispatch order confirmation email to the customer
+                Mail::to($customer->email)->send(new OrderConfirmation($order));
 
                 return $order;
             });
@@ -193,7 +200,7 @@ class CheckoutPage extends Component
                 'order_success_title' => 'Order placed successfully!',
                 'order_success_message' => 'Thank you for your purchase! Please wait for an email confirmation to know when your order is being processed.',
             ]);
-        }
+    }
 
     /**
      * Take the ordered quantities out of stock.
@@ -251,6 +258,6 @@ class CheckoutPage extends Component
             'total'          => $subtotal,
             'pickupLocation' => self::PICKUP_LOCATION_LABEL,
             'paymentMethod'  => self::PAYMENT_METHOD_LABEL,
-        ])->layout('components.layouts.front-end-layout', ['title' => 'Checkout']);
+        ]);
     }
 }

@@ -2,33 +2,26 @@
 
 namespace App\Livewire\Customer;
 
+use App\Models\Order;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 
+#[Layout('components.layouts.front-end-layout')]
+#[Title('My Orders')]
 class Orders extends Component
 {
     use WithPagination;
-    public $statusFilter = '';
-
-    public function updatingStatusFilter(){
-        $this->resetPage();
-    }
-
 
     public function render()
     {
-        $query = auth('customer')->user()->orders()
-        ->with(['items.product'])
-        ->latest();
+        $orders = Order::where('customer_id', auth('customer')->id())
+            ->latest()
+            ->paginate(10);
 
-        if ($this->statusFilter) {
-            $query->where('status',$this->statusFilter);
-        }
-
-        $orders = $query->paginate(10);
-        return view('livewire.orders',[
-            'orders' => $orders
-        ])
-        ->layout('components.layouts.front-end-layout');
+        return view('livewire.orders', [
+            'orders' => $orders,
+        ]);
     }
 }

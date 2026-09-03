@@ -4,54 +4,42 @@ namespace App\Filament\Widgets;
 
 use App\Models\Order;
 use Filament\Widgets\ChartWidget;
-use Flowframe\Trend\Trend;
-use Flowframe\Trend\TrendValue;
 
 class RevenueChart extends ChartWidget
 {
+    // Fix: Remove 'static' from $heading
+    protected ?string $heading = 'Revenue Trend (Completed Orders)';
     protected static ?int $sort = 2;
-    protected ?string $heading = 'Paid Product Revenue';
-    public ?string $filter = 'week';
-
     protected function getData(): array
     {
-        $activeFilter = $this->filter;
-        $data = Trend::query(
-            Order::query()->where('payment_status', 'paid')
-        )
-            ->between(
-                start: match ($activeFilter) {
-                    'week' => now()->subWeek(),
-                    'month' => now()->subMonth(),
-                    'year' => now()->subYear(),
-                },
-                end: now()
-            )
-            ->perWeek()
-            ->sum('total');
+        // Group completed order revenue by month for the current year
+        $monthlyRevenue = Order::where('status', 'completed')
+            ->whereYear('completed_at', now()->year)
+            ->selectRaw('MONTH(completed_at) as month, SUM(total) as aggregate')
+            ->groupBy('month')
+            ->pluck('aggregate', 'month')
+            ->all();
+
+        $data = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $data[] = $monthlyRevenue[$i] ?? 0;
+        }
 
         return [
-            'dataset' => [
+            'datasets' => [
                 [
-                    'label' => 'Revenue',
-                    'data' => $data->map(fn(TrendValue $value) => $value->aggregate)
+                    'label'       => 'Revenue (PHP)',
+                    'data'        => $data,
+                    'borderColor' => '#1E6031',
+                    'fill'        => 'start',
                 ],
             ],
-            'labels' => $data->map(fn(TrendValue $value) => $value->date)
+            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         ];
     }
 
     protected function getType(): string
     {
         return 'line';
-    }
-
-    protected function getFilters(): array|null
-    {
-        return [
-            'week' => 'Last Week',
-            'month' => 'Last Month',
-            'year' => 'Last Year',
-        ];
     }
 }
