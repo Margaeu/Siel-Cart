@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('sku')->unique();
             $table->string('name'); // e.g., "Red - Large"
-            $table->json('options')->nullable(); // Stores key-value options like {"size": "S"}
             $table->decimal('price', 10, 2);
             $table->unsignedInteger('stock_quantity')->default(0);
             $table->unsignedInteger('low_stock_threshold')->default(10);

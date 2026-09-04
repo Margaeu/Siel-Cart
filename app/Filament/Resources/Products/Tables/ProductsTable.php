@@ -39,9 +39,13 @@ class ProductsTable
                     ->label('Category')
                     ->badge()
                     ->sortable(),
+                // A variant product's own price column is not what it sells
+                // for, so show and sort on the same figure the storefront
+                // does: its cheapest active variant.
                 TextColumn::make('price')
-                    ->money('PHP')
-                    ->sortable(),
+                    ->label('Price')
+                    ->state(fn (Product $record) => $record->display_price_label)
+                    ->sortable(query: fn (Builder $query, string $direction) => $query->orderByDisplayPrice($direction)),
                 TextColumn::make('stock_quantity')
                     ->label('Stock')
                     ->state(fn (Product $record) => $record->has_variants

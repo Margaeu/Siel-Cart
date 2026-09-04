@@ -211,7 +211,7 @@ class AutomaticStockStatusTest extends TestCase
         Gate::before(fn () => true);
         $this->actingAs(User::factory()->create());
         \Filament\Facades\Filament::setCurrentPanel('admin');
-        $product = $this->product(['has_variants' => $hasVariants, 'manage_stock' => false]);
+        $product = $this->product(['has_variants' => $hasVariants]);
         $variant = $hasVariants
             ? ProductVariant::factory()->for($product)->create(['stock_quantity' => 0])
             : null;

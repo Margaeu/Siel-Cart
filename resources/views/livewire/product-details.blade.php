@@ -102,25 +102,19 @@
                             @php
                                 $variant = $product->variants->find($selectedVariant);
                             @endphp
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl font-bold text-gray-900">₱{{ number_format($variant->price, 2) }}</span>
-                                @if($variant->compare_price)
-                                    <span class="text-xl text-gray-500 line-through">₱{{ number_format($variant->compare_price, 2) }}</span>
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
-                                        -{{ $variant->discount_percentage }}%
-                                    </span>
-                                @endif
-                            </div>
+                            <span class="text-3xl font-bold text-gray-900">₱{{ number_format($variant->price, 2) }}</span>
                         @else
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl font-bold text-gray-900">₱{{ number_format($product->price, 2) }}</span>
-                                @if($product->compare_price)
-                                    <span class="text-xl text-gray-500 line-through">₱{{ number_format($product->compare_price, 2) }}</span>
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
-                                        -{{ $product->discount_percentage }}%
-                                    </span>
-                                @endif
-                            </div>
+                            {{--
+                                Reached by simple products, and by a variable
+                                product with no active variant at all -- mount()
+                                selects an inactive-stock variant if one exists,
+                                so only an empty active set falls through here.
+                                display_price_label prints the plain price for
+                             the first case and "Unavailable" for the second,
+                                   where the product's own price column names a
+                                figure nothing can be bought at.
+                            --}}
+                            <span class="text-3xl font-bold text-gray-900">{{ $product->display_price_label }}</span>
                         @endif
                     </div>
 

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Product;
 use Livewire\Component;
 use App\Models\Category;
+use Illuminate\Database\Eloquent\Builder;
 
 class HomePage extends Component
 {
@@ -17,11 +18,13 @@ class HomePage extends Component
             ->withReviewAggregates()
             ->limit(8)
             ->get();
+        // Count only the products a customer can reach, so a category tile
+        // cannot advertise more than the listing behind it will show.
         $categories = Category::active()
             ->sorted()
-            ->withCount('products')
+            ->withCount(['products' => fn (Builder $products) => $products->active()])
             ->limit(6)
-            ->get(); 
+            ->get();
         $newArrivals = Product::active()
             ->inStock()
             ->with(['category', 'primaryImage', 'variants'])

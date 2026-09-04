@@ -29,12 +29,6 @@
                 </span>
             @endif
 
-            @if($product->discount_percentage > 0)
-                <span class="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                    -{{ $product->discount_percentage }}%
-                </span>
-            @endif
-
             @if($product->stock_status === 'out_of_stock')
                 <span class="bg-gray-800 text-white text-xs font-semibold px-2 py-1 rounded">
                     Out of Stock
@@ -87,17 +81,16 @@
 
             <!-- Price -->
             <div class="flex items-center gap-2">
-
+                {{--
+                    display_price_label reads the cheapest active variant for a
+                    variable product ("From ₱44.99") and the product's own price
+                    otherwise. Printing $product->price here instead would show
+                    a number the customer cannot buy at, and would disagree with
+                    the price on the product page.
+                --}}
                 <span class="text-xl font-bold text-gray-900">
-                    ₱{{ number_format($product->price, 2) }}
+                    {{ $product->display_price_label }}
                 </span>
-
-                @if($product->compare_price)
-                    <span class="text-sm text-gray-500 line-through">
-                        ₱{{ number_format($product->compare_price, 2) }}
-                    </span>
-                @endif
-
             </div>
 
         </div>

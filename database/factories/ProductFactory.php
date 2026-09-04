@@ -33,7 +33,6 @@ class ProductFactory extends Factory
             'price' => $price,
             'stock_quantity' => fake()->numberBetween(0, 500),
             'low_stock_threshold' => 10,
-            'manage_stock' => true,
             'is_active' => fake()->boolean(95),
             'is_featured' => fake()->boolean(20),
             'has_variants' => fake()->boolean(30),

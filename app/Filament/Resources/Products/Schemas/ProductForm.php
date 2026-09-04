@@ -65,6 +65,8 @@ class ProductForm
                                     ])
                             ]),
                         Tab::make('Pricing & Inventory')
+                            ->icon(Heroicon::Banknotes)
+                            ->visible(fn (callable $get): bool => ! $get('has_variants'))
                             ->schema([
                                 Section::make('Pricing')
                                     ->schema([
@@ -82,7 +84,6 @@ class ProductForm
                                             ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
-                                    ->visible(fn (callable $get) => ! $get('has_variants'))
                                     ->schema([
                                         TextInput::make('stock_quantity')
                                             ->label('Stock Quantity')
@@ -93,10 +94,11 @@ class ProductForm
                                             ->default(0),
                                         TextInput::make('low_stock_threshold')
                                             ->label('Low stock Alert Threshold')
-                                            ->numeric()
-                                            ->default(0)
+                                            ->required()
+                                            ->integer()
                                             ->minValue(0)
-                                            ->helperText('Get notified when stock falls below this number'),
+                                            ->default(10)
+                                            ->helperText('Flag when remaining stock is at or below this threshold. Set to 0 to disable.'),
                                     ])
                                     ->columns(2)
                             ]),
@@ -192,7 +194,8 @@ class ProductForm
                             ->schema([
                                 Toggle::make('has_variants')
                                     ->live()
-                                    ->required(),
+                                    ->required()
+                                    ->helperText('When on, this product is priced and stocked per variant, and the Pricing & Inventory tab is hidden.'),
                                 Section::make('Product Variants')
                                     ->description('Enter stock for each size or color. The product is in stock when at least one active variant has stock.')
                                     ->schema([
@@ -227,11 +230,8 @@ class ProductForm
                                                     ->required()
                                                     ->integer()
                                                     ->minValue(0)
-                                                    ->default(0)
-                                                    ->helperText(
-                                                        'Flag this variant when stock reaches or falls below this number. '
-                                                        . 'Set to 0 to disable low-stock alerts.'
-                                                    ),
+                                                    ->default(10)
+                                                    ->helperText('Flag when remaining stock is at or below this threshold. Set to 0 to disable.'),
                                                 Toggle::make('is_active')
                                                     ->label('Active')
                                                     ->default(true),
@@ -307,6 +307,10 @@ class ProductForm
                                             ->columns(2)
                                             ->defaultItems(0)
                                             ->collapsible()
+                                            // Without this the drag handle reorders the rows on screen
+                                            // and the arrangement is lost on reload, because nothing
+                                            // writes the sort_order column the storefront reads.
+                                            ->orderColumn('sort_order')
                                             ->itemLabel(fn(array $state): ?string => $state['name'] ?? null)
                                             ->addActionLabel('Add Variant'),
                                     ])
