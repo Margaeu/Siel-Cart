@@ -36,7 +36,6 @@ class ReviewModerationTest extends TestCase
             'sku' => 'SMOKE-'.uniqid(),
             'price' => 100,
             'stock_quantity' => 5,
-            'stock_status' => 'in_stock',
             'is_active' => true,
         ]);
 

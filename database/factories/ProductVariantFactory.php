@@ -29,7 +29,6 @@ class ProductVariantFactory extends Factory
             'name' => $name,
             'price' => $price,
             'stock_quantity' => fake()->numberBetween(0, 100),
-            'stock_status' => fake()->randomElement(['in_stock', 'in_stock', 'out_of_stock']),
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 10),
         ];

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
-use App\Models\ProductVariant;
 
 class CartService
 {
@@ -42,7 +41,7 @@ class CartService
         // Find the product.
         $product = Product::find($productId);
 
-        if (!$product) {
+        if (!$product || !$product->is_active) {
             return [
                 'success' => false,
                 'message' => 'Product not found.',
@@ -52,9 +51,15 @@ class CartService
         // Determine which stock amount should be checked.
         $availableStock = $product->stock_quantity;
 
+        if ($product->has_variants && ! $variantId) {
+            return ['success' => false, 'message' => 'Please select a variant.'];
+        }
+
         // If a variant was selected, use the variant's stock.
         if ($variantId) {
-            $variant = ProductVariant::find($variantId);
+            $variant = $product->has_variants
+                ? $product->variants()->active()->find($variantId)
+                : null;
 
             if (!$variant) {
                 return [
@@ -161,7 +166,7 @@ class CartService
             ];
         }
 
-        // A product that is deleted, deactivated or flagged out of stock
+        // A product that is deleted, deactivated or out of stock
         // cannot have its quantity changed at all. Only removing it works.
         // Without this a deleted product with stock left on its row would
         // still accept quantity changes.

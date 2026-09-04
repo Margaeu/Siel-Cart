@@ -27,7 +27,6 @@ class ProductReviewsTest extends TestCase
             'description' => '<p>A product used to verify customer reviews.</p>',
             'price' => 350,
             'stock_quantity' => 10,
-            'stock_status' => 'in_stock',
             'is_active' => true,
         ]);
     }

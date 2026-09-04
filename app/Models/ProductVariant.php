@@ -18,16 +18,24 @@ class ProductVariant extends Model
         'name',
         'price',
         'stock_quantity',
-        'stock_status',
+        'low_stock_threshold',
         'is_active',
         'sort_order',
     ];
+
+    protected $appends = ['stock_status'];
+
+    public function getStockStatusAttribute(): string
+    {
+        return $this->stock_quantity > 0 ? 'in_stock' : 'out_of_stock';
+    }
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
             'stock_quantity' => 'integer',
+            'low_stock_threshold' => 'integer',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
@@ -41,7 +49,13 @@ class ProductVariant extends Model
     #[Scope]
     protected function inStock(Builder $query): void
     {
-        $query->where('stock_status', 'in_stock')
+        $query->where('stock_quantity', '>', 0);
+    }
+
+    #[Scope]
+    protected function lowStock(Builder $query): void
+    {
+        $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
               ->where('stock_quantity', '>', 0);
     }
 

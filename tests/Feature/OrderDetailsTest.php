@@ -33,7 +33,6 @@ class OrderDetailsTest extends TestCase
             'sku'            => 'SKU-' . strtoupper(uniqid()),
             'price'          => $price,
             'stock_quantity' => $stock,
-            'stock_status'   => 'in_stock',
             'is_active'      => true,
         ]);
     }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -20,6 +22,7 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('variants'))
             ->columns([
                 ImageColumn::make('primaryImage.image_path')
                     ->label('')
@@ -41,8 +44,15 @@ class ProductsTable
                     ->sortable(),
                 TextColumn::make('stock_quantity')
                     ->label('Stock')
-                    ->numeric()
-                    ->sortable(),
+                    ->state(fn (Product $record) => $record->has_variants
+                        ? $record->variants->where('is_active', true)->sum('stock_quantity')
+                        : $record->stock_quantity)
+                    ->numeric(),
+                TextColumn::make('stock_status')
+                    ->label('Availability')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state) => $state === 'in_stock' ? 'In Stock' : 'Out of Stock')
+                    ->color(fn (string $state) => $state === 'in_stock' ? 'success' : 'danger'),
                 IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean(),

@@ -68,7 +68,8 @@ class ProductListing extends Component
     {
         $query = Product::query()
             ->active()
-            ->with(['category', 'primaryImage']);
+            ->with(['category', 'primaryImage', 'variants'])
+            ->withReviewAggregates();
 
         // Search
         if ($this->search) {

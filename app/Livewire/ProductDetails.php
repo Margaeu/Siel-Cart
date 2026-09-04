@@ -52,8 +52,13 @@ class ProductDetails extends Component
         $this->selectedImage = $this->defaultSharedImagePath();
 
         // select first variant if product has variants
-        if ($this->product->has_variants && $this->product->variants->isNotEmpty()) {
-            $this->selectVariant($this->product->variants->first()->id);
+        if ($this->product->has_variants) {
+            $activeVariants = $this->product->variants->where('is_active', true);
+            $initialVariant = $activeVariants->first(fn ($variant) => $variant->stock_quantity > 0)
+                ?? $activeVariants->first();
+            if ($initialVariant) {
+                $this->selectVariant($initialVariant->id);
+            }
         }
 
         $this->loadReviewState();
@@ -66,15 +71,24 @@ class ProductDetails extends Component
     public function hydrate(): void
     {
         $this->product?->loadMissing([
+            'category',
             'generalImages',
             'primaryImage',
             'variants.images',
+            // The page reads reviews_count and average_rating; without the
+            // relation each read falls back to its own query.
+            'approvedReviews.customer',
         ]);
     }
 
     public function selectVariant($variantId)
     {
-        $this->selectedVariant = $variantId;
+        $variant = $this->product->variants->where('is_active', true)->find($variantId);
+        if (! $this->product->has_variants || ! $variant) {
+            return;
+        }
+
+        $this->selectedVariant = $variant->id;
 
         $variantImages = $this->product->variants->find($variantId)?->images ?? collect();
 
@@ -265,13 +279,20 @@ class ProductDetails extends Component
         $relatedProducts = Product::active()
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['primaryImage'])
+            // Related cards render the same product-card view as any listing,
+            // and that view reads the category name.
+            ->with(['category', 'primaryImage', 'variants'])
+            ->withReviewAggregates()
             ->limit(4)
             ->get();
 
         return view('livewire.product-details', [
             'relatedProducts' => $relatedProducts,
             'galleryImages' => $this->galleryImages(),
+            'selectionInStock' => $this->product->is_active && ($this->product->has_variants
+                ? (bool) $this->product->variants->contains(fn ($variant) =>
+                    $variant->id == $this->selectedVariant && $variant->is_active && $variant->stock_quantity > 0)
+                : $this->product->stock_status === 'in_stock'),
         ])->layout('components.layouts.front-end-layout', ['title' => $this->product->name.' - '.config('app.name')]);
     }
 }

@@ -92,19 +92,21 @@ class CartItem extends Model
      */
     public function getAvailableStockAttribute(): int
     {
-        return (int) ($this->variant?->stock_quantity ?? $this->product?->stock_quantity ?? 0);
+        if ($this->product_variant_id || $this->product?->has_variants) {
+            return (int) ($this->variant?->stock_quantity ?? 0);
+        }
+
+        return (int) ($this->product?->stock_quantity ?? 0);
     }
 
     /**
      * Get the stock status that applies to this item.
      *
-     * A variant carries its own status, and it is the one that
-     * matters when the customer picked a variant. Only fall back
-     * to the product's status when there is no variant.
+     * Availability follows the quantity of the selected item.
      */
     public function getStockStatusAttribute(): ?string
     {
-        return $this->variant?->stock_status ?? $this->product?->stock_status;
+        return $this->available_stock > 0 ? 'in_stock' : 'out_of_stock';
     }
 
     /**
@@ -114,7 +116,6 @@ class CartItem extends Model
      * asks whether the shop is still selling the item:
      * - the product must still be active
      * - the chosen variant, if any, must still be active
-     * - it must not be flagged out of stock
      * - there must be at least one unit on hand
      */
     public function getIsPurchasableAttribute(): bool
@@ -135,13 +136,13 @@ class CartItem extends Model
             return false;
         }
 
-        // The chosen variant was deactivated after it was added.
-        if ($this->variant && !$this->variant->is_active) {
-            return false;
-        }
-
-        // The seller flagged the item as out of stock.
-        if ($this->stock_status === 'out_of_stock') {
+        // Variant products must use stock from a valid, active selection.
+        if ($this->product->has_variants) {
+            if (! $this->variant || ! $this->variant->is_active
+                || $this->variant->product_id !== $this->product->id) {
+                return false;
+            }
+        } elseif ($this->product_variant_id) {
             return false;
         }
 

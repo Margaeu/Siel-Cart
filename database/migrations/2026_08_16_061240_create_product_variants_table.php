@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('name'); // e.g., "Red - Large"
             $table->json('options')->nullable(); // Stores key-value options like {"size": "S"}
             $table->decimal('price', 10, 2);
-            $table->integer('stock_quantity')->default(0);
-            $table->enum('stock_status', ['in_stock', 'out_of_stock'])->default('in_stock');
+            $table->unsignedInteger('stock_quantity')->default(0);
+            $table->unsignedInteger('low_stock_threshold')->default(10);
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->timestamps();

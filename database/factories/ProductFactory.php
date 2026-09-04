@@ -34,14 +34,9 @@ class ProductFactory extends Factory
             'stock_quantity' => fake()->numberBetween(0, 500),
             'low_stock_threshold' => 10,
             'manage_stock' => true,
-            'stock_status' => fake()->randomElement(['in_stock', 'in_stock', 'in_stock', 'out_of_stock']),
             'is_active' => fake()->boolean(95),
             'is_featured' => fake()->boolean(20),
             'has_variants' => fake()->boolean(30),
-<<<<<<< HEAD
-            'weight' => fake()->randomFloat(2, 0.1, 50),
-=======
->>>>>>> origin/frontend
             'views_count' => fake()->numberBetween(0, 1000),
         ];
     }

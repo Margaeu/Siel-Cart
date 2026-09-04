@@ -57,7 +57,7 @@
                                 Featured
                             </span>
                         @endif
-                        @if($product->stock_status === 'in_stock')
+                        @if($selectionInStock)
                             <span class="bg-emerald-100 text-emerald-800 text-sm font-semibold px-3 py-1 rounded">
                                 In Stock
                             </span>
@@ -179,7 +179,7 @@
                     --}}
 
                     <!-- Add to Cart -->
-                    @if($product->stock_status === 'in_stock')
+                    @if($selectionInStock)
                         <button wire:click="addToCart"
                                 style="background-color: #1E6031;"
                                 class="w-full text-white py-3 px-6 rounded-lg hover:opacity-90 transition font-semibold text-lg">

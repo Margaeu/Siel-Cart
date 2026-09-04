@@ -82,16 +82,14 @@ class ProductForm
                                             ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
+                                    ->visible(fn (callable $get) => ! $get('has_variants'))
                                     ->schema([
-                                        Toggle::make('manage_stock')
-                                            ->default(true)
-                                            ->helperText('Enable stock management for this product')
-                                            ->live(),
                                         TextInput::make('stock_quantity')
                                             ->label('Stock Quantity')
-                                            ->required(fn(callable $get) => $get('manage_stock'))
-                                            ->disabled(fn(callable $get) => !$get('manage_stock'))
-                                            ->numeric()
+                                            ->required()
+                                            ->integer()
+                                            ->minValue(0)
+                                            ->helperText('Stock status is automatic: more than zero is in stock; zero is out of stock.')
                                             ->default(0),
                                         TextInput::make('low_stock_threshold')
                                             ->label('Low stock Alert Threshold')
@@ -99,14 +97,6 @@ class ProductForm
                                             ->default(0)
                                             ->minValue(0)
                                             ->helperText('Get notified when stock falls below this number'),
-                                        Select::make('stock_status')
-                                            ->options([
-                                                'in_stock' => 'In Stock',
-                                                'out_of_stock' => 'Out of Stock',
-                                            ])
-                                            ->native(false)
-                                            ->default('in_stock')
-                                            ->required(),
                                     ])
                                     ->columns(2)
                             ]),
@@ -204,7 +194,7 @@ class ProductForm
                                     ->live()
                                     ->required(),
                                 Section::make('Product Variants')
-                                    ->description('Add variants like different sizes or colors')
+                                    ->description('Enter stock for each size or color. The product is in stock when at least one active variant has stock.')
                                     ->schema([
                                         Repeater::make('variants')
                                             ->relationship('variants')
@@ -226,20 +216,22 @@ class ProductForm
                                                     ->minValue(0)
                                                     ->step(0.01),
                                                 TextInput::make('stock_quantity')
-                                                    ->label('Stock')
-                                                    ->numeric()
-                                                    ->default(0)
-                                                    ->minValue(0)
-                                                    ->required(),
-                                                Select::make('stock_status')
-                                                    ->options([
-                                                        'in_stock' => 'In Stock',
-                                                        'out_of_stock' => 'Out of Stock',
-                                                        'on_backorder' => 'On Backorder',
-                                                    ])
-                                                    ->default('in_stock')
+                                                    ->label('Stock Quantity')
                                                     ->required()
-                                                    ->native(false),
+                                                    ->integer()
+                                                    ->minValue(0)
+                                                    ->helperText('Stock status is calculated automatically from this quantity.')
+                                                    ->default(0),
+                                                TextInput::make('low_stock_threshold')
+                                                    ->label('Low Stock Alert Threshold')
+                                                    ->required()
+                                                    ->integer()
+                                                    ->minValue(0)
+                                                    ->default(0)
+                                                    ->helperText(
+                                                        'Flag this variant when stock reaches or falls below this number. '
+                                                        . 'Set to 0 to disable low-stock alerts.'
+                                                    ),
                                                 Toggle::make('is_active')
                                                     ->label('Active')
                                                     ->default(true),

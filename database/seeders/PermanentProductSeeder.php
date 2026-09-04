@@ -99,7 +99,6 @@ class PermanentProductSeeder extends Seeder
                             'options' => json_encode(['size' => $v['size']]),
                             'price' => $product->price,
                             'stock_quantity' => 50,
-                            'stock_status' => 'in_stock',
                             'is_active' => true,
                             'sort_order' => $vIndex,
                         ]

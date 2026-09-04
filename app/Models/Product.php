@@ -24,12 +24,26 @@ class Product extends Model
         'stock_quantity',
         'low_stock_threshold',
         'manage_stock',
-        'stock_status',
         'is_active',
         'is_featured',
         'has_variants',
         'views_count',
     ];
+
+    protected $appends = ['stock_status'];
+
+    public function getStockStatusAttribute(): string
+    {
+        if (! $this->has_variants) {
+            return $this->stock_quantity > 0 ? 'in_stock' : 'out_of_stock';
+        }
+
+        $hasStock = $this->relationLoaded('variants')
+            ? $this->variants->contains(fn (ProductVariant $variant) => $variant->is_active && $variant->stock_quantity > 0)
+            : $this->variants()->active()->inStock()->exists();
+
+        return $hasStock ? 'in_stock' : 'out_of_stock';
+    }
 
     protected function casts(): array
     {
@@ -68,8 +82,14 @@ class Product extends Model
     #[Scope]
     protected function inStock(Builder $query): void
     {
-        $query->where('stock_status', 'in_stock')
-              ->where('stock_quantity', '>', 0);
+        $query->where(function (Builder $query) {
+            $query->where(fn (Builder $query) => $query
+                ->where('has_variants', false)
+                ->where('stock_quantity', '>', 0))
+                ->orWhere(fn (Builder $query) => $query
+                    ->where('has_variants', true)
+                    ->whereHas('variants', fn (Builder $variants) => $variants->active()->inStock()));
+        });
     }
 
     /**
@@ -78,8 +98,17 @@ class Product extends Model
     #[Scope]
     protected function lowStock(Builder $query): void
     {
-        $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
-              ->where('stock_quantity', '>', 0);
+        $query->where(function (Builder $query) {
+            $query->where(fn (Builder $simple) => $simple
+                ->where('has_variants', false)
+                ->where('stock_quantity', '>', 0)
+                ->whereColumn('stock_quantity', '<=', 'low_stock_threshold'))
+            ->orWhere(fn (Builder $variable) => $variable
+                ->where('has_variants', true)
+                ->whereHas('variants', fn (Builder $variants) => $variants
+                    ->active()
+                    ->lowStock()));
+        });
     }
 
     /**
@@ -152,14 +181,55 @@ class Product extends Model
      }
 
      // helper Methods
-    public function getAverageRatingAttribute()
+
+    /**
+     * Mean rating over approved reviews, 0 when there are none.
+     *
+     * A product card reads this once per star, so a plain relation query here
+     * costs five round trips per card. Prefer the aggregate a listing loaded
+     * with withAvg(), then the loaded relation, and only query as a last
+     * resort. The aggregate is NULL for a product with no approved reviews,
+     * so test for the key rather than for a value -- `??` would send exactly
+     * those products back to the database on every read.
+     */
+    public function getAverageRatingAttribute(): float
     {
-        return $this->approvedReviews()->avg('rating') ?? 0;
+        if (array_key_exists('approved_reviews_avg_rating', $this->attributes)) {
+            return (float) ($this->attributes['approved_reviews_avg_rating'] ?? 0);
+        }
+
+        $average = $this->relationLoaded('approvedReviews')
+            ? $this->approvedReviews->avg('rating')
+            : $this->approvedReviews()->avg('rating');
+
+        return (float) ($average ?? 0);
     }
 
-    public function getReviewsCountAttribute()
+    /**
+     * Number of approved reviews, read from the aggregate a listing loaded
+     * with withCount() where one is present. See getAverageRatingAttribute().
+     */
+    public function getReviewsCountAttribute(): int
     {
-        return $this->approvedReviews()->count();
+        if (array_key_exists('approved_reviews_count', $this->attributes)) {
+            return (int) $this->attributes['approved_reviews_count'];
+        }
+
+        return $this->relationLoaded('approvedReviews')
+            ? $this->approvedReviews->count()
+            : $this->approvedReviews()->count();
+    }
+
+    /**
+     * Load the review aggregates every product card reads.
+     *
+     * Listings that render cards must call this, or each card falls back to
+     * per-read queries against the reviews table.
+     */
+    #[Scope]
+    protected function withReviewAggregates(Builder $query): void
+    {
+        $query->withCount('approvedReviews')->withAvg('approvedReviews', 'rating');
     }
 
     public function incrementViews()
