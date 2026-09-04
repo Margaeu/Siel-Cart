@@ -84,22 +84,26 @@
                                 <div class="flex-shrink-0">
                                     <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-100">
 
-                                        @if($item->product->primaryImage)
+                                    @php
+                                        // Use the selected variant's first image.
+                                        // Fall back to the product's general primary image.
+                                        $cartImage = $item->variant?->images->first()
+                                            ?? $item->product->primaryImage;
+                                    @endphp
 
-                                            <img src="{{ $item->product->primaryImage->url }}"
-                                                 alt="{{ $item->product->name }}"
-                                                 class="w-full h-full object-cover
-                                                 {{ $isUnavailable && !$isOverStock ? 'grayscale' : '' }}">
-
-                                        @else
-
-                                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
-                                                <span class="text-2xl text-gray-500">
-                                                    {{ substr($item->product->name, 0, 1) }}
-                                                </span>
-                                            </div>
-
-                                        @endif
+                                    @if($cartImage)
+                                        <img
+                                            src="{{ $cartImage->url }}"
+                                            alt="{{ $item->product->name }}{{ $item->variant ? ' - '.$item->variant->name : '' }}"
+                                            class="w-full h-full object-cover
+                                                {{ $isUnavailable && !$isOverStock ? 'grayscale' : '' }}">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
+                                            <span class="text-2xl text-gray-500">
+                                                {{ substr($item->product->name, 0, 1) }}
+                                            </span>
+                                        </div>
+                                    @endif
 
                                     </div>
                                 </div>

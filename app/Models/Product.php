@@ -110,14 +110,35 @@ class Product extends Model
          return $this->hasMany(ProductVariant::class);
      }
 
+     /**
+      * Every image belonging to this product, shared and variant-specific alike.
+      */
      public function images()
      {
          return $this->hasMany(ProductImage::class)->orderBy('sort_order');
      }
 
+     /**
+      * Images that belong to the product itself rather than to one variant:
+      * size charts, packaging shots, model displays. These stay visible no
+      * matter which variant the customer selects.
+      */
+     public function generalImages()
+     {
+         return $this->hasMany(ProductImage::class)
+             ->whereNull('product_variant_id')
+             ->orderBy('sort_order');
+     }
+
+     /**
+      * The card/thumbnail image. Scoped to the shared gallery so a variant
+      * image can never be picked up as the product's representative image.
+      */
      public function primaryImage()
      {
-         return $this->hasOne(ProductImage::class)->where('is_primary', true);
+         return $this->hasOne(ProductImage::class)
+             ->whereNull('product_variant_id')
+             ->where('is_primary', true);
      }
 
      public function reviews()

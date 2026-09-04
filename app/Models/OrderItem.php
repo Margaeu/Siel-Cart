@@ -13,6 +13,7 @@ class OrderItem extends Model
         'product_name',
         'product_sku',
         'variant_name',
+        'product_image',
         'price',
         'quantity',
         'subtotal',
@@ -41,5 +42,12 @@ class OrderItem extends Model
     public function variant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function getDisplayImageUrlAttribute(): ?string
+    {
+        return $this->product_image
+            ?? $this->variant?->images->first()?->url
+            ?? $this->product?->primaryImage?->url;
     }
 }

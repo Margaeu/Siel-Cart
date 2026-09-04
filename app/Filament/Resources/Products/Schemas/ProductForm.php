@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Filament\Infolists\Components\TextEntry;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
@@ -113,9 +114,9 @@ class ProductForm
                             ->icon(Heroicon::Photo)
                             ->schema([
                                 Section::make('Product Images')
-                                    ->description('Upload multiple images. The first image will be the primary image.')
+                                    ->description('Shared images shown for every variant — size charts, packaging, model displays. The first image will be the primary image. Per-variant photos are uploaded under the Product Variants tab.')
                                     ->schema([
-                                        FileUpload::make('images')
+                                        FileUpload::make('generalImages')
                                             ->disk('r2')
                                             ->visibility('public')
                                             ->label('Product Images')
@@ -136,15 +137,19 @@ class ProductForm
                                             ])
                                             ->helperText('You can drag and drop to reorder images')
                                             ->afterStateHydrated(function (FileUpload $component, ?Product $record): void {
-                                                // `images` is a relationship, not a column, so Filament's
+                                                // `generalImages` is a relationship, not a column, so Filament's
                                                 // `attributesToArray()` fill leaves this field empty.
                                                 //
                                                 // This deliberately replaces BaseFileUpload::hydrateFiles(),
                                                 // whose `$disk->exists()` check drops paths whose R2 object is
                                                 // missing and treats an unreachable R2 as "missing". An empty
                                                 // state would then read as "cleared the gallery" on save.
+                                                //
+                                                // Only shared images load here; variant images belong to the
+                                                // variant's own uploader and must not be listed (or deleted) by
+                                                // this field.
                                                 $component->state(
-                                                    $record?->images
+                                                    $record?->generalImages
                                                         ->pluck('image_path')
                                                         ->filter()
                                                         ->values()
@@ -164,8 +169,9 @@ class ProductForm
                                                     ->all();
 
                                                 // Remove only what left the field, so images that survived the
-                                                // edit keep their existing R2 object and row.
-                                                foreach ($record->images()->get() as $existingImage) {
+                                                // edit keep their existing R2 object and row. Scoped to
+                                                // `generalImages` so variant photos are never touched here.
+                                                foreach ($record->generalImages()->get() as $existingImage) {
                                                     if (in_array($existingImage->image_path, $paths, true)) {
                                                         continue;
                                                     }
@@ -175,7 +181,7 @@ class ProductForm
                                                 }
 
                                                 foreach ($paths as $index => $imagePath) {
-                                                    $record->images()->updateOrCreate(
+                                                    $record->generalImages()->updateOrCreate(
                                                         ['image_path' => $imagePath],
                                                         [
                                                             'is_primary' => $index === 0,
@@ -184,7 +190,9 @@ class ProductForm
                                                     );
                                                 }
 
-                                                $record->unsetRelation('images')->unsetRelation('primaryImage');
+                                                $record->unsetRelation('images')
+                                                    ->unsetRelation('generalImages')
+                                                    ->unsetRelation('primaryImage');
                                             })
                                             ->dehydrated(false)
                                     ])
@@ -235,6 +243,74 @@ class ProductForm
                                                 Toggle::make('is_active')
                                                     ->label('Active')
                                                     ->default(true),
+                                                FileUpload::make('images')
+                                                    ->disk('r2')
+                                                    ->visibility('public')
+                                                    ->label('Variant Images')
+                                                    ->helperText('Shown when a customer selects this variant. Leave empty to keep showing the shared product images.')
+                                                    ->multiple()
+                                                    ->image()
+                                                    ->directory('products/variants')
+                                                    ->maxSize(2048)
+                                                    ->reorderable()
+                                                    ->columnSpanFull()
+                                                    ->orientImagesFromExif(false)
+                                                    ->imagePreviewHeight('150')
+                                                    ->fetchFileInformation(false)
+                                                    ->extraAttributes([
+                                                        'data-filepond-type' => 'image',
+                                                    ])
+                                                    ->extraInputAttributes([
+                                                        'data-filepond-item-property-size' => 'false',
+                                                    ])
+                                                    // Same reasoning as the shared gallery above: `images` is a
+                                                    // relationship, and BaseFileUpload's `$disk->exists()` check
+                                                    // would silently drop paths when R2 is unreachable.
+                                                    ->afterStateHydrated(function (FileUpload $component, ?ProductVariant $record): void {
+                                                        $component->state(
+                                                            $record?->images
+                                                                ->pluck('image_path')
+                                                                ->filter()
+                                                                ->values()
+                                                                ->all() ?? [],
+                                                        );
+                                                    })
+                                                    ->saveRelationshipsUsing(function ($state, ?ProductVariant $record): void {
+                                                        if (! $record) {
+                                                            return;
+                                                        }
+
+                                                        $paths = collect(Arr::wrap($state))
+                                                            ->filter(fn ($path): bool => is_string($path) && filled($path))
+                                                            ->values()
+                                                            ->all();
+
+                                                        foreach ($record->images()->get() as $existingImage) {
+                                                            if (in_array($existingImage->image_path, $paths, true)) {
+                                                                continue;
+                                                            }
+
+                                                            Storage::disk('r2')->delete($existingImage->image_path);
+                                                            $existingImage->delete();
+                                                        }
+
+                                                        foreach ($paths as $index => $imagePath) {
+                                                            $record->images()->updateOrCreate(
+                                                                ['image_path' => $imagePath],
+                                                                [
+                                                                    'product_id' => $record->product_id,
+                                                                    // `is_primary` stays false: it marks the
+                                                                    // product's card thumbnail, which is always
+                                                                    // a shared image.
+                                                                    'is_primary' => false,
+                                                                    'sort_order' => $index,
+                                                                ],
+                                                            );
+                                                        }
+
+                                                        $record->unsetRelation('images');
+                                                    })
+                                                    ->dehydrated(false),
                                             ])
                                             ->columns(2)
                                             ->defaultItems(0)

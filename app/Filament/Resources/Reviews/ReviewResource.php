@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Reviews;
 
-use App\Filament\Resources\Reviews\Pages\CreateReview;
 use App\Filament\Resources\Reviews\Pages\EditReview;
 use App\Filament\Resources\Reviews\Pages\ListReviews;
 use App\Filament\Resources\Reviews\Schemas\ReviewForm;
@@ -42,8 +41,22 @@ class ReviewResource extends Resource
     {
         return [
             'index' => ListReviews::route('/'),
-            'create' => CreateReview::route('/create'),
             'edit' => EditReview::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Surface the pending moderation queue in the sidebar.
+     */
+    public static function getNavigationBadge(): ?string
+    {
+        $pending = Review::where('is_approved', false)->count();
+
+        return $pending > 0 ? (string) $pending : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
     }
 }

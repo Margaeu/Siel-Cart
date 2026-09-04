@@ -17,7 +17,7 @@ class OrderDetails extends Component
     {
         $this->order = Order::where('id', $id)
             ->where('customer_id', auth('customer')->id())
-            ->with(['customer', 'items.product.primaryImage', 'statusHistories'])
+            ->with(['customer', 'items.product.primaryImage', 'items.variant.images','statusHistories', ])
             ->firstOrFail();
     }
 

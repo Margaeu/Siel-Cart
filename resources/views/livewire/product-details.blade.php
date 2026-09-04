@@ -32,10 +32,10 @@
                         @endif
                     </div>
 
-                    <!-- Thumbnail Images -->
-                    @if($product->images->count() > 1)
+                    <!-- Thumbnail Images: shared images + the selected variant's own -->
+                    @if($galleryImages->count() > 1)
                         <div class="grid grid-cols-4 gap-4">
-                            @foreach($product->images as $image)
+                            @foreach($galleryImages as $image)
                                 <button wire:click="selectImage('{{ $image->image_path }}')"
                                         style="{{ $selectedImage === $image->image_path ? 'border-color: #1E6031;' : '' }}"
                                         class="aspect-square rounded-lg overflow-hidden border-2 {{ $selectedImage === $image->image_path ? '' : 'border-gray-200' }} hover:opacity-80 transition">
@@ -301,6 +301,58 @@
                             <p class="text-gray-500">No reviews yet. Be the first to review this product!</p>
                         </div>
                     @endif
+
+                    @auth('customer')
+                        <div class="mt-8 border-t pt-8">
+                            @if($hasReview && !$reviewIsApproved)
+                                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+                                    Your review has been submitted and is awaiting approval.
+                                </div>
+                            @elseif($hasReview)
+                                <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                                    Thank you for reviewing this product.
+                                </div>
+                            @elseif($canReview)
+                                <form wire:submit="submitReview" class="space-y-5">
+                                    <h3 class="text-xl font-semibold text-gray-900">Write a Review</h3>
+
+                                    <div>
+                                        <label for="review-rating" class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                                        <select id="review-rating" wire:model="reviewRating"
+                                                class="w-full rounded-lg border-gray-300 focus:border-[#1E6031] focus:ring-[#1E6031]">
+                                            <option value="5">5 - Excellent</option>
+                                            <option value="4">4 - Good</option>
+                                            <option value="3">3 - Average</option>
+                                            <option value="2">2 - Poor</option>
+                                            <option value="1">1 - Very Poor</option>
+                                        </select>
+                                        @error('reviewRating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="review-title" class="block text-sm font-medium text-gray-700 mb-1">Title (optional)</label>
+                                        <input id="review-title" type="text" wire:model="reviewTitle" maxlength="255"
+                                               class="w-full rounded-lg border-gray-300 focus:border-[#1E6031] focus:ring-[#1E6031]">
+                                        @error('reviewTitle') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="review-comment" class="block text-sm font-medium text-gray-700 mb-1">Review</label>
+                                        <textarea id="review-comment" wire:model="reviewComment" rows="4" maxlength="2000"
+                                                  class="w-full rounded-lg border-gray-300 focus:border-[#1E6031] focus:ring-[#1E6031]"></textarea>
+                                        @error('reviewComment') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @error('review') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <button type="submit"
+                                            class="rounded-lg bg-[#1E6031] px-5 py-2.5 font-semibold text-white transition hover:bg-[#154522] disabled:opacity-50"
+                                            wire:loading.attr="disabled" wire:target="submitReview">
+                                        Submit Review
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endauth
                 </div>
             </div>
         </div>

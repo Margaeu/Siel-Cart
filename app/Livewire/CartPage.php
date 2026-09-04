@@ -42,7 +42,7 @@ class CartPage extends Component
             $this->cart->load([
                 'items.product.primaryImage',
                 'items.product.category',
-                'items.variant',
+                'items.variant.images',
             ]);
         }
     }

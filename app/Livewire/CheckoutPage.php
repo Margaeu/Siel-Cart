@@ -69,9 +69,9 @@ class CheckoutPage extends Component
             return [];
         }
 
-        $cart->load([
+        $cart->load([           
             'items.product.primaryImage',
-            'items.variant',
+            'items.variant.images',
         ]);
 
         return $cart->items->map(function ($item) {
@@ -83,7 +83,7 @@ class CheckoutPage extends Component
                 'variant_name' => $item->variant?->name,
                 'sku'          => $item->variant?->sku ?? $item->product->sku,
                 'price'        => $item->price,
-                'image'        => $item->product->primaryImage?->url,
+                'image'        => ($item->variant?->images->first() ?? $item->product->primaryImage)?->url,
                 'quantity'     => $item->quantity,
             ];
         })->all();

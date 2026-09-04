@@ -63,7 +63,7 @@
                 <div class="flex items-center gap-1 mb-2">
 
                     <div class="flex text-amber-400">
-                        @for($i = 1; $i <= 5; $i)
+                        @for($i = 1; $i <= 5; $i++)
 
                             @if($i <= floor($product->average_rating))
                                 <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
