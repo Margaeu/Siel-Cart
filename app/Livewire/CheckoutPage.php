@@ -3,12 +3,13 @@
 namespace App\Livewire;
 
 use App\Models\Order;
-use App\Models\Product;
+use App\Models\Cart;
+use App\Models\CartItem;
 use Livewire\Component;
 use App\Models\OrderItem;
-use App\Models\ProductVariant;
 use App\Services\CartService;
 use App\Mail\OrderConfirmation;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -32,8 +33,8 @@ class CheckoutPage extends Component
     public array $cart = [];
 
     /**
-     * Stops a second order being created when the customer double-taps
-     * Place Order before the first request has redirected away.
+     * Disables the button while this page submits. The database cart lock
+     * below also protects submissions from separate tabs or requests.
      */
     public bool $placingOrder = false;
 
@@ -49,7 +50,7 @@ class CheckoutPage extends Component
         // Never allow checkout to start with out-of-stock items.
         if ($cartService->hasUnavailableItems()) {
             return redirect()->route('cart.index')
-                ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
+                ->with('error', 'Some items in your cart are no longer available. Lower quantities that exceed stock, or remove unavailable items before checkout.');
         }
     }
 
@@ -63,18 +64,57 @@ class CheckoutPage extends Component
      */
     protected function buildCartFromDatabase(CartService $cartService): array
     {
+        return $this->cartLines($this->loadCartItems($cartService));
+    }
+
+    /**
+     * Submission takes current locking reads of the cart, its lines, then
+     * products and variants in ID order. Prices and availability therefore
+     * come from the same rows that remain locked until the order is saved.
+     */
+    protected function loadCartItems(CartService $cartService, bool $lock = false): Collection
+    {
         $cart = $cartService->getCart();
 
         if (!$cart) {
-            return [];
+            return new Collection;
         }
 
-        $cart->load([           
-            'items.product.primaryImage',
-            'items.variant.images',
-        ]);
+        if ($lock) {
+            $cart = Cart::whereKey($cart->id)
+                ->where('customer_id', auth('customer')->id())
+                ->lockForUpdate()->first();
 
-        return $cart->items->map(function ($item) {
+            if (!$cart) {
+                return new Collection;
+            }
+        }
+
+        $items = $cart->items()->orderBy('id');
+
+        if ($lock) {
+            $items->lockForUpdate();
+        }
+
+        return $items->with([
+            'product' => function ($query) use ($lock) {
+                $query->orderBy('id')->with('primaryImage');
+                if ($lock) {
+                    $query->lockForUpdate();
+                }
+            },
+            'variant' => function ($query) use ($lock) {
+                $query->orderBy('id')->with('images');
+                if ($lock) {
+                    $query->lockForUpdate();
+                }
+            },
+        ])->get();
+    }
+
+    protected function cartLines(Collection $items): array
+    {
+        return $items->map(function (CartItem $item) {
             return [
                 'cart_item_id' => $item->id,
                 'product_id'   => $item->product_id,
@@ -111,25 +151,18 @@ class CheckoutPage extends Component
 
         $this->placingOrder = true;
 
-        // Price the order from the database rather than from $this->cart.
-        // That property round-trips through the browser, and the page may
-        // also have sat open while stock or prices changed.
-        $cart = $this->buildCartFromDatabase($cartService);
-        $this->cart = $cart;
-
-        if (empty($cart)) {
-            $this->placingOrder = false;
-            return redirect()->route('cart.index');
-        }
-
-        if ($cartService->hasUnavailableItems()) {
-            $this->placingOrder = false;
-            return redirect()->route('cart.index')
-                ->with('error', 'Some items in your cart are no longer available. Please remove them before checkout.');
-        }
-
         try {
-            $order = DB::transaction(function () use ($cart, $cartService) {
+            $order = DB::transaction(function () use ($cartService) {
+                // Do not use the browser's cart or a snapshot read before the
+                // transaction. A second submission waits, then sees no items.
+                $items = $this->loadCartItems($cartService, lock: true);
+                if ($items->isEmpty()) {
+                    return null;
+                }
+
+                $this->reserveStock($items);
+                $cart = $this->cartLines($items);
+                $this->cart = $cart;
                 $subtotal = $this->subtotalFor($cart);
                 $customer = auth('customer')->user();
 
@@ -166,28 +199,36 @@ class CheckoutPage extends Component
                     ]);
                 }
 
-                $this->reserveStock($cart);
-
-                // Clearing inside the transaction means an order can never
-                // end up existing alongside the cart that produced it.
-                $cartService->clearCart();
-
-                // Dispatch order confirmation email to the customer
-                Mail::to($customer->email)->send(new OrderConfirmation($order));
+                // Consume only the locked lines included in this order.
+                // An item added separately must not disappear unpurchased.
+                CartItem::whereIn('id', $items->modelKeys())->delete();
 
                 return $order;
             });
         } catch (\DomainException $e) {
-            // Raised by reserveStock. The message names the product and is
-            // written for the customer, so it is safe to show.
             $this->placingOrder = false;
-            session()->flash('error', $e->getMessage());
-            return;
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             $this->placingOrder = false;
             report($e);
             session()->flash('error', 'We could not place your order. Please try again.');
             return;
+        }
+
+        if (!$order) {
+            $this->placingOrder = false;
+            return redirect()->route('cart.index');
+        }
+
+        $successMessage = 'Thank you for your purchase! Please wait for an email confirmation to know when your order is being processed.';
+
+        // The order is committed before email is dispatched. A mail or queue
+        // failure must not roll it back or invite the customer to order twice.
+        try {
+            Mail::to(auth('customer')->user()->email)->send(new OrderConfirmation($order));
+        } catch (\Throwable $e) {
+            report($e);
+            $successMessage = 'Your order was placed, but we could not send the confirmation email. You can track your order here.';
         }
 
         $this->dispatch('cart-updated');
@@ -198,50 +239,45 @@ class CheckoutPage extends Component
             ->route('customer.orders.show', $order->id)
             ->with([
                 'order_success_title' => 'Order placed successfully!',
-                'order_success_message' => 'Thank you for your purchase! Please wait for an email confirmation to know when your order is being processed.',
+                'order_success_message' => $successMessage,
             ]);
     }
 
     /**
-     * Take the ordered quantities out of stock.
-     *
-     * Rows are locked before they are read, so two customers checking out
-     * at the same moment cannot both pass the stock check and sell the
-     * same last unit twice. The lock is held until the transaction commits.
-     *
-     * Locks are always taken in the same order, so two concurrent
-     * checkouts can never each hold the row the other is waiting for.
+     * Validate and reserve from the locked product/variant models. Grouping
+     * also handles older carts containing duplicate lines for the same item.
      */
-    protected function reserveStock(array $cart): void
+    protected function reserveStock(Collection $items): void
     {
-        $lines = collect($cart)
-            ->sortBy(fn ($line) => sprintf(
-                '%s-%012d',
-                $line['variant_id'] ? 'v' : 'p',
-                $line['variant_id'] ?? $line['product_id'],
-            ))
-            ->values();
-
-        foreach ($lines as $line) {
-            // A variant carries its own stock, so that is the row to lock
-            // whenever the customer picked one.
-            $stockHolder = $line['variant_id']
-                ? ProductVariant::whereKey($line['variant_id'])->lockForUpdate()->first()
-                : Product::whereKey($line['product_id'])->lockForUpdate()->first();
-
-            if (!$stockHolder) {
+        foreach ($items as $item) {
+            if (!$item->is_purchasable || $item->price < 0) {
+                $name = $item->product?->name ?? 'This product';
                 throw new \DomainException(
-                    "{$line['name']} is no longer available. Please remove it from your cart."
+                    "{$name} is no longer available. Please remove it from your cart."
                 );
             }
 
-            if ($stockHolder->stock_quantity < $line['quantity']) {
+            if ($item->quantity < 1) {
+                throw new \DomainException('Every item must have a quantity of at least 1. Please update your cart.');
+            }
+        }
+
+        $groups = $items->groupBy(fn (CartItem $item) => $item->product_variant_id
+            ? 'variant-'.$item->product_variant_id
+            : 'product-'.$item->product_id);
+
+        foreach ($groups as $group) {
+            $item = $group->first();
+            $stockHolder = $item->variant ?? $item->product;
+            $quantity = $group->sum('quantity');
+
+            if ($stockHolder->stock_quantity < $quantity) {
                 throw new \DomainException(
-                    "Only {$stockHolder->stock_quantity} left of {$line['name']}. Please lower the quantity in your cart."
+                    "Only {$stockHolder->stock_quantity} left of {$item->product->name}. Please lower the quantity in your cart."
                 );
             }
 
-            $stockHolder->decrement('stock_quantity', $line['quantity']);
+            $stockHolder->decrement('stock_quantity', $quantity);
         }
     }
 

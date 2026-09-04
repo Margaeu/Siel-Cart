@@ -6,11 +6,20 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Order extends Model
 {
      use SoftDeletes;
+
+    /**
+     * Statuses that mean the order is no longer a sale, so its units belong
+     * back on the shelf: cancelled before it was handed over, or returned
+     * after it was. 'return_requested' is not one of them -- the goods are
+     * still with the customer until staff complete the return.
+     */
+    public const RESTOCKING_STATUSES = ['cancelled', 'return_completed'];
 
     protected $fillable = [
         'order_number',
@@ -28,6 +37,13 @@ class Order extends Model
         'claimant_name',
         'claimant_phone',
         'admin_notes',
+        // These were being written by the cancel and complete flows without
+        // being fillable, so mass assignment dropped them silently -- orders
+        // ended up cancelled with no reason recorded, and completed with no
+        // completed_at, which is the date the return window is measured from.
+        'cancellation_reason',
+        'cancelled_at',
+        'completed_at',
     ];
 
     protected function casts(): array
@@ -37,6 +53,9 @@ class Order extends Model
             'total' => 'decimal:2',
             'pickup_date' => 'date',
             'paid_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'stock_restored_at' => 'datetime',
         ];
     }
 
@@ -123,6 +142,86 @@ class Order extends Model
     }
 
     /**
+     * Put this order's units back on the shelf.
+     *
+     * Checkout takes stock out at the moment the order is written, so
+     * nothing returns it unless this does. It lives on the model rather
+     * than in the page that cancels, because the status can be changed
+     * from several places -- the customer's cancel button, the admin's
+     * status dropdown, a future bulk action -- and every one of them has
+     * to credit stock the same way or the product module drifts.
+     *
+     * stock_restored_at is what makes this safe to call more than once.
+     * The order row is locked and re-read inside the transaction before
+     * the column is checked, so two people cancelling the same order at
+     * the same moment cannot both pass the check and credit stock twice.
+     *
+     * Products are locked before variants, matching the order checkout
+     * takes them in, so a cancel and a checkout cannot deadlock against
+     * each other. Rows within each group are locked by ascending id for
+     * the same reason.
+     *
+     * Returns whether this call was the one that did the crediting.
+     */
+    public function restoreStock(): bool
+    {
+        return DB::transaction(function (): bool {
+            $order = static::withTrashed()
+                ->whereKey($this->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if (!$order || $order->stock_restored_at !== null) {
+                return false;
+            }
+
+            $productQuantities = [];
+            $variantQuantities = [];
+
+            foreach ($order->items()->get() as $item) {
+                // A line whose product was force-deleted keeps its snapshot
+                // but has no stock left to credit, so there is nothing to do
+                // for it. The same goes for a deleted variant.
+                if ($item->product_variant_id) {
+                    $variantQuantities[$item->product_variant_id] =
+                        ($variantQuantities[$item->product_variant_id] ?? 0) + $item->quantity;
+                } elseif ($item->product_id) {
+                    $productQuantities[$item->product_id] =
+                        ($productQuantities[$item->product_id] ?? 0) + $item->quantity;
+                }
+            }
+
+            // Sum per product first. An order can hold more than one line for
+            // the same item, and each row must only be touched once.
+            ksort($productQuantities);
+            ksort($variantQuantities);
+
+            foreach ($productQuantities as $productId => $quantity) {
+                // Soft-deleted products are included. The units physically
+                // came back, and the product can still be restored.
+                Product::withTrashed()
+                    ->whereKey($productId)
+                    ->lockForUpdate()
+                    ->first()
+                    ?->increment('stock_quantity', $quantity);
+            }
+
+            foreach ($variantQuantities as $variantId => $quantity) {
+                ProductVariant::whereKey($variantId)
+                    ->lockForUpdate()
+                    ->first()
+                    ?->increment('stock_quantity', $quantity);
+            }
+
+            // Quietly, so this write does not re-enter the status hook below.
+            $order->forceFill(['stock_restored_at' => now()])->saveQuietly();
+            $this->stock_restored_at = $order->stock_restored_at;
+
+            return true;
+        });
+    }
+
+    /**
      * Build a code that no other order is using.
      *
      * Both columns this feeds are uniquely indexed, so a repeat would
@@ -169,6 +268,26 @@ class Order extends Model
                 'status' => $order->status,
                 'notes' => 'Order created'
             ]);
+        });
+
+        // Credit stock back the moment the order stops being a sale.
+        //
+        // This hangs off the model rather than off the pages that change the
+        // status, so the customer's cancel button and the admin's status
+        // dropdown restock identically. Before this, only the customer's
+        // button did, and an order cancelled from the admin panel left its
+        // units permanently missing from stock_quantity.
+        //
+        // An order moved back out of a cancelled status is deliberately not
+        // re-deducted -- nothing here can know the stock is still there to
+        // take. restoreStock() will refuse to credit it a second time, so the
+        // worst case is stock that reads high and is corrected by hand,
+        // rather than stock credited twice.
+        static::updated(function ($order) {
+            if ($order->wasChanged('status')
+                && in_array($order->status, self::RESTOCKING_STATUSES, true)) {
+                $order->restoreStock();
+            }
         });
     }
 }

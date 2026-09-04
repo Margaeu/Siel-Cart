@@ -34,9 +34,22 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
+    /**
+     * The product this line was bought from, deleted or not.
+     *
+     * Products are soft-deleted, so without withTrashed() the relation goes
+     * null the moment one is removed from the catalogue and the order loses
+     * its live fallbacks -- the image most visibly. The line still displays
+     * from its own snapshot either way, but there is no reason to drop back
+     * to that while the product row is still sitting there. CartItem loads
+     * trashed products for the same reason.
+     *
+     * A force-deleted product leaves product_id null rather than deleting
+     * the line, so this is null only when the product is gone for good.
+     */
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
 
     public function variant()
@@ -44,6 +57,18 @@ class OrderItem extends Model
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
+    /**
+     * The picture to show for this line.
+     *
+     * The snapshot taken at checkout comes first, so the order keeps showing
+     * what the customer actually bought. The live variant image is preferred
+     * over the product's own for anything older than that snapshot, since a
+     * variant line should point at its own picture rather than the parent's.
+     *
+     * Every view that shows an order line must use this. Reaching for
+     * product->primaryImage directly skips the snapshot and the variant
+     * image both, and shows nothing at all once the product is deleted.
+     */
     public function getDisplayImageUrlAttribute(): ?string
     {
         return $this->product_image

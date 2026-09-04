@@ -156,15 +156,17 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         @foreach($order->items->take(3) as $item)
-                                            @if($item->product)
-                                                <div class="w-12 h-12 rounded bg-gray-100 border border-gray-200 overflow-hidden">
-                                                    @if($item->product->primaryImage)
-                                                        <img src="{{ $item->product->primaryImage->url }}" 
-                                                             alt="{{ $item->product_name }}"
-                                                             class="w-full h-full object-cover">
-                                                    @endif
-                                                </div>
-                                            @endif
+                                            <div class="w-12 h-12 rounded bg-gray-100 border border-gray-200 overflow-hidden">
+                                                @if($item->display_image_url)
+                                                    <img src="{{ $item->display_image_url }}"
+                                                         alt="{{ $item->product_name }}{{ $item->variant_name ? ' - '.$item->variant_name : '' }}"
+                                                         class="w-full h-full object-cover">
+                                                @else
+                                                    <div class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold">
+                                                        {{ substr($item->product_name, 0, 1) }}
+                                                    </div>
+                                                @endif
+                                            </div>
                                         @endforeach
                                         @if($order->items->count() > 3)
                                             <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">

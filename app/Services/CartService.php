@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 
 class CartService
 {
@@ -38,6 +38,27 @@ class CartService
         ?int $variantId = null,
         int $quantity = 1
     ): array {
+        $cart = $this->getCart();
+
+        if (! $cart) {
+            return [
+                'success' => false,
+                'message' => 'Please log in to add products to your cart.',
+            ];
+        }
+
+        return $this->withLockedCart($cart, fn (Cart $lockedCart) =>
+            $this->addItemToLockedCart($lockedCart, $productId, $variantId, $quantity)
+        );
+    }
+
+    /** Validate and save an addition while holding the customer's cart lock. */
+    private function addItemToLockedCart(
+        Cart $cart,
+        int $productId,
+        ?int $variantId,
+        int $quantity
+    ): array {
         // Find the product.
         $product = Product::find($productId);
 
@@ -53,6 +74,18 @@ class CartService
 
         if ($product->has_variants && ! $variantId) {
             return ['success' => false, 'message' => 'Please select a variant.'];
+        }
+
+        // A product sold on its own has to carry a price. products.price is
+        // nullable because a product sold by variant has none of its own, so
+        // a product switched back off variants can reach here with nothing to
+        // charge. Letting it in would put a row in the cart that prices as
+        // null, blocks checkout, and can only be removed.
+        if (! $product->has_variants && $product->price === null) {
+            return [
+                'success' => false,
+                'message' => 'This product is not available for purchase right now.',
+            ];
         }
 
         // If a variant was selected, use the variant's stock.
@@ -79,20 +112,11 @@ class CartService
             ];
         }
 
-        // Get the customer's permanent cart.
-        $cart = $this->getCart();
-
-        if (!$cart) {
-            return [
-                'success' => false,
-                'message' => 'Please log in to add products to your cart.',
-            ];
-        }
-
         // Check if this product/variant is already in the cart.
         $cartItem = $cart->items()
             ->where('product_id', $productId)
             ->where('product_variant_id', $variantId)
+            ->lockForUpdate()
             ->first();
 
         // Calculate the final quantity after adding.
@@ -146,9 +170,17 @@ class CartService
             ];
         }
 
+        return $this->withLockedCart($cart, fn (Cart $lockedCart) =>
+            $this->updateQuantityInLockedCart($lockedCart, $cartItemId, $quantity)
+        );
+    }
+
+    private function updateQuantityInLockedCart(Cart $cart, int $cartItemId, int $quantity): array
+    {
         // Find only an item belonging to this customer's cart.
         $cartItem = $cart->items()
             ->with(['product', 'variant'])
+            ->lockForUpdate()
             ->find($cartItemId);
 
         if (!$cartItem) {
@@ -211,17 +243,18 @@ class CartService
             return false;
         }
 
-        // Only delete an item that belongs to the
-        // currently logged-in customer's cart.
-        $cartItem = $cart->items()->find($cartItemId);
+        return $this->withLockedCart($cart, function (Cart $lockedCart) use ($cartItemId): bool {
+            // Keep the ownership check and deletion under the same cart lock.
+            $cartItem = $lockedCart->items()->lockForUpdate()->find($cartItemId);
 
-        if (!$cartItem) {
-            return false;
-        }
+            if (! $cartItem) {
+                return false;
+            }
 
-        $cartItem->delete();
+            $cartItem->delete();
 
-        return true;
+            return true;
+        });
     }
 
     /**
@@ -248,9 +281,10 @@ class CartService
     /**
      * Get the subtotal of all cart items.
      *
-     * Each item is priced by CartItem's subtotal accessor, which uses
-     * the variant price for items with a variant and the product price
-     * for items without one.
+     * Each item is priced by CartItem's payable_subtotal accessor, which
+     * uses the variant price for items with a variant and the product price
+     * for items without one, and contributes nothing for a row the shop can
+     * no longer sell.
      */
     public function getSubtotal(): float
     {
@@ -263,7 +297,7 @@ class CartService
         return (float) $cart->items()
             ->with(['product', 'variant'])
             ->get()
-            ->sum(fn ($item) => $item->subtotal);
+            ->sum(fn ($item) => $item->payable_subtotal);
     }
 
     /**
@@ -276,7 +310,26 @@ class CartService
         $cart = $this->getCart();
 
         if ($cart) {
-            $cart->items()->delete();
+            $this->withLockedCart($cart, function (Cart $lockedCart): void {
+                $lockedCart->items()->delete();
+            });
         }
+    }
+
+    /**
+     * Serialize cart changes, including first additions with no item row yet.
+     * Checkout locks this same cart row before reading or consuming its items.
+     */
+    private function withLockedCart(Cart $cart, callable $operation): mixed
+    {
+        return DB::transaction(function () use ($cart, $operation) {
+            $lockedCart = Cart::query()
+                ->whereKey($cart->id)
+                ->where('customer_id', auth('customer')->id())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            return $operation($lockedCart);
+        }, attempts: 3);
     }
 }

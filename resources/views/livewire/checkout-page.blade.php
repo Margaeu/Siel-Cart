@@ -69,7 +69,9 @@
                                 @if($item['variant_name'])
                                     <p class="text-sm text-gray-600 mt-0.5">Variation: {{ $item['variant_name'] }}</p>
                                 @endif
-                                <p class="text-sm text-gray-500 mt-0.5">SKU: {{ $item['sku'] }}</p>
+                                @if($item['sku'])
+                                    <p class="text-sm text-gray-500 mt-0.5">SKU: {{ $item['sku'] }}</p>
+                                @endif
                                 <p class="text-sm text-gray-600 mt-1">
                                     ₱{{ number_format($item['price'], 2) }} × {{ $item['quantity'] }}
                                 </p>

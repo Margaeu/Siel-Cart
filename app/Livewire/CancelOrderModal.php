@@ -3,8 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Order;
-use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -27,22 +25,37 @@ class CancelOrderModal extends Component
             return;
         }
 
-        DB::transaction(function () {
-            $this->order->update([
+        $cancelled = DB::transaction(function (): bool {
+            // Re-read under a lock. The check above is only as good as the
+            // moment it ran, and two taps on Cancel must not both get past it.
+            // Restocking is guarded separately, but the cancellation reason
+            // and timestamp would otherwise be overwritten by the loser.
+            $order = Order::whereKey($this->order->id)
+                ->where('customer_id', auth('customer')->id())
+                ->lockForUpdate()
+                ->first();
+
+            if (!$order || $order->status !== 'pending') {
+                return false;
+            }
+
+            // Stock goes back through Order's status hook, so this path and
+            // the admin's status dropdown credit it exactly the same way.
+            $order->update([
                 'status'              => 'cancelled',
                 'cancellation_reason' => $this->reason,
                 'cancelled_at'        => now(),
             ]);
 
-            // Restock inventory back to products/variants
-            foreach ($this->order->items as $item) {
-                if ($item->product_variant_id) {
-                    ProductVariant::where('id', $item->product_variant_id)->increment('stock_quantity', $item->quantity);
-                } elseif ($item->product_id) {
-                    Product::where('id', $item->product_id)->increment('stock_quantity', $item->quantity);
-                }
-            }
+            return true;
         });
+
+        $this->order->refresh();
+
+        if (!$cancelled) {
+            session()->flash('error', 'Orders can only be cancelled while pending.');
+            return;
+        }
 
         session()->flash('message', 'Your order has been cancelled successfully.');
         return redirect()->route('customer.orders.show', $this->order->id);

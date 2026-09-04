@@ -17,6 +17,11 @@ class Orders extends Component
     public function render()
     {
         $orders = Order::where('customer_id', auth('customer')->id())
+            // The lines and the images display_image_url falls back to. The
+            // items were not loaded at all before, so ten orders' worth of
+            // rows were fetched one order at a time, then one image lookup
+            // per line on top of that.
+            ->with(['items.product.primaryImage', 'items.variant.images'])
             ->latest()
             ->paginate(10);
 

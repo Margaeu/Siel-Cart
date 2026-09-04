@@ -134,15 +134,49 @@ class CartPage extends Component
     /**
      * Calculate the cart subtotal.
      *
-     * Each item prices itself through CartItem's subtotal accessor,
-     * so variant items use the variant price and everything else
-     * uses the product price.
+     * Each item prices itself through CartItem's payable_subtotal accessor,
+     * so variant items use the variant price and everything else uses the
+     * product price. A row the shop can no longer sell adds nothing, so the
+     * summary never quotes an amount that includes items the customer is
+     * about to be told to remove.
      */
     #[Computed]
     public function subtotal()
     {
         return $this->cart
-            ? $this->cart->items->sum(fn ($item) => $item->subtotal)
+            ? $this->cart->items->sum(fn ($item) => $item->payable_subtotal)
+            : 0;
+    }
+
+    /**
+     * How many units the subtotal above actually covers.
+     *
+     * Cart::total_quantity counts everything in the cart, which is what the
+     * header badge wants -- a broken row still needs the customer's
+     * attention. The summary line has to agree with the money beside it
+     * instead, so it counts only what is being priced.
+     */
+    #[Computed]
+    public function payableQuantity()
+    {
+        return $this->cart
+            ? $this->cart->items
+                ->filter(fn ($item) => $item->is_purchasable)
+                ->sum('quantity')
+            : 0;
+    }
+
+    /**
+     * How many rows were left out of the subtotal, so the summary can say
+     * so rather than silently showing a smaller number than the cart.
+     */
+    #[Computed]
+    public function excludedItemCount()
+    {
+        return $this->cart
+            ? $this->cart->items
+                ->reject(fn ($item) => $item->is_purchasable)
+                ->count()
             : 0;
     }
 

@@ -39,6 +39,12 @@ return new class extends Migration
             $table->string('cancellation_reason')->nullable();
             $table->timestamp('cancelled_at')->nullable();
 
+            // Set once the order's units have been credited back to stock.
+            // Checkout takes them out when the order is written, so a cancel
+            // or a completed return has to put them back -- but exactly once,
+            // however many times the status is edited afterwards.
+            $table->timestamp('stock_restored_at')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
         });

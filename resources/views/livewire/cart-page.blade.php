@@ -37,6 +37,12 @@
                     @endif
 
                     <!-- Quantity Error Message -->
+                    @if(session('error'))
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
                     @if($quantityError)
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                             {{ $quantityError }}
@@ -127,7 +133,11 @@
                                         when it does not.
                                     --}}
                                     <p class="text-lg font-bold text-[#1E6031]">
-                                        ₱{{ number_format($item->price, 2) }}
+                                        @if($item->price !== null)
+                                            ₱{{ number_format($item->price, 2) }}
+                                        @else
+                                            Price unavailable
+                                        @endif
                                     </p>
 
                                     <!-- Availability Notice -->
@@ -212,7 +222,11 @@
 
                                     <!-- Item Subtotal -->
                                     <p class="text-lg font-bold text-gray-900">
-                                        ₱{{ number_format($item->subtotal, 2) }}
+                                        @if($item->price !== null)
+                                            ₱{{ number_format($item->subtotal, 2) }}
+                                        @else
+                                            &mdash;
+                                        @endif
                                     </p>
 
                                 </div>
@@ -256,8 +270,12 @@
 
                             <div class="flex justify-between">
 
+                                {{--
+                                    This counts only what is being priced, so
+                                    it always matches the amount beside it.
+                                --}}
                                 <span class="text-gray-600">
-                                    Subtotal ({{ $cart->total_quantity }} items)
+                                    Subtotal ({{ $this->payableQuantity }} items)
                                 </span>
 
                                 <span class="font-medium">
@@ -265,6 +283,18 @@
                                 </span>
 
                             </div>
+
+                            {{--
+                                Say what was left out. Without this the total
+                                just looks too low for the rows on screen.
+                            --}}
+                            @if($this->excludedItemCount > 0)
+
+                                <p class="text-sm text-gray-500">
+                                    {{ $this->excludedItemCount }} unavailable {{ $this->excludedItemCount === 1 ? 'item' : 'items' }} not included.
+                                </p>
+
+                            @endif
 
                         </div>
 
@@ -295,11 +325,11 @@
                                 <button
                                     disabled
                                     class="block w-full bg-gray-300 text-gray-500 text-center py-3 px-6 rounded-lg cursor-not-allowed font-semibold">
-                                    Remove Unavailable Items to Checkout
+                                    Resolve Cart Items to Checkout
                                 </button>
 
                                 <p class="text-sm text-red-600 text-center mt-3">
-                                    Please remove unavailable products from your cart before checkout.
+                                    Lower quantities that exceed available stock, or remove unavailable products before checkout.
                                 </p>
 
                             @else

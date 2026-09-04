@@ -48,16 +48,17 @@ class Cart extends Model
     /**
      * Get the total price of all products in the cart.
      *
-     * cart_items does not have its own price column, so the amount
-     * comes from CartItem's subtotal accessor. That accessor uses the
+     * cart_items does not have its own price column, so the amount comes
+     * from CartItem's payable_subtotal accessor. That accessor uses the
      * variant price when a variant was selected and the product price
-     * otherwise.
+     * otherwise, and leaves out any row the shop can no longer sell so the
+     * figure is one the customer could actually pay.
      */
     public function getTotalAttribute(): float
     {
         return (float) $this->items()
             ->with(['product', 'variant'])
             ->get()
-            ->sum(fn ($item) => $item->subtotal);
+            ->sum(fn ($item) => $item->payable_subtotal);
     }
 }

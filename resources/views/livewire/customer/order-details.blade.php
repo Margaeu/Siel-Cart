@@ -158,7 +158,9 @@
                                         @if($item->variant_name)
                                             <p class="text-sm text-gray-600">Variation: {{ $item->variant_name }}</p>
                                         @endif
-                                        <p class="text-sm text-gray-500">SKU: {{ $item->product_sku }}</p>
+                                        @if($item->product_sku)
+                                            <p class="text-sm text-gray-500">SKU: {{ $item->product_sku }}</p>
+                                        @endif
                                         <p class="text-sm text-gray-600">Quantity: {{ $item->quantity }} × ₱{{ number_format($item->price, 2) }}</p>
                                     </div>
                                     <div class="text-right flex-shrink-0">

@@ -12,7 +12,7 @@ class Dashboard extends Component
         $customer = auth('customer')->user();
 
         $recentOrders = $customer->orders()
-        ->with(['items.product'])
+        ->with(['items.product.primaryImage', 'items.variant.images'])
         ->latest()
         ->limit(5)
         ->get();

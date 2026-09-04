@@ -73,10 +73,14 @@
                                 @foreach($order->items as $item)
                                     <div class="flex gap-4">
                                         <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                            @if($item->product && $item->product->primaryImage)
-                                                <img src="{{ $item->product->primaryImage->url }}" 
-                                                     alt="{{ $item->product_name }}"
+                                            @if($item->display_image_url)
+                                                <img src="{{ $item->display_image_url }}"
+                                                     alt="{{ $item->product_name }}{{ $item->variant_name ? ' - '.$item->variant_name : '' }}"
                                                      class="w-full h-full object-cover">
+                                            @else
+                                                <div class="w-full h-full flex items-center justify-center text-gray-400 text-2xl font-semibold">
+                                                    {{ substr($item->product_name, 0, 1) }}
+                                                </div>
                                             @endif
                                         </div>
                                         <div class="flex-1">

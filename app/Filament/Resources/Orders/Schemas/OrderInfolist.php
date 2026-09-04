@@ -83,7 +83,8 @@ class OrderInfolist
                                     TextEntry::make('product_name'),
                                     TextEntry::make('variant_name')
                                         ->placeholder('—'),
-                                    TextEntry::make('product_sku'),
+                                    TextEntry::make('product_sku')
+                                        ->placeholder('—'),
                                     TextEntry::make('price')
                                         ->money('PHP'),
                                     TextEntry::make('quantity'),
