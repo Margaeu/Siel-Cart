@@ -6,7 +6,7 @@
             <ol class="flex items-center gap-2">
                 <li>
                     <a href="{{ route('home') }}"
-                       class="text-gray-500 hover:text-[#1E6031]">
+                       class="text-gray-500 hover:text-[var(--color-primary)]">
                         Home
                     </a>
                 </li>
@@ -132,7 +132,7 @@
                                         item has a variant, and the product price
                                         when it does not.
                                     --}}
-                                    <p class="text-lg font-bold text-[#1E6031]">
+                                    <p class="text-lg font-bold text-[var(--color-primary)]">
                                         @if($item->price !== null)
                                             ₱{{ number_format($item->price, 2) }}
                                         @else
@@ -195,7 +195,7 @@
                                             wire:loading.attr="disabled"
                                             wire:target="updateQuantity"
                                             @disabled($item->quantity <= 1 || ($isUnavailable && !$isOverStock))
-                                            class="flex h-10 w-10 items-center justify-center text-xl font-semibold text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1E6031] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+                                            class="flex h-10 w-10 items-center justify-center text-xl font-semibold text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
                                             aria-label="Decrease quantity of {{ $item->product->name }}">
                                             &minus;
                                         </button>
@@ -214,7 +214,7 @@
                                             wire:loading.attr="disabled"
                                             wire:target="updateQuantity"
                                             @disabled($item->quantity >= $availableStock || $isUnavailable)
-                                            class="flex h-10 w-10 items-center justify-center text-xl font-semibold text-[#1E6031] transition hover:bg-[#f2f7f4] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1E6031] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+                                            class="flex h-10 w-10 items-center justify-center text-xl font-semibold text-[var(--color-primary)] transition hover:bg-[#f2f7f4] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
                                             aria-label="Increase quantity of {{ $item->product->name }}">
                                             +
                                         </button>
@@ -248,7 +248,7 @@
                         </button>
 
                         <a href="{{ route('products.index') }}"
-                           class="text-[#1E6031] hover:text-[#164824] font-medium">
+                           class="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] font-medium">
                             ← Continue Shopping
                         </a>
 
@@ -307,7 +307,7 @@
                                     Total
                                 </span>
 
-                                <span class="text-2xl font-bold text-[#1E6031]">
+                                <span class="text-2xl font-bold text-[var(--color-primary)]">
                                     ₱{{ number_format($this->subtotal, 2) }}
                                 </span>
 
@@ -336,7 +336,7 @@
 
                                 <!-- Checkout Enabled -->
                                 <a href="{{ route('checkout') }}"
-                                   class="block w-full bg-[#1E6031] text-white text-center py-3 px-6 rounded-lg hover:bg-[#164824] transition font-semibold">
+                                   class="block w-full bg-[var(--color-primary)] text-white text-center py-3 px-6 rounded-lg hover:bg-[var(--color-primary-hover)] transition font-semibold">
                                     Proceed to Checkout
                                 </a>
 
@@ -346,14 +346,14 @@
 
                             <!-- Login to Checkout -->
                             <a href="{{ route('login') }}"
-                               class="block w-full bg-[#1E6031] text-white text-center py-3 px-6 rounded-lg hover:bg-[#164824] transition font-semibold">
+                               class="block w-full bg-[var(--color-primary)] text-white text-center py-3 px-6 rounded-lg hover:bg-[var(--color-primary-hover)] transition font-semibold">
                                 Login to Checkout
                             </a>
 
                             <p class="text-sm text-gray-600 text-center mt-3">
                                 Or
                                 <a href="{{ route('register') }}"
-                                   class="text-[#1E6031] hover:text-[#164824]">
+                                   class="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]">
                                     create an account
                                 </a>
                             </p>
@@ -392,7 +392,7 @@
                 </p>
 
                 <a href="{{ route('products.index') }}"
-                   class="inline-block bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold">
+                   class="inline-block bg-[var(--color-primary)] text-white px-8 py-3 rounded-lg hover:bg-[var(--color-primary-hover)] transition font-semibold">
                     Start Shopping
                 </a>
 

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Banners\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class BannerForm
@@ -13,22 +14,49 @@ class BannerForm
     {
         return $schema
             ->components([
-                TextInput::make('title')
-                    ->default(null),
-                TextInput::make('subtitle')
-                    ->default(null),
-                FileUpload::make('image_path')
-                    ->image()
-                    ->required(),
-                TextInput::make('link_url')
-                    ->url()
-                    ->default(null),
-                Toggle::make('is_active')
-                    ->required(),
-                TextInput::make('sort_order')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
+                Section::make('Banner Image')
+                    ->description('This image is displayed full-width in the homepage carousel.')
+                    ->schema([
+                        FileUpload::make('image_path')
+                            ->label('Banner Image')
+                            ->disk('r2')
+                            ->visibility('public')
+                            ->directory('banners')
+                            ->image()
+                            ->required()
+                            ->maxSize(2048)
+                            ->imageEditor()
+                            ->imageEditorAspectRatios(['16:9', '21:9', null])
+                            ->orientImagesFromExif(false)
+                            ->imagePreviewHeight('250')
+                            ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 2MB.')
+                            ->columnSpanFull(),
+                    ]),
+                Section::make('Content')
+                    ->schema([
+                        TextInput::make('title')
+                            ->default(null),
+                        TextInput::make('subtitle')
+                            ->default(null),
+                        TextInput::make('link_url')
+                            ->label('Link URL')
+                            ->helperText('Where the banner takes shoppers when clicked (optional).')
+                            ->url()
+                            ->default(null),
+                    ])->columns(2),
+                Section::make('Display')
+                    ->schema([
+                        Toggle::make('is_active')
+                            ->label('Active')
+                            ->default(true)
+                            ->required(),
+                        TextInput::make('sort_order')
+                            ->label('Sort Order')
+                            ->helperText('Lower numbers appear first in the carousel.')
+                            ->required()
+                            ->numeric()
+                            ->default(0),
+                    ])->columns(2),
             ]);
     }
 }

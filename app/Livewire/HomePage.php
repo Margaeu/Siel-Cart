@@ -2,38 +2,40 @@
 
 namespace App\Livewire;
 
+use App\Models\Banner;
 use App\Models\Product;
 use Livewire\Component;
 use App\Models\Category;
-use Illuminate\Database\Eloquent\Builder;
 
 class HomePage extends Component
 {
     public function render()
     {
+        $banners = Banner::active()
+            ->ordered()
+            ->get();
+
         $featuredProducts = Product::active()
             ->featured()
             ->inStock()
-            ->with(['category', 'primaryImage', 'variants'])
-            ->withReviewAggregates()
+            ->with(['category', 'primaryImage'])
             ->limit(8)
             ->get();
-        // Count only the products a customer can reach, so a category tile
-        // cannot advertise more than the listing behind it will show.
+
         $categories = Category::active()
             ->sorted()
-            ->withCount(['products' => fn (Builder $products) => $products->active()])
+            ->withCount('products')
             ->limit(6)
-            ->get();
+            ->get(); 
         $newArrivals = Product::active()
             ->inStock()
-            ->with(['category', 'primaryImage', 'variants'])
-            ->withReviewAggregates()
+            ->with(['category', 'primaryImage'])
             ->latest()
             ->limit(8)
             ->get();
 
         return view('livewire.home-page',[
+            'banners' => $banners,
             'featuredProducts' => $featuredProducts,
             'categories' => $categories,
             'newArrivals' => $newArrivals

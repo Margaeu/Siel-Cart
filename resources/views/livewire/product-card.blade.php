@@ -47,7 +47,7 @@
 
             <!-- Product Name -->
             <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 transition"
-                onmouseover="this.style.color='#1E6031'"
+                onmouseover="this.style.color='var(--color-primary)'"
                 onmouseout="this.style.color=''">
                 {{ $product->name }}
             </h3>
@@ -111,7 +111,7 @@
 
                 <a href="{{ route('products.show', $product->slug) }}"
                    wire:navigate
-                   style="background-color: #1E6031;"
+                   style="background-color: var(--color-primary);"
                    class="block w-full text-center text-white py-2 px-4 rounded-lg hover:opacity-90 transition font-medium">
                     Add To Cart
                 </a>
@@ -126,7 +126,7 @@
                     wire:click="addToCart"
                     wire:loading.attr="disabled"
                     wire:target="addToCart"
-                    style="background-color: #1E6031;"
+                    style="background-color: var(--color-primary);"
                     class="w-full cursor-pointer text-white py-2 px-4 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
 

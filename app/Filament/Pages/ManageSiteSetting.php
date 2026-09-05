@@ -5,9 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Setting;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -18,29 +16,29 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
-class ManageSiteSetting extends Page implements HasSchemas
+class ManageSiteSettings extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::Swatch;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Cog6Tooth;
     protected static string|UnitEnum|null $navigationGroup = 'Design';
 
-    protected static ?string $navigationLabel = 'Site Branding & Theme';
-    protected static ?string $title = 'Site Branding & Theme';
+    protected static ?string $navigationLabel = 'Site Branding';
+    protected static ?string $title = 'Site Branding';
 
-    protected string $view = 'filament.pages.manage-site-setting';
+    protected string $view = 'filament.pages.manage-site-settings';
 
     /**
      * Keys this page is allowed to read/write in the settings table.
      * Keep this list in sync with the fields defined in form().
+     *
+     * Colors and fonts moved to the Color Themes & Fonts resource — see
+     * App\Models\Theme — so they're no longer managed here.
      */
     private const MANAGED_KEYS = [
         'site_name',
         'tagline',
         'logo_path',
-        'primary_color',
-        'secondary_color',
-        'font_family',
     ];
 
     public ?array $data = [];
@@ -57,9 +55,6 @@ class ManageSiteSetting extends Page implements HasSchemas
             'site_name' => 'CLSU Shop',
             'tagline' => null,
             'logo_path' => null,
-            'primary_color' => '#2E7D32',
-            'secondary_color' => '#F9A825',
-            'font_family' => 'Inter',
         ], array_filter($current, fn ($value) => $value !== null)));
     }
 
@@ -68,7 +63,7 @@ class ManageSiteSetting extends Page implements HasSchemas
         return $schema
             ->components([
                 Section::make('Branding')
-                    ->description('Shown in the storefront header, footer, and page titles.')
+                    ->description('Shown in the storefront header, footer, and page titles. For colors and fonts, see Design → Color Themes & Fonts.')
                     ->schema([
                         TextInput::make('site_name')
                             ->label('Site name')
@@ -86,34 +81,6 @@ class ManageSiteSetting extends Page implements HasSchemas
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
-
-                Section::make('Color palette')
-                    ->description('Applied storefront-wide as CSS variables.')
-                    ->schema([
-                        ColorPicker::make('primary_color')
-                            ->label('Primary color'),
-
-                        ColorPicker::make('secondary_color')
-                            ->label('Secondary color'),
-                    ])
-                    ->columns(2),
-
-                Section::make('Typography')
-                    ->description('Choose from a pre-approved set of web-safe Google Fonts. Custom font uploads and per-section typography are handled in code.')
-                    ->schema([
-                        Select::make('font_family')
-                            ->label('Site font')
-                            ->options([
-                                'Inter' => 'Inter',
-                                'Poppins' => 'Poppins',
-                                'Roboto' => 'Roboto',
-                                'Nunito' => 'Nunito',
-                                'Merriweather' => 'Merriweather',
-                                'Playfair Display' => 'Playfair Display',
-                            ])
-                            ->native(false)
-                            ->required(),
-                    ]),
             ])
             ->statePath('data');
     }

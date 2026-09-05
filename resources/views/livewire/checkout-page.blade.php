@@ -6,7 +6,7 @@
             <h1 class="text-3xl font-bold text-gray-900">Checkout</h1>
             <p class="text-gray-600 mt-1">
                 Everything in your cart will be ordered. To change what you are buying,
-                <a href="{{ route('cart.index') }}" class="text-[#1E6031] font-medium hover:underline">go back to your cart</a>.
+                <a href="{{ route('cart.index') }}" class="text-[var(--color-primary)] font-medium hover:underline">go back to your cart</a>.
             </p>
         </div>
 
@@ -21,7 +21,7 @@
             {{-- ── Section 1: Customer Information ───────────────────────── --}}
             <section class="bg-white rounded-lg shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[#1E6031] text-white font-semibold text-sm">1</span>
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-primary)] text-white font-semibold text-sm">1</span>
                     <h2 class="text-xl font-bold text-gray-900">Customer Information</h2>
                 </div>
 
@@ -38,14 +38,14 @@
 
                 <p class="text-sm text-gray-500 mt-4">
                     This comes from your account. Update it in your
-                    <a href="{{ route('customer.profile') }}" class="text-[#1E6031] hover:underline">profile</a>.
+                    <a href="{{ route('customer.profile') }}" class="text-[var(--color-primary)] hover:underline">profile</a>.
                 </p>
             </section>
 
             {{-- ── Section 2: Products Ordered ───────────────────────────── --}}
             <section class="bg-white rounded-lg shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[#1E6031] text-white font-semibold text-sm">2</span>
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-primary)] text-white font-semibold text-sm">2</span>
                     <h2 class="text-xl font-bold text-gray-900">Products Ordered</h2>
                 </div>
 
@@ -90,16 +90,16 @@
             {{-- ── Section 3: Fulfilment, Payment & Placement ────────────── --}}
             <section class="bg-white rounded-lg shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-6">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[#1E6031] text-white font-semibold text-sm">3</span>
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-primary)] text-white font-semibold text-sm">3</span>
                     <h2 class="text-xl font-bold text-gray-900">Fulfilment &amp; Payment</h2>
                 </div>
 
                 {{-- Fulfilment method: fixed, nothing to choose --}}
                 <div class="mb-6">
                     <h3 class="text-sm font-medium text-gray-700 mb-2">Fulfilment Method</h3>
-                    <div class="border-2 border-[#1E6031] bg-[#f2f7f4] rounded-lg p-4">
+                    <div class="border-2 border-[var(--color-primary)] bg-[#f2f7f4] rounded-lg p-4">
                         <div class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-[#1E6031] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[var(--color-primary)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                             </svg>
@@ -114,9 +114,9 @@
                 {{-- Payment method: fixed, nothing to choose --}}
                 <div class="mb-6">
                     <h3 class="text-sm font-medium text-gray-700 mb-2">Payment Method</h3>
-                    <div class="border-2 border-[#1E6031] bg-[#f2f7f4] rounded-lg p-4">
+                    <div class="border-2 border-[var(--color-primary)] bg-[#f2f7f4] rounded-lg p-4">
                         <div class="flex items-start gap-3">
-                            <svg class="w-6 h-6 text-[#1E6031] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[var(--color-primary)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
@@ -140,7 +140,7 @@
 
                         <div class="flex justify-between items-center border-t pt-3">
                             <span class="text-lg font-semibold text-gray-900">Order Total</span>
-                            <span class="text-2xl font-bold text-[#1E6031]">₱{{ number_format($total, 2) }}</span>
+                            <span class="text-2xl font-bold text-[var(--color-primary)]">₱{{ number_format($total, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -157,7 +157,7 @@
                             wire:target="placeOrder"
                             wire:loading.attr="disabled"
                             @disabled($placingOrder)
-                            class="bg-[#1E6031] text-white px-8 py-3 rounded-lg hover:bg-[#164824] transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
+                            class="bg-[var(--color-primary)] text-white px-8 py-3 rounded-lg hover:bg-[var(--color-primary-hover)] transition font-semibold disabled:opacity-60 disabled:cursor-not-allowed">
                         <span wire:loading.remove wire:target="placeOrder">Place Order</span>
                         <span wire:loading wire:target="placeOrder">Placing order…</span>
                     </button>

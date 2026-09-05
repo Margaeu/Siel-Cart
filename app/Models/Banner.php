@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Banner extends Model
 {
@@ -43,8 +44,12 @@ class Banner extends Model
         $query->orderBy('sort_order');
     }
 
-    public function getImageUrlAttribute(): string
+    public function getImageUrlAttribute(): ?string
     {
-        return asset('storage/' . $this->image_path);
+        if (!$this->image_path) {
+            return null;
+        }
+
+        return Storage::disk('r2')->url($this->image_path);
     }
 }

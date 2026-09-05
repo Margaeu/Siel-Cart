@@ -37,7 +37,7 @@
                         <div class="grid grid-cols-4 gap-4">
                             @foreach($galleryImages as $image)
                                 <button wire:click="selectImage('{{ $image->image_path }}')"
-                                        style="{{ $selectedImage === $image->image_path ? 'border-color: #1E6031;' : '' }}"
+                                        style="{{ $selectedImage === $image->image_path ? 'border-color: var(--color-primary);' : '' }}"
                                         class="aspect-square rounded-lg overflow-hidden border-2 {{ $selectedImage === $image->image_path ? '' : 'border-gray-200' }} hover:opacity-80 transition">
                                     <img src="{{ $image->url }}"
                                          alt="{{ $product->name }}"
@@ -130,7 +130,7 @@
                             <div class="grid grid-cols-2 gap-3">
                                 @foreach($product->variants->where('is_active', true) as $variant)
                                     <button wire:click="selectVariant({{ $variant->id }})"
-                                            style="{{ $selectedVariant === $variant->id ? 'border-color: #1E6031; background-color: #f2f7f4;' : '' }}"
+                                            style="{{ $selectedVariant === $variant->id ? 'border-color: var(--color-primary); background-color: #f2f7f4;' : '' }}"
                                             class="border-2 rounded-lg p-3 text-left transition {{ $selectedVariant === $variant->id ? '' : 'border-gray-300 hover:border-gray-400' }}">
                                         <p class="font-medium text-gray-900">{{ $variant->name }}</p>
                                         <p class="text-sm text-gray-600">₱{{ number_format($variant->price, 2) }}</p>
@@ -175,7 +175,7 @@
                     <!-- Add to Cart -->
                     @if($selectionInStock)
                         <button wire:click="addToCart"
-                                style="background-color: #1E6031;"
+                                style="background-color: var(--color-primary);"
                                 class="w-full text-white py-3 px-6 rounded-lg hover:opacity-90 transition font-semibold text-lg">
                             Add to Cart
                         </button>
@@ -195,7 +195,7 @@
                         <div class="flex justify-between">
                             <span class="text-gray-600">Category:</span>
                             <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" 
-                               style="color: #1E6031;"
+                               style="color: var(--color-primary);"
                                class="font-medium hover:underline">
                                 {{ $product->category->name }}
                             </a>
@@ -204,7 +204,7 @@
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Brand:</span>
                                 <a href="{{ route('products.index', ['brand' => $product->brand->slug]) }}" 
-                                   style="color: #1E6031;"
+                                   style="color: var(--color-primary);"
                                    class="font-medium hover:underline">
                                     {{ $product->brand->name }}
                                 </a>
@@ -221,12 +221,12 @@
             <div class="border-b">
                 <nav class="flex">
                     <button @click="activeTab = 'description'"
-                            :style="activeTab === 'description' ? 'border-color: #1E6031; color: #1E6031;' : ''"
+                            :style="activeTab === 'description' ? 'border-color: var(--color-primary); color: var(--color-primary);' : ''"
                             class="px-6 py-4 border-b-2 font-medium transition text-gray-500">
                         Description
                     </button>
                     <button @click="activeTab = 'reviews'"
-                            :style="activeTab === 'reviews' ? 'border-color: #1E6031; color: #1E6031;' : ''"
+                            :style="activeTab === 'reviews' ? 'border-color: var(--color-primary); color: var(--color-primary);' : ''"
                             class="px-6 py-4 border-b-2 font-medium transition text-gray-500">
                         Reviews ({{ $product->reviews_count }})
                     </button>
@@ -250,7 +250,7 @@
                                 <div class="border-b pb-6 last:border-b-0">
                                     <div class="flex items-start gap-4">
                                         <div class="flex-shrink-0">
-                                            <div style="background-color: #1E6031;" class="w-12 h-12 text-white rounded-full flex items-center justify-center font-bold">
+                                            <div style="background-color: var(--color-primary);" class="w-12 h-12 text-white rounded-full flex items-center justify-center font-bold">
                                                 {{ substr($review->customer->name, 0, 1) }}
                                             </div>
                                         </div>
@@ -313,7 +313,7 @@
                                     <div>
                                         <label for="review-rating" class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
                                         <select id="review-rating" wire:model="reviewRating"
-                                                class="w-full rounded-lg border-gray-300 focus:border-[#1E6031] focus:ring-[#1E6031]">
+                                                class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                                             <option value="5">5 - Excellent</option>
                                             <option value="4">4 - Good</option>
                                             <option value="3">3 - Average</option>
@@ -326,20 +326,20 @@
                                     <div>
                                         <label for="review-title" class="block text-sm font-medium text-gray-700 mb-1">Title (optional)</label>
                                         <input id="review-title" type="text" wire:model="reviewTitle" maxlength="255"
-                                               class="w-full rounded-lg border-gray-300 focus:border-[#1E6031] focus:ring-[#1E6031]">
+                                               class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                                         @error('reviewTitle') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div>
                                         <label for="review-comment" class="block text-sm font-medium text-gray-700 mb-1">Review</label>
                                         <textarea id="review-comment" wire:model="reviewComment" rows="4" maxlength="2000"
-                                                  class="w-full rounded-lg border-gray-300 focus:border-[#1E6031] focus:ring-[#1E6031]"></textarea>
+                                                  class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
                                         @error('reviewComment') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         @error('review') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <button type="submit"
-                                            class="rounded-lg bg-[#1E6031] px-5 py-2.5 font-semibold text-white transition hover:bg-[#154522] disabled:opacity-50"
+                                            class="rounded-lg bg-[var(--color-primary)] px-5 py-2.5 font-semibold text-white transition hover:bg-[#154522] disabled:opacity-50"
                                             wire:loading.attr="disabled" wire:target="submitReview">
                                         Submit Review
                                     </button>

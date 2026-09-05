@@ -26,9 +26,9 @@
             <div class="mb-8">
                 <nav class="text-sm mb-4">
                     <ol class="flex items-center gap-2">
-                        <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 hover:text-[#1E6031]">Account</a></li>
+                        <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 hover:text-[var(--color-primary)]">Account</a></li>
                         <li class="text-gray-400">/</li>
-                        <li><a href="{{ route('customer.orders') }}" class="text-gray-500 hover:text-[#1E6031]">Orders</a></li>
+                        <li><a href="{{ route('customer.orders') }}" class="text-gray-500 hover:text-[var(--color-primary)]">Orders</a></li>
                         <li class="text-gray-400">/</li>
                         <li class="text-gray-900 font-medium">{{ $order->order_number }}</li>
                     </ol>
@@ -45,7 +45,7 @@
                             <button type="button" 
                                     wire:click="requestReturn" 
                                     wire:loading.attr="disabled"
-                                    class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-[#1E6031] rounded-lg shadow-sm hover:bg-[#154522] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E6031] transition-all cursor-pointer disabled:opacity-50">
+                                    class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-[var(--color-primary)] rounded-lg shadow-sm hover:bg-[#154522] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)] transition-all cursor-pointer disabled:opacity-50">
                                 <svg wire:loading.remove wire:target="requestReturn" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/>
                                 </svg>
@@ -79,7 +79,7 @@
             </div>
 
             @if(session()->has('order_success_title'))
-                <div class="bg-[#f2f7f4] border border-[#1E6031] text-[#1E6031] px-5 py-4 rounded-lg mb-6">
+                <div class="bg-[#f2f7f4] border border-[var(--color-primary)] text-[var(--color-primary)] px-5 py-4 rounded-lg mb-6">
                     <p class="font-bold">{{ session('order_success_title') }}</p>
                     <p class="mt-1">{{ session('order_success_message') }}</p>
                 </div>
@@ -214,7 +214,7 @@
                         <div class="mt-4 pt-4 border-t">
                             <p class="text-sm text-gray-600">Claim Number</p>
                             @if($order->claim_number)
-                                <p class="font-mono font-bold text-lg text-[#1E6031]">{{ $order->claim_number }}</p>
+                                <p class="font-mono font-bold text-lg text-[var(--color-primary)]">{{ $order->claim_number }}</p>
                                 <p class="text-sm text-gray-600 mt-1">
                                     Present this at the {{ \App\Livewire\CheckoutPage::PICKUP_LOCATION_LABEL }} to collect your order.
                                 </p>
@@ -234,7 +234,7 @@
                                 @foreach($order->statusHistories as $history)
                                     <div class="flex gap-4">
                                         <div class="flex-shrink-0">
-                                            <div class="w-10 h-10 rounded-full bg-[#f2f7f4] text-[#1E6031] flex items-center justify-center">
+                                            <div class="w-10 h-10 rounded-full bg-[#f2f7f4] text-[var(--color-primary)] flex items-center justify-center">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
@@ -301,7 +301,7 @@
                         <div class="border-t pt-4">
                             <div class="flex justify-between items-center">
                                 <span class="text-lg font-semibold">Order Total</span>
-                                <span class="text-2xl font-bold text-[#1E6031]">
+                                <span class="text-2xl font-bold text-[var(--color-primary)]">
                                     ₱{{ number_format($order->total, 2) }}
                                 </span>
                             </div>
