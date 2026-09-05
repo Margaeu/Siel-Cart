@@ -1,45 +1,141 @@
 <div>
-    <!-- Hero Section -->
-    <section class="bg-[#1E6031] text-white py-20 relative overflow-hidden">
-        <!-- Subtle background accent element -->
-        <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-[#E0A70D]/10 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- Hero Banner Carousel -->
+    @if($banners->isNotEmpty())
+        <section
+            x-data="{
+                active: 0,
+                total: {{ $banners->count() }},
+                timer: null,
+                start() {
+                    if (this.total <= 1) return;
+                    this.timer = setInterval(() => { this.next() }, 6000);
+                },
+                next() { this.active = (this.active + 1) % this.total },
+                prev() { this.active = (this.active - 1 + this.total) % this.total },
+            }"
+            x-init="start()"
+            class="relative overflow-hidden bg-[var(--color-primary)]"
+        >
+            <div class="relative h-[340px] md:h-[460px] lg:h-[520px]">
+                @foreach($banners as $banner)
+                    <div
+                        x-show="active === {{ $loop->index }}"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-700"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-300"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="absolute inset-0"
+                    >
+                        @if($banner->link_url)
+                            <a href="{{ $banner->link_url }}" class="block w-full h-full">
+                        @endif
 
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-                    Welcome to {{ config('app.name') }}
-                </h1>
-                <p class="text-xl md:text-2xl mb-8 text-[#E0A70D] font-medium">
-                    Discover amazing products at unbeatable prices
-                </p>
-                <a href="{{ route('products.index') }}" 
-                   class="inline-block bg-[#E0A70D] text-[#1E6031] px-8 py-3.5 rounded-lg font-bold hover:bg-amber-400 active:bg-amber-500 transition shadow-lg transform hover:-translate-y-0.5">
-                    Shop Now
-                </a>
+                        <img src="{{ $banner->image_url }}"
+                             alt="{{ $banner->title ?? config('app.name') . ' banner' }}"
+                             class="w-full h-full object-cover">
+
+                        @if($banner->title || $banner->subtitle)
+                            <div class="absolute inset-0 bg-black/30 flex items-center">
+                                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
+                                    <div class="max-w-xl text-white">
+                                        @if($banner->title)
+                                            <h1 class="text-3xl md:text-5xl font-bold mb-3 tracking-tight">
+                                                {{ $banner->title }}
+                                            </h1>
+                                        @endif
+                                        @if($banner->subtitle)
+                                            <p class="text-lg md:text-xl text-[var(--color-secondary)] font-medium">
+                                                {{ $banner->subtitle }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($banner->link_url)
+                            </a>
+                        @endif
+                    </div>
+                @endforeach
             </div>
-        </div>
-    </section>
+
+            @if($banners->count() > 1)
+                <!-- Prev / Next Arrows -->
+                <button @click="prev()"
+                        aria-label="Previous banner"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition backdrop-blur-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button @click="next()"
+                        aria-label="Next banner"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition backdrop-blur-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <!-- Dots -->
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    @foreach($banners as $banner)
+                        <button @click="active = {{ $loop->index }}"
+                                aria-label="Go to banner {{ $loop->iteration }}"
+                                :style="active === {{ $loop->index }} ? 'background-color: var(--color-secondary);' : ''"
+                                class="w-2.5 h-2.5 rounded-full transition"
+                                :class="active === {{ $loop->index }} ? '' : 'bg-white/50 hover:bg-white/80'">
+                        </button>
+                    @endforeach
+                </div>
+            @endif
+        </section>
+    @else
+        <!-- Fallback hero (shown until banners are uploaded in the admin) -->
+        <section class="bg-[var(--color-primary)] text-white py-20 relative overflow-hidden">
+            <!-- Subtle background accent element -->
+            <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-[var(--color-secondary)]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+                        Welcome to {{ config('app.name') }}
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 text-[var(--color-secondary)] font-medium">
+                        Discover amazing products at unbeatable prices
+                    </p>
+                    <a href="{{ route('products.index') }}" 
+                       class="inline-block bg-[var(--color-secondary)] text-[var(--color-primary)] px-8 py-3.5 rounded-lg font-bold hover:bg-amber-400 active:bg-amber-500 transition shadow-lg transform hover:-translate-y-0.5">
+                        Shop Now
+                    </a>
+                </div>
+            </div>
+        </section>
+    @endif
 
     <!-- Categories Section -->
     <section class="py-16 bg-white">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-[#1E6031] pl-3">Shop by Category</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-[var(--color-primary)] pl-3">Shop by Category</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 @foreach($categories as $category)
                     <a href="{{ route('products.index', ['category' => $category->slug]) }}" 
                        class="group">
-                        <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 border border-gray-100 group-hover:border-[#E0A70D] transition">
+                        <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 border border-gray-100 group-hover:border-[var(--color-secondary)] transition">
                             @if($category->image)
                                 <img src="{{ asset('storage/' . $category->image) }}" 
                                      alt="{{ $category->name }}"
                                      class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
                             @else
-                                <div class="w-full h-full flex items-center justify-center bg-[#1E6031]">
-                                    <span class="text-4xl text-[#E0A70D] font-bold">{{ substr($category->name, 0, 1) }}</span>
+                                <div class="w-full h-full flex items-center justify-center bg-[var(--color-primary)]">
+                                    <span class="text-4xl text-[var(--color-secondary)] font-bold">{{ substr($category->name, 0, 1) }}</span>
                                 </div>
                             @endif
                         </div>
-                        <h3 class="text-center font-medium text-gray-900 group-hover:text-[#1E6031] transition">
+                        <h3 class="text-center font-medium text-gray-900 group-hover:text-[var(--color-primary)] transition">
                             {{ $category->name }}
                         </h3>
                         <p class="text-center text-sm text-gray-500">{{ $category->products_count }} items</p>
@@ -53,9 +149,9 @@
     <section class="py-16 bg-emerald-50/40">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[#E0A70D] pl-3">Featured Products</h2>
+                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[var(--color-secondary)] pl-3">Featured Products</h2>
                 <a href="{{ route('products.index', ['featured' => 1]) }}" 
-                   class="text-[#1E6031] hover:text-[#E0A70D] font-semibold transition">
+                   class="text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-semibold transition">
                     View All →
                 </a>
             </div>
@@ -72,9 +168,9 @@
     <section class="py-16 bg-white">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[#1E6031] pl-3">New Arrivals</h2>
+                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[var(--color-primary)] pl-3">New Arrivals</h2>
                 <a href="{{ route('products.index', ['sort' => 'newest']) }}" 
-                   class="text-[#1E6031] hover:text-[#E0A70D] font-semibold transition">
+                   class="text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-semibold transition">
                     View All →
                 </a>
             </div>
@@ -88,12 +184,12 @@
     </section>
 
     <!-- Benefits Section -->
-    <section class="py-16 bg-[#1E6031]/5 border-t border-emerald-100">
+    <section class="py-16 bg-[var(--color-primary)]/5 border-t border-emerald-100">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Quality Guarantee -->
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-emerald-100">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[#1E6031] rounded-full mb-4">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[var(--color-primary)] rounded-full mb-4">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -104,7 +200,7 @@
 
                 <!-- Fast Shipping -->
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-[#FEF8EA]">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-[#FEF8EA] text-[#E0A70D] rounded-full mb-4">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-[#FEF8EA] text-[var(--color-secondary)] rounded-full mb-4">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
@@ -115,7 +211,7 @@
 
                 <!-- Secure Payment -->
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-emerald-100">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[#1E6031] rounded-full mb-4">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[var(--color-primary)] rounded-full mb-4">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
@@ -126,157 +222,4 @@
             </div>
         </div>
     </section>
-
-    <!-- Floating AI Chatbot Toggle Button -->
-    <button id="chat-toggle" class="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3 bg-[#1E6031] text-white font-semibold rounded-full shadow-xl hover:bg-[#164724] active:scale-95 transition-all duration-200 group">
-        <svg class="w-6 h-6 text-[#E0A70D] group-hover:rotate-12 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-        <span>Chat with AI</span>
-    </button>
-
-    <!-- Chatbot Window -->
-    <div id="chat-widget" wire:ignore class="hidden fixed bottom-24 right-6 z-50 w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex-col overflow-hidden transition-all duration-300">
-        <!-- Header -->
-        <div class="bg-[#1E6031] text-white p-4 flex items-center justify-between shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-[#E0A70D]/20 flex items-center justify-center border border-[#E0A70D]/40">
-                    <span class="text-lg">🤖</span>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-sm leading-tight">Shopping Assistant</h4>
-                    <span class="text-xs text-emerald-200 flex items-center gap-1.5 mt-0.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online
-                    </span>
-                </div>
-            </div>
-            <button id="chat-close" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-
-        <!-- Messages Area -->
-        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50/50 text-sm">
-            <div class="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-none bg-white text-gray-800 border border-gray-100 shadow-sm">
-                Hello! 👋 How can I help you find what you're looking for today?
-            </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
-            <input type="text" id="chat-input" placeholder="Ask about products, orders..." class="flex-1 px-4 py-2.5 bg-gray-100 border border-transparent rounded-xl focus:bg-white focus:border-[#1E6031] focus:outline-none text-sm text-gray-900 placeholder-gray-400 transition">
-            <button id="chat-send" class="p-2.5 bg-[#1E6031] text-white rounded-xl hover:bg-[#164724] active:scale-95 transition shadow-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            </button>
-        </div>
-    </div>
-
- <script>
-    function initChatbot() {
-        const toggleBtn = document.getElementById('chat-toggle');
-        const closeBtn = document.getElementById('chat-close');
-        const chatWidget = document.getElementById('chat-widget');
-        const sendBtn = document.getElementById('chat-send');
-        const inputField = document.getElementById('chat-input');
-        const messagesBox = document.getElementById('chat-messages');
-
-        if (!toggleBtn || !chatWidget) return;
-
-        toggleBtn.onclick = () => { 
-            chatWidget.classList.remove('hidden'); 
-            chatWidget.classList.add('flex');
-        };
-        closeBtn.onclick = () => { 
-            chatWidget.classList.add('hidden'); 
-            chatWidget.classList.remove('flex');
-        };
-
-        function appendMessage(text, sender) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `max-w-[85%] p-3 text-sm transition-all duration-200 ${
-                sender === 'user' 
-                    ? 'self-end bg-[#1E6031] text-white rounded-2xl rounded-tr-none shadow-sm ml-auto' 
-                    : 'self-start bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm mr-auto'
-            }`;
-
-            msgDiv.innerText = text;
-            messagesBox.appendChild(msgDiv);
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-        }
-
-        function showTypingIndicator() {
-            const indicatorDiv = document.createElement('div');
-            indicatorDiv.id = 'typing-indicator';
-            indicatorDiv.className = 'self-start max-w-[85%] p-3 bg-white text-gray-400 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm flex items-center gap-1 mr-auto';
-            indicatorDiv.innerHTML = `
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-            `;
-            messagesBox.appendChild(indicatorDiv);
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-        }
-
-        function removeTypingIndicator() {
-            const indicator = document.getElementById('typing-indicator');
-            if (indicator) indicator.remove();
-        }
-
-        // ==========================================
-        // PASTE YOUR NEW sendMessage() FUNCTION HERE
-        // ==========================================
-        async function sendMessage() {
-            const message = inputField.value.trim();
-            if (!message) return;
-
-            appendMessage(message, 'user');
-            inputField.value = '';
-            showTypingIndicator();
-
-            try {
-                // Point fetch to Laravel's internal API route
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ message })
-                });
-
-                removeTypingIndicator();
-
-                if (!response.ok) {
-                    appendMessage(`Server Error (${response.status}): Could not reach Laravel API.`, 'bot');
-                    return;
-                }
-
-                const data = await response.json();
-                
-                if (data.response) {
-                    appendMessage(data.response, 'bot');
-                } else {
-                    appendMessage('Error: Received invalid response from server.', 'bot');
-                }
-            } catch (error) {
-                removeTypingIndicator();
-                console.error('Fetch Error:', error);
-                appendMessage('Network Error: Check browser console (F12) for details.', 'bot');
-            }
-        }
-
-        sendBtn.onclick = sendMessage;
-        inputField.onkeypress = (e) => {
-            if (e.key === 'Enter') sendMessage();
-        };
-    }
-
-    document.addEventListener('DOMContentLoaded', initChatbot);
-    document.addEventListener('livewire:navigated', initChatbot);
-</script>
 </div>
