@@ -126,7 +126,7 @@
                        class="group">
                         <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 border border-gray-100 group-hover:border-[var(--color-secondary)] transition">
                             @if($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}" 
+                                <img src="{{ $category->image_url }}" 
                                      alt="{{ $category->name }}"
                                      class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
                             @else

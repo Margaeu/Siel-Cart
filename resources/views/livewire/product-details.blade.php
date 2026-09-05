@@ -32,10 +32,10 @@
                         @endif
                     </div>
 
-                    <!-- Thumbnail Images -->
-                    @if($displayImages->count() > 1)
+                    <!-- Thumbnail Images: shared images + the selected variant's own -->
+                    @if($galleryImages->count() > 1)
                         <div class="grid grid-cols-4 gap-4">
-                            @foreach($displayImages as $image)
+                            @foreach($galleryImages as $image)
                                 <button wire:click="selectImage('{{ $image->image_path }}')"
                                         style="{{ $selectedImage === $image->image_path ? 'border-color: var(--color-primary);' : '' }}"
                                         class="aspect-square rounded-lg overflow-hidden border-2 {{ $selectedImage === $image->image_path ? '' : 'border-gray-200' }} hover:opacity-80 transition">
@@ -57,7 +57,7 @@
                                 Featured
                             </span>
                         @endif
-                        @if($product->stock_status === 'in_stock')
+                        @if($selectionInStock)
                             <span class="bg-emerald-100 text-emerald-800 text-sm font-semibold px-3 py-1 rounded">
                                 In Stock
                             </span>
@@ -102,25 +102,19 @@
                             @php
                                 $variant = $product->variants->find($selectedVariant);
                             @endphp
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl font-bold text-gray-900">${{ number_format($variant->price, 2) }}</span>
-                                @if($variant->compare_price)
-                                    <span class="text-xl text-gray-500 line-through">${{ number_format($variant->compare_price, 2) }}</span>
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
-                                        -{{ $variant->discount_percentage }}%
-                                    </span>
-                                @endif
-                            </div>
+                            <span class="text-3xl font-bold text-gray-900">₱{{ number_format($variant->price, 2) }}</span>
                         @else
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl font-bold text-gray-900">${{ number_format($product->price, 2) }}</span>
-                                @if($product->compare_price)
-                                    <span class="text-xl text-gray-500 line-through">${{ number_format($product->compare_price, 2) }}</span>
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
-                                        -{{ $product->discount_percentage }}%
-                                    </span>
-                                @endif
-                            </div>
+                            {{--
+                                Reached by simple products, and by a variable
+                                product with no active variant at all -- mount()
+                                selects an inactive-stock variant if one exists,
+                                so only an empty active set falls through here.
+                                display_price_label prints the plain price for
+                             the first case and "Unavailable" for the second,
+                                   where the product's own price column names a
+                                figure nothing can be bought at.
+                            --}}
+                            <span class="text-3xl font-bold text-gray-900">{{ $product->display_price_label }}</span>
                         @endif
                     </div>
 
@@ -139,7 +133,7 @@
                                             style="{{ $selectedVariant === $variant->id ? 'border-color: var(--color-primary); background-color: #f2f7f4;' : '' }}"
                                             class="border-2 rounded-lg p-3 text-left transition {{ $selectedVariant === $variant->id ? '' : 'border-gray-300 hover:border-gray-400' }}">
                                         <p class="font-medium text-gray-900">{{ $variant->name }}</p>
-                                        <p class="text-sm text-gray-600">${{ number_format($variant->price, 2) }}</p>
+                                        <p class="text-sm text-gray-600">₱{{ number_format($variant->price, 2) }}</p>
                                         <p class="text-xs {{ $variant->stock_status === 'in_stock' ? 'text-emerald-600' : 'text-red-600' }}">
                                             {{ $variant->stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock' }}
                                         </p>
@@ -172,20 +166,14 @@
                         </div>
                     </div>
 
-                    <!-- Flash Messages -->
-                    @if (session()->has('success'))
-                        <div class="bg-emerald-100 border border-emerald-400 text-emerald-700 px-4 py-3 rounded mb-4">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session()->has('error'))
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                            {{ session('error') }}
-                        </div>
-                    @endif
+                    {{--
+                        Add to Cart feedback is shown by the shared popup
+                        in the layout (<x-cart-toast />), so no flash
+                        message block is needed here.
+                    --}}
 
                     <!-- Add to Cart -->
-                    @if($product->stock_status === 'in_stock')
+                    @if($selectionInStock)
                         <button wire:click="addToCart"
                                 style="background-color: var(--color-primary);"
                                 class="w-full text-white py-3 px-6 rounded-lg hover:opacity-90 transition font-semibold text-lg">
@@ -307,6 +295,58 @@
                             <p class="text-gray-500">No reviews yet. Be the first to review this product!</p>
                         </div>
                     @endif
+
+                    @auth('customer')
+                        <div class="mt-8 border-t pt-8">
+                            @if($hasReview && !$reviewIsApproved)
+                                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+                                    Your review has been submitted and is awaiting approval.
+                                </div>
+                            @elseif($hasReview)
+                                <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                                    Thank you for reviewing this product.
+                                </div>
+                            @elseif($canReview)
+                                <form wire:submit="submitReview" class="space-y-5">
+                                    <h3 class="text-xl font-semibold text-gray-900">Write a Review</h3>
+
+                                    <div>
+                                        <label for="review-rating" class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                                        <select id="review-rating" wire:model="reviewRating"
+                                                class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
+                                            <option value="5">5 - Excellent</option>
+                                            <option value="4">4 - Good</option>
+                                            <option value="3">3 - Average</option>
+                                            <option value="2">2 - Poor</option>
+                                            <option value="1">1 - Very Poor</option>
+                                        </select>
+                                        @error('reviewRating') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="review-title" class="block text-sm font-medium text-gray-700 mb-1">Title (optional)</label>
+                                        <input id="review-title" type="text" wire:model="reviewTitle" maxlength="255"
+                                               class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
+                                        @error('reviewTitle') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="review-comment" class="block text-sm font-medium text-gray-700 mb-1">Review</label>
+                                        <textarea id="review-comment" wire:model="reviewComment" rows="4" maxlength="2000"
+                                                  class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
+                                        @error('reviewComment') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @error('review') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <button type="submit"
+                                            class="rounded-lg bg-[var(--color-primary)] px-5 py-2.5 font-semibold text-white transition hover:bg-[#154522] disabled:opacity-50"
+                                            wire:loading.attr="disabled" wire:target="submitReview">
+                                        Submit Review
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endauth
                 </div>
             </div>
         </div>
