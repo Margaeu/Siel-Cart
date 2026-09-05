@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -40,5 +41,18 @@ class SystemSetupSeeder extends Seeder
                 ['name' => $categoryName]
             );
         }
+
+        // 3. Create the default active Color Theme, matching the site's
+        // original hardcoded look. Manage from Admin → Design → Color
+        // Themes & Fonts.
+        Theme::firstOrCreate(
+            ['name' => 'Default Green'],
+            [
+                'primary_color' => '#1E6031',
+                'secondary_color' => '#E0A70D',
+                'font_family' => 'Inter',
+                'is_active' => true,
+            ]
+        );
     }
 }

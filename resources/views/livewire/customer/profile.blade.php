@@ -5,7 +5,7 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
             <nav class="text-sm">
                 <ol class="flex items-center gap-2">
-                    <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 hover:text-[#1E6031]">Account</a></li>
+                    <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 hover:text-[var(--color-primary)]">Account</a></li>
                     <li class="text-gray-400">/</li>
                     <li class="text-gray-900 font-medium">Profile</li>
                 </ol>
@@ -17,7 +17,7 @@
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <div class="flex flex-col items-center text-center mb-6">
-                        <div class="w-24 h-24 bg-[#1E6031] text-white rounded-full flex items-center justify-center text-3xl font-bold mb-4">
+                        <div class="w-24 h-24 bg-[var(--color-primary)] text-white rounded-full flex items-center justify-center text-3xl font-bold mb-4">
                             {{ substr(auth('customer')->user()->name, 0, 1) }}
                         </div>
                         <h2 class="text-xl font-bold text-gray-900">{{ auth('customer')->user()->name }}</h2>
@@ -48,7 +48,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
                                 <input type="text"
                                        wire:model="first_name"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                                 @error('first_name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                             </div>
 
@@ -56,7 +56,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
                                 <input type="text"
                                        wire:model="last_name"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                                 @error('last_name') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -65,7 +65,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                             <input type="email" 
                                    wire:model="email"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                             @error('email') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -73,12 +73,12 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                             <input type="tel" 
                                    wire:model="phone"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                             @error('phone') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                         </div>
 
                         <button type="submit"
-                                class="w-full bg-[#1E6031] text-white py-2 px-4 rounded-lg hover:bg-[#164824] transition font-semibold">
+                                class="w-full bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[var(--color-primary-hover)] transition font-semibold">
                             Update Profile
                         </button>
                     </form>
@@ -104,7 +104,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
                             <input type="password" 
                                    wire:model="current_password"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                             @error('current_password') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -112,7 +112,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                             <input type="password" 
                                    wire:model="new_password"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                             @error('new_password') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                         </div>
 
@@ -120,11 +120,11 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
                             <input type="password" 
                                    wire:model="new_password_confirmation"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                         </div>
 
                         <button type="submit"
-                                class="w-full bg-[#1E6031] text-white py-2 px-4 rounded-lg hover:bg-[#164824] transition font-semibold">
+                                class="w-full bg-[var(--color-primary)] text-white py-2 px-4 rounded-lg hover:bg-[var(--color-primary-hover)] transition font-semibold">
                             Change Password
                         </button>
                     </form>

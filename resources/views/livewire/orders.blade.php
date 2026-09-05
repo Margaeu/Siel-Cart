@@ -5,7 +5,7 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
             <nav class="text-sm">
                 <ol class="flex items-center gap-2">
-                    <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 hover:text-[#1E6031]">Account</a></li>
+                    <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 hover:text-[var(--color-primary)]">Account</a></li>
                     <li class="text-gray-400">/</li>
                     <li class="text-gray-900 font-medium">Orders</li>
                 </ol>
@@ -17,7 +17,7 @@
             <div class="flex items-center gap-4">
                 <label class="text-gray-700 font-medium">Filter by Status:</label>
                 <select wire:model.live="statusFilter"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1E6031] focus:border-[#1E6031]">
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]">
                     <option value="">All Orders</option>
                     <option value="pending">Pending</option>
                     <option value="processing">Processing</option>
@@ -47,7 +47,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm text-gray-600">Total</p>
-                                        <p class="font-semibold text-gray-900">₱{{ number_format($order->total, 2) }}</p>
+                                        <p class="font-semibold text-gray-900">${{ number_format($order->total, 2) }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
@@ -60,7 +60,7 @@
                                         {{ ucfirst($order->status) }}
                                     </span>
                                     <a href="{{ route('customer.orders.show', $order->id) }}"
-                                       class="text-[#1E6031] hover:text-[#164824] font-medium">
+                                       class="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] font-medium">
                                         View Details →
                                     </a>
                                 </div>
@@ -73,14 +73,10 @@
                                 @foreach($order->items as $item)
                                     <div class="flex gap-4">
                                         <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                            @if($item->display_image_url)
-                                                <img src="{{ $item->display_image_url }}"
-                                                     alt="{{ $item->product_name }}{{ $item->variant_name ? ' - '.$item->variant_name : '' }}"
+                                            @if($item->product && $item->product->primaryImage)
+                                                <img src="{{ $item->product->primaryImage->url }}" 
+                                                     alt="{{ $item->product_name }}"
                                                      class="w-full h-full object-cover">
-                                            @else
-                                                <div class="w-full h-full flex items-center justify-center text-gray-400 text-2xl font-semibold">
-                                                    {{ substr($item->product_name, 0, 1) }}
-                                                </div>
                                             @endif
                                         </div>
                                         <div class="flex-1">
@@ -91,7 +87,7 @@
                                             <p class="text-sm text-gray-600">Quantity: {{ $item->quantity }}</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-bold text-gray-900">₱{{ number_format($item->subtotal, 2) }}</p>
+                                            <p class="font-bold text-gray-900">${{ number_format($item->subtotal, 2) }}</p>
                                         </div>
                                     </div>
                                 @endforeach
@@ -120,12 +116,12 @@
                 </p>
                 @if($statusFilter)
                     <button wire:click="$set('statusFilter', '')"
-                            class="inline-block bg-[#1E6031] text-white px-6 py-2 rounded-lg hover:bg-[#164824] transition">
+                            class="inline-block bg-[var(--color-primary)] text-white px-6 py-2 rounded-lg hover:bg-[var(--color-primary-hover)] transition">
                         Show All Orders
                     </button>
                 @else
                     <a href="{{ route('products.index') }}" 
-                       class="inline-block bg-[#1E6031] text-white px-6 py-2 rounded-lg hover:bg-[#164824] transition">
+                       class="inline-block bg-[var(--color-primary)] text-white px-6 py-2 rounded-lg hover:bg-[var(--color-primary-hover)] transition">
                         Start Shopping
                     </a>
                 @endif

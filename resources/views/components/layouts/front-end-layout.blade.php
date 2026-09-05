@@ -7,9 +7,7 @@
 
     <title>{{ $title ?? config('app.name', 'E-Commerce Store') }}</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    @include('partials.theme-styles')
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -32,7 +30,7 @@
             <div class="flex items-center justify-between py-4">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <a href="{{ route('home') }}" class="text-2xl font-bold text-[#1E6031]">
+                    <a href="{{ route('home') }}" class="text-2xl font-bold text-[var(--color-primary)]">
                         {{ config('app.name', 'E-Commerce') }}
                     </a>
                 </div>
@@ -45,13 +43,13 @@
                 <!-- Right Side -->
                 <div class="flex items-center gap-4">
                     @auth('customer')
-                        <a href="{{ route('customer.dashboard') }}" class="text-gray-700 hover:text-text-[#1E6031]">
+                        <a href="{{ route('customer.dashboard') }}" class="text-gray-700 hover:text-[var(--color-primary)]">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-[#1E6031]">
+                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-[var(--color-primary)]">
                             Login
                         </a>
                     @endauth
@@ -65,19 +63,19 @@
             <nav class="border-t py-4">
                 <ul class="flex items-center gap-8">
                     <li>
-                        <a href="{{ route('home') }}" class="text-gray-700 hover:text-[#1E6031]font-medium">
+                        <a href="{{ route('home') }}" class="text-gray-700 hover:text-[var(--color-primary)] font-medium">
                             Home
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('products.index') }}" class="text-gray-700 hover:text-[#1E6031] font-medium">
+                        <a href="{{ route('products.index') }}" class="text-gray-700 hover:text-[var(--color-primary)] font-medium">
                             Shop
                         </a>
                     </li>
                     @foreach(\App\Models\Category::active()->sorted()->limit(5)->get() as $category)
                         <li>
                             <a href="{{ route('products.index', ['category' => $category->slug]) }}" 
-                               class="text-gray-700 hover:text-[#1E6031]">
+                               class="text-gray-700 hover:text-[var(--color-primary)]">
                                 {{ $category->name }}
                             </a>
                         </li>
@@ -92,9 +90,6 @@
         {{ $slot }}
     </main>
     @livewire('notifications')
-
-    <!-- Cart notification popup (shown once per page) -->
-    <x-cart-toast />
 
 
     <!-- Footer -->
