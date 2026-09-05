@@ -92,18 +92,18 @@ class PermanentProductSeeder extends Seeder
                 ];
 
                 foreach ($variants as $vIndex => $v) {
-                    $product->variants()->updateOrCreate(
-                        ['sku' => "{$product->sku}-{$v['size']}"],
-                        [
-                            'name' => "{$product->name} - {$v['name']}",
-                            'options' => json_encode(['size' => $v['size']]),
-                            'price' => $product->price,
-                            'stock_quantity' => 50,
-                            'is_active' => true,
-                            'sort_order' => $vIndex,
-                        ]
-                    );
-                }
+    $product->variants()->updateOrCreate(
+        ['sku' => "{$product->sku}-{$v['size']}"],
+        [
+            'name' => "{$product->name} - {$v['name']}",
+            // 'options' line removed here
+            'price' => $product->price,
+            'stock_quantity' => 50,
+            'is_active' => true,
+            'sort_order' => $vIndex,
+        ]
+    );
+}
             }
         }
     }

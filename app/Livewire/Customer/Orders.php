@@ -35,6 +35,6 @@ class Orders extends Component
 
         return view('livewire.orders', [
             'orders' => $orders,
-        ]);
+        ])->layout('components.layouts.front-end-layout', ['title' => 'My Orders - '.config('app.name')]);
     }
 }
