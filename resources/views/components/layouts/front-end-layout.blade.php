@@ -89,6 +89,8 @@
     <main>
         {{ $slot }}
     </main>
+
+    <x-cart-toast />
     @livewire('notifications')
 
 

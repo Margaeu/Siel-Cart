@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\CartPage;
 use App\Livewire\CheckoutPage;
 use App\Livewire\ProductCard;
+use App\Livewire\ProductDetails;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
@@ -64,6 +65,33 @@ class CartPricingTest extends TestCase
             ->assertSee('Large Green')->assertSee('₱99.99')->assertSee('₱499.98');
         $this->assertSame($selected->id, $service->getCart()->items()->where('product_id', $product->id)->first()->product_variant_id);
         $this->assertSame(499.98, $service->getSubtotal());
+    }
+
+    public function test_product_details_confirms_the_exact_variant_added_to_the_cart(): void
+    {
+        $product = $this->product([
+            'name' => 'CLSU Shirt',
+            'has_variants' => true,
+            'price' => null,
+        ]);
+        $variant = ProductVariant::factory()->for($product)->create([
+            'name' => 'Yellow',
+            'sku' => 'SHIRT-YELLOW',
+            'price' => 250,
+            'stock_quantity' => 5,
+        ]);
+
+        Livewire::test(ProductDetails::class, ['slug' => $product->slug])
+            ->assertSet('selectedVariant', $variant->id)
+            ->call('addToCart')
+            ->assertDispatched(
+                'cart-added',
+                message: 'CLSU Shirt — Yellow has been added to your cart.',
+            );
+
+        $this->get(route('products.show', $product->slug))
+            ->assertOk()
+            ->assertSee('@cart-added.window', false);
     }
 
     public function test_deleted_variant_never_falls_back_to_parent_price_and_blocks_checkout(): void

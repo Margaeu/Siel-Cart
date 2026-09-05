@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -17,7 +18,7 @@ class CartService
     public function getCart(): ?Cart
     {
         // Make sure a customer is logged in.
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return null;
         }
 
@@ -47,8 +48,7 @@ class CartService
             ];
         }
 
-        return $this->withLockedCart($cart, fn (Cart $lockedCart) =>
-            $this->addItemToLockedCart($lockedCart, $productId, $variantId, $quantity)
+        return $this->withLockedCart($cart, fn (Cart $lockedCart) => $this->addItemToLockedCart($lockedCart, $productId, $variantId, $quantity)
         );
     }
 
@@ -62,7 +62,7 @@ class CartService
         // Find the product.
         $product = Product::find($productId);
 
-        if (!$product || !$product->is_active) {
+        if (! $product || ! $product->is_active) {
             return [
                 'success' => false,
                 'message' => 'Product not found.',
@@ -71,6 +71,7 @@ class CartService
 
         // Determine which stock amount should be checked.
         $availableStock = $product->stock_quantity;
+        $variant = null;
 
         if ($product->has_variants && ! $variantId) {
             return ['success' => false, 'message' => 'Please select a variant.'];
@@ -94,7 +95,7 @@ class CartService
                 ? $product->variants()->active()->find($variantId)
                 : null;
 
-            if (!$variant) {
+            if (! $variant) {
                 return [
                     'success' => false,
                     'message' => 'Product variant not found.',
@@ -147,8 +148,20 @@ class CartService
 
         return [
             'success' => true,
-            'message' => $product->name . ' has been added to your cart.',
+            'message' => $this->addedToCartMessage($product, $variant),
         ];
+    }
+
+    /** Build a confirmation that identifies the exact item added. */
+    private function addedToCartMessage(Product $product, ?ProductVariant $variant): string
+    {
+        $itemName = $product->name;
+
+        if ($variant) {
+            $itemName .= ' — '.$variant->name;
+        }
+
+        return $itemName.' has been added to your cart.';
     }
 
     /**
@@ -163,15 +176,14 @@ class CartService
     ): array {
         $cart = $this->getCart();
 
-        if (!$cart) {
+        if (! $cart) {
             return [
                 'success' => false,
                 'message' => 'Please log in first.',
             ];
         }
 
-        return $this->withLockedCart($cart, fn (Cart $lockedCart) =>
-            $this->updateQuantityInLockedCart($lockedCart, $cartItemId, $quantity)
+        return $this->withLockedCart($cart, fn (Cart $lockedCart) => $this->updateQuantityInLockedCart($lockedCart, $cartItemId, $quantity)
         );
     }
 
@@ -183,7 +195,7 @@ class CartService
             ->lockForUpdate()
             ->find($cartItemId);
 
-        if (!$cartItem) {
+        if (! $cartItem) {
             return [
                 'success' => false,
                 'message' => 'Cart item not found.',
@@ -202,7 +214,7 @@ class CartService
         // cannot have its quantity changed at all. Only removing it works.
         // Without this a deleted product with stock left on its row would
         // still accept quantity changes.
-        if (!$cartItem->is_purchasable) {
+        if (! $cartItem->is_purchasable) {
             return [
                 'success' => false,
                 'message' => 'This product is no longer available. Please remove it from your cart.',
@@ -239,7 +251,7 @@ class CartService
     {
         $cart = $this->getCart();
 
-        if (!$cart) {
+        if (! $cart) {
             return false;
         }
 
@@ -266,7 +278,7 @@ class CartService
     {
         $cart = $this->getCart();
 
-        if (!$cart) {
+        if (! $cart) {
             return false;
         }
 
@@ -290,7 +302,7 @@ class CartService
     {
         $cart = $this->getCart();
 
-        if (!$cart) {
+        if (! $cart) {
             return 0;
         }
 

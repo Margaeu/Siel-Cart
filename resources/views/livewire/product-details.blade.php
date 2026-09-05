@@ -190,7 +190,7 @@
                     <div class="mt-8 border-t pt-6 space-y-3">
                         <div class="flex justify-between">
                             <span class="text-gray-600">SKU:</span>
-                            <span class="font-medium">{{ $product->sku }}</span>
+                            <span class="font-medium">{{ $selectedVariant ? $product->variants->find($selectedVariant)?->sku : $product->sku }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Category:</span>
