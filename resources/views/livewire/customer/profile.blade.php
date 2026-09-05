@@ -18,7 +18,7 @@
                 <div class="bg-white rounded-lg shadow-sm p-6">
                     <div class="flex flex-col items-center text-center mb-6">
                         <div class="w-24 h-24 bg-[var(--color-primary)] text-white rounded-full flex items-center justify-center text-3xl font-bold mb-4">
-                            {{ substr(auth('customer')->user()->name, 0, 1) }}
+                            {{ auth('customer')->user()->initials() }}
                         </div>
                         <h2 class="text-xl font-bold text-gray-900">{{ auth('customer')->user()->name }}</h2>
                         <p class="text-gray-600">{{ auth('customer')->user()->email }}</p>

@@ -21,9 +21,11 @@
                     <option value="">All Orders</option>
                     <option value="pending">Pending</option>
                     <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
+                    <option value="ready_for_pickup">Ready for Pickup</option>
+                    <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
+                    <option value="return_requested">Return Requested</option>
+                    <option value="return_completed">Return Completed</option>
                 </select>
             </div>
         </div>
