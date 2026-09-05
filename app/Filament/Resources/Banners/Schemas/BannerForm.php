@@ -26,7 +26,7 @@ class BannerForm
                             ->required()
                             ->maxSize(2048)
                             ->imageEditor()
-                            ->imageEditorAspectRatios(['16:9', '21:9', null])
+                            ->imageEditorAspectRatioOptions(['16:9', '21:9', null])
                             ->orientImagesFromExif(false)
                             ->imagePreviewHeight('250')
                             ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 2MB.')
@@ -37,11 +37,6 @@ class BannerForm
                         TextInput::make('title')
                             ->default(null),
                         TextInput::make('subtitle')
-                            ->default(null),
-                        TextInput::make('link_url')
-                            ->label('Link URL')
-                            ->helperText('Where the banner takes shoppers when clicked (optional).')
-                            ->url()
                             ->default(null),
                     ])->columns(2),
                 Section::make('Display')

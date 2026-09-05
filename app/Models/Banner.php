@@ -16,7 +16,6 @@ class Banner extends Model
         'title',
         'subtitle',
         'image_path',
-        'link_url',
         'is_active',
         'sort_order',
     ];
