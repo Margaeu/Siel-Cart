@@ -207,6 +207,31 @@ class Product extends Model
             ->where('is_primary', true);
     }
 
+    /**
+     * The image used by catalogue cards.
+     *
+     * A shared primary image remains the first choice. If the product has no
+     * shared primary image, use the first image from an active variant so a
+     * sellable product does not fall back to the letter placeholder while it
+     * still has usable photography.
+     */
+    public function cardImage()
+    {
+        return $this->hasOne(ProductImage::class)
+            ->where(function (Builder $images) {
+                $images
+                    ->where(fn (Builder $shared) => $shared
+                        ->whereNull('product_variant_id')
+                        ->where('is_primary', true))
+                    ->orWhere(fn (Builder $variantImage) => $variantImage
+                        ->whereNotNull('product_variant_id')
+                        ->whereHas('variant', fn (Builder $variant) => $variant->active()));
+            })
+            ->orderByRaw('CASE WHEN product_variant_id IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
     public function reviews()
     {
         return $this->hasMany(Review::class);

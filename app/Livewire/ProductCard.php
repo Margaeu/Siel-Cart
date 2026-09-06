@@ -35,7 +35,7 @@ class ProductCard extends Component
      */
     private function restoreProductData(): void
     {
-        $this->product->loadMissing(['category', 'primaryImage', 'variants']);
+        $this->product->loadMissing(['category', 'cardImage', 'variants']);
 
         // reviews_count and average_rating fall back to a query per read
         // without either the withCount()/withAvg() aggregates or the relation.

@@ -15,8 +15,8 @@
             </div> 
             --}}
 
-            @if($product->primaryImage)
-                <img src="{{ $product->primaryImage->url }}"
+            @if($product->cardImage)
+                <img src="{{ $product->cardImage->url }}"
                      alt="{{ $product->name }}"
                      class="w-full h-full object-contain group-hover:scale-105 transition duration-300 ease-in-out">
             @else

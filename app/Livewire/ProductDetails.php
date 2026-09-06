@@ -281,7 +281,7 @@ class ProductDetails extends Component
             ->where('id', '!=', $this->product->id)
             // Related cards render the same product-card view as any listing,
             // and that view reads the category name.
-            ->with(['category', 'primaryImage', 'variants'])
+            ->with(['category', 'cardImage', 'variants'])
             ->withReviewAggregates()
             ->limit(4)
             ->get();

@@ -82,7 +82,7 @@ class ProductListing extends Component
     {
         $query = Product::query()
             ->active()
-            ->with(['category', 'primaryImage', 'variants'])
+            ->with(['category', 'cardImage', 'variants'])
             ->withReviewAggregates();
 
         // Search
