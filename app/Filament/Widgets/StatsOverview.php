@@ -34,7 +34,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->description('Today: $' . number_format($todayRevenue, 2))
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
-            Stat::make('Total Orders', $totalOrders)
+            Stat::make('Total Pending Orders', $totalOrders)
                 ->description($pendingOrders . ' pending')
                 ->descriptionIcon('heroicon-m-shopping-cart')
                 ->color('warning')
