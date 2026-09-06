@@ -294,6 +294,6 @@ class CheckoutPage extends Component
             'total'          => $subtotal,
             'pickupLocation' => self::PICKUP_LOCATION_LABEL,
             'paymentMethod'  => self::PAYMENT_METHOD_LABEL,
-        ]);
+        ])->layout('components.layouts.front-end-layout', ['title' => 'Checkout - '.config('app.name')]);
     }
 }

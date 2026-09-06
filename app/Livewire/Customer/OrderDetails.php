@@ -56,6 +56,7 @@ class OrderDetails extends Component
 
     public function render()
     {
-        return view('livewire.customer.order-details');
+        return view('livewire.customer.order-details')
+            ->layout('components.layouts.front-end-layout', ['title' => 'Order Details - '.config('app.name')]);
     }
 }

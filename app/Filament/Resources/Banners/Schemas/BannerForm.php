@@ -38,6 +38,11 @@ class BannerForm
                             ->default(null),
                         TextInput::make('subtitle')
                             ->default(null),
+                        // TextInput::make('link_url')
+                        //     ->label('Link URL')
+                        //     ->helperText('Where the banner takes shoppers when clicked (optional).')
+                        //     ->url()
+                        //     ->default(null),
                     ])->columns(2),
                 Section::make('Display')
                     ->schema([
