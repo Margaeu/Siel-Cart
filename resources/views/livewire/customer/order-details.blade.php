@@ -18,6 +18,14 @@
         $paymentStatus = strtolower($order->status) === 'cancelled' 
             ? 'cancelled' 
             : $order->payment_status;
+
+        $cancellationReasonLabel = match ($order->cancellation_reason) {
+            'customer_no_show' => 'The order was not collected during the scheduled pickup period.',
+            'change_of_mind'    => 'Change of mind',
+            'incorrect_items'   => 'Added wrong item or quantity',
+            null, ''            => 'No cancellation reason was recorded.',
+            default             => Str::headline($order->cancellation_reason),
+        };
     @endphp
 
     <div class="bg-gray-50 py-8">
@@ -190,10 +198,20 @@
                                 </p>
                             </div>
                             <div>
+                                <p class="text-sm text-gray-600">Pickup Time</p>
+                                <p class="font-semibold text-gray-900">
+                                    @if($order->pickup_slot)
+                                        {{ $order->pickup_slot }}
+                                    @else
+                                        <span class="text-gray-500 font-normal">To be scheduled</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div>
                                 <p class="text-sm text-gray-600">Claimed By</p>
                                 <p class="font-semibold text-gray-900">
-                                    @if($order->pickup_contact_name)
-                                        {{ $order->pickup_contact_name }}
+                                    @if($order->claimant_name)
+                                        {{ $order->claimant_name }}
                                     @else
                                         <span class="text-gray-500 font-normal">To be designated</span>
                                     @endif
@@ -202,8 +220,8 @@
                             <div>
                                 <p class="text-sm text-gray-600">Contact Number</p>
                                 <p class="font-semibold text-gray-900">
-                                    @if($order->pickup_contact_phone)
-                                        {{ $order->pickup_contact_phone }}
+                                    @if($order->claimant_phone)
+                                        {{ $order->claimant_phone }}
                                     @else
                                         <span class="text-gray-500 font-normal">To be designated</span>
                                     @endif
@@ -226,34 +244,6 @@
                         </div>
                     </div>
 
-                    {{-- Order History --}}
-                    @if($order->statusHistories->count() > 0)
-                        <div class="bg-white rounded-lg shadow-sm p-6">
-                            <h2 class="text-xl font-bold text-gray-900 mb-4">Order History</h2>
-                            <div class="space-y-4">
-                                @foreach($order->statusHistories as $history)
-                                    <div class="flex gap-4">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-10 h-10 rounded-full bg-[#f2f7f4] text-[var(--color-primary)] flex items-center justify-center">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center justify-between">
-                                                <p class="font-semibold text-gray-900">{{ Str::headline($history->status) }}</p>
-                                                <p class="text-sm text-gray-500">{{ $history->created_at->format('M d, Y h:i A') }}</p>
-                                            </div>
-                                            @if($history->notes)
-                                                <p class="text-sm text-gray-600 mt-1">{{ $history->notes }}</p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
 
                 {{-- Order Summary --}}
@@ -284,6 +274,12 @@
                                     <span class="font-semibold text-red-600">
                                         {{ $order->cancelled_at ? $order->cancelled_at->format('M d, Y h:i A') : $order->updated_at->format('M d, Y h:i A') }}
                                     </span>
+                                </div>
+                                <div class="text-sm border-t pt-3">
+                                    <p class="text-gray-600">Cancellation Reason</p>
+                                    <p class="mt-1 font-semibold text-red-700">
+                                        {{ $cancellationReasonLabel }}
+                                    </p>
                                 </div>
                             @endif
 

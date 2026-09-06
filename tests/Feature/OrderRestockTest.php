@@ -125,6 +125,7 @@ class OrderRestockTest extends TestCase
         $order->refresh();
         $this->assertSame(10, $product->fresh()->stock_quantity);
         $this->assertSame('cancelled', $order->status);
+        $this->assertSame('cancelled', $order->payment_status);
         // These two were being dropped by mass assignment before.
         $this->assertSame('change_of_mind', $order->cancellation_reason);
         $this->assertNotNull($order->cancelled_at);

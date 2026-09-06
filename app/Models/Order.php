@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +13,7 @@ use Illuminate\Support\Str;
 
 class Order extends Model
 {
-     use SoftDeletes;
+    use SoftDeletes;
 
     /**
      * Statuses that mean the order is no longer a sale, so its units belong
@@ -32,7 +34,6 @@ class Order extends Model
         'claim_number',
         'payment_method',
         'payment_status',
-        'paid_at',
         'status',
         'claimant_name',
         'claimant_phone',
@@ -52,7 +53,6 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
             'pickup_date' => 'date',
-            'paid_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'completed_at' => 'datetime',
             'stock_restored_at' => 'datetime',
@@ -130,15 +130,69 @@ class Order extends Model
     }
 
     // helper methods
-    public function updateStatus($newStatus , $notes = null, $userId = null)
+    public function updateStatus(string $newStatus, ?string $notes = null, ?int $userId = null, array $attributes = []): void
     {
-        $this->update(['status' => $newStatus]);
+        DB::transaction(function () use ($newStatus, $notes, $userId, $attributes) {
+            $this->update(array_merge($attributes, [
+                'status' => $newStatus,
+            ]));
 
-        $this->statusHistories()->create([
-            'status' => $newStatus,
-            'notes' => $notes,
-            'user_id' => $userId,
-        ]);
+            $this->statusHistories()->create([
+                'status' => $newStatus,
+                'notes' => $notes,
+                'user_id' => $userId,
+            ]);
+        });
+    }
+
+    /**
+     * Get the end of this order's scheduled pickup period.
+     *
+     * Pickup slots are stored as a display-friendly interval such as
+     * "8:00 AM - 5:00 PM". The final time in the value is the no-show
+     * cutoff. Returning null keeps cancellation unavailable for incomplete
+     * or legacy schedules that cannot be interpreted safely.
+     */
+    public function pickupDeadline(): ?CarbonImmutable
+    {
+        if (! $this->pickup_date || blank($this->pickup_slot)) {
+            return null;
+        }
+
+        preg_match_all(
+            '/(?:0?[1-9]|1[0-2]):[0-5][0-9]\s*(?:AM|PM)/i',
+            $this->pickup_slot,
+            $matches,
+        );
+
+        $pickupEndTime = end($matches[0]);
+
+        if ($pickupEndTime === false) {
+            return null;
+        }
+
+        return CarbonImmutable::createFromFormat(
+            'Y-m-d g:i A',
+            $this->pickup_date->format('Y-m-d').' '.strtoupper($pickupEndTime),
+            config('app.timezone'),
+        );
+    }
+
+    /**
+     * Admin no-show cancellation is only valid after a ready order's
+     * complete pickup period has elapsed.
+     */
+    public function canBeCancelledForNoShow(?CarbonInterface $at = null): bool
+    {
+        $pickupDeadline = $this->pickupDeadline();
+
+        if ($this->status !== 'ready_for_pickup' || ! $pickupDeadline) {
+            return false;
+        }
+
+        $at ??= now();
+
+        return $at->greaterThanOrEqualTo($pickupDeadline);
     }
 
     /**
@@ -171,7 +225,7 @@ class Order extends Model
                 ->lockForUpdate()
                 ->first();
 
-            if (!$order || $order->stock_restored_at !== null) {
+            if (! $order || $order->stock_restored_at !== null) {
                 return false;
             }
 
@@ -235,16 +289,17 @@ class Order extends Model
     protected static function generateUniqueCode(string $column, string $prefix): string
     {
         do {
-            $code = $prefix . strtoupper(Str::random(8));
+            $code = $prefix.strtoupper(Str::random(8));
         } while (static::withTrashed()->where($column, $code)->exists());
 
         return $code;
     }
 
-    protected static function boot(){
+    protected static function boot()
+    {
         parent::boot();
 
-        static::creating(function ($order){
+        static::creating(function ($order) {
             if (empty($order->order_number)) {
                 $order->order_number = static::generateUniqueCode('order_number', 'ORD-');
             }
@@ -257,16 +312,16 @@ class Order extends Model
         // This hangs off saving rather than off updateStatus() so that it
         // also fires when the status is changed straight through the admin
         // panel, and the code is written in the same query as the status.
-        static::saving(function ($order){
+        static::saving(function ($order) {
             if ($order->status === 'ready_for_pickup' && empty($order->claim_number)) {
                 $order->claim_number = static::generateUniqueCode('claim_number', 'CLM-');
             }
         });
 
-        static::created(function($order){
+        static::created(function ($order) {
             $order->statusHistories()->create([
                 'status' => $order->status,
-                'notes' => 'Order created'
+                'notes' => 'Order created',
             ]);
         });
 

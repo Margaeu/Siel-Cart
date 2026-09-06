@@ -9,28 +9,34 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OrderReadyForPickupMail extends Mailable
+class OrderCancelledNoShowMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public Order $order;
-
-    public function __construct(Order $order)
+    public function __construct(public Order $order)
     {
-        $this->order = $order;
+        $this->order->loadMissing(['customer', 'items']);
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Order #' . $this->order->order_number . ' is Ready for Pickup!',
+            subject: 'Your GreenCobraCart Order #'.$this->order->order_number.' Has Been Cancelled',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.orders.ready-for-pickup',
+            markdown: 'mail.orders.cancelled-no-show',
+            with: [
+                'order' => $this->order,
+            ],
         );
+    }
+
+    public function attachments(): array
+    {
+        return [];
     }
 }

@@ -23,14 +23,14 @@ class OrderProcessingMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order #' . $this->order->order_number . ' is now Processing',
+            subject: 'Your Order #' . $this->order->order_number . ' has been confirmed',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.orders.processing',
+            markdown: 'mail.orders.processing'
         );
     }
 }

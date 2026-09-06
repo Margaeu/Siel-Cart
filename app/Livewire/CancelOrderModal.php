@@ -13,7 +13,7 @@ class CancelOrderModal extends Component
     public bool $isOpen = false;
 
     protected array $rules = [
-        'reason' => 'required|string|in:change_of_mind,incorrect_items,found_better_price,other',
+        'reason' => 'required|string|in:change_of_mind,incorrect_items',
     ];
 
     public function cancelOrder()
@@ -41,11 +41,18 @@ class CancelOrderModal extends Component
 
             // Stock goes back through Order's status hook, so this path and
             // the admin's status dropdown credit it exactly the same way.
-            $order->update([
-                'status'              => 'cancelled',
-                'cancellation_reason' => $this->reason,
-                'cancelled_at'        => now(),
-            ]);
+            $reasonLabel = ucwords(str_replace('_', ' ', $this->reason));
+
+            $order->updateStatus(
+                'cancelled',
+                "Order cancelled by customer. Reason: {$reasonLabel}.",
+                null,
+                [
+                    'cancellation_reason' => $this->reason,
+                    'cancelled_at'        => now(),
+                    'payment_status'      => 'cancelled',
+                ],
+            );
 
             return true;
         });

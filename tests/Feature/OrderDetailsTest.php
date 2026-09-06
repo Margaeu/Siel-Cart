@@ -50,7 +50,7 @@ class OrderDetailsTest extends TestCase
             'subtotal'            => 471.00,
             'total'               => 471.00,
             'pickup_location'     => CheckoutPage::PICKUP_LOCATION,
-            'pickup_contact_name' => $customer->name,
+            'claimant_name'       => $customer->name,
             'payment_method'      => CheckoutPage::PAYMENT_METHOD,
             'payment_status'      => 'pending',
             'status'              => 'pending',
@@ -124,15 +124,37 @@ class OrderDetailsTest extends TestCase
         $order    = $this->makeOrder($customer);
 
         $order->update([
-            'pickup_contact_name'  => null,
-            'pickup_contact_phone' => null,
+            'claimant_name'  => null,
+            'claimant_phone' => null,
         ]);
+
+        $this->assertNull($order->claimant_name);
+        $this->assertNull($order->claimant_phone);
 
         $this->actingAs($customer, 'customer')
             ->get(route('customer.orders.show', $order->id))
             ->assertOk()
             ->assertSee('Claimed By')
             ->assertSee('To be designated');
+    }
+
+    public function test_a_cancelled_order_summary_shows_a_readable_cancellation_reason(): void
+    {
+        $customer = Customer::factory()->create();
+        $order = $this->makeOrder($customer);
+
+        $order->update([
+            'status' => 'cancelled',
+            'payment_status' => 'failed',
+            'cancellation_reason' => 'customer_no_show',
+            'cancelled_at' => now(),
+        ]);
+
+        $this->actingAs($customer, 'customer')
+            ->get(route('customer.orders.show', $order->id))
+            ->assertOk()
+            ->assertSee('Cancellation Reason')
+            ->assertSee('The order was not collected during the scheduled pickup period.');
     }
 
     public function test_the_success_message_is_shown_only_right_after_the_order_is_placed(): void

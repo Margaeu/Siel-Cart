@@ -23,14 +23,14 @@ class OrderCompletedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Order #' . $this->order->order_number . ' Collected Successfully',
+            subject: 'Your Order #' . $this->order->order_number . ' Collected Successfully',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.orders.completed',
+            markdown: 'mail.orders.completed',
             with: [
                 'order' => $this->order,
             ],

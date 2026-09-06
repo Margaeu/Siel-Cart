@@ -5,10 +5,12 @@ namespace App\Filament\Resources\Orders\Schemas;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Colors\Color;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
 use Illuminate\Support\Str;
 
 class OrderInfolist
@@ -16,158 +18,216 @@ class OrderInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Order Information')
-                ->columns(3)
-                ->schema([
-                    TextEntry::make('order_number')->label('Order #'),
-
-                    TextEntry::make('created_at')
-                        ->label('Date Placed')
-                        ->dateTime('M d, Y h:i A'),
-
-                    TextEntry::make('status')
-                        ->badge()
-                        ->formatStateUsing(
-                            fn ($state) => Str::headline($state)
-                        ),
-
-                    TextEntry::make('payment_method')
-                        ->formatStateUsing(
-                            fn ($state) => Str::headline($state)
-                        ),
-
-                    TextEntry::make('payment_status')
-                        ->badge()
-                        ->formatStateUsing(
-                            fn ($state) => Str::headline($state)
-                        ),
-                ]),
-
-            Section::make('Customer Information')
-                ->columns(3)
-                ->schema([
-                    TextEntry::make('customer.name')
-                        ->label('Customer'),
-
-                    TextEntry::make('customer.email')
-                        ->label('Email'),
-
-                    TextEntry::make('customer.phone')
-                        ->label('Phone')
-                        ->placeholder('Not provided'),
-                ]),
-
-            Grid::make([
-                'default' => 1,
-                'xl' => 12,
-            ])
+            Section::make('Order overview')
                 ->columnSpanFull()
+                ->columns([
+                    'default' => 1,
+                    'xl' => 12,
+                ])
                 ->schema([
-                    Section::make('Ordered Products')
-                        ->columnSpan([
+                    Fieldset::make('Order')
+                        ->columns([
                             'default' => 1,
-                            'xl' => 7,
+                            'sm' => 2,
                         ])
-                        ->schema([
-                            RepeatableEntry::make('items')
-                                ->hiddenLabel()
-                                ->table([
-                                    TableColumn::make('Product'),
-                                    TableColumn::make('Variation'),
-                                    TableColumn::make('SKU'),
-                                    TableColumn::make('Unit Price'),
-                                    TableColumn::make('Quantity'),
-                                    TableColumn::make('Subtotal'),
-                                ])
-                                ->schema([
-                                    TextEntry::make('product_name'),
-                                    TextEntry::make('variant_name')
-                                        ->placeholder('—'),
-                                    TextEntry::make('product_sku')
-                                        ->placeholder('—'),
-                                    TextEntry::make('price')
-                                        ->money('PHP'),
-                                    TextEntry::make('quantity'),
-                                    TextEntry::make('subtotal')
-                                        ->money('PHP'),
-                                ]),
-                        ]),
-
-                    Group::make([
-                        Section::make('Order Totals')
-                            ->columns(2)
-                            ->schema([
-                                TextEntry::make('subtotal')
-                                    ->label('Merchandise Subtotal')
-                                    ->money('PHP'),
-
-                                TextEntry::make('total')
-                                    ->label('Order Total')
-                                    ->money('PHP'),
-                            ]),
-
-                        Section::make('Pickup and Claimant Information')
-                            ->columns(2)
-                            ->schema([
-                                TextEntry::make('pickup_location')
-                                    ->label('Pickup Location')
-                                    ->placeholder('UBAP Office'),
-
-                                TextEntry::make('pickup_date')
-                                    ->label('Pickup Date')
-                                    ->date('M d, Y')
-                                    ->placeholder('Not scheduled'),
-
-                                TextEntry::make('pickup_slot')
-                                    ->label('Pickup Time')
-                                    ->time('h:i A')
-                                    ->placeholder('Not scheduled'),
-
-                                TextEntry::make('claim_number')
-                                    ->label('Claim Number')
-                                    ->placeholder('Not issued'),
-
-                                TextEntry::make('claimant_name')
-                                    ->label('Claimed By')
-                                    ->placeholder('Not designated'),
-
-                                TextEntry::make('claimant_phone')
-                                    ->label('Claimant Phone')
-                                    ->placeholder('Not provided'),
-
-                                TextEntry::make('admin_notes')
-                                    ->label('Admin Notes')
-                                    ->placeholder('No notes')
-                                    ->columnSpanFull(),
-                            ]),
-
-                        Section::make('Status History')
-                            ->schema([
-                                RepeatableEntry::make('statusHistories')
-                                    ->hiddenLabel()
-                                    ->table([
-                                        TableColumn::make('Date'),
-                                        TableColumn::make('Status'),
-                                        TableColumn::make('Notes'),
-                                    ])
-                                    ->schema([
-                                        TextEntry::make('created_at')
-                                            ->dateTime('M d, Y h:i A'),
-
-                                        TextEntry::make('status')
-                                            ->formatStateUsing(
-                                                fn ($state) => Str::headline($state)
-                                            ),
-
-                                        TextEntry::make('notes')
-                                            ->placeholder('—'),
-                                    ]),
-                            ]),
-                    ])
                         ->columnSpan([
                             'default' => 1,
                             'xl' => 5,
+                        ])
+                        ->schema([
+                            TextEntry::make('order_number')
+                                ->label('Order number'),
+
+                            TextEntry::make('status')
+                                ->label('Order status')
+                                ->badge()
+                                ->color(fn (string $state): array | string => match ($state) {
+                                    'pending' => 'warning',
+                                    'processing' => 'info',
+                                    'ready_for_pickup' => Color::Purple,
+                                    'completed' => 'success',
+                                    'cancelled' => 'danger',
+                                    default => 'gray',
+                                })
+                                ->formatStateUsing(fn ($state) => Str::headline($state)),
+
+                            TextEntry::make('created_at')
+                                ->label('Placed at')
+                                ->dateTime('M d, Y - h:i A')
+                                ->weight(FontWeight::Bold),
+
+                            TextEntry::make('completed_at')
+                                ->label(fn ($record): string => $record->status === 'cancelled'
+                                    ? 'Cancelled at'
+                                    : 'Collected at')
+                                ->state(fn ($record) => $record->status === 'cancelled'
+                                    ? $record->cancelled_at
+                                    : $record->completed_at)
+                                ->dateTime('M d, Y - h:i A')
+                                ->placeholder(fn ($record): string => $record->status === 'cancelled'
+                                    ? 'Cancellation date unavailable'
+                                    : 'Not yet collected')
+                                ->weight(FontWeight::Bold),
+
+                            TextEntry::make('payment_method')
+                                ->label('Payment method')
+                                ->formatStateUsing(fn ($state) => Str::headline($state)),
+
+                            TextEntry::make('payment_status')
+                                ->label('Payment status')
+                                ->badge()
+                                ->color(fn (string $state): string => match ($state) {
+                                    'pending' => 'warning',
+                                    'paid' => 'success',
+                                    'cancelled', 'failed' => 'danger',
+                                    default => 'gray',
+                                })
+                                ->formatStateUsing(fn ($state) => Str::headline($state)),
                         ]),
+
+                    Fieldset::make('Customer')
+                        ->columns(1)
+                        ->columnSpan([
+                            'default' => 1,
+                            'xl' => 4,
+                        ])
+                        ->schema([
+                            TextEntry::make('customer.name')
+                                ->label('Name'),
+
+                            TextEntry::make('customer.email')
+                                ->label('Email'),
+
+                            TextEntry::make('customer.phone')
+                                ->label('Phone')
+                                ->placeholder('Not provided'),
+                        ]),
+
+                    Fieldset::make('Totals')
+                        ->columns(1)
+                        ->columnSpan([
+                            'default' => 1,
+                            'xl' => 3,
+                        ])
+                        ->schema([
+                            TextEntry::make('subtotal')
+                                ->label('Merchandise subtotal')
+                                ->money('PHP'),
+
+                            TextEntry::make('total')
+                                ->label('Order total')
+                                ->money('PHP')
+                                ->weight(FontWeight::Bold),
+
+                            TextEntry::make('cancellation_reason')
+                                ->label('Cancellation reason')
+                                ->formatStateUsing(fn (?string $state): ?string => match ($state) {
+                                    'change_of_mind' => 'Change of mind',
+                                    'incorrect_items' => 'Added wrong item/quantity',
+                                    null, '' => null,
+                                    default => Str::headline($state),
+                                })
+                                ->placeholder('Not provided')
+                                ->visible(fn ($record): bool => $record->status === 'cancelled'),
+
+                        ]),
+                ]),
+
+            Section::make('Ordered products')
+                ->columnSpanFull()
+                ->schema([
+                    RepeatableEntry::make('items')
+                        ->hiddenLabel()
+                        ->table([
+                            TableColumn::make('Product'),
+                            TableColumn::make('Variation'),
+                            TableColumn::make('SKU'),
+                            TableColumn::make('Unit price'),
+                            TableColumn::make('Quantity'),
+                            TableColumn::make('Subtotal'),
+                        ])
+                        ->schema([
+                            TextEntry::make('product_name'),
+                            TextEntry::make('variant_name')
+                                ->placeholder('—'),
+                            TextEntry::make('product_sku')
+                                ->placeholder('—'),
+                            TextEntry::make('price')
+                                ->money('PHP'),
+                            TextEntry::make('quantity'),
+                            TextEntry::make('subtotal')
+                                ->money('PHP'),
+                        ]),
+                ]),
+
+            Section::make('Pickup and claimant information')
+                ->columnSpanFull()
+                ->columns([
+                    'default' => 1,
+                    'lg' => 2,
+                ])
+                ->schema([
+                    TextEntry::make('claim_number')
+                        ->label('Claim number')
+                        ->placeholder('Not yet issued')
+                        ->copyable(fn ($record): bool => filled($record->claim_number))
+                        ->copyMessage('Claim number copied')
+                        ->size(fn ($record): TextSize => $record->status === 'ready_for_pickup'
+                            ? TextSize::Large
+                            : TextSize::Medium)
+                        ->weight(fn ($record): FontWeight => $record->status === 'ready_for_pickup'
+                            ? FontWeight::Bold
+                            : FontWeight::Normal)
+                        ->color(fn ($record): ?string => $record->status === 'ready_for_pickup'
+                            ? 'primary'
+                            : null)
+                        ->columnSpanFull(),
+
+                    Fieldset::make('Pickup schedule')
+                        ->columns([
+                            'default' => 1,
+                            'sm' => 2,
+                        ])
+                        ->columnSpan([
+                            'default' => 1,
+                            'lg' => fn ($record): int => $record->status === 'completed' ? 1 : 2,
+                        ])
+                        ->schema([
+                            TextEntry::make('pickup_location')
+                                ->label('Location')
+                                ->placeholder('UBAP Office')
+                                ->columnSpanFull(),
+
+                            TextEntry::make('pickup_date')
+                                ->label('Date')
+                                ->date('M d, Y')
+                                ->placeholder('Not yet scheduled'),
+
+                            TextEntry::make('pickup_slot')
+                                ->label('Time interval')
+                                ->placeholder('Not yet scheduled'),
+                        ]),
+
+                    Fieldset::make('Claimant')
+                        ->columns([
+                            'default' => 1,
+                            'sm' => 2,
+                        ])
+                        ->visible(fn ($record): bool => $record->status === 'completed')
+                        ->schema([
+                            TextEntry::make('claimant_name')
+                                ->label('Name')
+                                ->placeholder('Not yet designated'),
+
+                            TextEntry::make('claimant_phone')
+                                ->label('Phone')
+                                ->placeholder('Not yet provided'),
+                        ]),
+
+                    TextEntry::make('admin_notes')
+                        ->label('Admin notes')
+                        ->placeholder('No notes')
+                        ->columnSpanFull(),
                 ]),
         ]);
     }

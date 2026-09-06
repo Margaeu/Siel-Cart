@@ -171,8 +171,6 @@ class CheckoutPage extends Component
                     'subtotal'             => $subtotal,
                     'total'                => $subtotal,
                     'pickup_location'      => self::PICKUP_LOCATION,
-                    'claimant_name'  => $customer->name,
-                    'claimant_phone' => $customer->phone,
                     // pickup_date is left null on purpose. The UBAP admins
                     // schedule it later, once the order is ready to claim.
                     'payment_method'       => self::PAYMENT_METHOD,

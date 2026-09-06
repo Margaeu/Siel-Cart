@@ -124,8 +124,8 @@
         <div class="pickup-box">
             <h3 style="margin-top: 0;">Pickup Details</h3>
             <p style="margin: 0;"><strong>Location:</strong> {{ Str::headline($order->pickup_location) }}</p>
-            <p style="margin: 6px 0 0;"><strong>Claimed by:</strong> {{ $order->pickup_contact_name }}</p>
-            <p style="margin: 6px 0 0;"><strong>Contact number:</strong> {{ $order->pickup_contact_phone }}</p>
+            <p style="margin: 6px 0 0;"><strong>Claimed by:</strong> {{ $order->claimant_name }}</p>
+            <p style="margin: 6px 0 0;"><strong>Contact number:</strong> {{ $order->claimant_phone }}</p>
             <p style="margin: 6px 0 0;">
                 <strong>Pickup date:</strong>
                 @if($order->pickup_date)

@@ -34,22 +34,16 @@ class OrderDetails extends Component
             return;
         }
 
-        // 3. Update Order Status
-        $this->order->update([
-            'status' => 'return_requested',
-        ]);
+        $this->order->updateStatus(
+            'return_requested',
+            'Customer submitted a return/refund request.',
+            null,
+        );
 
-        // 4. Record Action in Status History
-        if (method_exists($this->order, 'statusHistories')) {
-            $this->order->statusHistories()->create([
-                'user_id' => null,
-                'status'  => 'return_requested',
-                'notes'   => 'Customer submitted a return/refund request.',
-            ]);
-        }
-
-        session()->flash('order_success_title', 'Request Submitted');
-        session()->flash('order_success_message', 'Your return/refund request has been submitted and is pending review.');
+        session()->flash(
+            'order_success_message',
+            'Your return/refund request has been submitted and is pending review.'
+        );
 
         $this->order->refresh();
     }

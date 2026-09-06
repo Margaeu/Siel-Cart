@@ -17,8 +17,6 @@
                             <option value="">Select a reason...</option>
                             <option value="change_of_mind">Change of mind</option>
                             <option value="incorrect_items">Added wrong item/quantity</option>
-                            <option value="found_better_price">Found a better price</option>
-                            <option value="other">Other reason</option>
                         </select>
                         @error('reason') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>

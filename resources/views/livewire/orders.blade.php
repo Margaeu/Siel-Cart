@@ -49,7 +49,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm text-gray-600">Total</p>
-                                        <p class="font-semibold text-gray-900">${{ number_format($order->total, 2) }}</p>
+                                        <p class="font-semibold text-gray-900">₱{{ number_format($order->total, 2) }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
@@ -89,7 +89,7 @@
                                             <p class="text-sm text-gray-600">Quantity: {{ $item->quantity }}</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="font-bold text-gray-900">${{ number_format($item->subtotal, 2) }}</p>
+                                            <p class="font-bold text-gray-900">₱{{ number_format($item->subtotal, 2) }}</p>
                                         </div>
                                     </div>
                                 @endforeach

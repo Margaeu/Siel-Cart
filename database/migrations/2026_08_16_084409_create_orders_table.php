@@ -29,7 +29,6 @@ return new class extends Migration
             // Payment & Status
             $table->enum('payment_method', ['cash_on_pickup'])->default('cash_on_pickup');
             $table->string('payment_status')->default('pending'); // pending, paid, failed, refunded
-            $table->timestamp('paid_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('return_deadline')->nullable();
             $table->enum('status', ['pending', 'processing', 'ready_for_pickup', 'completed', 'cancelled', 'return_requested', 'return_completed'])->default('pending');

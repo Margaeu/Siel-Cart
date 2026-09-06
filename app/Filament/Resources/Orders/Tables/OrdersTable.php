@@ -2,29 +2,28 @@
 
 namespace App\Filament\Resources\Orders\Tables;
 
-use App\Models\Order;
+use App\Mail\OrderCompletedMail;
 use App\Mail\OrderProcessingMail;
 use App\Mail\OrderReadyForPickupMail;
-use App\Mail\OrderCompletedMail;
-use Filament\Actions\ViewAction;
+use App\Models\Order;
+use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\TimePicker;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use pxlrbt\FilamentExcel\Actions\ExportAction;
-use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
-use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class OrdersTable
 {
@@ -54,38 +53,38 @@ class OrdersTable
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending'          => 'warning',
-                        'processing'       => 'info',
-                        'ready_for_pickup' => 'primary',
-                        'completed'        => 'success',
+                    ->color(fn (string $state): array | string => match ($state) {
+                        'pending' => 'warning',
+                        'processing' => 'info',
+                        'ready_for_pickup' => Color::Purple,
+                        'completed' => 'success',
                         'return_requested' => 'warning',
                         'return_completed' => 'success',
-                        'cancelled'        => 'danger',
-                        default            => 'gray',
+                        'cancelled' => 'danger',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => Str::headline($state)),
 
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Date')
-                    ->dateTime('M d, Y h:i A')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('order_date')
+                    ->label('Order Date')
+                    ->state(fn (Order $record) => $record->created_at)
+                    ->date('M d, Y')
+                    ->sortable(['created_at']),
+
+                Tables\Columns\TextColumn::make('order_time')
+                    ->label('Order Time')
+                    ->state(fn (Order $record) => $record->created_at)
+                    ->time('h:i A')
+                    ->sortable(['created_at']),
             ])
+
             ->filters([
                 TrashedFilter::make(),
             ])
-            ->headerActions([
-                ExportAction::make()
-                    ->label('Export to Excel')
-                    ->exports([
-                        ExcelExport::make('orders_report')
-                            ->fromTable(),
-                    ]),
-            ])
+
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
-                
 
                 // 1. Pending -> Processing
                 Action::make('mark_processing')
@@ -93,7 +92,7 @@ class OrdersTable
                     ->color('warning')
                     ->icon('heroicon-o-arrow-path')
                     ->action(function (Order $record) {
-                        $record->update(['status' => 'processing']);
+                        $record->updateStatus('processing', 'Order is being processed.',auth()->id(),);
                         Mail::to($record->customer->email)->send(new OrderProcessingMail($record));
                     })
                     ->visible(fn (Order $record) => strtolower($record->status) === 'pending'),
@@ -106,21 +105,34 @@ class OrdersTable
                     ->schema([
                         TextInput::make('claim_number')
                             ->required()
-                            ->default(fn () => 'CLM-' . strtoupper(Str::random(6))),
+                            ->default(fn () => 'CLM-'.strtoupper(Str::random(6))),
                         DatePicker::make('pickup_date')
                             ->required(),
-                        TimePicker::make('pickup_slot')
-                            ->label('Pickup Time')
+                        TimePicker::make('pickup_start_time')
+                            ->label('Pickup Time From')
                             ->seconds(false)
+                            ->default('08:00')
+                            ->required(),
+                        TimePicker::make('pickup_end_time')
+                            ->label('Pickup Time Until')
+                            ->seconds(false)
+                            ->default('17:00')
+                            ->after('pickup_start_time')
+                            ->validationMessages([
+                                'after' => 'The pickup end time must be later than the start time.',
+                            ])
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
-                        $record->update([
-                            'status'       => 'ready_for_pickup',
-                            'claim_number' => $data['claim_number'],
-                            'pickup_date'  => $data['pickup_date'],
-                            'pickup_slot'  => $data['pickup_slot'],
-                        ]);
+                        $record->updateStatus( 'ready_for_pickup','Order is ready for pickup.', auth()->id(),
+                            [
+                                'claim_number' => $data['claim_number'],
+                                'pickup_date'  => $data['pickup_date'],
+                                'pickup_slot'  => Carbon::parse($data['pickup_start_time'])->format('g:i A')
+                                    . ' - '
+                                    . Carbon::parse($data['pickup_end_time'])->format('g:i A'),
+                            ],
+                        );
                         Mail::to($record->customer->email)->send(new OrderReadyForPickupMail($record));
                     })
                     ->visible(fn (Order $record) => strtolower($record->status) === 'processing'),
@@ -141,14 +153,14 @@ class OrdersTable
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
-                        $record->update([
-                            'status'               => 'completed',
-                            'payment_status'       => 'paid',
-                            'paid_at'              => now(),
-                            'completed_at'         => now(),
-                            'claimant_name'  => $data['claimant_name'],
-                            'claimant_phone' => $data['claimant_phone'],
-                        ]);
+                            $record->updateStatus('completed', 'Order was collected and completed.', auth()->id(),
+                                [
+                                    'payment_status' => 'paid',
+                                    'completed_at'   => now(),
+                                    'claimant_name'  => $data['claimant_name'],
+                                    'claimant_phone' => $data['claimant_phone'],
+                                ],
+                            );
 
                         Mail::to($record->customer->email)->send(new OrderCompletedMail($record));
 
@@ -162,7 +174,6 @@ class OrdersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    ExportBulkAction::make(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
