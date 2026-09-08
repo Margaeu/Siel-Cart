@@ -25,7 +25,7 @@ class OrderResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ShoppingCart;
 
     protected static ?string $recordTitleAttribute = 'order_number';
-    protected static string | UnitEnum | null $navigationGroup = 'Sales';
+    protected static string | UnitEnum | null $navigationGroup = 'Shop';
 
     public static function form(Schema $schema): Schema
     {

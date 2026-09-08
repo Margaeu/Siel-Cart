@@ -30,11 +30,11 @@ class StatsOverview extends StatsOverviewWidget
         $lowStockProducts = Product::lowStock()->count();
 
         return [
-            Stat::make('Total Revenue', number_format($totalRevenue, 2))
-                ->description('Today: $' . number_format($todayRevenue, 2))
+            Stat::make('Total Revenue ', '₱ ' . number_format($totalRevenue, 2))
+                ->description('Today: ₱' . number_format($todayRevenue, 2))
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
-            Stat::make('Total Pending Orders', $totalOrders)
+            Stat::make('Total Completed Orders', $totalOrders)
                 ->description($pendingOrders . ' pending')
                 ->descriptionIcon('heroicon-m-shopping-cart')
                 ->color('warning')

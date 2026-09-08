@@ -41,7 +41,7 @@ Route::middleware('auth:customer')->group(function () {
         $guard = auth('customer');
         $guard->logout();
 
-        request()->session()->invalidate();
+        request()->session()->regenerate();
         request()->session()->regenerateToken();
 
         return redirect('/');

@@ -105,7 +105,7 @@
                         Welcome to {{ config('app.name') }}
                     </h1>
                     <p class="text-xl md:text-2xl mb-8 text-[var(--color-secondary)] font-medium">
-                        Discover amazing products at unbeatable prices
+                        Discover the official merchandise of UPC!
                     </p>
                     <a href="{{ route('products.index') }}" 
                        class="inline-block bg-[var(--color-secondary)] text-[var(--color-primary)] px-8 py-3.5 rounded-lg font-bold hover:bg-amber-400 active:bg-amber-500 transition shadow-lg transform hover:-translate-y-0.5">

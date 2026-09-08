@@ -17,7 +17,7 @@ use UnitEnum;
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
-    protected static string | UnitEnum | null $navigationGroup = 'Catalog';
+    protected static string | UnitEnum | null $navigationGroup = 'Shop';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Tag;
 
     protected static ?string $recordTitleAttribute = 'name';

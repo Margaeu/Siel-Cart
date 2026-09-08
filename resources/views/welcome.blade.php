@@ -117,7 +117,7 @@
 
         <!-- Floating Chatbot Button -->
         <button id="chat-toggle" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; padding: 12px 20px; background-color: #f53003; color: #fff; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            💬 Chat with AI
+            💬 Chat
         </button>
 
         <!-- Chat Window -->
