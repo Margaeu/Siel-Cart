@@ -37,11 +37,11 @@ View Order Details
 
 If you believe this cancellation was made in error or you have concerns regarding your pickup, please contact the UBAP Office for assistance.
 
-Thank you for choosing GreenCobraCart.
+Thanks,<br>
+UBAP team
 
-**UBAP Office**  
-Email: {{ \App\Models\Setting::get('store_email', config('mail.from.address')) }}  
-Phone: {{ \App\Models\Setting::get('store_phone', 'Contact information unavailable') }}
+**UBAP Office**<br>
+Email: ubap@clsu.edu.ph<br>
 
 This is an automated email. Please do not reply directly to this message.
 </x-mail::message>

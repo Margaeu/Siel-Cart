@@ -9,20 +9,19 @@ We have confirmed your order **#{{ $order->order_number }}**!
 
 Please wait for our admin team to process your order and email you again with your claim number and pickup slot.
 
-**Estimated Fulfillment Time:** It may take within **3–5 business days** to fulfill your order.
+**Estimated Fulfillment Time:** It may take within **2-3 business days** to fulfill your order.
 
 <x-mail::button :url="route('customer.orders')">
 View Order Details
 </x-mail::button>
 
-If you have concerns regarding your order, please contact the UBAP Office for assistance.
+If you have concerns regarding your collected order, please contact the UBAP Office for assistance
 
 Thanks,<br>
-{{ config('app.name') }}
+UBAP team
 
 **UBAP Office**<br>
-Email: {{ \App\Models\Setting::get('store_email', config('mail.from.address')) }}<br>
-Phone: {{ \App\Models\Setting::get('store_phone', 'Contact information unavailable') }}
+Email: ubap@clsu.edu.ph<br>
 
 This is an automated email. Please do not reply directly to this message.
 </x-mail::message>
