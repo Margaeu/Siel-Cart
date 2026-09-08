@@ -2,26 +2,36 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Order;
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\Product;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatsOverview extends StatsOverviewWidget
 {
-    protected ?string $pollingInterval = '10s';
+    protected ?string $pollingInterval = '30s';
+
     protected static ?int $sort = 0;
+
+    protected function getColumns(): array
+    {
+        return [
+            'default' => 1,
+            '@sm' => 2,
+            '@xl' => 5,
+        ];
+    }
+
     protected function getStats(): array
     {
-        $totalRevenue = Order::where('payment_status', 'paid')->sum('total');
-        $todayRevenue = Order::where('payment_status', 'paid')
+        $totalSales = Order::where('payment_status', 'paid')->sum('total');
+        $todaySales = Order::where('payment_status', 'paid')
             ->whereDate('created_at', today())
             ->sum('total');
 
-        $totalOrders = Order::count();
         $pendingOrders = Order::where('status', 'pending')->count();
-
+        $totalProducts = Product::count();
         $totalCustomers = Customer::count();
         $newCustomersThisMonth = Customer::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
@@ -30,25 +40,41 @@ class StatsOverview extends StatsOverviewWidget
         $lowStockProducts = Product::lowStock()->count();
 
         return [
-            Stat::make('Total Revenue ', '₱ ' . number_format($totalRevenue, 2))
-                ->description('Today: ₱' . number_format($todayRevenue, 2))
+            Stat::make('Total sales', '₱'.number_format($totalSales, 2))
+                ->description('₱'.number_format($todaySales, 2).' today')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->color('success'),
-            Stat::make('Total Completed Orders', $totalOrders)
-                ->description($pendingOrders . ' pending')
-                ->descriptionIcon('heroicon-m-shopping-cart')
+                ->icon('heroicon-o-banknotes')
+                ->color('success')
+                ->url(route('filament.admin.resources.orders.index', ['tab' => 'completed']))
+                ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
+            Stat::make('Pending orders', number_format($pendingOrders))
+                ->description('Needs review')
+                ->descriptionIcon('heroicon-m-clock')
+                ->icon('heroicon-o-shopping-cart')
                 ->color('warning')
-                ->url(route('filament.admin.resources.orders.index')),
-            Stat::make('Total Customers', $totalCustomers)
-                ->description($newCustomersThisMonth . ' new this month')
+                ->url(route('filament.admin.resources.orders.index', ['tab' => 'pending']))
+                ->extraAttributes(['class' => 'clsu-stat clsu-stat--yellow']),
+            Stat::make('Products', number_format($totalProducts))
+                ->description('Catalog items')
+                ->descriptionIcon('heroicon-m-cube')
+                ->icon('heroicon-o-cube')
+                ->color('success')
+                ->url(route('filament.admin.resources.products.index'))
+                ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
+            Stat::make('Customers', number_format($totalCustomers))
+                ->description(number_format($newCustomersThisMonth).' new this month')
                 ->descriptionIcon('heroicon-m-user-group')
-                ->color('info')
-                ->url(route('filament.admin.resources.customers.index')),
-            Stat::make('Low stock Alert', $lowStockProducts)
-                ->description('Products running low')
+                ->icon('heroicon-o-user-group')
+                ->color('success')
+                ->url(route('filament.admin.resources.customers.index'))
+                ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
+            Stat::make('Low-stock products', number_format($lowStockProducts))
+                ->description('Restock required')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->icon('heroicon-o-exclamation-triangle')
                 ->color('danger')
-                ->url(route('filament.admin.resources.products.index')),
+                ->url(route('filament.admin.resources.products.index'))
+                ->extraAttributes(['class' => 'clsu-stat clsu-stat--critical']),
         ];
     }
 }

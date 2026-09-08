@@ -218,23 +218,27 @@ class InventoryWidgetTest extends TestCase
             ->assertCanNotSeeTableRecords([$this->row('HOODIE-MAROON')]);
     }
 
-    public function test_out_of_stock_and_low_stock_rows_are_flagged_for_highlighting(): void
+    public function test_empty_and_running_down_rows_are_flagged_for_their_own_highlight(): void
     {
         $this->product(['sku' => 'OUT-1', 'stock_quantity' => 0, 'low_stock_threshold' => 5]);
         $this->product(['sku' => 'LOW-1', 'stock_quantity' => 5, 'low_stock_threshold' => 5]);
         $this->product(['sku' => 'IN-1', 'stock_quantity' => 50, 'low_stock_threshold' => 5]);
 
         $widget = Livewire::test(InventoryManagement::class)
-            // The class only highlights anything because the widget renders
-            // its own view, which carries the rule for it.
-            ->assertSeeHtml('.fi-ta-row.' . InventoryManagement::ALERT_ROW_CLASS)
-            ->assertSeeHtml('fi-ta-row ' . InventoryManagement::ALERT_ROW_CLASS);
+            // The classes only highlight anything because the widget renders
+            // its own view, which carries the rules for them.
+            ->assertSeeHtml('.fi-ta-row.' . InventoryManagement::OUT_OF_STOCK_ROW_CLASS)
+            ->assertSeeHtml('.fi-ta-row.' . InventoryManagement::LOW_STOCK_ROW_CLASS)
+            ->assertSeeHtml('fi-ta-row ' . InventoryManagement::OUT_OF_STOCK_ROW_CLASS)
+            ->assertSeeHtml('fi-ta-row ' . InventoryManagement::LOW_STOCK_ROW_CLASS);
 
         $table = $widget->instance()->getTable();
 
-        $this->assertContains(InventoryManagement::ALERT_ROW_CLASS, $table->getRecordClasses($this->row('OUT-1')));
-        $this->assertContains(InventoryManagement::ALERT_ROW_CLASS, $table->getRecordClasses($this->row('LOW-1')));
-        $this->assertNotContains(InventoryManagement::ALERT_ROW_CLASS, $table->getRecordClasses($this->row('IN-1')));
+        // Each status wears one highlight of its own: an empty shelf must not
+        // pick up the colour that means merely running down, or vice versa.
+        $this->assertSame([InventoryManagement::OUT_OF_STOCK_ROW_CLASS], $table->getRecordClasses($this->row('OUT-1')));
+        $this->assertSame([InventoryManagement::LOW_STOCK_ROW_CLASS], $table->getRecordClasses($this->row('LOW-1')));
+        $this->assertSame([], $table->getRecordClasses($this->row('IN-1')));
     }
 
     public function test_the_table_reads_stock_in_a_fixed_number_of_queries(): void

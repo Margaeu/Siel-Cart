@@ -1,0 +1,538 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+@layer components {
+    :root {
+        --clsu-page: #f6f8f3;
+        --clsu-surface: #ffffff;
+        --clsu-forest: #315423;
+        --clsu-leaf: #557f13;
+        --clsu-mist: #e4eadc;
+        --clsu-ink: #20350f;
+    }
+
+    .fi-body {
+        background-color: var(--clsu-page);
+    }
+
+    .fi-main {
+        padding-inline: clamp(1rem, 2.5vw, 2.5rem);
+    }
+
+    .fi-page-header-main-ctn {
+        gap: clamp(1.75rem, 3vw, 2.5rem);
+        padding-block: clamp(1.5rem, 3vw, 2.5rem) 3rem;
+    }
+
+    .fi-header {
+        min-height: 8.25rem;
+        gap: 1.5rem;
+        border-radius: 1.25rem;
+        background-color: var(--clsu-forest);
+        padding: clamp(1.35rem, 3vw, 2rem);
+        box-shadow: 0 8px 24px rgb(32 53 15 / 0.08);
+    }
+
+    .fi-header > div:first-child {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+    }
+
+    .fi-header .fi-header-heading {
+        order: 1;
+        color: #ffffff;
+        font-size: clamp(1.65rem, 3vw, 2.15rem);
+        line-height: 1.15;
+        letter-spacing: -0.025em;
+    }
+
+    .fi-header .fi-breadcrumbs {
+        order: 2;
+        display: block;
+        margin: 0.7rem 0 0;
+    }
+
+    .fi-header .fi-breadcrumbs-item {
+        color: rgb(255 255 255 / 0.72);
+        font-size: 0.8125rem;
+        font-weight: 550;
+    }
+
+    .fi-header .fi-breadcrumbs-item-label {
+        color: inherit;
+    }
+
+    .fi-header a.fi-breadcrumbs-item-label:hover {
+        color: #ffffff;
+    }
+
+    .fi-header .fi-breadcrumbs-item-separator {
+        color: rgb(255 255 255 / 0.4);
+    }
+
+    .fi-header .fi-header-subheading {
+        order: 3;
+        color: rgb(255 255 255 / 0.75);
+    }
+
+    .fi-header.fi-header-has-breadcrumbs .fi-header-actions-ctn {
+        margin-top: 0;
+    }
+
+    .fi-header .fi-header-actions-ctn {
+        align-self: center;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-primary,
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success {
+        background-color: #6e941f;
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgb(23 37 8 / 0.18);
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-primary:hover,
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success:hover {
+        background-color: #7fa526;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray,
+    .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color) {
+        background-color: #ffffff;
+        color: var(--clsu-forest);
+        box-shadow: none;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray:hover,
+    .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color):hover {
+        background-color: #f2f6ed;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning {
+        background-color: #fbbf24;
+        color: #422006;
+        box-shadow: 0 1px 2px rgb(66 32 6 / 0.16);
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning:hover {
+        background-color: #fcd34d;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-danger {
+        background-color: #dc2626;
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgb(127 29 29 / 0.2);
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-danger:hover {
+        background-color: #ef4444;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-ac > .fi-btn:not(.fi-color-danger) + .fi-btn.fi-color-danger {
+        margin-inline-start: 0.75rem;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn > .fi-icon {
+        color: inherit;
+    }
+
+    .fi-header .fi-header-actions-ctn .fi-btn:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 3px;
+    }
+
+    .fi-section:not(.fi-section-not-contained),
+    .fi-ta-ctn {
+        border: 1px solid var(--clsu-mist);
+        box-shadow: 0 2px 8px rgb(32 53 15 / 0.035);
+    }
+
+    .fi-resource-create-record-page .fi-section:not(.fi-section-not-contained),
+    .fi-resource-edit-record-page .fi-section:not(.fi-section-not-contained) {
+        border-radius: 1rem;
+        background-color: var(--clsu-surface);
+    }
+
+    .fi-resource-create-record-page .fi-section-header-heading,
+    .fi-resource-edit-record-page .fi-section-header-heading {
+        color: var(--clsu-ink);
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .fi-resource-create-record-page .fi-section-header-description,
+    .fi-resource-edit-record-page .fi-section-header-description {
+        max-width: 54rem;
+        color: #687361;
+        line-height: 1.5;
+    }
+
+    .fi-resource-create-record-page .fi-fo-field-label-content,
+    .fi-resource-edit-record-page .fi-fo-field-label-content {
+        color: #34412d;
+        font-weight: 650;
+    }
+
+    .fi-resource-create-record-page .fi-fo-field-content-col > .fi-sc-text,
+    .fi-resource-edit-record-page .fi-fo-field-content-col > .fi-sc-text {
+        color: #76816f;
+        font-size: 0.8125rem;
+        line-height: 1.4;
+    }
+
+    .fi-btn {
+        border-radius: 0.625rem;
+        font-weight: 650;
+    }
+
+    .fi-resource-create-record-page form#form > .fi-sc-actions,
+    .fi-resource-edit-record-page form#form > .fi-sc-actions {
+        border-top: 1px solid var(--clsu-mist);
+        padding-top: 1.25rem;
+    }
+
+    .clsu-image-upload .filepond--root {
+        min-height: 10rem;
+        border: 1px dashed #b9cbaa;
+        background-color: #f7faf4;
+        box-shadow: none;
+    }
+
+    .clsu-image-upload .filepond--drop-label {
+        min-height: 9rem;
+    }
+
+    .clsu-image-upload .filepond--item-panel {
+        border-radius: 0.75rem;
+    }
+
+    .fi-wi-stats-overview-stat.clsu-stat {
+        overflow: hidden;
+        border: 1px solid var(--clsu-mist);
+        border-radius: 1rem;
+        box-shadow: 0 2px 8px rgb(32 53 15 / 0.035);
+        transition: border-color 150ms ease, transform 150ms ease;
+    }
+
+    a.fi-wi-stats-overview-stat.clsu-stat:hover {
+        border-color: #cbd9bd;
+        transform: translateY(-1px);
+    }
+
+    .fi-wi-stats-overview-stat.clsu-stat:focus-visible {
+        outline: 2px solid var(--clsu-leaf);
+        outline-offset: 3px;
+    }
+
+    .clsu-stat .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.65rem;
+        padding: 0.4rem;
+    }
+
+    .clsu-stat--green {
+        box-shadow: inset 0 3px 0 var(--clsu-leaf), 0 2px 8px rgb(32 53 15 / 0.035) !important;
+    }
+
+    .clsu-stat--green .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
+        background-color: #eef5e6;
+        color: var(--clsu-leaf);
+    }
+
+    .clsu-stat--yellow {
+        box-shadow: inset 0 3px 0 #e5a50a, 0 2px 8px rgb(32 53 15 / 0.035) !important;
+    }
+
+    .clsu-stat--yellow .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
+        background-color: #fff7da;
+        color: #a96705;
+    }
+
+    .clsu-stat--critical {
+        border-color: #fecaca !important;
+        background: linear-gradient(135deg, #fff7f7 0%, #ffffff 58%);
+        box-shadow: inset 0 3px 0 #dc2626, 0 3px 12px rgb(185 28 28 / 0.08) !important;
+    }
+
+    .clsu-stat--critical .fi-wi-stats-overview-stat-label,
+    .clsu-stat--critical .fi-wi-stats-overview-stat-value {
+        color: #991b1b;
+    }
+
+    .clsu-stat--critical .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .fi-wi-chart .fi-section,
+    .fi-wi-table .fi-ta-ctn {
+        border-radius: 1.125rem;
+        background-color: var(--clsu-surface);
+    }
+
+    .fi-ta-ctn {
+        isolation: isolate;
+        border-radius: 1.125rem;
+        background-color: var(--clsu-surface);
+    }
+
+    .fi-ta-ctn .fi-ta-header,
+    .fi-ta-ctn .fi-ta-header-toolbar,
+    .fi-ta-ctn .fi-ta-filters-above-content-ctn {
+        border-color: var(--clsu-mist);
+        background-color: #fbfcf9;
+    }
+
+    .fi-ta-ctn .fi-ta-header-heading {
+        color: var(--clsu-ink);
+    }
+
+    .fi-ta-table > thead {
+        background-color: #edf4e6;
+    }
+
+    .fi-ta-table > thead .fi-ta-header-cell,
+    .fi-ta-table > thead .fi-ta-header-group-cell {
+        color: #30451e;
+        font-size: 0.75rem;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+    }
+
+    .fi-ta-search-field {
+        width: min(100%, 21rem);
+    }
+
+    .fi-ta-row .fi-ta-actions {
+        gap: 0.35rem;
+    }
+
+    .fi-ta-row .fi-ta-actions .fi-link {
+        border-radius: 0.5rem;
+        padding: 0.3rem 0.4rem;
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+
+    .fi-ta-row .fi-ta-actions .fi-link:hover {
+        background-color: #f1f6eb;
+    }
+
+    .fi-ta-row .fi-ta-actions .fi-link.fi-color-danger:hover {
+        background-color: #fff1f2;
+    }
+
+    .fi-ta-ctn .fi-badge {
+        font-weight: 650;
+    }
+
+    .fi-topbar {
+        border-bottom: 1px solid var(--clsu-mist);
+        background-color: #ffffff;
+        box-shadow: none;
+    }
+
+    .fi-topbar .fi-logo {
+        color: #20350f;
+    }
+
+    .fi-topbar .fi-icon-btn {
+        color: #557f13;
+    }
+
+    .fi-topbar .fi-icon-btn:hover {
+        background-color: #f4f8ec;
+        color: #436611;
+    }
+
+    .fi-topbar .fi-icon-btn:focus-visible,
+    .fi-topbar .fi-user-menu-trigger:focus-visible {
+        border-radius: 9999px;
+        outline: 2px solid #557f13;
+        outline-offset: 3px;
+    }
+
+    .fi-topbar .fi-user-menu-trigger {
+        border-radius: 9999px;
+    }
+
+    .fi-topbar .fi-user-avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 2px solid #e5efcf;
+        border-radius: 9999px;
+        background-color: #557f13;
+        box-shadow: 0 0 0 1px rgb(85 127 19 / 0.15), 0 3px 8px rgb(23 37 8 / 0.12);
+    }
+
+    .fi-topbar .fi-topbar-database-notifications-btn > .fi-icon-btn-badge-ctn {
+        background-color: #ffffff;
+    }
+
+    .fi-main-sidebar {
+        background-color: #2f4f14;
+        color: #ffffff;
+    }
+
+    .fi-main-sidebar .fi-sidebar-header {
+        background-color: #2f4f14;
+        box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.12);
+    }
+
+    .fi-main-sidebar .fi-logo {
+        color: #ffffff;
+    }
+
+    .fi-main-sidebar .fi-sidebar-nav {
+        scrollbar-color: rgb(255 255 255 / 0.32) transparent;
+    }
+
+    .fi-main-sidebar .fi-sidebar-group-label {
+        color: #dcebbf;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .fi-main-sidebar .fi-sidebar-group-btn > .fi-icon,
+    .fi-main-sidebar .fi-sidebar-group-collapse-btn .fi-icon {
+        color: rgb(255 255 255 / 0.65);
+    }
+
+    .fi-main-sidebar .fi-sidebar-item-btn {
+        border-inline-start: 3px solid transparent;
+    }
+
+    .fi-main-sidebar .fi-sidebar-item-label {
+        color: rgb(255 255 255 / 0.9);
+    }
+
+    .fi-main-sidebar .fi-sidebar-item-btn > .fi-icon {
+        color: rgb(255 255 255 / 0.72);
+    }
+
+    .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover,
+    .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:focus-visible,
+    .fi-main-sidebar .fi-sidebar-group-dropdown-trigger-btn:hover,
+    .fi-main-sidebar .fi-sidebar-group-dropdown-trigger-btn:focus-visible {
+        background-color: rgb(255 255 255 / 0.1);
+    }
+
+    .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        border-inline-start-color: #f59e0b;
+        background-color: #557f13;
+        box-shadow: 0 5px 14px rgb(23 37 8 / 0.2);
+    }
+
+    .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+        color: #ffffff;
+    }
+
+    .fi-main-sidebar .fi-sidebar-item-btn:focus-visible,
+    .fi-main-sidebar .fi-sidebar-group-collapse-btn:focus-visible,
+    .fi-main-sidebar .fi-sidebar-close-sidebar-btn:focus-visible {
+        outline: 2px solid #fbbf24;
+        outline-offset: 2px;
+    }
+
+    .fi-main-sidebar .fi-sidebar-database-notifications-btn-label {
+        color: rgb(255 255 255 / 0.9);
+    }
+
+    .fi-main-sidebar .fi-sidebar-database-notifications-btn > .fi-icon {
+        color: rgb(255 255 255 / 0.72);
+    }
+
+    @media (max-width: 639px) {
+        .fi-header {
+            min-height: auto;
+        }
+
+        .fi-header .fi-header-actions-ctn,
+        .fi-header .fi-header-actions-ctn > .fi-ac {
+            width: 100%;
+        }
+
+        .fi-header .fi-header-actions-ctn .fi-btn {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fi-wi-stats-overview-stat.clsu-stat {
+            transition: none;
+        }
+
+        a.fi-wi-stats-overview-stat.clsu-stat:hover {
+            transform: none;
+        }
+    }
+
+    .dark .fi-body {
+        background-color: #11180d;
+    }
+
+    .dark .fi-section:not(.fi-section-not-contained),
+    .dark .fi-ta-ctn {
+        border-color: rgb(255 255 255 / 0.1);
+        box-shadow: none;
+    }
+
+    .dark .fi-resource-create-record-page .fi-section:not(.fi-section-not-contained),
+    .dark .fi-resource-edit-record-page .fi-section:not(.fi-section-not-contained) {
+        background-color: #182015;
+    }
+
+    .dark .fi-resource-create-record-page .fi-section-header-heading,
+    .dark .fi-resource-edit-record-page .fi-section-header-heading,
+    .dark .fi-resource-create-record-page .fi-fo-field-label-content,
+    .dark .fi-resource-edit-record-page .fi-fo-field-label-content {
+        color: #edf4e7;
+    }
+
+    .dark .fi-resource-create-record-page .fi-section-header-description,
+    .dark .fi-resource-edit-record-page .fi-section-header-description,
+    .dark .fi-resource-create-record-page .fi-fo-field-content-col > .fi-sc-text,
+    .dark .fi-resource-edit-record-page .fi-fo-field-content-col > .fi-sc-text {
+        color: #a8b5a0;
+    }
+
+    .dark .clsu-image-upload .filepond--root {
+        border-color: #52634a;
+        background-color: #202b1c;
+    }
+
+    .dark .fi-wi-stats-overview-stat.clsu-stat,
+    .dark .fi-wi-chart .fi-section,
+    .dark .fi-wi-table .fi-ta-ctn,
+    .dark .fi-ta-ctn {
+        border-color: rgb(255 255 255 / 0.1);
+        background: #182015;
+    }
+
+    .dark .fi-ta-ctn .fi-ta-header,
+    .dark .fi-ta-ctn .fi-ta-header-toolbar,
+    .dark .fi-ta-ctn .fi-ta-filters-above-content-ctn,
+    .dark .fi-ta-table > thead {
+        border-color: rgb(255 255 255 / 0.1);
+        background-color: #202b1c;
+    }
+
+    .dark .fi-ta-table > thead .fi-ta-header-cell,
+    .dark .fi-ta-table > thead .fi-ta-header-group-cell,
+    .dark .fi-ta-ctn .fi-ta-header-heading {
+        color: #e6efdf;
+    }
+
+    .dark .clsu-stat--critical .fi-wi-stats-overview-stat-label,
+    .dark .clsu-stat--critical .fi-wi-stats-overview-stat-value {
+        color: #fecaca;
+    }
+}

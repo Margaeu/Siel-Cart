@@ -17,8 +17,9 @@ class ReviewResource extends Resource
 {
     protected static ?string $model = Review::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::Star;
-    protected static string | UnitEnum | null $navigationGroup = 'Customer Management';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedStar;
+    protected static string | UnitEnum | null $navigationGroup = 'Shop Management';
+    protected static ?int $navigationSort = 30;
 
     public static function form(Schema $schema): Schema
     {

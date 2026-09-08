@@ -21,10 +21,13 @@ use Illuminate\Database\Eloquent\Builder;
 class InventoryManagement extends TableWidget
 {
     /**
-     * Marks the rows that need attention. The widget's view styles it; nothing
-     * in Filament's stylesheet does.
+     * Mark the rows that need attention, tinting each one to match its status
+     * badge. The widget's view styles these; nothing in Filament's stylesheet
+     * does.
      */
-    public const ALERT_ROW_CLASS = 'fi-inventory-alert';
+    public const OUT_OF_STOCK_ROW_CLASS = 'fi-inventory-out-of-stock';
+
+    public const LOW_STOCK_ROW_CLASS = 'fi-inventory-low-stock';
 
     protected static ?int $sort = 2;
 
@@ -94,7 +97,8 @@ class InventoryManagement extends TableWidget
                     ->default(true),
             ])
             ->recordClasses(fn (InventoryItem $record): ?string => match ($record->status) {
-                InventoryItem::STATUS_OUT_OF_STOCK, InventoryItem::STATUS_LOW_STOCK => self::ALERT_ROW_CLASS,
+                InventoryItem::STATUS_OUT_OF_STOCK => self::OUT_OF_STOCK_ROW_CLASS,
+                InventoryItem::STATUS_LOW_STOCK => self::LOW_STOCK_ROW_CLASS,
                 default => null,
             });
     }

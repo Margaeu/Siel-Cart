@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Categories\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -35,9 +34,11 @@ class CategoriesTable
                     ->label('Order')
                     ->numeric()
                     ->sortable(),
-                IconColumn::make('is_active')
+                TextColumn::make('is_active')
                     ->label('Active')
-                    ->boolean(),
+                    ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Active' : 'Inactive')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -32,7 +32,8 @@ class ProductForm
                         Tab::make('Basic Information')
                             ->icon(Heroicon::InformationCircle)
                             ->schema([
-                                Section::make('Product Details')
+                                Section::make('Product details')
+                                    ->description('Set the product name and the category customers will browse.')
                                     ->schema([
                                         TextInput::make('name')
                                             ->required(),
@@ -54,7 +55,8 @@ class ProductForm
                                                     ->visibleOn('edit'),
                                             ]),
                                     ])->columns(2),
-                                Section::make('Product Description')
+                                Section::make('Product description')
+                                    ->description('Add a concise summary and the full details shown on the product page.')
                                     ->schema([
                                         Textarea::make('short_description')
                                             ->default(null)
@@ -69,6 +71,7 @@ class ProductForm
                             ->visible(fn (callable $get): bool => ! $get('has_variants'))
                             ->schema([
                                 Section::make('Pricing')
+                                    ->description('Set the identifier and selling price for this product.')
                                     ->schema([
                                         TextInput::make('sku')
                                             ->label('SKU')
@@ -84,6 +87,7 @@ class ProductForm
                                             ->prefix('₱'),
                                     ])->columns(2),
                                 Section::make('Inventory')
+                                    ->description('Track available units and choose when the dashboard should flag low stock.')
                                     ->schema([
                                         TextInput::make('stock_quantity')
                                             ->label('Stock Quantity')
@@ -114,6 +118,7 @@ class ProductForm
                                             ->label('Product Images')
                                             ->multiple()
                                             ->image()
+                                            ->panelLayout('grid')
                                             ->directory('products')
                                             ->maxSize(2048)
                                             ->reorderable()
@@ -122,6 +127,7 @@ class ProductForm
                                             ->imagePreviewHeight('250')
                                             ->fetchFileInformation(false)
                                             ->extraAttributes([
+                                                'class' => 'clsu-image-upload',
                                                 'data-filepond-type' => 'image',
                                             ])
                                             ->extraInputAttributes([
@@ -192,10 +198,14 @@ class ProductForm
                         Tab::make('Product Variants')
                             ->icon(Heroicon::Squares2x2)
                             ->schema([
-                                Toggle::make('has_variants')
-                                    ->live()
-                                    ->required()
-                                    ->helperText('When on, this product is priced and stocked per variant, and the Pricing & Inventory tab is hidden.'),
+                                Section::make('Variant setup')
+                                    ->description('Choose whether sizes, colors, or other options have their own price and stock.')
+                                    ->schema([
+                                        Toggle::make('has_variants')
+                                            ->live()
+                                            ->required()
+                                            ->helperText('When on, this product is priced and stocked per variant, and the Pricing & Inventory tab is hidden.'),
+                                    ]),
                                 Section::make('Product Variants')
                                     ->description('Enter stock for each size or color. The product is in stock when at least one active variant has stock.')
                                     ->schema([
@@ -242,6 +252,7 @@ class ProductForm
                                                     ->helperText('Shown when a customer selects this variant. Leave empty to keep showing the shared product images.')
                                                     ->multiple()
                                                     ->image()
+                                                    ->panelLayout('grid')
                                                     ->directory('products/variants')
                                                     ->maxSize(2048)
                                                     ->reorderable()
@@ -250,6 +261,7 @@ class ProductForm
                                                     ->imagePreviewHeight('150')
                                                     ->fetchFileInformation(false)
                                                     ->extraAttributes([
+                                                        'class' => 'clsu-image-upload',
                                                         'data-filepond-type' => 'image',
                                                     ])
                                                     ->extraInputAttributes([
@@ -321,6 +333,7 @@ class ProductForm
                             ->icon(Heroicon::Cog6Tooth)
                             ->schema([
                                 Section::make('Product status')
+                                    ->description('Control whether this item is available and highlighted in the storefront.')
                                     ->schema([
                                         Toggle::make('is_active')
                                             ->required(),
@@ -328,7 +341,8 @@ class ProductForm
                                             ->required(),
                                     ])
                                     ->columns(2),
-                                Section::make('statistics')
+                                Section::make('Statistics')
+                                    ->description('Read-only activity information for this product.')
                                     ->schema([
                                         TextEntry::make('views_count')
                                             ->state(fn($record) => $record?->views_count ?? 0),

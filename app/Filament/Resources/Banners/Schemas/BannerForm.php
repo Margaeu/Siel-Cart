@@ -29,10 +29,12 @@ class BannerForm
                             ->imageEditorAspectRatioOptions(['16:9', '21:9', null])
                             ->orientImagesFromExif(false)
                             ->imagePreviewHeight('250')
+                            ->extraAttributes(['class' => 'clsu-image-upload'])
                             ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 2MB.')
                             ->columnSpanFull(),
                     ]),
                 Section::make('Content')
+                    ->description('Add the short message displayed with the banner image.')
                     ->schema([
                         TextInput::make('title')
                             ->default(null),
@@ -45,6 +47,7 @@ class BannerForm
                         //     ->default(null),
                     ])->columns(2),
                 Section::make('Display')
+                    ->description('Control whether this banner is visible and where it appears in the carousel.')
                     ->schema([
                         Toggle::make('is_active')
                             ->label('Active')

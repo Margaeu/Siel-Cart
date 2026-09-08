@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Categories\Schemas;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\FileUpload;
+use Filament\Schemas\Schema;
 
 class CategoryForm
 {
@@ -15,7 +15,8 @@ class CategoryForm
     {
         return $schema
             ->components([
-                Section::make('Category Information')
+                Section::make('Category information')
+                    ->description('Name and describe this storefront collection.')
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
@@ -29,16 +30,28 @@ class CategoryForm
                             ->rows(3)
                             ->default(null)
                             ->columnSpanFull(),
+                    ]),
+
+                Section::make('Category image')
+                    ->description('Upload the image customers will use to recognize this category.')
+                    ->columnSpanFull()
+                    ->schema([
                         FileUpload::make('image')
+                            ->label('Image')
                             ->disk('r2')
                             ->directory('categories')
                             ->imageEditor()
                             ->preserveFilenames()
                             ->downloadable()
-                            ->image(),
+                            ->openable()
+                            ->image()
+                            ->imagePreviewHeight('220')
+                            ->extraAttributes(['class' => 'clsu-image-upload'])
+                            ->columnSpanFull(),
                     ]),
 
-                Section::make('Display Settings')
+                Section::make('Display settings')
+                    ->description('Choose whether this category is visible and set its storefront order.')
                     ->columns(2)
                     ->schema([
                         Toggle::make('is_active')

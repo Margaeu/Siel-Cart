@@ -18,6 +18,7 @@ class ReviewForm
                 // completed order, so everything here is read-only. Moderation is the
                 // only thing an admin changes; unwanted reviews are deleted, not rewritten.
                 Section::make('Review')
+                    ->description('Customer-submitted content is shown here for context and cannot be edited.')
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
@@ -66,6 +67,7 @@ class ReviewForm
                     ]),
 
                 Section::make('Moderation')
+                    ->description('Control whether this review appears publicly on the product page.')
                     ->columnSpanFull()
                     ->schema([
                         Toggle::make('is_approved')

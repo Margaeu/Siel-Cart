@@ -4,19 +4,33 @@
 
 {{--
     Filament's stylesheet has no class that tints a table row, and the panel
-    builds its CSS without this app's Tailwind, so the highlight for rows that
-    need restocking is defined here, alongside the only table that uses it.
+    builds its CSS without this app's Tailwind, so the highlights for rows that
+    need restocking are defined here, alongside the only table that uses them.
+    Each row is tinted in its status badge's own colour: red for an empty
+    shelf, orange for one that is running down.
 --}}
 <x-filament-widgets::widget class="fi-wi-table">
     <style>
-        .fi-ta-row.{{ InventoryManagement::ALERT_ROW_CLASS }},
-        .fi-ta-record.{{ InventoryManagement::ALERT_ROW_CLASS }} {
+        .fi-ta-row.{{ InventoryManagement::OUT_OF_STOCK_ROW_CLASS }},
+        .fi-ta-record.{{ InventoryManagement::OUT_OF_STOCK_ROW_CLASS }} {
             background-color: var(--danger-50);
+            box-shadow: inset 3px 0 0 var(--danger-600);
         }
 
-        .dark .fi-ta-row.{{ InventoryManagement::ALERT_ROW_CLASS }},
-        .dark .fi-ta-record.{{ InventoryManagement::ALERT_ROW_CLASS }} {
+        .dark .fi-ta-row.{{ InventoryManagement::OUT_OF_STOCK_ROW_CLASS }},
+        .dark .fi-ta-record.{{ InventoryManagement::OUT_OF_STOCK_ROW_CLASS }} {
             background-color: color-mix(in oklab, var(--danger-400) 10%, transparent);
+        }
+
+        .fi-ta-row.{{ InventoryManagement::LOW_STOCK_ROW_CLASS }},
+        .fi-ta-record.{{ InventoryManagement::LOW_STOCK_ROW_CLASS }} {
+            background-color: var(--warning-50);
+            box-shadow: inset 3px 0 0 var(--warning-500);
+        }
+
+        .dark .fi-ta-row.{{ InventoryManagement::LOW_STOCK_ROW_CLASS }},
+        .dark .fi-ta-record.{{ InventoryManagement::LOW_STOCK_ROW_CLASS }} {
+            background-color: color-mix(in oklab, var(--warning-400) 10%, transparent);
         }
     </style>
 

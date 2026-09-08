@@ -7,7 +7,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -26,8 +25,11 @@ class CustomersTable
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),
-                IconColumn::make('is_active')
-                    ->boolean(),
+                TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Active' : 'Inactive')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'danger'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

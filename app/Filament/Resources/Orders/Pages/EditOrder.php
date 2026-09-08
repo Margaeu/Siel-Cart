@@ -21,6 +21,7 @@ class EditOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            RestoreAction::make(),
             Action::make('cancel_no_show')
                 ->label('Cancel No-show Order')
                 ->icon('heroicon-o-x-circle')
@@ -78,7 +79,6 @@ class EditOrder extends EditRecord
                 }),
             DeleteAction::make(),
             ForceDeleteAction::make(),
-            RestoreAction::make(),
         ];
     }
 }

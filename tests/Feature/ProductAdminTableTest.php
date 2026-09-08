@@ -37,6 +37,11 @@ class ProductAdminTableTest extends TestCase
 
         Livewire::test(ListProducts::class)
             ->assertOk()
+            ->assertSee('Manage Products')
+            ->assertSee('Administrator')
+            ->assertSee('Products')
+            ->assertSee('Manage')
+            ->assertSee('Add Product')
             ->assertCanSeeTableRecords([$simple, $variable])
             ->assertSee('From ₱44.99')
             ->assertSee('₱300.00')

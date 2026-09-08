@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class UserForm
@@ -14,30 +13,35 @@ class UserForm
     {
         return $schema
             ->components([
-                TextInput::make('first_name')
-                    ->required(),
-                TextInput::make('last_name')
-                    ->required(),
-                TextInput::make('email')
-                    ->label('Email address')
-                    ->email()
-                    ->required(),
-                TextInput::make('password')
-                    ->password()
-                    ->revealable()
-                    ->required(),
-                Select::make('roles')
-                    ->relationship('roles', 'name')
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
+                Section::make('Account details')
+                    ->description('Basic information used to identify this administrator.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('first_name')
+                            ->required(),
+                        TextInput::make('last_name')
+                            ->required(),
+                        TextInput::make('email')
+                            ->label('Email address')
+                            ->email()
+                            ->required()
+                            ->columnSpanFull(),
+                    ]),
 
-                /* DateTimePicker::make('email_verified_at'),
-                TextInput::make('phone')
-                    ->tel()
-                    ->default(null),
-                Toggle::make('is_active')
-                    ->required(), */
+                Section::make('Access and security')
+                    ->description('Set the sign-in password and choose what this administrator can manage.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('password')
+                            ->password()
+                            ->revealable()
+                            ->required(),
+                        Select::make('roles')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
+                    ]),
             ]);
     }
 }

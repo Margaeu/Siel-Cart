@@ -70,13 +70,11 @@ class ReviewsTable
                     ->boolean()
                     ->toggleable(),
 
-                Tables\Columns\IconColumn::make('is_approved')
-                    ->label('Approved')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-clock')
-                    ->trueColor('success')
-                    ->falseColor('warning')
+                Tables\Columns\TextColumn::make('is_approved')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Approved' : 'Pending')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'warning')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')

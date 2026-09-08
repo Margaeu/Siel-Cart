@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Banners\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -27,9 +26,11 @@ class BannersTable
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
-                IconColumn::make('is_active')
+                TextColumn::make('is_active')
                     ->label('Active')
-                    ->boolean()
+                    ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Active' : 'Inactive')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'danger')
                     ->sortable(),
                 TextColumn::make('sort_order')
                     ->label('Order')

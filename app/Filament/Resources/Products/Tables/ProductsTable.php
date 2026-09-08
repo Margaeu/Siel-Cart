@@ -57,9 +57,11 @@ class ProductsTable
                     ->badge()
                     ->formatStateUsing(fn (string $state) => $state === 'in_stock' ? 'In Stock' : 'Out of Stock')
                     ->color(fn (string $state) => $state === 'in_stock' ? 'success' : 'danger'),
-                IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean(),
+                TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Active' : 'Inactive')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'danger'),
                 IconColumn::make('is_featured')
                     ->label('Featured')
                     ->boolean()

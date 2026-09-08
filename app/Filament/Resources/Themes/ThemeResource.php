@@ -19,8 +19,10 @@ class ThemeResource extends Resource
 {
     protected static ?string $model = Theme::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::Swatch;
-    protected static string|UnitEnum|null $navigationGroup = 'Design';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSwatch;
+    protected static string|UnitEnum|null $navigationGroup = 'Content Management';
+
+    protected static ?int $navigationSort = 30;
 
     protected static ?string $navigationLabel = 'Color Themes & Fonts';
 

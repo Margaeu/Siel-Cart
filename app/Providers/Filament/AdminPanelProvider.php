@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\AvatarProviders\GreenCobraAvatarProvider;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -29,8 +30,34 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('GreenCobraCart')
+            ->brandLogo(fn () => view('filament.admin.brand'))
+            ->brandLogoHeight('2.75rem')
+            ->databaseNotifications()
+            ->sidebarCollapsibleOnDesktop()
+            ->defaultAvatarProvider(GreenCobraAvatarProvider::class)
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => [
+                    50 => '#f4f8ec',
+                    100 => '#e5efcf',
+                    200 => '#cddea8',
+                    300 => '#acc875',
+                    400 => '#88ac46',
+                    500 => '#6e941f',
+                    600 => '#557f13',
+                    700 => '#436611',
+                    800 => '#374f14',
+                    900 => '#304415',
+                    950 => '#172508',
+                ],
+                'warning' => Color::Amber,
+            ])
+            ->navigationGroups([
+                'Shop Management',
+                'Catalog',
+                'Content Management',
+                'System Administration',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -58,6 +85,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
+                    ->navigationGroup('System Administration')
+                    ->navigationIcon('heroicon-o-shield-check')
+                    ->activeNavigationIcon('heroicon-o-shield-check')
+                    ->navigationSort(20),
             ]);
     }
 }

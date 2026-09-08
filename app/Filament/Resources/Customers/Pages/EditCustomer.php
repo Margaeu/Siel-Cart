@@ -15,9 +15,9 @@ class EditCustomer extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            RestoreAction::make(),
             DeleteAction::make(),
             ForceDeleteAction::make(),
-            RestoreAction::make(),
         ];
     }
 }

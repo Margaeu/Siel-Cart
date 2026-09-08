@@ -10,7 +10,6 @@ use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ColorColumn;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -30,9 +29,11 @@ class ThemesTable
                 TextColumn::make('resolved_font_name')
                     ->label('Font')
                     ->getStateUsing(fn (Theme $record) => $record->resolved_font_name),
-                IconColumn::make('is_active')
+                TextColumn::make('is_active')
                     ->label('Active')
-                    ->boolean()
+                    ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Active' : 'Inactive')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'danger')
                     ->sortable(),
                 TextColumn::make('updated_at')
                     ->label('Last updated')

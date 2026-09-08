@@ -17,6 +17,7 @@ class ThemeForm
         return $schema
             ->components([
                 Section::make('Theme')
+                    ->description('Name this storefront style and choose whether it is currently in use.')
                     ->schema([
                         TextInput::make('name')
                             ->label('Theme name')
@@ -31,7 +32,7 @@ class ThemeForm
                     ])->columns(2),
 
                 Section::make('Colors')
-                    ->description('Applied storefront-wide as CSS variables.')
+                    ->description('Choose the main institutional and supporting accent colors used across the storefront.')
                     ->schema([
                         ColorPicker::make('primary_color')
                             ->label('Primary color')

@@ -58,7 +58,8 @@ class ReviewModerationTest extends TestCase
             ->assertOk()
             ->assertSeeText('Smoke Test Shirt')
             ->assertSeeText('Juan Dela Cruz')
-            ->assertSeeText('Solid shirt');
+            ->assertSeeText('Solid shirt')
+            ->assertSeeText('Pending');
     }
 
     public function test_approve_record_action_flips_the_flag(): void

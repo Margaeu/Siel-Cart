@@ -20,8 +20,10 @@ class ManageSiteSettings extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::Cog6Tooth;
-    protected static string|UnitEnum|null $navigationGroup = 'Design';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
+    protected static string|UnitEnum|null $navigationGroup = 'Content Management';
+
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $navigationLabel = 'Site Branding';
     protected static ?string $title = 'Site Branding';
