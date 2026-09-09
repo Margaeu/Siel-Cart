@@ -1,0 +1,31 @@
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('./Acumin-RPro.otf') format('opentype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('./Acumin-ItPro.otf') format('opentype');
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('./Acumin-BdPro.otf') format('opentype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('./Acumin-BdItPro.otf') format('opentype');
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+}

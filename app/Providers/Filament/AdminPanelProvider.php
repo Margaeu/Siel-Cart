@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\AvatarProviders\GreenCobraAvatarProvider;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,6 +34,11 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('GreenCobraCart')
             ->brandLogo(fn () => view('filament.admin.brand'))
             ->brandLogoHeight('2.75rem')
+            ->font(
+                'Acumin Pro',
+                url: asset('fonts/filament/filament/acumin-pro/index.css'),
+                provider: LocalFontProvider::class,
+            )
             ->databaseNotifications()
             ->sidebarCollapsibleOnDesktop()
             ->defaultAvatarProvider(GreenCobraAvatarProvider::class)

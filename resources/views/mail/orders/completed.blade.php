@@ -19,7 +19,11 @@ If you experience any issues, eligible items can be submitted for return/refund 
 View Order Details
 </x-mail::button>
 
-If you have concerns regarding your collected order, please contact the UBAP Office for assistance
+Thank you for choosing GreenCobraCart!
+
+We hope you enjoy your CLSU merchandise.
+
+If you have any concerns about your order, please contact the UBAP Office for assistance.
 
 Thanks,<br>
 UBAP team

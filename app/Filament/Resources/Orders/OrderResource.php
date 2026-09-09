@@ -2,13 +2,12 @@
 
 namespace App\Filament\Resources\Orders;
 
-use App\Filament\Resources\Orders\Pages\CreateOrder;
 use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
-use App\Filament\Resources\Orders\Schemas\OrderForm;
-use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
+use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Filament\Resources\Orders\Schemas\OrderInfolist;
+use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -18,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
+
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
@@ -25,7 +25,8 @@ class OrderResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShoppingCart;
 
     protected static ?string $recordTitleAttribute = 'order_number';
-    protected static string | UnitEnum | null $navigationGroup = 'Shop Management';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Shop Management';
 
     protected static ?int $navigationSort = 10;
 
@@ -36,12 +37,17 @@ class OrderResource extends Resource
 
     public static function infolist(Schema $schema): Schema
     {
-    return OrderInfolist::configure($schema);
+        return OrderInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
         return OrdersTable::configure($table);
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
     }
 
     public static function getRelations(): array
@@ -55,7 +61,6 @@ class OrderResource extends Resource
     {
         return [
             'index' => ListOrders::route('/'),
-            'create' => CreateOrder::route('/create'),
             'edit' => EditOrder::route('/{record}/edit'),
             'view' => ViewOrder::route('/{record}'),
         ];

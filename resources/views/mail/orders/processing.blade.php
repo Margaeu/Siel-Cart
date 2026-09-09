@@ -15,8 +15,6 @@ Please wait for our admin team to process your order and email you again with yo
 View Order Details
 </x-mail::button>
 
-If you have concerns regarding your collected order, please contact the UBAP Office for assistance
-
 Thanks,<br>
 UBAP team
 

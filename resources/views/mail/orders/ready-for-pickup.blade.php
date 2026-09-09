@@ -13,13 +13,15 @@ Your order **#{{ $order->order_number }}** is ready for collection at the UBAP O
 
 ## Important Reminder
 
-**Note:** Please claim your items within your designated time slot. Unclaimed orders will be cancelled immediately.
+**Note:** 
+Please have your Claim number ready when collecting your order.
+If someone else will collect the order on your behalf, please make sure they have the required authorization and order information.
+Please claim your items within your designated time slot. Unclaimed orders will be cancelled immediately.
 
 <x-mail::button :url="route('customer.orders')">
 View Order Details
 </x-mail::button>
 
-If you have concerns regarding your collected order, please contact the UBAP Office for assistance
 
 Thanks,<br>
 UBAP team

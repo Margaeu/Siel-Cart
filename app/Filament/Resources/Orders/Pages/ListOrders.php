@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Orders\Pages;
 
 use App\Filament\Resources\Orders\OrderResource;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Colors\Color;
@@ -12,13 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 class ListOrders extends ListRecords
 {
     protected static string $resource = OrderResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            CreateAction::make(),
-        ];
-    }
 
     public function getTabs(): array
     {
@@ -66,8 +58,8 @@ class ListOrders extends ListRecords
 
     private function statusTab(
         string $label,
-        string | array $statuses,
-        string | array $badgeColor,
+        string|array $statuses,
+        string|array $badgeColor,
     ): Tab {
         $statuses = (array) $statuses;
 
@@ -80,7 +72,6 @@ class ListOrders extends ListRecords
                     ->whereIn('status', $statuses)
                     ->count()
             )
-            ->badgeColor($badgeColor)
-            ->deferBadge();
+            ->badgeColor($badgeColor);
     }
 }

@@ -87,27 +87,21 @@
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-primary,
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success {
-        background-color: #6e941f;
-        color: #ffffff;
-        box-shadow: 0 1px 2px rgb(23 37 8 / 0.18);
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success,
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray,
+    .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color) {
+        background-color: #fbbf24;
+        color: #111827;
+        box-shadow: 0 1px 2px rgb(66 32 6 / 0.16);
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-primary:hover,
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success:hover {
-        background-color: #7fa526;
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray,
-    .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color) {
-        background-color: #ffffff;
-        color: var(--clsu-forest);
-        box-shadow: none;
-    }
-
+    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success:hover,
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray:hover,
     .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color):hover {
-        background-color: #f2f6ed;
+        background-color: #fbbf24;
+        background-image: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+        color: #000000;
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning {
@@ -117,7 +111,8 @@
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning:hover {
-        background-color: #fcd34d;
+        background-color: #fbbf24;
+        background-image: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-danger {
@@ -186,6 +181,26 @@
     .fi-btn {
         border-radius: 0.625rem;
         font-weight: 650;
+    }
+
+    .fi-simple-page form .fi-btn.fi-color-primary {
+        background-color: var(--clsu-leaf);
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgb(23 37 8 / 0.18);
+    }
+
+    .fi-simple-page form .fi-btn.fi-color-primary:hover {
+        background-color: #436611;
+        color: #ffffff;
+    }
+
+    .fi-simple-page form .fi-btn.fi-color-primary:focus-visible {
+        outline: 2px solid var(--clsu-forest);
+        outline-offset: 3px;
+    }
+
+    .fi-simple-page form .fi-btn.fi-color-primary > .fi-icon {
+        color: inherit;
     }
 
     .fi-resource-create-record-page form#form > .fi-sc-actions,
