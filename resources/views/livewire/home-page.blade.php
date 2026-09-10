@@ -4,90 +4,196 @@
         <section
             x-data="{
                 active: 0,
+                position: 1,
                 total: {{ $banners->count() }},
                 timer: null,
-                start() {
-                    if (this.total <= 1) return;
-                    this.timer = setInterval(() => { this.next() }, 6000);
+                animate: true,
+                dragging: false,
+                dragStartX: 0,
+                dragOffset: 0,
+                prefersReducedMotion() {
+                    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 },
-                next() { this.active = (this.active + 1) % this.total },
-                prev() { this.active = (this.active - 1 + this.total) % this.total },
+                start() {
+                    this.stop();
+
+                    if (this.total <= 1 || this.prefersReducedMotion()) {
+                        return;
+                    }
+
+                    this.timer = window.setInterval(() => this.next(), 6000);
+                },
+                stop() {
+                    if (this.timer) {
+                        window.clearInterval(this.timer);
+                        this.timer = null;
+                    }
+                },
+                restart() {
+                    this.start();
+                },
+                next() {
+                    if (this.total <= 1) return;
+
+                    if (this.prefersReducedMotion()) {
+                        this.active = (this.active + 1) % this.total;
+                        this.position = this.active + 1;
+                        return;
+                    }
+
+                    this.animate = true;
+                    this.position += 1;
+                    this.active = (this.active + 1) % this.total;
+                },
+                prev() {
+                    if (this.total <= 1) return;
+
+                    if (this.prefersReducedMotion()) {
+                        this.active = (this.active - 1 + this.total) % this.total;
+                        this.position = this.active + 1;
+                        return;
+                    }
+
+                    this.animate = true;
+                    this.position -= 1;
+                    this.active = (this.active - 1 + this.total) % this.total;
+                },
+                goTo(index) {
+                    this.animate = true;
+                    this.position = index + 1;
+                    this.active = index;
+                    this.restart();
+                },
+                settleLoop() {
+                    if (this.position !== 0 && this.position !== this.total + 1) return;
+
+                    this.animate = false;
+                    this.position = this.position === 0 ? this.total : 1;
+
+                    window.requestAnimationFrame(() => {
+                        window.requestAnimationFrame(() => {
+                            this.animate = true;
+                        });
+                    });
+                },
+                beginSwipe(event) {
+                    if (this.total <= 1) return;
+
+                    this.stop();
+                    this.animate = false;
+                    this.dragging = true;
+                    this.dragStartX = event.touches[0].clientX;
+                    this.dragOffset = 0;
+                },
+                moveSwipe(event) {
+                    if (!this.dragging) return;
+
+                    this.dragOffset = event.touches[0].clientX - this.dragStartX;
+                },
+                endSwipe(event) {
+                    if (!this.dragging) return;
+
+                    const distance = event.changedTouches[0].clientX - this.dragStartX;
+                    this.dragging = false;
+                    this.dragOffset = 0;
+                    this.animate = true;
+
+                    if (Math.abs(distance) >= 50) {
+                        distance < 0 ? this.next() : this.prev();
+                    }
+
+                    this.start();
+                },
             }"
             x-init="start()"
-            class="relative overflow-hidden bg-[var(--color-primary)]"
+            x-on:mouseenter="stop()"
+            x-on:mouseleave="start()"
+            x-on:focusin="stop()"
+            x-on:focusout="if (!$el.contains($event.relatedTarget)) start()"
+            class="group/carousel relative overflow-hidden bg-[var(--color-primary)]"
+            aria-roledescription="carousel"
+            aria-label="Featured promotions"
         >
-            <div class="relative h-[340px] md:h-[460px] lg:h-[520px]">
-                @foreach($banners as $banner)
+            <div
+                class="relative h-[clamp(18rem,40vw,34rem)] touch-pan-y select-none overflow-hidden"
+                x-on:touchstart.passive="beginSwipe($event)"
+                x-on:touchmove.passive="moveSwipe($event)"
+                x-on:touchend="endSwipe($event)"
+                x-on:touchcancel="dragging = false; dragOffset = 0; animate = true; start()"
+            >
+                <div
+                    x-ref="track"
+                    class="flex h-full will-change-transform motion-reduce:transition-none"
+                    style="transform: translate3d(-100%, 0, 0)"
+                    x-bind:class="animate && !dragging ? 'transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]' : 'transition-none'"
+                    x-bind:style="'transform: translate3d(calc(-' + (position * 100) + '% + ' + dragOffset + 'px), 0, 0)'"
+                    x-on:transitionend.self="settleLoop()"
+                >
+                    {{-- Cloned edge slides make the first/last transition loop without a visible jump. --}}
                     <div
-                        x-show="active === {{ $loop->index }}"
-                        x-cloak
-                        x-transition:enter="transition ease-out duration-700"
-                        x-transition:enter-start="opacity-0"
-                        x-transition:enter-end="opacity-100"
-                        x-transition:leave="transition ease-in duration-300"
-                        x-transition:leave-start="opacity-100"
-                        x-transition:leave-end="opacity-0"
-                        class="absolute inset-0"
+                        class="relative h-full w-full shrink-0"
+                        aria-hidden="true"
                     >
-                        @if($banner->link_url)
-                            <a href="{{ $banner->link_url }}" class="block w-full h-full">
-                        @endif
-
-                        <img src="{{ $banner->image_url }}"
-                             alt="{{ $banner->title ?? config('app.name') . ' banner' }}"
-                             class="w-full h-full object-cover">
-
-                        @if($banner->title || $banner->subtitle)
-                            <div class="absolute inset-0 bg-black/30 flex items-center">
-                                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-                                    <div class="max-w-xl text-white">
-                                        @if($banner->title)
-                                            <h1 class="text-3xl md:text-5xl font-bold mb-3 tracking-tight">
-                                                {{ $banner->title }}
-                                            </h1>
-                                        @endif
-                                        @if($banner->subtitle)
-                                            <p class="text-lg md:text-xl text-[var(--color-secondary)] font-medium">
-                                                {{ $banner->subtitle }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        @if($banner->link_url)
-                            </a>
-                        @endif
+                        <x-storefront.banner-slide :banner="$banners->last()" />
                     </div>
-                @endforeach
+
+                    @foreach($banners as $banner)
+                        <div
+                            class="relative h-full w-full shrink-0"
+                            role="group"
+                            aria-roledescription="slide"
+                            aria-label="{{ $loop->iteration }} of {{ $loop->count }}"
+                            x-bind:aria-hidden="active !== {{ $loop->index }}"
+                        >
+                            <x-storefront.banner-slide
+                                :banner="$banner"
+                                :interactive="true"
+                                :index="$loop->index"
+                            />
+                        </div>
+                    @endforeach
+
+                    <div
+                        class="relative h-full w-full shrink-0"
+                        aria-hidden="true"
+                    >
+                        <x-storefront.banner-slide :banner="$banners->first()" />
+                    </div>
+                </div>
             </div>
 
             @if($banners->count() > 1)
                 <!-- Prev / Next Arrows -->
-                <button @click="prev()"
+                <button
+                        type="button"
+                        x-on:click="prev(); restart()"
                         aria-label="Previous banner"
-                        class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition backdrop-blur-sm">
+                        class="pointer-events-none absolute left-3 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/20 text-white opacity-0 shadow-lg backdrop-blur-sm transition hover:bg-black/40 focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] group-hover/carousel:pointer-events-auto group-hover/carousel:opacity-100 sm:left-6">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <button @click="next()"
+                <button
+                        type="button"
+                        x-on:click="next(); restart()"
                         aria-label="Next banner"
-                        class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition backdrop-blur-sm">
+                        class="pointer-events-none absolute right-3 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/20 text-white opacity-0 shadow-lg backdrop-blur-sm transition hover:bg-black/40 focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] group-hover/carousel:pointer-events-auto group-hover/carousel:opacity-100 sm:right-6">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
 
                 <!-- Dots -->
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                <div class="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/20 px-3 py-2 backdrop-blur-sm sm:bottom-7">
                     @foreach($banners as $banner)
-                        <button @click="active = {{ $loop->index }}"
+                        <button
+                                type="button"
+                                x-on:click="goTo({{ $loop->index }})"
                                 aria-label="Go to banner {{ $loop->iteration }}"
-                                :style="active === {{ $loop->index }} ? 'background-color: var(--color-secondary);' : ''"
-                                class="w-2.5 h-2.5 rounded-full transition"
-                                :class="active === {{ $loop->index }} ? '' : 'bg-white/50 hover:bg-white/80'">
+                                x-bind:aria-current="active === {{ $loop->index }} ? 'true' : null"
+                                class="size-2.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+                                x-bind:class="active === {{ $loop->index }} ? 'w-7 bg-[var(--color-secondary)]' : 'bg-white/75 hover:bg-white'"
+                        >
                         </button>
                     @endforeach
                 </div>
@@ -159,25 +265,6 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($featuredProducts as $product)
                     <livewire:product-card :product="$product" :key="$product->id" lazy />
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    <!-- New Arrivals -->
-    <section class="py-16 bg-white">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[var(--color-primary)] pl-3">New Arrivals</h2>
-                <a href="{{ route('products.index', ['sort' => 'newest']) }}" 
-                   class="text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-semibold transition">
-                    View All →
-                </a>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach($newArrivals as $product)
-                    <livewire:product-card :product="$product" :key="'new-' . $product->id" />
                 @endforeach
             </div>
         </div>

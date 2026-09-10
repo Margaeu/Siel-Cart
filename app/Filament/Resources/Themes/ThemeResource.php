@@ -24,7 +24,7 @@ class ThemeResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
-    protected static ?string $navigationLabel = 'Color Themes & Fonts';
+    protected static ?string $navigationLabel = 'Color Themes';
 
     protected static ?string $recordTitleAttribute = 'name';
 

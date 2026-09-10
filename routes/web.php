@@ -20,6 +20,10 @@ Route::get('/', HomePage::class)->name('home');
 Route::get('products', ProductListing::class)->name('products.index');
 Route::get('product/{slug}', ProductDetails::class)->name('products.show');
 Route::get('/cart', CartPage::class)->name('cart.index');
+Route::view('/about', 'pages.about')->name('about');
+Route::view('/privacy-policy', 'pages.privacy-policy')->name('privacy-policy');
+Route::view('/return-refund-policy', 'pages.return-refund-policy')->name('return-refund-policy');
+Route::view('/faqs', 'pages.faqs')->name('faqs');
 
 // API Route for the AI Chatbot
 Route::post('/api/chat', [ChatController::class, 'store']);

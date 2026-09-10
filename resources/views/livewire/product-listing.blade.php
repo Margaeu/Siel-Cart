@@ -26,38 +26,6 @@
             {{-- filters sidebar --}}
             <aside class="hidden lg:block">
                 <div class="sticky top-24 space-y-6">
-                    <!-- Active Filters -->
-                    @if($search || $category || $minPrice || $featured)
-                        <div class="bg-white p-4 rounded-lg shadow-sm">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="font-semibold text-gray-900">Active Filters</h3>
-                                <button wire:click="clearFilters" 
-                                        class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]">
-                                    Clear All
-                                </button>
-                            </div>
-                            <div class="flex flex-wrap gap-2">
-                                @if($search)
-                                    <span class="inline-flex items-center gap-1 bg-[#f2f7f4] text-[var(--color-primary)] px-3 py-1 rounded-full text-sm">
-                                        Search: {{ $search }}
-                                        <button wire:click="$set('search', '')" class="hover:text-[var(--color-primary-hover)]">×</button>
-                                    </span>
-                                @endif
-                                @if($category)
-                                    <span class="inline-flex items-center gap-1 bg-[#f2f7f4] text-[var(--color-primary)] px-3 py-1 rounded-full text-sm">
-                                        Category
-                                        <button wire:click="$set('category', '')" class="hover:text-[var(--color-primary-hover)]">×</button>
-                                    </span>
-                                @endif
-                                @if($featured)
-                                    <span class="inline-flex items-center gap-1 bg-[#f2f7f4] text-[var(--color-primary)] px-3 py-1 rounded-full text-sm">
-                                        Featured
-                                        <button wire:click="$set('featured', '')" class="hover:text-[var(--color-primary-hover)]">×</button>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
 
                     <!-- Categories -->
                     <div class="bg-white p-4 rounded-lg shadow-sm">

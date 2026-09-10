@@ -19,17 +19,12 @@ class StatsOverview extends StatsOverviewWidget
         return [
             'default' => 1,
             '@sm' => 2,
-            '@xl' => 5,
+            '@xl' => 3,
         ];
     }
 
     protected function getStats(): array
     {
-        $totalSales = Order::where('payment_status', 'paid')->sum('total');
-        $todaySales = Order::where('payment_status', 'paid')
-            ->whereDate('created_at', today())
-            ->sum('total');
-
         $pendingOrders = Order::where('status', 'pending')->count();
         $totalProducts = Product::count();
         $totalCustomers = Customer::count();
@@ -37,16 +32,9 @@ class StatsOverview extends StatsOverviewWidget
             ->whereYear('created_at', now()->year)
             ->count();
 
-        $lowStockProducts = Product::lowStock()->count();
+        //$lowStockProducts = Product::lowStock()->count();
 
         return [
-            Stat::make('Total sales', '₱'.number_format($totalSales, 2))
-                ->description('₱'.number_format($todaySales, 2).' today')
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->icon('heroicon-o-banknotes')
-                ->color('success')
-                ->url(route('filament.admin.resources.orders.index', ['tab' => 'completed']))
-                ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
             Stat::make('Pending orders', number_format($pendingOrders))
                 ->description('Needs review')
                 ->descriptionIcon('heroicon-m-clock')
@@ -68,6 +56,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->color('success')
                 ->url(route('filament.admin.resources.customers.index'))
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
+            /*
             Stat::make('Low-stock products', number_format($lowStockProducts))
                 ->description('Restock required')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
@@ -75,6 +64,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->color('danger')
                 ->url(route('filament.admin.resources.products.index'))
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--critical']),
+            */
         ];
     }
 }

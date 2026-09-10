@@ -61,6 +61,11 @@ class ProductListing extends Component
         $this->resetPage();
     }
 
+    public function updatedCategory(): void
+    {
+        $this->dispatch('category-changed', category: (string) $this->category);
+    }
+
     public function updatingSort()
     {
         $this->resetPage();
@@ -76,6 +81,7 @@ class ProductListing extends Component
         $this->reset(['search', 'category', 'minPrice', 'maxPrice', 'featured']);
         $this->maxPrice = $this->priceRange[1];
         $this->resetPage();
+        $this->dispatch('category-changed', category: '');
     }
 
     public function render()

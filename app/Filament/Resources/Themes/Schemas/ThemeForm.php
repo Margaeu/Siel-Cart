@@ -44,7 +44,7 @@ class ThemeForm
                             ->required()
                             ->default('#E0A70D'),
                     ])->columns(2),
-
+                /*
                 Section::make('Typography')
                     ->description('Pick a pre-approved web font, or upload your own font file below. An uploaded font always takes priority over the preset.')
                     ->schema([
@@ -82,6 +82,7 @@ class ThemeForm
                             ->helperText('.woff2 recommended. Max 2MB. Leave empty to use the preset font above instead.')
                             ->columnSpanFull(),
                     ])->columns(2),
+                */
             ]);
     }
 }

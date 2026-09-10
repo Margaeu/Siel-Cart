@@ -22,71 +22,179 @@
         @filamentStyles
 
 </head>
-<body class="bg-gray-50 antialiased">
-    <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <!-- Top Bar -->
-            <div class="flex items-center justify-between py-4">
-                <!-- Logo -->
-                <div class="flex items-center">
-                    <a href="{{ route('home') }}" class="text-2xl font-bold text-[var(--color-primary)]">
-                        {{ config('app.name', 'E-Commerce') }}
-                    </a>
-                </div>
+<body class="min-h-screen flex flex-col bg-gray-50 antialiased">
+    @php
+        $siteName = \App\Models\Setting::get('site_name') ?: config('app.name', 'GreenCobraCart');
+        $siteTagline = \App\Models\Setting::get('tagline') ?: 'THE OFFICIAL CLSU MERCHANDISE STORE';
+        $desktopNavLink = 'relative flex h-16 items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-4';
+        $mobileNavLink = 'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]';
+    @endphp
 
-                <!-- Search Bar (Desktop) -->
-                <div class="hidden flex-1 mx-8 lg:block">
-                    <livewire:search-bar />
-                </div>
+    <!-- Storefront masthead -->
+    <header
+        class="sticky top-0 z-50 bg-white shadow-[0_1px_12px_rgba(15,23,42,0.08)]"
+        x-data="{ navigationOpen: false }"
+        x-on:keydown.escape.window="navigationOpen = false"
+    >
+        <div class="bg-[var(--color-primary)] text-white">
+            <div class="mx-auto flex min-h-[5rem] max-w-[90rem] items-center justify-between gap-4 px-4 sm:min-h-24 sm:px-7 lg:px-11">
+                <a
+                    href="{{ route('home') }}"
+                    class="group flex min-w-0 items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)] sm:gap-5"
+                    aria-label="{{ $siteName }} home"
+                >
+                    <img
+                        src="{{ asset('images/clsu_logo_white.png') }}"
+                        alt="CLSU seal"
+                        class="size-12 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-[4.25rem]"
+                    >
+                    <span class="hidden h-14 w-px shrink-0 bg-[var(--color-secondary)] sm:block" aria-hidden="true"></span>
+                    <span class="min-w-0">
+                        <span class="block truncate text-lg font-bold leading-tight tracking-[-0.035em] sm:text-[1.75rem]">
+                            {{ $siteName }}
+                        </span>
+                        <span class="mt-1 hidden truncate text-[0.7rem] font-medium tracking-[0.22em] text-[var(--color-secondary)] sm:block lg:text-[0.78rem]">
+                            {{ Str::upper($siteTagline) }}
+                        </span>
+                    </span>
+                </a>
 
-                <!-- Right Side -->
-                <div class="flex items-center gap-4">
+                <div class="flex shrink-0 items-center gap-1 sm:gap-2">
                     @auth('customer')
-                        <a href="{{ route('customer.dashboard') }}" class="text-gray-700 hover:text-[var(--color-primary)]">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <a
+                            href="{{ route('customer.dashboard') }}"
+                            class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]"
+                            aria-label="My account"
+                            title="My account"
+                        >
+                            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0ZM4.5 20.25a7.5 7.5 0 0115 0" />
                             </svg>
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-[var(--color-primary)]">
-                            Login
+                        <a
+                            href="{{ route('login') }}"
+                            class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]"
+                            aria-label="Log in"
+                            title="Log in"
+                        >
+                            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0ZM4.5 20.25a7.5 7.5 0 0115 0" />
+                            </svg>
                         </a>
                     @endauth
 
-                    <!-- Cart -->
                     <livewire:cart-icon />
+
+                    <button
+                        type="button"
+                        class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] md:hidden"
+                        x-on:click="navigationOpen = !navigationOpen"
+                        x-bind:aria-expanded="navigationOpen"
+                        aria-controls="mobile-store-navigation"
+                        aria-label="Toggle navigation"
+                    >
+                        <svg x-show="!navigationOpen" class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16M4 12h16M4 17h16" />
+                        </svg>
+                        <svg x-cloak x-show="navigationOpen" class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             </div>
-
-            <!-- Navigation -->
-            <nav class="border-t py-4">
-                <ul class="flex items-center gap-8">
-                    <li>
-                        <a href="{{ route('home') }}" class="text-gray-700 hover:text-[var(--color-primary)] font-medium">
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('products.index') }}" class="text-gray-700 hover:text-[var(--color-primary)] font-medium">
-                            Shop
-                        </a>
-                    </li>
-                    @foreach(\App\Models\Category::active()->sorted()->limit(5)->get() as $category)
-                        <li>
-                            <a href="{{ route('products.index', ['category' => $category->slug]) }}" 
-                               class="text-gray-700 hover:text-[var(--color-primary)]">
-                                {{ $category->name }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </nav>
         </div>
+
+        <!-- Desktop store navigation -->
+        <nav class="hidden bg-white md:block" aria-label="Store navigation">
+            <div class="mx-auto max-w-[90rem] px-7 lg:px-11">
+                <ul class="flex items-center gap-8 lg:gap-10">
+                    <li>
+                        <a
+                            href="{{ route('home') }}"
+                            @class([
+                                $desktopNavLink,
+                                'text-[var(--color-primary)] after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-t-full after:bg-[var(--color-secondary)]' => request()->routeIs('home'),
+                                'text-gray-700 hover:text-[var(--color-primary)]' => ! request()->routeIs('home'),
+                            ])
+                            @if(request()->routeIs('home')) aria-current="page" @endif
+                        >Home</a>
+                    </li>
+                    <li>
+                        <a
+                            href="{{ route('products.index') }}"
+                            @class([
+                                $desktopNavLink,
+                                'text-[var(--color-primary)] after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-t-full after:bg-[var(--color-secondary)]' => request()->routeIs('products.*'),
+                                'text-gray-700 hover:text-[var(--color-primary)]' => ! request()->routeIs('products.*'),
+                            ])
+                            @if(request()->routeIs('products.*')) aria-current="page" @endif
+                        >Shop</a>
+                    </li>
+                    <li>
+                        <a
+                            href="{{ route('about') }}"
+                            @class([
+                                $desktopNavLink,
+                                'text-[var(--color-primary)] after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-t-full after:bg-[var(--color-secondary)]' => request()->routeIs('about'),
+                                'text-gray-700 hover:text-[var(--color-primary)]' => ! request()->routeIs('about'),
+                            ])
+                            @if(request()->routeIs('about')) aria-current="page" @endif
+                        >About Us</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Mobile store navigation -->
+        <nav
+            id="mobile-store-navigation"
+            x-cloak
+            x-show="navigationOpen"
+            x-transition.opacity.duration.150ms
+            class="border-t border-gray-100 bg-white px-4 py-3 shadow-lg md:hidden"
+            aria-label="Mobile store navigation"
+        >
+            <ul class="space-y-1">
+                <li>
+                    <a
+                        href="{{ route('home') }}"
+                        @class([
+                            $mobileNavLink,
+                            'bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] text-[var(--color-primary)]' => request()->routeIs('home'),
+                            'text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]' => ! request()->routeIs('home'),
+                        ])
+                        @if(request()->routeIs('home')) aria-current="page" @endif
+                    >Home</a>
+                </li>
+                <li>
+                    <a
+                        href="{{ route('products.index') }}"
+                        @class([
+                            $mobileNavLink,
+                            'bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] text-[var(--color-primary)]' => request()->routeIs('products.*'),
+                            'text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]' => ! request()->routeIs('products.*'),
+                        ])
+                        @if(request()->routeIs('products.*')) aria-current="page" @endif
+                    >Shop</a>
+                </li>
+                <li>
+                    <a
+                        href="{{ route('about') }}"
+                        @class([
+                            $mobileNavLink,
+                            'bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] text-[var(--color-primary)]' => request()->routeIs('about'),
+                            'text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]' => ! request()->routeIs('about'),
+                        ])
+                        @if(request()->routeIs('about')) aria-current="page" @endif
+                    >About Us</a>
+                </li>
+            </ul>
+        </nav>
     </header>
 
     <!-- Main Content -->
-    <main>
+    <main class="flex-1">
         {{ $slot }}
     </main>
 
@@ -99,15 +207,14 @@
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-lg font-bold mb-4">{{ config('app.name') }}</h3>
+                    <h3 class="text-lg font-bold mb-4">{{ $siteName }}</h3>
                     <p class="text-gray-400">Your one-stop shop for quality products.</p>
                 </div>
                 <div>
                     <h4 class="font-semibold mb-4">Quick Links</h4>
                     <ul class="space-y-2">
                         <li><a href="{{ route('products.index') }}" class="text-gray-400 hover:text-white">Shop</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white">About Us</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                        <li><a href="{{ route('about') }}" class="text-gray-400 hover:text-white">About Us</a></li>
                     </ul>
                 </div>
                 <div>
@@ -128,7 +235,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
             </div>
         </div>
     </footer>

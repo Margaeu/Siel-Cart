@@ -19,7 +19,7 @@
                 </h2>
                 <p class="mt-2 text-sm text-gray-600">
                     Don't have an account?
-                    <a href="{{ route('register') }}" class="font-semibold text-[#E0A70D] hover:underline">
+                    <a href="{{ route('register') }}" class="font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline transition">
                         Sign up
                     </a>
                 </p>

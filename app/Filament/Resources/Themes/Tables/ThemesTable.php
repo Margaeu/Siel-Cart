@@ -26,9 +26,11 @@ class ThemesTable
                     ->label('Primary'),
                 ColorColumn::make('secondary_color')
                     ->label('Secondary'),
+                /*
                 TextColumn::make('resolved_font_name')
                     ->label('Font')
                     ->getStateUsing(fn (Theme $record) => $record->resolved_font_name),
+                */
                 TextColumn::make('is_active')
                     ->label('Active')
                     ->badge()
