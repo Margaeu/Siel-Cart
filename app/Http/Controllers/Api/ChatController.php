@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -18,14 +18,16 @@ class ChatController extends Controller
             'message' => 'required|string',
         ]);
 
-        // 1. Resolve customer ID safely
-        $authenticatedId = Auth::guard('customer')->check() 
-            ? Auth::guard('customer')->id() 
-            : Auth::id();
+        // 1. Resolve customer ID safely.
+        // chat_messages.customer_id is constrained to the customers table, so only the
+        // customer guard may supply it — an id from the web guard belongs to a different
+        // table and would either break the foreign key or attribute the message to the
+        // wrong customer.
+        $customerId = Auth::guard('customer')->id();
 
-        $customerId = ($authenticatedId && User::where('id', $authenticatedId)->exists()) 
-            ? $authenticatedId 
-            : null;
+        if ($customerId && ! Customer::whereKey($customerId)->exists()) {
+            $customerId = null;
+        }
 
         // Ensure session ID is never null
         $sessionId = session()->getId() ?: 'guest_' . uniqid();

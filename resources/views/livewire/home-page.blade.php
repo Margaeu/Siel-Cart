@@ -222,6 +222,25 @@
         </section>
     @endif
 
+    <!-- Featured Products -->
+    <section class="py-16 bg-emerald-50/40">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[var(--color-secondary)] pl-3">Featured Products</h2>
+                <a href="{{ route('products.index', ['featured' => 1]) }}"
+                   class="text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-semibold transition">
+                    View All →
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                @foreach($featuredProducts as $product)
+                    <livewire:product-card :product="$product" :key="$product->id" lazy />
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     <!-- Categories Section -->
     <section class="py-16 bg-white">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -250,31 +269,12 @@
             </div>
         </div>
     </section>
-
-    <!-- Featured Products -->
-    <section class="py-16 bg-emerald-50/40">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[var(--color-secondary)] pl-3">Featured Products</h2>
-                <a href="{{ route('products.index', ['featured' => 1]) }}" 
-                   class="text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-semibold transition">
-                    View All →
-                </a>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach($featuredProducts as $product)
-                    <livewire:product-card :product="$product" :key="$product->id" lazy />
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    <!-- Benefits Section -->
+    
+    <!-- Benefits Section 
     <section class="py-16 bg-[var(--color-primary)]/5 border-t border-emerald-100">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Quality Guarantee -->
+                Quality Guarantee 
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-emerald-100">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[var(--color-primary)] rounded-full mb-4">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,7 +285,7 @@
                     <p class="text-gray-600">All products are carefully selected and quality tested</p>
                 </div>
 
-                <!-- Fast Shipping -->
+              Fast Shipping
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-[#FEF8EA]">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-[#FEF8EA] text-[var(--color-secondary)] rounded-full mb-4">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,8 +295,9 @@
                     <h3 class="text-xl font-semibold mb-2 text-gray-900">Fast Shipping</h3>
                     <p class="text-gray-600">Quick delivery right to your doorstep</p>
                 </div>
+    
 
-                <!-- Secure Payment -->
+               Secure Payment 
                 <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-emerald-100">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[var(--color-primary)] rounded-full mb-4">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,4 +310,5 @@
             </div>
         </div>
     </section>
+    -->
 </div>

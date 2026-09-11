@@ -7,8 +7,10 @@
     :root {
         --clsu-page: #f6f8f3;
         --clsu-surface: #ffffff;
-        --clsu-forest: #315423;
         --clsu-leaf: #557f13;
+        --clsu-leaf-dark: #436611;
+        --clsu-sun: #ffd801;
+        --clsu-sun-hover: #e6c200;
         --clsu-mist: #e4eadc;
         --clsu-ink: #20350f;
     }
@@ -30,7 +32,7 @@
         min-height: 8.25rem;
         gap: 1.5rem;
         border-radius: 1.25rem;
-        background-color: var(--clsu-forest);
+        background-color: var(--clsu-leaf);
         padding: clamp(1.35rem, 3vw, 2rem);
         box-shadow: 0 8px 24px rgb(32 53 15 / 0.08);
     }
@@ -90,7 +92,7 @@
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success,
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray,
     .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color) {
-        background-color: #fbbf24;
+        background-color: var(--clsu-sun);
         color: #111827;
         box-shadow: 0 1px 2px rgb(66 32 6 / 0.16);
     }
@@ -99,20 +101,20 @@
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success:hover,
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray:hover,
     .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color):hover {
-        background-color: #fbbf24;
-        background-image: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+        background-color: var(--clsu-sun-hover);
+        background-image: linear-gradient(135deg, var(--clsu-sun-hover) 0%, var(--clsu-sun) 100%);
         color: #000000;
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning {
-        background-color: #fbbf24;
+        background-color: var(--clsu-sun);
         color: #422006;
         box-shadow: 0 1px 2px rgb(66 32 6 / 0.16);
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning:hover {
-        background-color: #fbbf24;
-        background-image: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+        background-color: var(--clsu-sun-hover);
+        background-image: linear-gradient(135deg, var(--clsu-sun-hover) 0%, var(--clsu-sun) 100%);
     }
 
     .fi-header .fi-header-actions-ctn .fi-btn.fi-color-danger {
@@ -195,7 +197,7 @@
     }
 
     .fi-simple-page form .fi-btn.fi-color-primary:focus-visible {
-        outline: 2px solid var(--clsu-forest);
+        outline: 2px solid var(--clsu-leaf);
         outline-offset: 3px;
     }
 
@@ -259,7 +261,7 @@
     }
 
     .clsu-stat--yellow {
-        box-shadow: inset 0 3px 0 #e5a50a, 0 2px 8px rgb(32 53 15 / 0.035) !important;
+        box-shadow: inset 0 3px 0 var(--clsu-sun), 0 2px 8px rgb(32 53 15 / 0.035) !important;
     }
 
     .clsu-stat--yellow .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
@@ -389,12 +391,12 @@
     }
 
     .fi-main-sidebar {
-        background-color: #2f4f14;
+        background-color: var(--clsu-leaf);
         color: #ffffff;
     }
 
     .fi-main-sidebar .fi-sidebar-header {
-        background-color: #2f4f14;
+        background-color: var(--clsu-leaf);
         box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.12);
     }
 
@@ -439,8 +441,8 @@
     }
 
     .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
-        border-inline-start-color: #f59e0b;
-        background-color: #557f13;
+        border-inline-start-color: var(--clsu-sun);
+        background-color: var(--clsu-leaf-dark);
         box-shadow: 0 5px 14px rgb(23 37 8 / 0.2);
     }
 
@@ -452,7 +454,7 @@
     .fi-main-sidebar .fi-sidebar-item-btn:focus-visible,
     .fi-main-sidebar .fi-sidebar-group-collapse-btn:focus-visible,
     .fi-main-sidebar .fi-sidebar-close-sidebar-btn:focus-visible {
-        outline: 2px solid #fbbf24;
+        outline: 2px solid var(--clsu-sun);
         outline-offset: 2px;
     }
 

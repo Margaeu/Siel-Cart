@@ -186,7 +186,7 @@
                             </div>
                             <p class="text-gray-600 mb-4">No orders yet</p>
                             <a href="{{ route('products.index') }}" 
-                               class="inline-block bg-[var(--color-primary)] text-white px-6 py-2.5 rounded-lg hover:bg-[#164724] active:bg-[#0f3018] font-semibold transition shadow-sm">
+                               class="inline-block bg-[var(--color-primary)] text-white px-6 py-2.5 rounded-lg hover:bg-[#3E5D0E] active:bg-[#0f3018] font-semibold transition shadow-sm">
                                 Start Shopping
                             </a>
                         </div>

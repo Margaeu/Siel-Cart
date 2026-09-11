@@ -240,8 +240,10 @@
         </div>
     </footer>
 
+    @include('partials.chat-widget')
+
     @livewireScripts
     @filamentScripts
-    
+
 </body>
 </html>

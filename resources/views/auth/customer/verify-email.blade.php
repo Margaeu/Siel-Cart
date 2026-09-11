@@ -11,7 +11,7 @@
         <div class="max-w-md w-full">
             <!-- Logo -->
             <div class="text-center mb-8">
-                <a href="{{ route('home') }}" class="text-3xl font-bold text-[#1E6031]">
+                <a href="{{ route('home') }}" class="text-3xl font-bold text-[#557F13]">
                     {{ config('app.name') }}
                 </a>
                 <h2 class="mt-6 text-3xl font-bold text-gray-900">
@@ -31,7 +31,7 @@
                 @endif
 
                 @if (session('status') === 'verification-link-sent')
-                    <div class="mb-6 bg-green-50 border border-[#1E6031] text-[#1E6031] px-4 py-3 rounded-lg text-sm">
+                    <div class="mb-6 bg-green-50 border border-[#557F13] text-[#557F13] px-4 py-3 rounded-lg text-sm">
                         A fresh verification link is on its way. Check your inbox again in a moment.
                     </div>
                 @endif
@@ -39,7 +39,7 @@
                 <!-- Envelope Icon -->
                 <div class="flex justify-center mb-6">
                     <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-[#1E6031]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-8 h-8 text-[#557F13]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
@@ -49,7 +49,7 @@
                 <p class="text-sm text-gray-600 text-center">
                     We sent a verification link to
                 </p>
-                <p class="text-base font-semibold text-[#1E6031] text-center break-all mt-1 mb-4">
+                <p class="text-base font-semibold text-[#557F13] text-center break-all mt-1 mb-4">
                     {{ auth('customer')->user()->email }}
                 </p>
                 <p class="text-sm text-gray-600 text-center mb-6">
@@ -61,7 +61,7 @@
                 <form method="POST" action="{{ route('verification.send') }}">
                     @csrf
                     <button type="submit"
-                            class="w-full bg-[#1E6031] text-white py-3 px-4 rounded-lg hover:bg-[#164724] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2 transition font-semibold shadow-md">
+                            class="w-full bg-[#557F13] text-white py-3 px-4 rounded-lg hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2 transition font-semibold shadow-md">
                         Resend Verification Email
                     </button>
                 </form>
@@ -78,7 +78,7 @@
 
             <!-- Back to Home -->
             <p class="mt-6 text-center text-sm text-gray-600">
-                <a href="{{ route('home') }}" class="font-medium text-[#1E6031] hover:text-[#E0A70D] transition">
+                <a href="{{ route('home') }}" class="font-medium text-[#557F13] hover:text-[#E0A70D] transition">
                     ← Back to Home
                 </a>
             </p>

@@ -14,7 +14,7 @@
             padding: 20px;
         }
         .header {
-            background: #1E6031;
+            background: #557F13;
             color: white;
             padding: 30px;
             text-align: center;
@@ -33,7 +33,7 @@
         }
         .pickup-box {
             background: #f2f7f4;
-            border: 1px solid #1E6031;
+            border: 1px solid #557F13;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
@@ -46,7 +46,7 @@
             border-bottom: none;
         }
         .total {
-            background: #1E6031;
+            background: #557F13;
             color: white;
             padding: 15px;
             border-radius: 8px;
@@ -54,7 +54,7 @@
         }
         .button {
             display: inline-block;
-            background: #1E6031;
+            background: #557F13;
             color: white;
             padding: 12px 30px;
             text-decoration: none;
@@ -65,7 +65,7 @@
             font-family: monospace;
             font-size: 22px;
             font-weight: bold;
-            color: #1E6031;
+            color: #557F13;
             letter-spacing: 1px;
         }
     </style>

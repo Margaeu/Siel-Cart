@@ -46,7 +46,7 @@
             <!-- Success Icon -->
             <svg
                 x-show="!isError"
-                class="w-5 h-5 text-[#1E6031]"
+                class="w-5 h-5 text-[#557F13]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

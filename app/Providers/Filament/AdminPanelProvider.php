@@ -57,6 +57,19 @@ class AdminPanelProvider extends PanelProvider
                     900 => '#304415',
                     950 => '#172508',
                 ],
+                'secondary' => [
+                    50 => '#fffde6',
+                    100 => '#fff9b0',
+                    200 => '#fff475',
+                    300 => '#ffeb3b',
+                    400 => '#ffe514',
+                    500 => '#ffde0a',
+                    600 => '#ffd801',
+                    700 => '#c7a800',
+                    800 => '#9b8300',
+                    900 => '#806c00',
+                    950 => '#493d00',
+                ],
                 'warning' => Color::Amber,
             ])
             ->navigationGroups([
