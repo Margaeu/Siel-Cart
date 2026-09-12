@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\InventoryItem;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class InventoryManagement extends TableWidget
 {
+    use HasWidgetShield;
+
     /**
      * Mark the rows that need attention, tinting each one to match its status
      * badge. The widget's view styles these; nothing in Filament's stylesheet
