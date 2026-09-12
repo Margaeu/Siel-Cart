@@ -85,6 +85,50 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(OrderStatusHistory::class);
     }
 
+    /**
+     * Whether this is the only active super admin left, in which case
+     * deactivating it would leave the panel with no full-access account.
+     */
+    public function isLastActiveSuperAdmin(): bool
+    {
+        if (! $this->hasRole('super_admin')) {
+            return false;
+        }
+
+        return ! static::query()
+            ->active()
+            ->role('super_admin')
+            ->whereKeyNot($this->getKey())
+            ->exists();
+    }
+
+    /**
+     * Whether $actor may strip this account of panel access — by deactivating
+     * it, deleting it, or taking away its super admin role. Blocks
+     * self-lockout and the removal of the last active super admin.
+     */
+    public function canLosePanelAccessBy(?self $actor): bool
+    {
+        return ! $actor?->is($this) && ! $this->isLastActiveSuperAdmin();
+    }
+
+    /**
+     * Why this account may not lose panel access, phrased with $action
+     * ('deactivate', 'delete'), or null when it may.
+     */
+    public function panelAccessLossBlockedReason(?self $actor, string $action): ?string
+    {
+        if ($actor?->is($this)) {
+            return "You cannot {$action} your own account.";
+        }
+
+        if ($this->isLastActiveSuperAdmin()) {
+            return "This is the last active super admin — you cannot {$action} it until another super admin is active.";
+        }
+
+        return null;
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->is_active && $this->hasAnyRole(['super_admin', 'ubap', 'stratcomm']);

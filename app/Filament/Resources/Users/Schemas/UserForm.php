@@ -2,10 +2,14 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
+use Closure;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Spatie\Permission\Models\Role;
 
 class UserForm
 {
@@ -40,7 +44,34 @@ class UserForm
                             ->relationship('roles', 'name')
                             ->multiple()
                             ->preload()
-                            ->searchable(),
+                            ->searchable()
+                            // Dropping the super admin role locks an account out of
+                            // the panel exactly like deactivating it, so it answers
+                            // to the same guard as the toggle and the delete action.
+                            ->rule(static fn (?User $record): Closure => static function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                if (! $record?->hasRole('super_admin')) {
+                                    return;
+                                }
+
+                                $superAdminId = Role::where('name', 'super_admin')->value('id');
+
+                                $isKeepingRole = collect($value)
+                                    ->contains(fn (mixed $roleId): bool => (int) $roleId === (int) $superAdminId);
+
+                                if ($isKeepingRole) {
+                                    return;
+                                }
+
+                                $actor = Filament::auth()->user();
+
+                                if ($record->canLosePanelAccessBy($actor)) {
+                                    return;
+                                }
+
+                                $fail($record->is($actor)
+                                    ? 'You cannot remove your own super admin role.'
+                                    : 'This is the last active super admin — removing the role would leave the panel with no full-access account.');
+                            }),
                     ]),
             ]);
     }
