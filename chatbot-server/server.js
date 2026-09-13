@@ -14,7 +14,7 @@ const deepseek = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
     defaultHeaders: {
         'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'GreenCobraCart E-Commerce Assistant',
+        'X-Title': 'SielCart E-Commerce Assistant',
     }
 });
 
@@ -24,7 +24,7 @@ const FALLBACK_MODELS = [
     'google/gemini-2.0-flash-exp:free'
 ];
 
-const STANDARD_REFUSAL = "I can only assist with GreenCobraCart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
+const STANDARD_REFUSAL = "I can only assist with SielCart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
 
 /**
  * Everything the assistant is allowed to state as fact about how the store
@@ -34,7 +34,7 @@ const STANDARD_REFUSAL = "I can only assist with GreenCobraCart FAQs (how to ord
  * Keep this in sync with the order module: App\Livewire\CheckoutPage,
  * App\Models\Order, and App\Livewire\CancelOrderModal.
  */
-const STORE_FACTS = `STORE FACTS (the only accurate description of how GreenCobraCart works):
+const STORE_FACTS = `STORE FACTS (the only accurate description of how SielCart works):
 CobraCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
 
 HOW TO ORDER (use these steps whenever the customer asks how to order, how to buy, or how checkout works):

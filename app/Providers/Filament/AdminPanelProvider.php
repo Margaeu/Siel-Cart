@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('GreenCobraCart')
+            ->brandName('SielCart')
             ->brandLogo(fn () => view('filament.admin.brand'))
             ->brandLogoHeight('2.75rem')
             ->font(

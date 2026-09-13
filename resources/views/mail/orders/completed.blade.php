@@ -19,7 +19,7 @@ If you experience any issues, eligible items can be submitted for return/refund 
 View Order Details
 </x-mail::button>
 
-Thank you for choosing GreenCobraCart!
+Thank you for choosing SielCart!
 
 We hope you enjoy your CLSU merchandise.
 
