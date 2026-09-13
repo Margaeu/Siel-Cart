@@ -216,7 +216,7 @@
         </div>
 
         <!-- Tabs: Description & Reviews -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8" x-data="{ activeTab: 'description' }">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8" x-data="{ activeTab: (new URLSearchParams(window.location.search).get('tab')) || 'description' }">
             <!-- Tab Headers -->
             <div class="border-b">
                 <nav class="flex">
@@ -244,6 +244,12 @@
 
                 <!-- Reviews Tab -->
                 <div x-show="activeTab === 'reviews'" x-cloak>
+                    @if(session('report-status'))
+                        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                            {{ session('report-status') }}
+                        </div>
+                    @endif
+
                     @if($product->approvedReviews->count() > 0)
                         <div class="space-y-6">
                             @foreach($product->approvedReviews as $review)
@@ -285,6 +291,74 @@
                                             @if($review->comment)
                                                 <p class="text-gray-700">{{ $review->comment }}</p>
                                             @endif
+
+                                            @if(!empty($review->photos))
+                                                <div class="flex flex-wrap gap-2 mt-3">
+                                                    @foreach($review->photos as $photo)
+                                                        <a href="{{ Illuminate\Support\Facades\Storage::disk('r2')->url($photo) }}" target="_blank" rel="noopener">
+                                                            <img src="{{ Illuminate\Support\Facades\Storage::disk('r2')->url($photo) }}"
+                                                                 class="w-20 h-20 rounded-lg object-cover border border-gray-200"
+                                                                 alt="Review photo">
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                            @if($review->video_path)
+                                                <video controls class="mt-3 rounded-lg max-h-64" preload="metadata">
+                                                    <source src="{{ Illuminate\Support\Facades\Storage::disk('r2')->url($review->video_path) }}">
+                                                </video>
+                                            @endif
+
+                                            <!-- Report this reviewer -->
+                                            @auth('customer')
+                                                @if($review->customer_id !== auth('customer')->id())
+                                                    <div class="mt-3">
+                                                        @if(in_array($review->id, $reportedReviewIds))
+                                                            <span class="text-xs text-gray-400">Reported to admin</span>
+                                                        @elseif($showReportForm && $reportingReviewId === $review->id)
+                                                            <div class="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
+                                                                <p class="text-sm font-medium text-gray-900">Report this user</p>
+                                                                <div>
+                                                                    <select wire:model="reportReason"
+                                                                            class="w-full rounded-lg border-gray-300 text-sm focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
+                                                                        <option value="">Select a reason…</option>
+                                                                        <option value="Spam or advertising">Spam or advertising</option>
+                                                                        <option value="Abusive or offensive language">Abusive or offensive language</option>
+                                                                        <option value="Fake or misleading review">Fake or misleading review</option>
+                                                                        <option value="Inappropriate photos/video">Inappropriate photos/video</option>
+                                                                        <option value="Other">Other</option>
+                                                                    </select>
+                                                                    @error('reportReason') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                                </div>
+                                                                <div>
+                                                                    <textarea wire:model="reportDetails" rows="2" maxlength="1000"
+                                                                              placeholder="Additional details (optional)"
+                                                                              class="w-full rounded-lg border-gray-300 text-sm focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
+                                                                    @error('reportDetails') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                                    @error('report') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                                                </div>
+                                                                <div class="flex gap-2">
+                                                                    <button wire:click="submitReport" type="button"
+                                                                            wire:loading.attr="disabled" wire:target="submitReport"
+                                                                            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                                                                        Submit Report
+                                                                    </button>
+                                                                    <button wire:click="cancelReport" type="button"
+                                                                            class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                                                                        Cancel
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <button wire:click="startReport({{ $review->id }})" type="button"
+                                                                    class="text-xs text-gray-500 hover:text-red-600 underline">
+                                                                Report user
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            @endauth
                                         </div>
                                     </div>
                                 </div>
@@ -307,8 +381,11 @@
                                     Thank you for reviewing this product.
                                 </div>
                             @elseif($canReview)
-                                <form wire:submit="submitReview" class="space-y-5">
-                                    <h3 class="text-xl font-semibold text-gray-900">Write a Review</h3>
+                                <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+                                    <strong>A review is required.</strong> Your order for this product is complete — please share your feedback below.
+                                </div>
+                                <form wire:submit="submitReview" class="space-y-5" enctype="multipart/form-data">
+                                    <h3 class="text-xl font-semibold text-gray-900">Review Required</h3>
 
                                     <div>
                                         <label for="review-rating" class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
@@ -336,6 +413,55 @@
                                                   class="w-full rounded-lg border-gray-300 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
                                         @error('reviewComment') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                         @error('review') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="review-photos" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Photos (optional, up to 5)
+                                        </label>
+                                        <input id="review-photos" type="file" wire:model="reviewPhotos" accept="image/*" multiple
+                                               class="w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-200">
+                                        <div wire:loading wire:target="reviewPhotos" class="text-xs text-gray-500 mt-1">Uploading photos…</div>
+                                        @error('reviewPhotos') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @error('reviewPhotos.*') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @if($reviewPhotos)
+                                            <div class="flex flex-wrap gap-2 mt-2">
+                                                @foreach($reviewPhotos as $photo)
+                                                    <img src="{{ $photo->temporaryUrl() }}" class="w-16 h-16 rounded-lg object-cover border border-gray-200">
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div x-data="{
+                                            checkDuration(event) {
+                                                const file = event.target.files[0];
+                                                if (! file) return;
+                                                const url = URL.createObjectURL(file);
+                                                const videoEl = document.createElement('video');
+                                                videoEl.preload = 'metadata';
+                                                videoEl.onloadedmetadata = () => {
+                                                    URL.revokeObjectURL(url);
+                                                    if (videoEl.duration > 60) {
+                                                        alert('Please upload a video that is 1 minute or shorter.');
+                                                        event.target.value = '';
+                                                        $wire.set('reviewVideo', null);
+                                                    }
+                                                };
+                                                videoEl.src = url;
+                                            }
+                                        }">
+                                        <label for="review-video" class="block text-sm font-medium text-gray-700 mb-1">
+                                            Video (optional, max 1 minute)
+                                        </label>
+                                        <input id="review-video" type="file" wire:model="reviewVideo" accept="video/*"
+                                               x-on:change="checkDuration($event)"
+                                               class="w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-200">
+                                        <div wire:loading wire:target="reviewVideo" class="text-xs text-gray-500 mt-1">Uploading video…</div>
+                                        @error('reviewVideo') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                        @if($reviewVideo)
+                                            <video src="{{ $reviewVideo->temporaryUrl() }}" controls class="mt-2 rounded-lg max-h-48"></video>
+                                        @endif
                                     </div>
 
                                     <button type="submit"

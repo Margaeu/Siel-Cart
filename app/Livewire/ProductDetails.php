@@ -4,12 +4,16 @@ namespace App\Livewire;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Report;
 use App\Models\Review;
 use App\Services\CartService;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ProductDetails extends Component
 {
+    use WithFileUploads;
+
     public Product $product;
 
     public $selectedVariant = null;
@@ -24,11 +28,32 @@ class ProductDetails extends Component
 
     public string $reviewComment = '';
 
+    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
+    public array $reviewPhotos = [];
+
+    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    public $reviewVideo = null;
+
     public bool $canReview = false;
 
     public bool $hasReview = false;
 
     public bool $reviewIsApproved = false;
+
+    /**
+     * IDs of reviews the logged-in customer has already reported, so the
+     * "Report" button can be swapped out for a "Reported" note instead of
+     * letting them file the same report twice.
+     */
+    public array $reportedReviewIds = [];
+
+    public bool $showReportForm = false;
+
+    public ?int $reportingReviewId = null;
+
+    public string $reportReason = '';
+
+    public string $reportDetails = '';
 
     public function mount($slug)
     {
@@ -223,7 +248,22 @@ class ProductDetails extends Component
             'reviewRating' => ['required', 'integer', 'between:1,5'],
             'reviewTitle' => ['nullable', 'string', 'max:255'],
             'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
+            // Up to 5 photos, standard image types, 5MB each.
+            'reviewPhotos' => ['nullable', 'array', 'max:5'],
+            'reviewPhotos.*' => ['image', 'max:5120'],
+            // A single short clip. Exact duration (~1 minute) is enforced
+            // client-side before upload; this is the server-side backstop
+            // (type + a generous size cap, since duration can't be reliably
+            // read without a media-processing library).
+            'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
         ]);
+
+        $photoPaths = collect($this->reviewPhotos)
+            ->map(fn ($photo) => $photo->store("reviews/{$this->product->id}/{$customerId}/photos", 'r2'))
+            ->values()
+            ->all();
+
+        $videoPath = $this->reviewVideo?->store("reviews/{$this->product->id}/{$customerId}/video", 'r2');
 
         Review::create([
             'product_id' => $this->product->id,
@@ -232,13 +272,95 @@ class ProductDetails extends Component
             'rating' => $validated['reviewRating'],
             'title' => $validated['reviewTitle'] ?: null,
             'comment' => $validated['reviewComment'],
+            'photos' => $photoPaths ?: null,
+            'video_path' => $videoPath,
             'is_verified_purchase' => true,
-            'is_approved' => false,
+            'is_approved' => true,
+            $this->product->load('approvedReviews.customer')
         ]);
 
-        $this->reset('reviewTitle', 'reviewComment');
+        $this->reset('reviewTitle', 'reviewComment', 'reviewPhotos', 'reviewVideo');
         $this->reviewRating = 5;
         $this->loadReviewState();
+    }
+
+    /**
+     * Open the small inline "report this user" form for a given review.
+     */
+    public function startReport(int $reviewId): void
+    {
+        if (! auth('customer')->check()) {
+            session()->put('url.intended', route('products.show', $this->product->slug));
+            session()->flash('status', 'Please log in to report a review.');
+            $this->redirect(route('login'));
+
+            return;
+        }
+
+        $this->reportingReviewId = $reviewId;
+        $this->reportReason = '';
+        $this->reportDetails = '';
+        $this->showReportForm = true;
+    }
+
+    public function cancelReport(): void
+    {
+        $this->showReportForm = false;
+        $this->reportingReviewId = null;
+    }
+
+    /**
+     * File a report against the author of a review. Goes straight to the
+     * admin queue (Filament "Reports" resource) for moderation.
+     */
+    public function submitReport(): void
+    {
+        if (! auth('customer')->check()) {
+            $this->redirect(route('login'));
+
+            return;
+        }
+
+        $customerId = (int) auth('customer')->id();
+        $review = Review::find($this->reportingReviewId);
+
+        if (! $review) {
+            $this->cancelReport();
+
+            return;
+        }
+
+        if ($review->customer_id === $customerId) {
+            $this->addError('report', 'You cannot report your own review.');
+
+            return;
+        }
+
+        if (in_array($review->id, $this->reportedReviewIds, true)) {
+            $this->addError('report', 'You have already reported this review.');
+
+            return;
+        }
+
+        $validated = $this->validate([
+            'reportReason' => ['required', 'string', 'max:255'],
+            'reportDetails' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        Report::create([
+            'reporter_customer_id' => $customerId,
+            'reported_customer_id' => $review->customer_id,
+            'review_id' => $review->id,
+            'reason' => $validated['reportReason'],
+            'details' => $validated['reportDetails'] ?: null,
+        ]);
+
+        $this->reportedReviewIds[] = $review->id;
+        $this->showReportForm = false;
+        $this->reportingReviewId = null;
+        $this->reset('reportReason', 'reportDetails');
+
+        session()->flash('report-status', 'Thanks — this has been reported to the admin team.');
     }
 
     private function completedOrderId(int $customerId): ?int
@@ -254,12 +376,19 @@ class ProductDetails extends Component
         $this->canReview = false;
         $this->hasReview = false;
         $this->reviewIsApproved = false;
+        $this->reportedReviewIds = [];
 
         if (! auth('customer')->check()) {
             return;
         }
 
         $customerId = (int) auth('customer')->id();
+
+        $this->reportedReviewIds = Report::where('reporter_customer_id', $customerId)
+            ->whereIn('review_id', $this->product->approvedReviews->pluck('id'))
+            ->pluck('review_id')
+            ->all();
+
         $review = Review::where('product_id', $this->product->id)
             ->where('customer_id', $customerId)
             ->first();

@@ -17,6 +17,8 @@ class Review extends Model
         'rating',
         'title',
         'comment',
+        'photos',
+        'video_path',
         'is_verified_purchase',
         'is_approved',
     ];
@@ -25,9 +27,15 @@ class Review extends Model
     {
         return [
             'rating' => 'integer',
+            'photos' => 'array',
             'is_verified_purchase' => 'boolean',
             'is_approved' => 'boolean',
         ];
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
     }
 
     #[Scope]
@@ -65,4 +73,3 @@ class Review extends Model
         return $this->belongsTo(Order::class);
     }
 }
-

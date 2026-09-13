@@ -173,6 +173,16 @@
                                     </div>
                                     <div class="text-right flex-shrink-0">
                                         <p class="font-bold text-gray-900">₱{{ number_format($item->subtotal, 2) }}</p>
+                                        @if(strtolower($order->status) === 'completed' && $item->product_id)
+                                            @if(in_array($item->product_id, $reviewedProductIds))
+                                                <p class="text-xs text-emerald-600 mt-1">✓ Reviewed</p>
+                                            @elseif($item->product)
+                                                <a href="{{ route('products.show', $item->product->slug) }}?tab=reviews"
+                                                   class="inline-block mt-1 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded px-2 py-1">
+                                                    Review Required
+                                                </a>
+                                            @endif
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
