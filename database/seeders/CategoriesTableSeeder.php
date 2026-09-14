@@ -22,32 +22,24 @@ class CategoriesTableSeeder extends Seeder
 
         $categories = [
             [
-                'name' => 'Tshirts',
-                'slug' => 'tshirts',
+                'name' => 'Athletics',
+                'slug' => 'Athletics',
                 'description' => null,
                 'image' => 'categories/51701eba-e694-4118-9e31-473997fd2436-v1.jpg',
                 'is_active' => true,
                 'sort_order' => 0,
             ],
             [
-                'name' => 'Mugs',
-                'slug' => 'mugs',
+                'name' => 'Merch',
+                'slug' => 'Merch',
                 'description' => null,
                 'image' => null,
                 'is_active' => true,
                 'sort_order' => 0,
             ],
             [
-                'name' => 'Accessories',
-                'slug' => 'accessories',
-                'description' => null,
-                'image' => null,
-                'is_active' => true,
-                'sort_order' => 0,
-            ],
-            [
-                'name' => 'Stationary',
-                'slug' => 'stationary',
+                'name' => 'Gift Set',
+                'slug' => 'gift-set',
                 'description' => null,
                 'image' => null,
                 'is_active' => true,

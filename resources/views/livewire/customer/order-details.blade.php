@@ -6,7 +6,6 @@
             'cancelled'        => 'bg-red-100 text-red-800',
             'ready_for_pickup' => 'bg-blue-100 text-blue-800',
             'processing'       => 'bg-indigo-100 text-indigo-800',
-            'return_requested' => 'bg-yellow-100 text-yellow-800',
             default            => 'bg-yellow-100 text-yellow-800',
         };
 
@@ -48,40 +47,9 @@
                         {{-- Cancellation Modal for Pending Orders --}}
                         @livewire('cancel-order-modal', ['order' => $order])
 
-                        {{-- 1. Active Styled Livewire Button when order is Completed --}}
-                        @if(strtolower($order->status) === 'completed')
-                            <button type="button" 
-                                    wire:click="requestReturn" 
-                                    wire:loading.attr="disabled"
-                                    class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-[var(--color-primary)] rounded-lg shadow-sm hover:bg-[#154522] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)] transition-all cursor-pointer disabled:opacity-50">
-                                <svg wire:loading.remove wire:target="requestReturn" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/>
-                                </svg>
-                                <span wire:loading wire:target="requestReturn" class="mr-2">
-                                    <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                    </svg>
-                                </span>
-                                Request Return / Refund
-                            </button>
-
-                            <span class="px-4 py-2 rounded-lg text-sm font-semibold {{ $statusClasses }}">
-                                Completed
-                            </span>
-
-                        {{-- 2. Single Badge when Return is already requested or completed --}}
-                        @elseif(in_array(strtolower($order->status), ['return_requested', 'return requested', 'return_completed']))
-                            <span class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg bg-amber-100 text-amber-800 border border-amber-300">
-                                {{ Str::headline($order->status) }}
-                            </span>
-
-                        {{-- 3. Default Status Badge for all other states --}}
-                        @else
-                            <span class="px-4 py-2 rounded-lg text-sm font-semibold {{ $statusClasses }}">
-                                {{ Str::headline($order->status) }}
-                            </span>
-                        @endif
+                        <span class="px-4 py-2 rounded-lg text-sm font-semibold {{ $statusClasses }}">
+                            {{ Str::headline($order->status) }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -170,13 +138,50 @@
                                             <p class="text-sm text-gray-500">SKU: {{ $item->product_sku }}</p>
                                         @endif
                                         <p class="text-sm text-gray-600">Quantity: {{ $item->quantity }} × ₱{{ number_format($item->price, 2) }}</p>
+
+                                        {{-- Outcomes UBAP recorded for this line. Admin notes stay internal. --}}
+                                        @foreach($item->resolutions as $resolution)
+                                            @php($isRefund = $resolution->type === \App\Enums\OrderItemResolutionType::Refund)
+                                            <div class="mt-3 rounded-lg border px-3 py-2 text-sm {{ $isRefund ? 'border-amber-200 bg-amber-50' : 'border-sky-200 bg-sky-50' }}">
+                                                <p class="text-xs font-bold uppercase tracking-wide {{ $isRefund ? 'text-amber-800' : 'text-sky-800' }}">
+                                                    {{ $resolution->type->getOutcomeLabel() }}
+                                                    @if($item->quantity > 1)
+                                                        <span class="font-medium normal-case">({{ $resolution->quantity }} of {{ $item->quantity }})</span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-gray-700">Reason: {{ $resolution->reason->getLabel() }}</p>
+                                                @if($isRefund)
+                                                    <p class="text-gray-700">Refund Amount: ₱{{ number_format($resolution->refund_amount, 2) }}</p>
+                                                @else
+                                                    <p class="text-gray-700">Replacement: {{ $resolution->replacement_label }}</p>
+                                                @endif
+                                                <p class="text-gray-500">Processed: {{ $resolution->processed_at->format('F j, Y') }}</p>
+                                            </div>
+                                        @endforeach
                                     </div>
                                     <div class="text-right flex-shrink-0">
                                         <p class="font-bold text-gray-900">₱{{ number_format($item->subtotal, 2) }}</p>
+                                        @if(strtolower($order->status) === 'completed' && $item->product_id)
+                                            @if(in_array($item->product_id, $reviewedProductIds))
+                                                <p class="text-xs text-emerald-600 mt-1">✓ Reviewed</p>
+                                            @elseif($item->product)
+                                                <a href="{{ route('products.show', $item->product->slug) }}?tab=reviews"
+                                                   class="inline-block mt-1 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded px-2 py-1">
+                                                    Review Required
+                                                </a>
+                                            @endif
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
                         </div>
+
+                        @if(in_array($order->status, ['completed'], true))
+                            <p class="mt-4 pt-4 border-t text-sm text-gray-600">
+                                For return, refund, or exchange concerns, please contact the UBAP Office directly at
+                                <a href="mailto:ubap@clsu.edu.ph" class="font-medium text-[var(--color-primary)] hover:underline">ubap@clsu.edu.ph</a>.
+                            </p>
+                        @endif
                     </div>
 
                     {{-- Pickup Information --}}
@@ -280,16 +285,6 @@
                                     <p class="mt-1 font-semibold text-red-700">
                                         {{ $cancellationReasonLabel }}
                                     </p>
-                                </div>
-                            @endif
-
-                            {{-- 3. Display Return Completed Date --}}
-                            @if(strtolower($order->status) === 'return_completed')
-                                <div class="flex justify-between items-center text-sm border-t pt-3">
-                                    <span class="text-gray-600">Refunded On</span>
-                                    <span class="font-semibold text-amber-700">
-                                        {{ $order->updated_at->format('M d, Y h:i A') }}
-                                    </span>
                                 </div>
                             @endif
                         </div>

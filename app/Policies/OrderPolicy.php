@@ -67,4 +67,9 @@ class OrderPolicy
         return $authUser->can('Reorder:Order');
     }
 
+    public function recordResolution(AuthUser $authUser, Order $order): bool
+    {
+        return $authUser->can('RecordResolution:Order');
+    }
+
 }

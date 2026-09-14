@@ -3,6 +3,7 @@
 namespace App\Livewire\Customer;
 
 use App\Models\Order;
+use App\Models\Review;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -13,39 +14,25 @@ class OrderDetails extends Component
 {
     public Order $order;
 
+    /**
+     * Product IDs (from this order) the customer has already reviewed, so
+     * the "Review Required" prompt only shows for items still pending one.
+     */
+    public array $reviewedProductIds = [];
+
     public function mount(int $id): void
     {
         $this->order = Order::where('id', $id)
             ->where('customer_id', auth('customer')->id())
-            ->with(['customer', 'items.product.primaryImage', 'items.variant.images','statusHistories', ])
+            ->with(['customer', 'items.product.primaryImage', 'items.variant.images', 'items.resolutions', 'statusHistories'])
             ->firstOrFail();
-    }
 
-    public function requestReturn(): void
-    {
-        // 1. Security Check: Ensure the order belongs to the authenticated customer
-        if ((int)$this->order->customer_id !== (int)auth('customer')->id()) {
-            abort(403);
-        }
+        $productIds = $this->order->items->pluck('product_id')->filter()->unique()->values();
 
-        // 2. Strict Check: Allow return ONLY if order status is 'completed'
-        if (strtolower($this->order->status) !== 'completed') {
-            session()->flash('order_error', 'A return or refund request has already been submitted for this order.');
-            return;
-        }
-
-        $this->order->updateStatus(
-            'return_requested',
-            'Customer submitted a return/refund request.',
-            null,
-        );
-
-        session()->flash(
-            'order_success_message',
-            'Your return/refund request has been submitted and is pending review.'
-        );
-
-        $this->order->refresh();
+        $this->reviewedProductIds = Review::where('customer_id', auth('customer')->id())
+            ->whereIn('product_id', $productIds)
+            ->pluck('product_id')
+            ->all();
     }
 
     public function render()

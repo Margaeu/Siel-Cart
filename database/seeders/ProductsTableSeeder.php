@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +21,15 @@ class ProductsTableSeeder extends Seeder
         DB::table('products')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
+        // Retrieve existing category IDs dynamically by slug to avoid FK errors
+        $athleticsId = Category::where('slug', 'Athletics')->value('id') ?? 1;
+        $merchId     = Category::where('slug', 'Merch')->value('id') ?? 2;
+        $giftSetId   = Category::where('slug', 'gift-set')->value('id') ?? 3;
+
         $products = [
             [
                 'id' => 1,
-                'category_id' => 1,
+                'category_id' => $athleticsId,
                 'name' => 'Baybayin T-Shirt v1',
                 'slug' => 'permanent-system-product-1',
                 'sku' => 'PERM-001',
@@ -39,7 +45,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'category_id' => 2,
+                'category_id' => $merchId,
                 'name' => 'Enamel CLSU Mugs',
                 'slug' => 'permanent-system-product-2',
                 'sku' => 'PERM-002',
@@ -55,7 +61,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 3,
-                'category_id' => 2,
+                'category_id' => $merchId,
                 'name' => 'CLSU Tumbler',
                 'slug' => 'clsu-tumbler',
                 'sku' => 'PERM-003',
@@ -71,7 +77,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 4,
-                'category_id' => 1,
+                'category_id' => $athleticsId,
                 'name' => 'Sielesyuan Tshirt',
                 'slug' => 'permanent-system-product-4',
                 'sku' => 'PERM-004',
@@ -87,7 +93,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 5,
-                'category_id' => 1,
+                'category_id' => $athleticsId,
                 'name' => 'CLSU Windbreaker',
                 'slug' => 'permanent-system-product-5',
                 'sku' => 'PERM-005',
@@ -103,7 +109,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 6,
-                'category_id' => 1,
+                'category_id' => $athleticsId,
                 'name' => 'CLSU Athletes Hoodie',
                 'slug' => 'permanent-system-product-6',
                 'sku' => 'PERM-006',
@@ -119,7 +125,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 7,
-                'category_id' => 1,
+                'category_id' => $athleticsId,
                 'name' => 'Glory and Honor Shirt',
                 'slug' => 'glory-and-honor-shirt',
                 'sku' => 'PERM-007',
@@ -135,7 +141,7 @@ class ProductsTableSeeder extends Seeder
             ],
             [
                 'id' => 8,
-                'category_id' => 4,
+                'category_id' => $merchId, // Replaced invalid category_id: 4 with Merch
                 'name' => 'CLSU Notebook',
                 'slug' => 'clsu-notebook',
                 'sku' => 'PERM-008',

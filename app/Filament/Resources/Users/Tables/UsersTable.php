@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class UsersTable
@@ -39,11 +42,15 @@ class UsersTable
                 TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(),
-                TextColumn::make('is_active')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Active' : 'Inactive')
-                    ->color(fn (mixed $state): string => $state ? 'success' : 'danger'),
+                ToggleColumn::make('is_active')
+                    ->label('Active')
+                    // `disabled()` is re-evaluated server-side before the write,
+                    // so this is the authorization check, not just a UI hint.
+                    ->disabled(fn (User $record): bool => $record->is_active
+                        && ! $record->canLosePanelAccessBy(Filament::auth()->user()))
+                    ->tooltip(fn (User $record): ?string => $record->is_active
+                        ? $record->panelAccessLossBlockedReason(Filament::auth()->user(), 'deactivate')
+                        : null),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -62,7 +69,10 @@ class UsersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // Without this the bulk action only checks `deleteAny`, which
+                    // would let a selection sweep up protected super admins.
+                    DeleteBulkAction::make()
+                        ->authorizeIndividualRecords('delete'),
                 ]),
             ]);
     }

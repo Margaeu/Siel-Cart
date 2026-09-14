@@ -5,11 +5,14 @@ namespace App\Filament\Widgets;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatsOverview extends StatsOverviewWidget
 {
+    use HasWidgetShield;
+
     protected ?string $pollingInterval = '30s';
 
     protected static ?int $sort = 0;

@@ -27,8 +27,6 @@ class OrderForm
                                 'processing' => 'Processing',
                                 'ready_for_pickup' => 'Ready for pickup',
                                 'completed' => 'Completed',
-                                'return_requested' => 'Return requested',
-                                'return_completed' => 'Return completed',
                                 'cancelled' => 'Cancelled',
                             ])
                             ->native(false)

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -36,9 +37,19 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::authenticateUsing(function (Request $request) {
             $customer = Customer::where('email', $request->email)->first();
 
-            if ($customer && Hash::check($request->password, $customer->password)) {
-                return $customer;
+            if (! $customer || ! Hash::check($request->password, $customer->password)) {
+                return null;
             }
+
+            // Only tell a caller the account is deactivated once they have
+            // proven the password, so this cannot be used to enumerate accounts.
+            if (! $customer->is_active) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => __('This account has been deactivated. Please contact the shop administrator.'),
+                ]);
+            }
+
+            return $customer;
         });
     }
 

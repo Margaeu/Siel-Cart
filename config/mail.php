@@ -111,8 +111,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'noreply@greencobracart.com'),
-        'name' => env('MAIL_FROM_NAME', 'GreenCobraCart'),
+        'address' => env('MAIL_FROM_ADDRESS', 'noreply@gsielcart.com'),
+        'name' => env('MAIL_FROM_NAME', 'SielCart'),
     ],
 
 ];

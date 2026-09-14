@@ -14,7 +14,7 @@ const deepseek = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
     defaultHeaders: {
         'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'GreenCobraCart E-Commerce Assistant',
+        'X-Title': 'SielCart E-Commerce Assistant',
     }
 });
 
@@ -24,7 +24,7 @@ const FALLBACK_MODELS = [
     'google/gemini-2.0-flash-exp:free'
 ];
 
-const STANDARD_REFUSAL = "I can only assist with GreenCobraCart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
+const STANDARD_REFUSAL = "I can only assist with SielCart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
 
 /**
  * Everything the assistant is allowed to state as fact about how the store
@@ -34,7 +34,7 @@ const STANDARD_REFUSAL = "I can only assist with GreenCobraCart FAQs (how to ord
  * Keep this in sync with the order module: App\Livewire\CheckoutPage,
  * App\Models\Order, and App\Livewire\CancelOrderModal.
  */
-const STORE_FACTS = `STORE FACTS (the only accurate description of how GreenCobraCart works):
+const STORE_FACTS = `STORE FACTS (the only accurate description of how SielCart works):
 CobraCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
 
 HOW TO ORDER (use these steps whenever the customer asks how to order, how to buy, or how checkout works):
@@ -57,7 +57,7 @@ ORDER STATUS: A customer checks progress by logging in and opening My Orders, th
 
 CANCELLATION: A customer can cancel from the order details page only while the order is still Pending, choosing either change of mind or incorrect items. Once the order is being processed, they must contact the UBAP Office.
 
-RETURNS AND REFUNDS: A return or refund can be requested from the order details page only after the order is Completed. The request is reviewed by the UBAP staff.
+RETURNS AND REFUNDS: Returns, refunds, and exchanges cannot be requested through the website. For a defective or damaged item, or an item handed over in error, the customer contacts the UBAP Office directly by email or in person, and UBAP handles the verification and decision. Once UBAP has refunded or exchanged an item, the outcome is shown against that item on the customer's order details page.
 
 FORBIDDEN CLAIMS: Never mention or ask for a shipping address, delivery address, shipping method, shipping fee, delivery date, courier, tracking number, tracking link, card payment, e-wallet, online payment, or cash on delivery. Never say an order will be shipped or delivered. If a customer asks about delivery or online payment, tell them plainly that GreenCobraCart is pickup and cash-on-pickup only, then explain the pickup process.`;
 

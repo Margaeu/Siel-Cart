@@ -21,7 +21,7 @@ class OrderCancelledNoShowMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your GreenCobraCart Order #'.$this->order->order_number.' Has Been Cancelled',
+            subject: 'Your SielCart Order #'.$this->order->order_number.' Has Been Cancelled',
         );
     }
 

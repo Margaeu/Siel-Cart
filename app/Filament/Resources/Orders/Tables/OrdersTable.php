@@ -59,8 +59,6 @@ class OrdersTable
                         'processing' => 'info',
                         'ready_for_pickup' => Color::Purple,
                         'completed' => 'success',
-                        'return_requested' => 'warning',
-                        'return_completed' => 'success',
                         'cancelled' => 'danger',
                         default => 'gray',
                     })

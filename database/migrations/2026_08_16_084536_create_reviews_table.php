@@ -19,6 +19,10 @@ return new class extends Migration
             $table->integer('rating'); // 1-5
             $table->string('title')->nullable();
             $table->text('comment')->nullable();
+            // Up to 4-5 review photos, stored as an array of Cloudflare R2 paths.
+            $table->json('photos')->nullable();
+            // A single short (max ~1 minute) review video, R2 path.
+            $table->string('video_path')->nullable();
             $table->boolean('is_verified_purchase')->default(false);
             $table->boolean('is_approved')->default(false);
             $table->timestamps();

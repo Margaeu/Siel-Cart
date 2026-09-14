@@ -17,11 +17,14 @@ class Order extends Model
 
     /**
      * Statuses that mean the order is no longer a sale, so its units belong
-     * back on the shelf: cancelled before it was handed over, or returned
-     * after it was. 'return_requested' is not one of them -- the goods are
-     * still with the customer until staff complete the return.
+     * back on the shelf. Only a cancellation qualifies: the goods never left.
      */
-    public const RESTOCKING_STATUSES = ['cancelled', 'return_completed'];
+    public const RESTOCKING_STATUSES = ['cancelled'];
+    /**
+     * Statuses whose goods were collected and paid for, so UBAP may since have
+     * refunded or exchanged something from them.
+     */
+    public const RESOLVABLE_STATUSES = ['completed'];
 
     protected $fillable = [
         'order_number',
@@ -113,6 +116,15 @@ class Order extends Model
         $query->where('status', 'completed');
     }
 
+    /**
+     * Orders with a refund or exchange recorded on any line
+     */
+    #[Scope]
+    protected function withReturnActivity(Builder $query): void
+    {
+       $query->whereHas('items.resolutions');
+    }
+
     // relationships
     public function customer()
     {
@@ -176,6 +188,15 @@ class Order extends Model
             $this->pickup_date->format('Y-m-d').' '.strtoupper($pickupEndTime),
             config('app.timezone'),
         );
+    }
+
+    /**
+     * Whether a refund or exchange UBAP made can be recorded against this
+     * order's lines. See RESOLVABLE_STATUSES.
+     */
+    public function canRecordItemResolutions(): bool
+    {
+        return in_array($this->status, self::RESOLVABLE_STATUSES, true) && ! $this->trashed();
     }
 
     /**
