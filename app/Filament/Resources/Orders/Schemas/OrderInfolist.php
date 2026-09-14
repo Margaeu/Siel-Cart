@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
+use App\Models\OrderItemResolution;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
@@ -145,6 +146,7 @@ class OrderInfolist
                             TableColumn::make('Unit price'),
                             TableColumn::make('Quantity'),
                             TableColumn::make('Subtotal'),
+                            TableColumn::make('Returns'),
                         ])
                         ->schema([
                             TextEntry::make('product_name'),
@@ -157,6 +159,15 @@ class OrderInfolist
                             TextEntry::make('quantity'),
                             TextEntry::make('subtotal')
                                 ->money('PHP'),
+                            // Only what happened and when, e.g. "Refunded ×1 · Sep 13, 2026".
+                            // The full record is under Returns & Refunds.
+                            TextEntry::make('resolutions')
+                                ->formatStateUsing(fn (OrderItemResolution $state): string => $state->type->getOutcomeLabel()
+                                    .' ×'.$state->quantity
+                                    .' · '.$state->processed_at->format('M d, Y'))
+                                ->listWithLineBreaks()
+                                ->bulleted()
+                                ->placeholder('—'),
                         ]),
                 ]),
 

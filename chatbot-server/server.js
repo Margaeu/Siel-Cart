@@ -57,7 +57,7 @@ ORDER STATUS: A customer checks progress by logging in and opening My Orders, th
 
 CANCELLATION: A customer can cancel from the order details page only while the order is still Pending, choosing either change of mind or incorrect items. Once the order is being processed, they must contact the UBAP Office.
 
-RETURNS AND REFUNDS: A return or refund can be requested from the order details page only after the order is Completed. The request is reviewed by the UBAP staff.
+RETURNS AND REFUNDS: Returns, refunds, and exchanges cannot be requested through the website. For a defective or damaged item, or an item handed over in error, the customer contacts the UBAP Office directly by email or in person, and UBAP handles the verification and decision. Once UBAP has refunded or exchanged an item, the outcome is shown against that item on the customer's order details page.
 
 FORBIDDEN CLAIMS: Never mention or ask for a shipping address, delivery address, shipping method, shipping fee, delivery date, courier, tracking number, tracking link, card payment, e-wallet, online payment, or cash on delivery. Never say an order will be shipped or delivered. If a customer asks about delivery or online payment, tell them plainly that GreenCobraCart is pickup and cash-on-pickup only, then explain the pickup process.`;
 

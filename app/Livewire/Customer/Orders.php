@@ -29,7 +29,7 @@ class Orders extends Component
             // items were not loaded at all before, so ten orders' worth of
             // rows were fetched one order at a time, then one image lookup
             // per line on top of that.
-            ->with(['items.product.primaryImage', 'items.variant.images'])
+            ->with(['items.product.primaryImage', 'items.variant.images', 'items.resolutions'])
             ->latest()
             ->paginate(10);
 

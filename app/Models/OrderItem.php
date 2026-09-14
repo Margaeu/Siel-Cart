@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrderItemResolutionType;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
@@ -55,6 +56,34 @@ class OrderItem extends Model
     public function variant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
+     * Refunds and exchanges recorded against this line, oldest first.
+     */
+    public function resolutions()
+    {
+        return $this->hasMany(OrderItemResolution::class)
+            ->orderBy('processed_at')
+            ->orderBy('id');
+    }
+
+    /**
+     * How many of this line's units can still be refunded or exchanged.
+     *
+     * A refunded unit is settled for good: the money went back and so did the
+     * goods. An exchanged one is not -- the customer is holding its
+     * replacement, and a replacement can turn out defective too. So only
+     * refunds count against the units bought, and a unit can be exchanged again
+     * for as long as it has not been refunded.
+     */
+    public function resolvableQuantity(): int
+    {
+        $refunded = $this->relationLoaded('resolutions')
+            ? $this->resolutions->where('type', OrderItemResolutionType::Refund)->sum('quantity')
+            : $this->resolutions()->reorder()->where('type', OrderItemResolutionType::Refund->value)->sum('quantity');
+
+        return max(0, $this->quantity - (int) $refunded);
     }
 
     /**

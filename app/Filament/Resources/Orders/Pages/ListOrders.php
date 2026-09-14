@@ -47,11 +47,11 @@ class ListOrders extends ListRecords
                 badgeColor: 'danger',
             ),
 
-            'returns' => $this->statusTab(
-                label: 'Returns/Refunds',
-                statuses: ['return_requested', 'return_completed'],
-                badgeColor: 'warning',
-            ),
+            // Orders with a recorded refund or exchange.
+            'returns' => Tab::make('Returns/Refunds')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->withReturnActivity())
+                ->badge(static fn (): int => OrderResource::getEloquentQuery()->withReturnActivity()->count())
+                ->badgeColor('warning'),
 
         ];
     }

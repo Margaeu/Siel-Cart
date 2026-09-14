@@ -170,9 +170,18 @@ return [
                 'update',
                 'delete',
             ],
+            // Refunds and exchanges are recorded under Returns & Refunds, but
+            // recording one is something done to an order, so the permission
+            // lives with orders rather than on a resource of its own.
+            \App\Filament\Resources\Orders\OrderResource::class => [
+                'recordResolution',
+            ],
         ],
         'exclude' => [
-            //
+            // Access follows the order permissions above -- see
+            // OrderItemResolutionPolicy -- so there is nothing of its own for
+            // Shield to generate, and a generated policy would replace that.
+            \App\Filament\Resources\ReturnRefunds\ReturnRefundResource::class,
         ],
     ],
 

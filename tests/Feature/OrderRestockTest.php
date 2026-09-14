@@ -52,7 +52,6 @@ class OrderRestockTest extends TestCase
     {
         return [
             'cancelled' => ['cancelled'],
-            'return completed' => ['return_completed'],
         ];
     }
 
@@ -84,20 +83,22 @@ class OrderRestockTest extends TestCase
         $this->assertSame(10, $product->fresh()->stock_quantity);
     }
 
-    public function test_a_requested_return_does_not_restock_yet(): void
+    /**
+     * Returns are settled by UBAP outside the shop now, and whatever comes back
+     * is defective, damaged, or was handed over in error -- none of it is fit
+     * to sell again. The two statuses left over from the old self-service
+     * workflow must not put it back on the shelf.
+     */
+    public function test_legacy_return_statuses_do_not_restock(): void
     {
         $product = $this->product();
         $order = $this->order($product->id, quantity: 3);
 
         $order->update(['status' => 'return_requested']);
-
-        // The goods are still with the customer until staff complete it.
-        $this->assertSame(7, $product->fresh()->stock_quantity);
-        $this->assertNull($order->fresh()->stock_restored_at);
-
         $order->update(['status' => 'return_completed']);
 
-        $this->assertSame(10, $product->fresh()->stock_quantity);
+        $this->assertSame(7, $product->fresh()->stock_quantity);
+        $this->assertNull($order->fresh()->stock_restored_at);
     }
 
     public function test_stock_is_credited_once_however_often_the_status_is_edited(): void

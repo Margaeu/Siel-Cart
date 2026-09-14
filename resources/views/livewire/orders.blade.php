@@ -24,8 +24,6 @@
                     <option value="ready_for_pickup">Ready for Pickup</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
-                    <option value="return_requested">Return Requested</option>
-                    <option value="return_completed">Return Completed</option>
                 </select>
             </div>
         </div>
@@ -87,6 +85,15 @@
                                                 <p class="text-sm text-gray-600">{{ $item->variant_name }}</p>
                                             @endif
                                             <p class="text-sm text-gray-600">Quantity: {{ $item->quantity }}</p>
+                                            @if($item->resolutions->isNotEmpty())
+                                                <div class="mt-1 flex flex-wrap gap-1">
+                                                    @foreach($item->resolutions->pluck('type')->unique() as $type)
+                                                        <span class="inline-block rounded px-2 py-0.5 text-xs font-semibold {{ $type === \App\Enums\OrderItemResolutionType::Refund ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800' }}">
+                                                            {{ $type->getOutcomeLabel() }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="text-right">
                                             <p class="font-bold text-gray-900">₱{{ number_format($item->subtotal, 2) }}</p>

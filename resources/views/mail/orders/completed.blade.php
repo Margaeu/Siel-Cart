@@ -8,12 +8,12 @@ Your order **#{{ $order->order_number }}** has been successfully collected.
 ## Collection Details
 
 **Claimed By:** {{ $order->claimant_name }}<br>
-**Contact Number:** {{ $order->claimant_name }}<br>
+**Contact Number:** {{ $order->claimant_phone }}<br>
 **Date Collected:** {{ $order->completed_at ? $order->completed_at->format('M d, Y h:i A') : now()->format('M d, Y h:i A') }}
 
-## Returns and Refunds
+## Returns, Refunds, and Exchanges
 
-If you experience any issues, eligible items can be submitted for return/refund within **3 days** of collection.
+For return, refund, or exchange concerns, please contact the UBAP Office directly. Any refund or exchange UBAP makes will be shown on your order details.
 
 <x-mail::button :url="route('customer.orders')">
 View Order Details
