@@ -11,6 +11,7 @@
 <body class="bg-gray-50 text-gray-900 antialiased">
     <main>
         {{ $slot }}
+        @include('components.chat-widget')
     </main>
 
     @livewireScripts

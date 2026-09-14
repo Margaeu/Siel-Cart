@@ -65,6 +65,12 @@ FORBIDDEN CLAIMS: Never mention or ask for a shipping address, delivery address,
 function isIrrelevantQuery(text) {
     const query = text.trim().toLowerCase();
 
+    // Whitelist casual greetings so they pass through to the LLM
+    const GREETINGS = ['hi', 'hello', 'halu', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo'];
+    if (GREETINGS.some(g => query === g || query.startsWith(g + ' '))) {
+        return false;
+    }
+
     // 1. Math expressions or simple equations (e.g., 1+1, 5*10, 100/2, "what is 2 + 2")
     const mathPattern = /^(\d+[\s\+\-\*\/\^%\=]+\d+|\b(what is|calculate|compute|solve)\b.*?\d+)/i;
     if (mathPattern.test(query)) return true;
@@ -75,7 +81,7 @@ function isIrrelevantQuery(text) {
     // 3. Coding/programming requests
     if (/\b(write code|python|javascript|function|html|css|sql|script)\b/i.test(query)) return true;
 
-    // 4. Common trivia / general chit-chat queries
+    // 4. Common trivia / general off-topic queries
     if (/^(who is|what is the capital|tell me a story|write a poem|sing|meaning of life)/i.test(query)) return true;
 
     return false;
@@ -95,9 +101,19 @@ async function generateContentWithFallback(message, systemInstruction) {
                 ],
             });
 
-            const text = completion.choices[0]?.message?.content;
+            let text = completion.choices[0]?.message?.content;
             
-            if (text) return text;
+            if (text) {
+                // Strip out "User Safety: safe", "User safety: safe", "user:safe", etc.
+                text = text.replace(/^(user\s*safety:\s*safe|user:safe)\s*/i, '').trim();
+
+                // If the model ONLY outputted the safety tag and nothing else, return a fallback greeting
+                if (!text) {
+                    return "Hello! How can I help you find what you're looking for today?";
+                }
+
+                return text;
+            }
         } catch (error) {
             console.warn(`Model [${modelName}] failed/rate-limited: ${error.message}. Trying next model...`);
             lastError = error;
@@ -122,12 +138,13 @@ app.post('/api/chat', async (req, res) => {
 
         // STEP 2: Strict LLM System Prompt
         const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
-You are strictly an e-commerce assistant for GreenCobraCart. You DO NOT answer math questions (such as 1+1, calculations, or arithmetic), trivia, programming queries, general knowledge, or general conversations.
+You are strictly an e-commerce assistant for GreenCobraCart. You DO NOT answer math questions (such as 1+1, calculations, or arithmetic), trivia, programming queries, general knowledge, or unrelated topics.
 
 PERMITTED TOPICS ONLY:
-1. STORE FAQS: Ordering process, pickup, payment, return & refund policies, cancellation, and privacy/data handling.
-2. PRODUCT RECOMMENDATIONS: Finding GreenCobraCart products based on price limits, budget, categories, or store catalog.
-3. ORDER STATUS: Order progress, pickup readiness, and claim numbers.
+1. GREETINGS & SMALL TALK: Respond warmly to greetings (such as "hi", "halu", "hello", "good morning") with a friendly greeting, then ask how you can help them with GreenCobraCart products, orders, or FAQs.
+2. STORE FAQS: Ordering process, pickup, payment, return & refund policies, cancellation, and privacy/data handling.
+3. PRODUCT RECOMMENDATIONS: Finding GreenCobraCart products based on price limits, budget, categories, or store catalog.
+4. ORDER STATUS: Order progress, pickup readiness, and claim numbers.
 
 ${STORE_FACTS}
 
@@ -135,7 +152,7 @@ ACCURACY RULE:
 Answer questions about the store using only the STORE FACTS above. Never invent a policy, a step, a fee, or an option that is not stated there. If the facts do not cover the question, say you are not sure and advise the customer to contact the UBAP Office at ubap@clsu.edu.ph.
 
 REFUSAL INSTRUCTIONS:
-If the query is math (e.g., 1+1, 2+2, math problems), general knowledge, coding, or unrelated to GreenCobraCart e-commerce, output EXACTLY this response and NOTHING ELSE:
+If the query is math (e.g., 1+1, 2+2, math problems), general knowledge, coding, or completely unrelated to GreenCobraCart e-commerce, output EXACTLY this response and NOTHING ELSE:
 "${STANDARD_REFUSAL}"
 
 FORMATTING:
