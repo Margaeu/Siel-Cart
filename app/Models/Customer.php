@@ -21,6 +21,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'phone',
+        'date_of_birth', // Customer's date of birth entered during account registration.
         'is_active',
         'remember_token',
         'email_verified_at',
