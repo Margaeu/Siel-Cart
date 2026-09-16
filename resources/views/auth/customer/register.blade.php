@@ -69,6 +69,29 @@
                         </div>
                     </div>
 
+                    <!-- Date of Birth -->
+                    <div class="mb-4">
+                        <label for="date_of_birth" class="block text-sm font-medium text-gray-700 mb-2">
+                            Date of Birth
+                        </label>
+
+                        <!--
+                            The date input provides a calendar picker in supported browsers.
+                            The old() value keeps the entered date after a validation error.
+                        -->
+                        <input id="date_of_birth"
+                               type="date"
+                               name="date_of_birth"
+                               value="{{ old('date_of_birth') }}"
+                               required
+                               max="{{ date('Y-m-d') }}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0A70D] focus:border-[#557F13] outline-none transition">
+
+                        @error('date_of_birth')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Email -->
                     <div class="mb-4">
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">

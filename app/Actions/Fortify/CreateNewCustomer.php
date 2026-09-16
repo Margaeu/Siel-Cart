@@ -24,6 +24,11 @@ class CreateNewCustomer implements CreatesNewUsers
                 'max:255',
                 Rule::unique(Customer::class),
             ],
+
+            // Date of birth is required when creating a new customer account.
+            // The date cannot be later than today's date.
+            'date_of_birth' => ['required', 'date', 'before_or_equal:today'],
+
             'password' => $this->passwordRules(),
             'phone' => ['nullable', 'string', 'max:255'],
         ])->validate();
@@ -34,6 +39,10 @@ class CreateNewCustomer implements CreatesNewUsers
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'phone' => $input['phone'] ?? null,
+
+            // Save the date of birth entered in the registration form.
+            'date_of_birth' => $input['date_of_birth'],
+
             'is_active' => true,
         ]);
 

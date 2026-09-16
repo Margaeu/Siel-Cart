@@ -118,7 +118,7 @@
 
             try {
                 // Point fetch to Laravel's internal API route
-                const response = await fetch('{{ url('/api/chat') }}', {
+                const response = await fetch("{{ url('/api/chat') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
