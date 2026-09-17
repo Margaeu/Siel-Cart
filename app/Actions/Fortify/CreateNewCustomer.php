@@ -29,10 +29,8 @@ class CreateNewCustomer implements CreatesNewUsers
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'phone' => $input['phone'] ?? null,
-
             // Save the date of birth entered in the registration form.
             'date_of_birth' => $input['date_of_birth'],
-
             'is_active' => true,
         ]);
 
