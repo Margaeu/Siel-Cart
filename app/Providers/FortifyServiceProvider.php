@@ -37,8 +37,14 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::authenticateUsing(function (Request $request) {
             $customer = Customer::where('email', $request->email)->first();
 
-            if (! $customer || ! Hash::check($request->password, $customer->password)) {
+            if (! $customer) {
                 return null;
+            }
+
+            if (! Hash::check($request->password, $customer->password)) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => __('You entered a wrong password.'),
+                ]);
             }
 
             // Only tell a caller the account is deactivated once they have

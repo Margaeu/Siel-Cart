@@ -98,6 +98,18 @@ class EmailVerificationTest extends TestCase
         Notification::assertSentTo($customer, VerifyEmail::class);
     }
 
+    public function test_customer_can_request_another_verification_email_via_get(): void
+    {
+        Notification::fake();
+
+        $customer = Customer::factory()->unverified()->create();
+
+        $response = $this->actingAs($customer, 'customer')->get(route('verification.send'));
+
+        $response->assertSessionHas('status', 'verification-link-sent');
+        Notification::assertSentTo($customer, VerifyEmail::class);
+    }
+
     public function test_email_can_be_verified(): void
     {
         $customer = Customer::factory()->unverified()->create();

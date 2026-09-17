@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Process\Process;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,8 +12,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind('path.public',function(){
-            return realpath(base_path().'/../public_html/ecommerce');
+        $this->app->bind('path.public', function () {
+            return realpath(base_path() . '/../public_html/ecommerce');
         });
     }
 
@@ -21,6 +22,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-       
+        // Automatically start the chatbot when running:
+        // php artisan serve
+
+        if (
+            $this->app->runningInConsole() &&
+            isset($_SERVER['argv'][1]) &&
+            $_SERVER['argv'][1] === 'serve'
+        ) {
+            $chatbotPath = base_path('chatbot-server');
+
+            $chatbot = new Process(
+                ['npm.cmd', 'start'],
+                $chatbotPath
+            );
+
+            $chatbot->setTimeout(null);
+            $chatbot->start();
+
+            echo PHP_EOL; 
+            echo " Chatbot server starting on port 3000" . PHP_EOL;
+            echo PHP_EOL;
+        }
     }
 }
