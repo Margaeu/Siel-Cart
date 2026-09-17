@@ -17,18 +17,8 @@ class CreateNewCustomer implements CreatesNewUsers
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique(Customer::class),
-            ],
-
-            // Date of birth is required when creating a new customer account.
-            // The date cannot be later than today's date.
-            'date_of_birth' => ['required', 'date', 'before_or_equal:today'],
-
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique(Customer::class)],
+            'date_of_birth' => ['required', 'date', 'before_or_equal:today'], // Date of birth is required when creating a new customer account. The date cannot be later than today's date.
             'password' => $this->passwordRules(),
             'phone' => ['nullable', 'string', 'max:255'],
         ])->validate();
