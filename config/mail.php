@@ -112,7 +112,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'noreply@gsielcart.com'),
-        'name' => env('MAIL_FROM_NAME', 'SielCart'),
+        'name' => env('MAIL_FROM_NAME', 'Siel Cart'),
     ],
 
 ];

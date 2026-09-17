@@ -7,7 +7,7 @@ use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class GreenCobraAvatarProvider implements AvatarProvider
+class SielAvatarProvider implements AvatarProvider
 {
     public function get(Model $record): string
     {

@@ -2,7 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\AvatarProviders\GreenCobraAvatarProvider;
+use App\Filament\AvatarProviders\SielAvatarProvider;
+use App\Filament\Pages\Auth\Login;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -30,8 +31,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
-            ->brandName('SielCart')
+            ->login(Login::class)
+            ->brandName('Siel Cart')
             ->brandLogo(fn () => view('filament.admin.brand'))
             ->brandLogoHeight('2.75rem')
             ->font(
@@ -39,9 +40,9 @@ class AdminPanelProvider extends PanelProvider
                 url: asset('fonts/filament/filament/acumin-pro/index.css'),
                 provider: LocalFontProvider::class,
             )
-            ->databaseNotifications()
+            //->databaseNotifications()
             ->sidebarCollapsibleOnDesktop()
-            ->defaultAvatarProvider(GreenCobraAvatarProvider::class)
+            ->defaultAvatarProvider(SielAvatarProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => [

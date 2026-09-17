@@ -19,7 +19,7 @@ For return, refund, or exchange concerns, please contact the UBAP Office directl
 View Order Details
 </x-mail::button>
 
-Thank you for choosing SielCart!
+Thank you for choosing Siel Cart!
 
 We hope you enjoy your CLSU merchandise.
 

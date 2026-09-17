@@ -143,7 +143,7 @@ class AdminOrderCancellationTest extends TestCase
         $html = $mail->render();
 
         $this->assertSame(
-            'Your SielCart Order #'.$order->order_number.' Has Been Cancelled',
+            'Your Siel Cart Order #'.$order->order_number.' Has Been Cancelled',
             $mail->envelope()->subject,
         );
         $this->assertStringContainsString('Green Cobra Shirt', $html);

@@ -3,7 +3,7 @@
 
 Hello {{ $order->customer->name }},
 
-Your SielCart order **#{{ $order->order_number }}** has been cancelled because it was not collected during the scheduled pickup period.
+Your Siel Cart order **#{{ $order->order_number }}** has been cancelled because it was not collected during the scheduled pickup period.
 
 ## Order Details
 
@@ -29,7 +29,7 @@ Your SielCart order **#{{ $order->order_number }}** has been cancelled because i
 
 Your order has been marked as **Cancelled**, and the items have been released from your order.
 
-If you still wish to purchase these items, you may place a new order through SielCart, subject to product availability.
+If you still wish to purchase these items, you may place a new order through Siel Cart, subject to product availability.
 
 <x-mail::button :url="route('customer.orders.show', $order)">
 View Order Details

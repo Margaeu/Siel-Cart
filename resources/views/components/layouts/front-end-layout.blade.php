@@ -24,7 +24,7 @@
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50 antialiased">
     @php
-        $siteName = \App\Models\Setting::get('site_name') ?: config('app.name', 'SielCart');
+        $siteName = \App\Models\Setting::get('site_name') ?: config('app.name', 'Siel Cart');
         $siteTagline = \App\Models\Setting::get('tagline') ?: 'THE OFFICIAL CLSU MERCHANDISE STORE';
         $desktopNavLink = 'relative flex h-16 items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-4';
         $mobileNavLink = 'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]';
