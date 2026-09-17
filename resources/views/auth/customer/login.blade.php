@@ -36,6 +36,15 @@
                     </div>
                 @endif
 
+                @php
+                    // A failed sign-in clears both fields (the email is not
+                    // repopulated) but highlights both so the error stays clear.
+                    $loginFailed = $errors->has('email');
+                    $inputBase = 'w-full px-4 py-2 border rounded-lg focus:outline-none transition';
+                    $inputValid = 'border-gray-300 focus:border-[#557F13]';
+                    $inputInvalid = 'border-red-500 focus:border-red-600';
+                @endphp
+
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
 
@@ -44,13 +53,13 @@
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                             Email Address
                         </label>
-                        <input id="email" 
-                               type="email" 
-                               name="email" 
-                               value="{{ old('email') }}"
-                               required 
+                        <input id="email"
+                               type="email"
+                               name="email"
+                               required
                                autofocus
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0A70D] focus:border-[#557F13] outline-none transition">
+                               @if ($loginFailed) aria-invalid="true" @endif
+                               @class([$inputBase, $inputInvalid => $loginFailed, $inputValid => ! $loginFailed])>
                         @error('email')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -66,7 +75,8 @@
                                    type="password"
                                    name="password"
                                    required
-                                   class="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0A70D] focus:border-[#557F13] outline-none transition">
+                                   @if ($loginFailed || $errors->has('password')) aria-invalid="true" @endif
+                                   @class([$inputBase, 'pr-11', $inputInvalid => $loginFailed || $errors->has('password'), $inputValid => ! ($loginFailed || $errors->has('password'))])>
                             <button type="button"
                                     data-password-toggle="password"
                                     aria-controls="password"

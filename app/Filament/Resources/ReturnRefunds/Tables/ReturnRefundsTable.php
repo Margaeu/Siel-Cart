@@ -70,7 +70,7 @@ class ReturnRefundsTable
 
                 TextColumn::make('reason')
                     ->label('Reason'),
-
+                /*
                 TextColumn::make('quantity')
                     ->label('Order Quantity')
                     ->numeric(),
@@ -90,6 +90,7 @@ class ReturnRefundsTable
                     ->label('Returned as')
                     ->placeholder('—')
                     ->toggleable(),
+                */
 
                 TextColumn::make('processedBy.name')
                     ->label('Processed by')

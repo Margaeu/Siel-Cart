@@ -2,39 +2,18 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\TextEntry;
+use App\Models\User;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 
 class UserInfolist
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                TextEntry::make('first_name'),
-                TextEntry::make('last_name'),
-                TextEntry::make('role')
-                    ->label('Role')
-                    ->disabled()
-                    ->getStateUsing(
-                        fn($record) =>
-                        str($record->getRoleNames()->first() ?? 'User')
-                            ->replace('_',' ')
-                            ->title()
-                    ),
-
-                TextEntry::make('email')
-                    ->label('Email address'),
-                TextEntry::make('email_verified_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-            ]);
+        return $schema->components([
+            View::make('filament.resources.users.profile')
+                ->viewData(fn (User $record): array => ['user' => $record])
+                ->columnSpanFull(),
+        ]);
     }
 }

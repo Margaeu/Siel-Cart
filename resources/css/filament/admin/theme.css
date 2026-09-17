@@ -205,10 +205,256 @@
         color: inherit;
     }
 
+    .fi-simple-page form .fi-input-wrp.fi-invalid:focus-within {
+        @apply ring-1;
+    }
+
     .fi-resource-create-record-page form#form > .fi-sc-actions,
     .fi-resource-edit-record-page form#form > .fi-sc-actions {
         border-top: 1px solid var(--clsu-mist);
         padding-top: 1.25rem;
+    }
+
+    .clsu-user-profile {
+        color: var(--clsu-ink);
+    }
+
+    .clsu-user-profile__identity,
+    .clsu-user-profile__card {
+        border: 1px solid var(--clsu-mist);
+        border-radius: 1.125rem;
+        background: var(--clsu-surface);
+        box-shadow: 0 4px 18px rgb(32 53 15 / 0.045);
+    }
+
+    .clsu-user-profile__identity {
+        display: flex;
+        align-items: center;
+        gap: clamp(1rem, 2.5vw, 1.75rem);
+        min-width: 0;
+        padding: clamp(1.25rem, 3vw, 2rem);
+        border-top: 4px solid var(--clsu-sun);
+    }
+
+    .clsu-user-profile__avatar {
+        display: grid;
+        flex: none;
+        place-items: center;
+        width: clamp(4.25rem, 7vw, 5.75rem);
+        aspect-ratio: 1;
+        border: 4px solid #ffffff;
+        border-radius: 1.3rem;
+        background: #e8f0da;
+        color: var(--clsu-leaf-dark);
+        box-shadow: 0 0 0 1px #c7d9af;
+        font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+        font-weight: 750;
+        letter-spacing: -0.055em;
+        text-transform: uppercase;
+    }
+
+    .clsu-user-profile__identity-copy {
+        min-width: 0;
+    }
+
+    .clsu-user-profile__eyebrow {
+        color: var(--clsu-leaf);
+        font-size: 0.6875rem;
+        font-weight: 750;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .clsu-user-profile__name {
+        margin-top: 0.35rem;
+        font-size: clamp(1.5rem, 2.6vw, 2rem);
+        font-weight: 750;
+        line-height: 1.15;
+        letter-spacing: -0.04em;
+        overflow-wrap: anywhere;
+    }
+
+    .clsu-user-profile__email {
+        display: inline-block;
+        margin-top: 0.45rem;
+        color: #53634a;
+        font-size: 0.9375rem;
+        overflow-wrap: anywhere;
+    }
+
+    .clsu-user-profile a:hover {
+        color: var(--clsu-leaf);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+
+    .clsu-user-profile a:focus-visible {
+        border-radius: 2px;
+        outline: 2px solid var(--clsu-leaf);
+        outline-offset: 4px;
+    }
+
+    .clsu-user-profile__badges {
+        display: flex;
+        align-self: flex-start;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    .clsu-user-profile__badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.9rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .clsu-user-profile__badge--role {
+        background: #edf4e5;
+        color: #3e6017;
+    }
+
+    .clsu-user-profile__badge--active {
+        background: #e8f5eb;
+        color: #24633c;
+    }
+
+    .clsu-user-profile__badge--inactive {
+        background: #fff0e4;
+        color: #9a4c10;
+    }
+
+    .clsu-user-profile__badge--active::before,
+    .clsu-user-profile__badge--inactive::before {
+        width: 0.4rem;
+        height: 0.4rem;
+        margin-right: 0.45rem;
+        border-radius: 50%;
+        background: currentColor;
+        content: '';
+    }
+
+    .clsu-user-profile__details {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 1fr);
+        gap: 1.25rem;
+        margin-top: 1.25rem;
+    }
+
+    .clsu-user-profile__side {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .clsu-user-profile__card {
+        min-width: 0;
+        padding: clamp(1.25rem, 2.5vw, 1.75rem);
+    }
+
+    .clsu-user-profile__card-heading {
+        margin-bottom: 1.3rem;
+    }
+
+    .clsu-user-profile__card-heading h3 {
+        font-size: 1.0625rem;
+        font-weight: 750;
+        letter-spacing: -0.02em;
+    }
+
+    .clsu-user-profile__card-heading p {
+        margin-top: 0.25rem;
+        color: #6b7964;
+        font-size: 0.8125rem;
+    }
+
+    .clsu-user-profile__fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 1.5rem;
+    }
+
+    .clsu-user-profile__field {
+        min-width: 0;
+        padding: 1rem 0;
+        border-top: 1px solid #eaf0e5;
+    }
+
+    .clsu-user-profile__field--wide {
+        grid-column: 1 / -1;
+    }
+
+    .clsu-user-profile dt {
+        margin-bottom: 0.35rem;
+        color: #6b7964;
+        font-size: 0.75rem;
+        font-weight: 650;
+    }
+
+    .clsu-user-profile dd {
+        font-size: 0.9375rem;
+        font-weight: 650;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .clsu-user-profile__verification {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border-radius: 0.8rem;
+        background: #fff7e8;
+        padding: 0.9rem 1rem;
+        color: #845316;
+    }
+
+    .clsu-user-profile__verification--complete {
+        background: #edf6e9;
+        color: #316b37;
+    }
+
+    .clsu-user-profile__verification-mark {
+        display: grid;
+        flex: none;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    .clsu-user-profile__verification strong {
+        display: block;
+        font-size: 0.875rem;
+    }
+
+    .clsu-user-profile__verification p {
+        margin-top: 0.1rem;
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .clsu-user-profile__history > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-top: 1px solid #eaf0e5;
+    }
+
+    .clsu-user-profile__history dt {
+        margin: 0;
+    }
+
+    .clsu-user-profile__history dd {
+        text-align: right;
+        font-size: 0.8125rem;
     }
 
     .clsu-image-upload .filepond--root {
@@ -466,6 +712,16 @@
         color: rgb(255 255 255 / 0.72);
     }
 
+    @media (max-width: 900px) {
+        .clsu-user-profile__details {
+            grid-template-columns: 1fr;
+        }
+
+        .clsu-user-profile__side {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
     @media (max-width: 639px) {
         .fi-header {
             min-height: auto;
@@ -479,6 +735,36 @@
         .fi-header .fi-header-actions-ctn .fi-btn {
             flex: 1;
             justify-content: center;
+        }
+
+        .clsu-user-profile__identity {
+            flex-wrap: wrap;
+        }
+
+        .clsu-user-profile__badges {
+            justify-content: flex-start;
+            width: 100%;
+            margin-left: 0;
+            padding-top: 0.35rem;
+        }
+
+        .clsu-user-profile__side {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .clsu-user-profile__fields {
+            grid-template-columns: 1fr;
+        }
+
+        .clsu-user-profile__history > div {
+            display: block;
+        }
+
+        .clsu-user-profile__history dd {
+            margin-top: 0.3rem;
+            text-align: left;
         }
     }
 
@@ -494,6 +780,72 @@
 
     .dark .fi-body {
         background-color: #11180d;
+    }
+
+    .dark .clsu-user-profile {
+        color: #edf4e7;
+    }
+
+    .dark .clsu-user-profile__identity,
+    .dark .clsu-user-profile__card {
+        border-color: #35462d;
+        background: #182015;
+        box-shadow: none;
+    }
+
+    .dark .clsu-user-profile__identity {
+        border-top-color: var(--clsu-sun);
+    }
+
+    .dark .clsu-user-profile__avatar {
+        border-color: #182015;
+        background: #33482b;
+        color: #e9f5dc;
+        box-shadow: 0 0 0 1px #526b41;
+    }
+
+    .dark .clsu-user-profile__eyebrow,
+    .dark .clsu-user-profile__email {
+        color: #c6dda7;
+    }
+
+    .dark .clsu-user-profile__badge--role {
+        background: #35492c;
+        color: #d7ecb9;
+    }
+
+    .dark .clsu-user-profile__badge--active {
+        background: #244732;
+        color: #bce9c7;
+    }
+
+    .dark .clsu-user-profile__badge--inactive {
+        background: #4b3523;
+        color: #ffd5aa;
+    }
+
+    .dark .clsu-user-profile__card-heading p,
+    .dark .clsu-user-profile dt {
+        color: #a8b5a0;
+    }
+
+    .dark .clsu-user-profile__field,
+    .dark .clsu-user-profile__history > div {
+        border-color: #35462d;
+    }
+
+    .dark .clsu-user-profile__verification {
+        background: #4b3523;
+        color: #ffd5aa;
+    }
+
+    .dark .clsu-user-profile__verification--complete {
+        background: #244732;
+        color: #bce9c7;
+    }
+
+    .dark .clsu-user-profile__verification-mark {
+        background: #182015;
     }
 
     .dark .fi-section:not(.fi-section-not-contained),

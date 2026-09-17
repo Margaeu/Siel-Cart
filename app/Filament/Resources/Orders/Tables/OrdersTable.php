@@ -70,11 +70,15 @@ class OrdersTable
                     ->date('M d, Y')
                     ->sortable(['created_at']),
 
-                Tables\Columns\TextColumn::make('order_time')
-                    ->label('Order Time')
-                    ->state(fn (Order $record) => $record->created_at)
-                    ->time('h:i A')
-                    ->sortable(['created_at']),
+                Tables\Columns\TextColumn::make('completed_at')
+                    ->label('Collected / Cancelled')
+                    ->state(fn (Order $record) => $record->status === 'cancelled'
+                        ? $record->cancelled_at
+                        : $record->completed_at)
+                    ->dateTime('M d, Y')
+                    ->placeholder(fn (Order $record): string => $record->status === 'cancelled'
+                        ? 'Cancellation date unavailable'
+                        : 'Not yet collected'),
             ])
 
             ->filters([
