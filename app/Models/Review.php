@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Review extends Model
 {
-    use HasFactory;
     protected $fillable = [
         'product_id',
         'customer_id',
@@ -18,49 +15,37 @@ class Review extends Model
         'title',
         'comment',
         'photos',
-        'video_path',
+        'video',
         'is_verified_purchase',
         'is_approved',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'photos' => 'array',
+        'is_verified_purchase' => 'boolean',
+        'is_approved' => 'boolean',
+    ];
+
+    // Accessor for photo URLs
+    public function getPhotoUrlsAttribute(): array
     {
-        return [
-            'rating' => 'integer',
-            'photos' => 'array',
-            'is_verified_purchase' => 'boolean',
-            'is_approved' => 'boolean',
-        ];
+        if (empty($this->photos) || !is_array($this->photos)) {
+            return [];
+        }
+
+        return array_map(function ($path) {
+            return Storage::disk('r2')->url($path);
+        }, $this->photos);
     }
 
-    public function reports()
+    // Accessor for video URL
+    public function getVideoUrlAttribute(): ?string
     {
-        return $this->hasMany(Report::class);
-    }
+        if (empty($this->video)) {
+            return null;
+        }
 
-    #[Scope]
-    protected function approved(Builder $query): void
-    {
-        $query->where('is_approved', true);
-    }
-
-    // Review::approved()->get()
-    #[Scope]
-    protected function verified(Builder $query): void
-    {
-        $query->where('is_verified_purchase', true);
-    }
-
-    #[Scope]
-    protected function rating(Builder $query, int $rating): void
-    {
-        $query->where('rating', $rating);
-    }
-
-    // Relationships
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
+        return Storage::disk('r2')->url($this->video);
     }
 
     public function customer()
@@ -68,8 +53,8 @@ class Review extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function order()
+    public function product()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Product::class);
     }
 }
