@@ -35,6 +35,18 @@ class FortifyServiceProvider extends ServiceProvider
 
         // configure authentication to use customer guard
         Fortify::authenticateUsing(function (Request $request) {
+            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $maxAttempts = 5;
+            $decaySeconds = 5 * 60; // 5 minutes
+
+            if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+                $seconds = RateLimiter::availableIn($throttleKey);
+                $minutes = (int) ceil($seconds / 60);
+                throw ValidationException::withMessages([
+                    Fortify::username() => "Too many failed login attempts. Please try again in {$minutes} minutes.",
+                ]);
+            }
+
             $customer = Customer::where('email', $request->email)->first();
 
             if (! $customer) {
@@ -42,10 +54,24 @@ class FortifyServiceProvider extends ServiceProvider
             }
 
             if (! Hash::check($request->password, $customer->password)) {
+                RateLimiter::hit($throttleKey, $decaySeconds);
+
+                // If this hit reached the maximum attempts, show the lockout message immediately.
+                if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+                    $seconds = RateLimiter::availableIn($throttleKey);
+                    $minutes = (int) ceil($seconds / 60);
+                    throw ValidationException::withMessages([
+                        Fortify::username() => "Too many failed login attempts. Please try again in {$minutes} minutes.",
+                    ]);
+                }
+
                 throw ValidationException::withMessages([
                     Fortify::username() => __('You entered a wrong password.'),
                 ]);
             }
+
+            // Clear failed attempts on successful login
+            RateLimiter::clear($throttleKey);
 
             // Only tell a caller the account is deactivated once they have
             // proven the password, so this cannot be used to enumerate accounts.
