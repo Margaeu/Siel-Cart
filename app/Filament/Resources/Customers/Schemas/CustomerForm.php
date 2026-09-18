@@ -28,6 +28,8 @@ class CustomerForm
                             ->required(),
                         DateTimePicker::make('email_verified_at')
                             ->label('Email verified at'),
+                        DateTimePicker::make('date_of_birth')
+                            ->label('Birthdate'),
                         TextInput::make('phone')
                             ->tel()
                             ->default(null),

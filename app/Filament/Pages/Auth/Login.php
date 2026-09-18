@@ -5,18 +5,44 @@ namespace App\Filament\Pages\Auth;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\View;
+use Filament\Schemas\Schema;
+use Illuminate\Validation\ValidationException;
 
 class Login extends BaseLogin
 {
     /**
-     * On a failed sign-in, clear what the admin typed and keep the error
-     * message, so the form looks fresh but still explains what went wrong.
+     * Clear the attempted credentials and show one error above the form.
      */
     protected function throwFailureValidationException(): never
     {
         $this->form->fill();
 
-        parent::throwFailureValidationException();
+        throw ValidationException::withMessages([
+            'login' => __('filament-panels::auth/pages/login.messages.failed'),
+        ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            View::make('filament.auth.login-error')
+                ->visible(fn (): bool => $this->getErrorBag()->has('login'))
+                ->viewData(fn (): array => ['message' => $this->getErrorBag()->first('login')]),
+            $this->getEmailFormComponent(),
+            $this->getPasswordFormComponent(),
+            $this->getRememberFormComponent(),
+        ]);
+    }
+
+    protected function getEmailFormComponent(): Component
+    {
+        /** @var TextInput $component */
+        $component = parent::getEmailFormComponent();
+
+        return $component->extraAttributes(fn (): array => $this->getErrorBag()->has('login')
+            ? ['class' => 'fi-invalid']
+            : []);
     }
 
     protected function getPasswordFormComponent(): Component
@@ -24,9 +50,7 @@ class Login extends BaseLogin
         /** @var TextInput $component */
         $component = parent::getPasswordFormComponent();
 
-        // The failure message is only attached to the email field, so mark the
-        // password input as invalid too whenever that message is present.
-        return $component->extraAttributes(fn (): array => $this->getErrorBag()->has('data.email')
+        return $component->extraAttributes(fn (): array => $this->getErrorBag()->has('login')
             ? ['class' => 'fi-invalid']
             : []);
     }

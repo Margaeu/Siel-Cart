@@ -31,7 +31,7 @@ class UsersTable
                     ->color(fn($state) => match ($state) {
                         'super_admin' => 'success',
                         'ubap' => 'warning',
-                        'stratcomm' => 'info',
+                        'stratcom' => 'info',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn($state) => str($state)->replace('_',' ')->title())

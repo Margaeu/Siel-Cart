@@ -152,7 +152,7 @@ class OrdersTable
                             ->required(),
                         TextInput::make('claimant_phone')
                             ->label('Contact Phone Number of Receiver')
-                            ->placeholder('e.g. 09171234567')
+                            ->placeholder('e.g. 0917123459')
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
