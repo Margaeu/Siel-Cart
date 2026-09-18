@@ -341,6 +341,7 @@ class ProductForm
                                             ->required(),
                                     ])
                                     ->columns(2),
+                                /*
                                 Section::make('Statistics')
                                     ->description('Read-only activity information for this product.')
                                     ->schema([
@@ -350,6 +351,7 @@ class ProductForm
                                             ->label('Created')
                                             ->state(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
+                                */
                             ]),
                     ]),
             ]);
