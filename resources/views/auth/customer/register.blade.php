@@ -84,7 +84,7 @@
                                name="date_of_birth"
                                value="{{ old('date_of_birth') }}"
                                required
-                               max="{{ date('Y-m-d') }}"
+                               max="{{ date('Y-m-d', strtotime('-13 years')) }}"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E0A70D] focus:border-[#557F13] outline-none transition">
 
                         @error('date_of_birth')
@@ -214,5 +214,27 @@
     </div>
 
     <x-password-toggle-script />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dob = document.getElementById('date_of_birth');
+            if (!dob) return;
+            const message = 'You must be 13 years old to create an account.';
+
+            function checkDob() {
+                dob.setCustomValidity('');
+                if (!dob.value) return;
+                if (dob.max && new Date(dob.value) > new Date(dob.max)) {
+                    dob.setCustomValidity(message);
+                }
+            }
+
+            dob.addEventListener('input', checkDob);
+            dob.addEventListener('invalid', function (e) {
+                if (dob.validity.rangeOverflow) {
+                    dob.setCustomValidity(message);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -16,6 +16,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Http\Controllers\EmailVerificationNotificationController;
 
 
 /*
@@ -46,6 +47,10 @@ Route::view('/return-refund-policy', 'pages.return-refund-policy')
 
 Route::view('/faqs', 'pages.faqs')
     ->name('faqs');
+
+Route::match(['GET', 'POST'], '/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    ->middleware('auth:customer')
+    ->name('verification.send');
 
 
 /*

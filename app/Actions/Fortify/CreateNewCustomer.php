@@ -14,14 +14,28 @@ class CreateNewCustomer implements CreatesNewUsers
 
     public function create(array $input)
     {
+        $messages = [
+            'date_of_birth.before_or_equal' => 'You must be 13 years old to create an account.',
+        ];
+
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique(Customer::class)],
-            'date_of_birth' => ['required', 'date', 'before_or_equal:today'], // Date of birth is required when creating a new customer account. The date cannot be later than today's date.
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique(Customer::class),
+            ],
+
+            // Date of birth is required when creating a new customer account.
+            // The customer must be at least 13 years old.
+            'date_of_birth' => ['required', 'date', 'before_or_equal:' . now()->subYears(13)->format('Y-m-d')],
+
             'password' => $this->passwordRules(),
             'phone' => ['nullable', 'string', 'max:255'],
-        ])->validate();
+        ], $messages)->validate();
 
         $customer = Customer::create([
             'first_name' => $input['first_name'],

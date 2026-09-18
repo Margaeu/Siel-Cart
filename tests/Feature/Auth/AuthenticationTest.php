@@ -43,6 +43,9 @@ class AuthenticationTest extends TestCase
         ]);
 
         $response->assertSessionHasErrorsIn('email');
+        $response->assertSessionHasErrors([
+            'email' => 'You entered a wrong password.',
+        ]);
 
         $this->assertGuest();
     }

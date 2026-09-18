@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation</title>
+    <title>SielCart Order Confirmation</title>
     <style>
          body {
             font-family: Arial, sans-serif;
@@ -72,7 +72,7 @@
 </head>
 <body>
     <div class="header">
-        <h1 style="margin: 0;">Thank You for Your Order!</h1>
+        <h1 style="margin: 0;">Thank You for Your Order at SielCart!</h1>
     </div>
 
     <div class="content">
