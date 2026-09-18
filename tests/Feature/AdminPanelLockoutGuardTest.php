@@ -174,14 +174,14 @@ class AdminPanelLockoutGuardTest extends TestCase
         $target = $this->ordinaryAdmin();
         $this->actAsPanelUser($actor);
 
-        $stratcomm = Role::findOrCreate('stratcomm', 'web');
+        $stratcom = Role::findOrCreate('stratcom', 'web');
 
         Livewire::test(EditUser::class, ['record' => $target->getKey()])
-            ->fillForm($this->editFormData([$stratcomm->getKey()]))
+            ->fillForm($this->editFormData([$stratcom->getKey()]))
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertTrue($target->fresh()->hasRole('stratcomm'));
+        $this->assertTrue($target->fresh()->hasRole('stratcom'));
     }
 
     public function test_creating_a_user_is_unaffected_by_the_role_guard(): void

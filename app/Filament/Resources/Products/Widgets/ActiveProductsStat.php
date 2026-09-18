@@ -16,7 +16,7 @@ class ActiveProductsStat extends StatsOverviewWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Active products', number_format(Product::active()->count()))
+            Stat::make('Active products', number_format(Product::where('is_active', true)->count()))
                 ->description('Visible in the storefront')
                 ->descriptionIcon('heroicon-m-eye')
                 ->icon('heroicon-o-check-circle')
