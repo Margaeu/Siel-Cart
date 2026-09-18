@@ -45,6 +45,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->color('warning')
                 ->url(route('filament.admin.resources.orders.index', ['tab' => 'pending']))
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--yellow']),
+            /*
             Stat::make('Products', number_format($totalProducts))
                 ->description('Catalog items')
                 ->descriptionIcon('heroicon-m-cube')
@@ -52,6 +53,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->color('success')
                 ->url(route('filament.admin.resources.products.index'))
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
+            */
             Stat::make('Customers', number_format($totalCustomers))
                 ->description(number_format($newCustomersThisMonth).' new this month')
                 ->descriptionIcon('heroicon-m-user-group')
