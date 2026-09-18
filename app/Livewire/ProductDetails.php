@@ -15,46 +15,26 @@ class ProductDetails extends Component
     use WithFileUploads;
 
     public Product $product;
-
     public $selectedVariant = null;
-
     public $quantity = 1;
-
     public $selectedImage = null;
-
     public int $reviewRating = 5;
-
     public string $reviewTitle = '';
-
     public string $reviewComment = '';
-
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
     public array $reviewPhotos = [];
-
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
     public $reviewVideo = null;
-
     public bool $canReview = false;
-
     public bool $hasReview = false;
-
-    public bool $reviewIsApproved = false;
-
-    /**
-     * IDs of reviews the logged-in customer has already reported, so the
-     * "Report" button can be swapped out for a "Reported" note instead of
-     * letting them file the same report twice.
-     */
-    public array $reportedReviewIds = [];
-
+    public bool $reviewIsApproved = true;
+    // Reporting Properties
     public bool $showReportForm = false;
-
     public ?int $reportingReviewId = null;
-
     public string $reportReason = '';
-
     public string $reportDetails = '';
-
+    public array $reportedReviewIds = [];
+    
     public function mount($slug)
     {
         $this->product = Product::where('slug', $slug)
@@ -62,9 +42,6 @@ class ProductDetails extends Component
                 'category',
                 'generalImages',
                 'primaryImage',
-                // `variants.images` loads each variant's gallery. Loading
-                // `images.variant` instead would walk the relation the wrong
-                // way and still leave `$variant->images` lazy.
                 'variants.images',
                 'approvedReviews.customer',
             ])
@@ -89,10 +66,6 @@ class ProductDetails extends Component
         $this->loadReviewState();
     }
 
-    /**
-     * Livewire re-fetches the model on every request and drops the relations
-     * loaded in mount(), so restore them before any variant lookup runs.
-     */
     public function hydrate(): void
     {
         $this->product?->loadMissing([
@@ -100,8 +73,6 @@ class ProductDetails extends Component
             'generalImages',
             'primaryImage',
             'variants.images',
-            // The page reads reviews_count and average_rating; without the
-            // relation each read falls back to its own query.
             'approvedReviews.customer',
         ]);
     }
@@ -123,27 +94,17 @@ class ProductDetails extends Component
             return;
         }
 
-        // The variant has no photos of its own. Fall back to the shared gallery
-        // rather than leaving the previous variant's photo on screen.
         if (! $this->product->generalImages->contains('image_path', $this->selectedImage)) {
             $this->selectedImage = $this->defaultSharedImagePath();
         }
     }
 
-    /**
-     * The product-level image to show when no variant image applies.
-     */
     private function defaultSharedImagePath(): ?string
     {
         return $this->product->primaryImage?->image_path
             ?? $this->product->generalImages->first()?->image_path;
     }
 
-    /**
-     * Thumbnails for the current selection: the shared product images plus the
-     * selected variant's own images. Other variants' photos stay hidden, so
-     * picking "Beige" never shows a blue or black thumbnail.
-     */
     public function galleryImages()
     {
         $variantImages = $this->product->variants
@@ -172,15 +133,8 @@ class ProductDetails extends Component
         }
     }
 
-    /**
-     * Add the selected product/variant to the customer's permanent cart.
-     *
-     * CartService handles the database cart and stock validation.
-     */
     public function addToCart(CartService $cartService)
     {
-        // A cart belongs to a customer account, so guests are sent
-        // to the login page first and returned here afterwards.
         if (! auth('customer')->check()) {
             session()->put('url.intended', route('products.show', $this->product->slug));
             session()->flash('status', 'Please log in to add products to your cart.');
@@ -200,17 +154,13 @@ class ProductDetails extends Component
             (int) $this->quantity
         );
 
-        // Stock validation failed.
         if (! $result['success']) {
             $this->dispatch('cart-error', message: $result['message']);
 
             return;
         }
 
-        // Update the cart icon in the header.
         $this->dispatch('cart-updated');
-
-        // Show the shared Add to Cart popup.
         $this->dispatch('cart-added', message: $result['message']);
     }
 
@@ -248,22 +198,18 @@ class ProductDetails extends Component
             'reviewRating' => ['required', 'integer', 'between:1,5'],
             'reviewTitle' => ['nullable', 'string', 'max:255'],
             'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
-            // Up to 5 photos, standard image types, 5MB each.
             'reviewPhotos' => ['nullable', 'array', 'max:5'],
             'reviewPhotos.*' => ['image', 'max:5120'],
-            // A single short clip. Exact duration (~1 minute) is enforced
-            // client-side before upload; this is the server-side backstop
-            // (type + a generous size cap, since duration can't be reliably
-            // read without a media-processing library).
             'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
+        ], [
+            'reviewPhotos.max' => 'You can attach up to 5 photos.',
         ]);
 
         $photoPaths = collect($this->reviewPhotos)
-            ->map(fn ($photo) => $photo->store("reviews/{$this->product->id}/{$customerId}/photos", 'r2'))
-            ->values()
+            ->map(fn ($photo) => $photo->store('reviews/photos', 'r2'))
             ->all();
 
-        $videoPath = $this->reviewVideo?->store("reviews/{$this->product->id}/{$customerId}/video", 'r2');
+        $videoPath = $this->reviewVideo?->store('reviews/videos', 'r2');
 
         Review::create([
             'product_id' => $this->product->id,
@@ -273,94 +219,87 @@ class ProductDetails extends Component
             'title' => $validated['reviewTitle'] ?: null,
             'comment' => $validated['reviewComment'],
             'photos' => $photoPaths ?: null,
-            'video_path' => $videoPath,
+            'video' => $videoPath,
             'is_verified_purchase' => true,
             'is_approved' => true,
-            $this->product->load('approvedReviews.customer')
         ]);
 
         $this->reset('reviewTitle', 'reviewComment', 'reviewPhotos', 'reviewVideo');
         $this->reviewRating = 5;
+
+        // Force reload the reviews relationship so the new review is visible instantly
+        $this->product->load('approvedReviews.customer');
+
         $this->loadReviewState();
     }
 
-    /**
-     * Open the small inline "report this user" form for a given review.
-     */
+    public function removeReviewPhoto(int $index): void
+    {
+        unset($this->reviewPhotos[$index]);
+        $this->reviewPhotos = array_values($this->reviewPhotos);
+    }
+
+    public function removeReviewVideo(): void
+    {
+        $this->reviewVideo = null;
+    }
+
     public function startReport(int $reviewId): void
     {
-        if (! auth('customer')->check()) {
-            session()->put('url.intended', route('products.show', $this->product->slug));
-            session()->flash('status', 'Please log in to report a review.');
-            $this->redirect(route('login'));
-
-            return;
-        }
-
         $this->reportingReviewId = $reviewId;
+        $this->showReportForm = true;
         $this->reportReason = '';
         $this->reportDetails = '';
-        $this->showReportForm = true;
     }
 
     public function cancelReport(): void
     {
         $this->showReportForm = false;
         $this->reportingReviewId = null;
+        $this->reportReason = '';
+        $this->reportDetails = '';
     }
 
-    /**
-     * File a report against the author of a review. Goes straight to the
-     * admin queue (Filament "Reports" resource) for moderation.
-     */
     public function submitReport(): void
     {
-        if (! auth('customer')->check()) {
-            $this->redirect(route('login'));
-
-            return;
-        }
-
-        $customerId = (int) auth('customer')->id();
-        $review = Review::find($this->reportingReviewId);
-
-        if (! $review) {
-            $this->cancelReport();
-
-            return;
-        }
-
-        if ($review->customer_id === $customerId) {
-            $this->addError('report', 'You cannot report your own review.');
-
-            return;
-        }
-
-        if (in_array($review->id, $this->reportedReviewIds, true)) {
-            $this->addError('report', 'You have already reported this review.');
-
-            return;
-        }
-
-        $validated = $this->validate([
-            'reportReason' => ['required', 'string', 'max:255'],
+        $this->validate([
+            'reportReason' => ['required', 'string'],
             'reportDetails' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        if (! auth('customer')->check()) {
+            session()->flash('status', 'Please log in to report a review.');
+            return;
+        }
+
+        if (! $this->reportingReviewId) {
+            $this->cancelReport();
+            return;
+        }
+
+        // 1. Fetch the review being reported to obtain the target customer's ID
+        $review = Review::find($this->reportingReviewId);
+
+        if (! $review) {
+            $this->addError('reportReason', 'The review you are trying to report no longer exists.');
+            return;
+        }
+
+        // 2. Insert record into database using foreign key constraints from your migration
         Report::create([
-            'reporter_customer_id' => $customerId,
+            'reporter_customer_id' => auth('customer')->id(),
             'reported_customer_id' => $review->customer_id,
-            'review_id' => $review->id,
-            'reason' => $validated['reportReason'],
-            'details' => $validated['reportDetails'] ?: null,
+            'review_id'            => $review->id,
+            'reason'               => $this->reportReason,
+            'details'              => $this->reportDetails ?: null,
+            'status'               => 'pending',
         ]);
 
-        $this->reportedReviewIds[] = $review->id;
-        $this->showReportForm = false;
-        $this->reportingReviewId = null;
-        $this->reset('reportReason', 'reportDetails');
+        // 3. Mark in state array so the UI renders "Reported to admin" immediately
+        $this->reportedReviewIds[] = $this->reportingReviewId;
 
-        session()->flash('report-status', 'Thanks — this has been reported to the admin team.');
+        session()->flash('report-status', 'Report submitted successfully. Thank you for helping keep our community safe.');
+        $this->cancelReport();
     }
 
     private function completedOrderId(int $customerId): ?int
@@ -375,8 +314,7 @@ class ProductDetails extends Component
     {
         $this->canReview = false;
         $this->hasReview = false;
-        $this->reviewIsApproved = false;
-        $this->reportedReviewIds = [];
+        $this->reviewIsApproved = true;
 
         if (! auth('customer')->check()) {
             return;
@@ -384,10 +322,10 @@ class ProductDetails extends Component
 
         $customerId = (int) auth('customer')->id();
 
+        // Hydrate previously reported review IDs for this session user
         $this->reportedReviewIds = Report::where('reporter_customer_id', $customerId)
-            ->whereIn('review_id', $this->product->approvedReviews->pluck('id'))
             ->pluck('review_id')
-            ->all();
+            ->toArray();
 
         $review = Review::where('product_id', $this->product->id)
             ->where('customer_id', $customerId)
@@ -395,7 +333,6 @@ class ProductDetails extends Component
 
         if ($review) {
             $this->hasReview = true;
-            $this->reviewIsApproved = $review->is_approved;
 
             return;
         }
@@ -408,8 +345,6 @@ class ProductDetails extends Component
         $relatedProducts = Product::where('is_active', true)
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            // Related cards render the same product-card view as any listing,
-            // and that view reads the category name.
             ->with(['category', 'cardImage', 'variants'])
             ->withReviewAggregates()
             ->limit(4)
