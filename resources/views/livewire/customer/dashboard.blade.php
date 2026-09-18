@@ -150,7 +150,7 @@
                                                 ($order->status === 'cancelled' ? 'bg-red-100 text-red-800' : 
                                                 'bg-[#FEF8EA] text-[var(--color-secondary)]') 
                                             }}">
-                                                {{ ucfirst($order->status) }}
+                                                {{ Str::headline($order->status) }}
                                             </span>
                                         </div>
                                     </div>

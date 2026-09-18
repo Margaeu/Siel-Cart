@@ -57,7 +57,7 @@
                                         ($order->status === 'shipped' ? 'bg-emerald-100 text-emerald-800' :
                                         'bg-yellow-100 text-yellow-800')) 
                                     }}">
-                                        {{ ucfirst($order->status) }}
+                                        {{ Str::headline($order->status) }}
                                     </span>
                                     <a href="{{ route('customer.orders.show', $order->id) }}"
                                        class="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] font-medium">
