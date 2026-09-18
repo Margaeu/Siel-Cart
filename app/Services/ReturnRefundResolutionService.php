@@ -7,7 +7,7 @@ use App\Enums\OrderItemResolutionType;
 use App\Enums\ReturnedItemCondition;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -29,9 +29,9 @@ use Illuminate\Validation\ValidationException;
  * Anything that does not hold up is thrown as a ValidationException keyed by
  * the input field responsible, so a form can point at the right field.
  */
-class OrderItemResolutionService
+class ReturnRefundResolutionService
 {
-    public function recordRefund(OrderItem $item, User $processor, array $data): OrderItemResolution
+    public function recordRefund(OrderItem $item, User $processor, array $data): ReturnRefundResolution
     {
         return $this->record(OrderItemResolutionType::Refund, $item, $processor, $data);
     }
@@ -50,18 +50,18 @@ class OrderItemResolutionService
      * the condition it came back in. The reason decides what happens to stock
      * -- see exchangeAttributes().
      */
-    public function recordExchange(OrderItem $item, User $processor, array $data): OrderItemResolution
+    public function recordExchange(OrderItem $item, User $processor, array $data): ReturnRefundResolution
     {
         return $this->record(OrderItemResolutionType::Exchange, $item, $processor, $data);
     }
 
-    private function record(OrderItemResolutionType $type, OrderItem $item, User $processor, array $data): OrderItemResolution
+    private function record(OrderItemResolutionType $type, OrderItem $item, User $processor, array $data): ReturnRefundResolution
     {
         Gate::forUser($processor)->authorize('recordResolution', $item->order()->withTrashed()->firstOrFail());
 
         $input = $this->validateInput($type, $data);
 
-        return DB::transaction(function () use ($type, $item, $processor, $input): OrderItemResolution {
+        return DB::transaction(function () use ($type, $item, $processor, $input): ReturnRefundResolution {
             // Order, line, product, variant: the same order restoreStock() and
             // checkout take their locks in, so none of them deadlock this.
             // Everything below is decided on rows read under these locks.
@@ -82,7 +82,7 @@ class OrderItemResolutionService
                 ? $this->refundAttributes($item, $input)
                 : $this->exchangeAttributes($item, $input);
 
-            return OrderItemResolution::create([
+            return ReturnRefundResolution::create([
                 'order_item_id' => $item->id,
                 'type' => $type,
                 'reason' => $input['reason'],

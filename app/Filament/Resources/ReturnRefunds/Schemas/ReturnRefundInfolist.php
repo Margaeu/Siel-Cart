@@ -5,7 +5,7 @@ namespace App\Filament\Resources\ReturnRefunds\Schemas;
 use App\Enums\OrderItemResolutionReason;
 use App\Enums\OrderItemResolutionType;
 use App\Filament\Resources\ReturnRefunds\ReturnRefundResource;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -43,7 +43,7 @@ class ReturnRefundInfolist
                         ->label('Refund amount')
                         ->money('PHP')
                         ->weight(FontWeight::Bold)
-                        ->visible(fn (OrderItemResolution $record): bool => $record->type === OrderItemResolutionType::Refund),
+                        ->visible(fn (ReturnRefundResolution $record): bool => $record->type === OrderItemResolutionType::Refund),
 
                     TextEntry::make('processed_at')
                         ->label('Processed date')
@@ -73,7 +73,7 @@ class ReturnRefundInfolist
                 ->schema([
                     TextEntry::make('orderItem.order.order_number')
                         ->label('Order number')
-                        ->url(fn (OrderItemResolution $record): ?string => ReturnRefundResource::getOrderUrl($record))
+                        ->url(fn (ReturnRefundResolution $record): ?string => ReturnRefundResource::getOrderUrl($record))
                         ->color('primary'),
 
                     TextEntry::make('orderItem.order.customer.name')
@@ -100,7 +100,7 @@ class ReturnRefundInfolist
                 ]),
 
             Section::make('Exchange')
-                ->description(fn (OrderItemResolution $record): string => static::isSellerError($record)
+                ->description(fn (ReturnRefundResolution $record): string => static::isSellerError($record)
                     ? 'UBAP released the wrong item, and the customer was given the item they ordered.'
                     : 'The customer was given another unit of the item they ordered.')
                 ->columnSpanFull()
@@ -108,11 +108,11 @@ class ReturnRefundInfolist
                     'default' => 1,
                     'sm' => 3,
                 ])
-                ->visible(fn (OrderItemResolution $record): bool => $record->type === OrderItemResolutionType::Exchange)
+                ->visible(fn (ReturnRefundResolution $record): bool => $record->type === OrderItemResolutionType::Exchange)
                 ->schema([
                     TextEntry::make('replacement')
                         ->label('Replacement given')
-                        ->state(fn (OrderItemResolution $record): ?string => collect([
+                        ->state(fn (ReturnRefundResolution $record): ?string => collect([
                             $record->replacement_product_name,
                             $record->replacement_variant_name,
                         ])->filter()->implode(' — ') ?: null)
@@ -122,13 +122,13 @@ class ReturnRefundInfolist
                     TextEntry::make('incorrect_item_label')
                         ->label('Item released in error')
                         ->placeholder('Not recorded')
-                        ->visible(fn (OrderItemResolution $record): bool => static::isSellerError($record)),
+                        ->visible(fn (ReturnRefundResolution $record): bool => static::isSellerError($record)),
 
                     TextEntry::make('incorrect_item_condition')
                         ->label('Condition when returned')
                         ->placeholder('Not recorded')
-                        ->visible(fn (OrderItemResolution $record): bool => static::isSellerError($record))
-                        ->helperText(fn (OrderItemResolution $record): ?string => match ($record->incorrect_item_condition?->isSellable()) {
+                        ->visible(fn (ReturnRefundResolution $record): bool => static::isSellerError($record))
+                        ->helperText(fn (ReturnRefundResolution $record): ?string => match ($record->incorrect_item_condition?->isSellable()) {
                             true => 'Back on the shelf, so its stock was not changed.',
                             false => 'Written off that item\'s stock.',
                             null => null,
@@ -137,7 +137,7 @@ class ReturnRefundInfolist
         ]);
     }
 
-    private static function isSellerError(OrderItemResolution $record): bool
+    private static function isSellerError(ReturnRefundResolution $record): bool
     {
         return $record->reason === OrderItemResolutionReason::SellerError;
     }

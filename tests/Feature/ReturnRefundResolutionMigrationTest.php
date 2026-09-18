@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\OrderItemResolutionReason;
 use App\Enums\OrderItemResolutionType;
 use App\Models\Order;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +20,7 @@ use Tests\TestCase;
  * statuses behind. None of it may be dropped or rewritten, and only outcomes
  * that name one order line unambiguously are carried into the new records.
  */
-class OrderItemResolutionMigrationTest extends TestCase
+class ReturnRefundResolutionMigrationTest extends TestCase
 {
     use BuildsResolvableOrders, RefreshDatabase;
 

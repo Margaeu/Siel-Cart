@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
 
@@ -13,14 +13,14 @@ use Illuminate\Foundation\Auth\User as AuthUser;
  *
  * There are no permissions of its own. Seeing a resolution follows seeing
  * orders, since the order page has always shown them. Recording one follows
- * RecordResolution:Order, the same ability OrderItemResolutionService checks
+ * RecordResolution:Order, the same ability ReturnRefundResolutionService checks
  * against the order itself.
  *
- * A recorded resolution is history (see OrderItemResolution::booted()), so
+ * A recorded resolution is history (see ReturnRefundResolution::booted()), so
  * every ability that would change, remove or copy one is refused here. Each
  * needs its own method: Filament allows an ability the policy does not define.
  */
-class OrderItemResolutionPolicy
+class ReturnRefundResolutionPolicy
 {
     use HandlesAuthorization;
 
@@ -29,7 +29,7 @@ class OrderItemResolutionPolicy
         return $authUser->can('ViewAny:Order');
     }
 
-    public function view(AuthUser $authUser, OrderItemResolution $orderItemResolution): bool
+    public function view(AuthUser $authUser, ReturnRefundResolution $returnRefundResolution): bool
     {
         return $authUser->can('View:Order');
     }
@@ -40,12 +40,12 @@ class OrderItemResolutionPolicy
         return $authUser->can('RecordResolution:Order') && $authUser->can('ViewAny:Order');
     }
 
-    public function update(AuthUser $authUser, OrderItemResolution $orderItemResolution): bool
+    public function update(AuthUser $authUser, ReturnRefundResolution $returnRefundResolution): bool
     {
         return false;
     }
 
-    public function delete(AuthUser $authUser, OrderItemResolution $orderItemResolution): bool
+    public function delete(AuthUser $authUser, ReturnRefundResolution $returnRefundResolution): bool
     {
         return false;
     }
@@ -55,7 +55,7 @@ class OrderItemResolutionPolicy
         return false;
     }
 
-    public function restore(AuthUser $authUser, OrderItemResolution $orderItemResolution): bool
+    public function restore(AuthUser $authUser, ReturnRefundResolution $returnRefundResolution): bool
     {
         return false;
     }
@@ -65,7 +65,7 @@ class OrderItemResolutionPolicy
         return false;
     }
 
-    public function forceDelete(AuthUser $authUser, OrderItemResolution $orderItemResolution): bool
+    public function forceDelete(AuthUser $authUser, ReturnRefundResolution $returnRefundResolution): bool
     {
         return false;
     }
@@ -75,7 +75,7 @@ class OrderItemResolutionPolicy
         return false;
     }
 
-    public function replicate(AuthUser $authUser, OrderItemResolution $orderItemResolution): bool
+    public function replicate(AuthUser $authUser, ReturnRefundResolution $returnRefundResolution): bool
     {
         return false;
     }

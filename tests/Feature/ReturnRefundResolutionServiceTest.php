@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\OrderItemResolutionReason;
 use App\Enums\OrderItemResolutionType;
 use App\Enums\ReturnedItemCondition;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Carbon\Carbon;
@@ -28,7 +28,7 @@ use Tests\TestCase;
  * released, and only when it comes back unfit to sell. For a defective or
  * damaged item, the replacement comes off the ordered item's own stock.
  */
-class OrderItemResolutionServiceTest extends TestCase
+class ReturnRefundResolutionServiceTest extends TestCase
 {
     use BuildsResolvableOrders, RefreshDatabase;
 
@@ -222,7 +222,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->exchange($line, $shirt, $large, $condition, quantity: 2);
 
-        $this->assertSame(1, OrderItemResolution::count());
+        $this->assertSame(1, ReturnRefundResolution::count());
         $this->assertSame(0, $medium->fresh()->stock_quantity);
     }
 
@@ -233,7 +233,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->assertRejected('incorrect_variant_id', fn () => $this->exchange($line, $shirt, $medium, 'damaged'));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(5, $medium->fresh()->stock_quantity);
         $this->assertSame(4, $large->fresh()->stock_quantity);
     }
@@ -245,7 +245,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->assertRejected('incorrect_product_id', fn () => $this->exchange($line, $mug, condition: 'damaged'));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(6, $mug->fresh()->stock_quantity);
     }
 
@@ -267,7 +267,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->assertRejected($field, fn () => $this->exchange($line, $shirt, $large, 'damaged', extra: $override));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(5, $medium->fresh()->stock_quantity);
         $this->assertSame(4, $large->fresh()->stock_quantity);
     }
@@ -298,7 +298,7 @@ class OrderItemResolutionServiceTest extends TestCase
         // A product sold without variants has none to name.
         $this->assertRejected('incorrect_variant_id', fn () => $this->exchange($line, $tumbler, $large, 'damaged'));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(4, $large->fresh()->stock_quantity);
         $this->assertSame(7, $blackMedium->fresh()->stock_quantity);
         $this->assertSame(9, $tumbler->fresh()->stock_quantity);
@@ -311,7 +311,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->assertRejected('quantity', fn () => $this->exchange($line, $shirt, $large, 'damaged', quantity: 2));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(1, $large->fresh()->stock_quantity);
 
         // Back in sellable condition there is nothing to write off.
@@ -352,7 +352,7 @@ class OrderItemResolutionServiceTest extends TestCase
         // A variant, for a product bought without one.
         $this->assertRejected('replacement_variant_id', fn () => $this->exchange($mugLine, $hoodie, $blackMedium, extra: ['replacement_variant_id' => $large->id]));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
     }
 
     public static function reasonsUbapDoesNotAccept(): array
@@ -374,7 +374,7 @@ class OrderItemResolutionServiceTest extends TestCase
         $this->assertRejected('reason', fn () => $this->exchange($line, $shirt, $large, 'damaged', extra: ['reason' => $reason]));
         $this->assertRejected('reason', fn () => $this->exchangeFaultyItem($line, extra: ['reason' => $reason]));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(5, $medium->fresh()->stock_quantity);
         $this->assertSame(4, $large->fresh()->stock_quantity);
     }
@@ -410,7 +410,7 @@ class OrderItemResolutionServiceTest extends TestCase
         $this->assertTrue($resolution->orderItem->is($line));
         $this->assertSame($type, $resolution->type);
         $this->assertSame($expected, $resolution->reason);
-        $this->assertSame(1, OrderItemResolution::count());
+        $this->assertSame(1, ReturnRefundResolution::count());
     }
 
     public static function faultyItemReasons(): array
@@ -495,7 +495,7 @@ class OrderItemResolutionServiceTest extends TestCase
         $this->assertNull($resolution->incorrect_variant_name);
         $this->assertNull($resolution->incorrect_item_condition);
 
-        $this->assertSame(2, OrderItemResolution::count());
+        $this->assertSame(2, ReturnRefundResolution::count());
         $this->assertSame(3, $medium->fresh()->stock_quantity);
         $this->assertSame(4, $large->fresh()->stock_quantity);
     }
@@ -514,7 +514,7 @@ class OrderItemResolutionServiceTest extends TestCase
         // No mugs left at all.
         $this->assertRejected('quantity', fn () => $this->exchangeFaultyItem($mugLine, $reason));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(1, $medium->fresh()->stock_quantity);
         $this->assertSame(4, $large->fresh()->stock_quantity);
         $this->assertSame(0, $mug->fresh()->stock_quantity);
@@ -547,7 +547,7 @@ class OrderItemResolutionServiceTest extends TestCase
         $this->recordingAdmin();
 
         // Fail after the stock has been taken and the row inserted.
-        Event::listen('eloquent.created: '.OrderItemResolution::class, function (): void {
+        Event::listen('eloquent.created: '.ReturnRefundResolution::class, function (): void {
             throw new RuntimeException('Simulated failure after the insert.');
         });
 
@@ -560,7 +560,7 @@ class OrderItemResolutionServiceTest extends TestCase
         }
 
         $this->assertSame('Simulated failure after the insert.', $thrown?->getMessage());
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(5, $medium->fresh()->stock_quantity);
     }
 
@@ -572,7 +572,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         // Fail after both writes have gone out, so anything short of one
         // transaction around them would leave the stock taken and the row saved.
-        Event::listen('eloquent.created: '.OrderItemResolution::class, function (): void {
+        Event::listen('eloquent.created: '.ReturnRefundResolution::class, function (): void {
             throw new RuntimeException('Simulated failure after the insert.');
         });
 
@@ -585,7 +585,7 @@ class OrderItemResolutionServiceTest extends TestCase
         }
 
         $this->assertSame('Simulated failure after the insert.', $thrown?->getMessage());
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(4, $large->fresh()->stock_quantity);
         $this->assertSame(5, $medium->fresh()->stock_quantity);
     }
@@ -633,7 +633,7 @@ class OrderItemResolutionServiceTest extends TestCase
         $this->assertRejected('order_item_id', fn () => $this->exchange($mugLine, $tumbler, condition: 'damaged'));
 
         $this->assertSame(9, $tumbler->fresh()->stock_quantity);
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
     }
 
     public static function withdrawals(): array
@@ -665,10 +665,10 @@ class OrderItemResolutionServiceTest extends TestCase
         $line = $this->line($this->completedOrder(), $this->product(['price' => 350]), quantity: 2);
 
         $this->assertRejected('refund_amount', fn () => $this->refund($line, 350.01, quantity: 1));
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
 
         $this->refund($line, 350, quantity: 1);
-        $this->assertSame(1, OrderItemResolution::count());
+        $this->assertSame(1, ReturnRefundResolution::count());
     }
 
     public static function invalidRefundInput(): array
@@ -699,7 +699,7 @@ class OrderItemResolutionServiceTest extends TestCase
             'processed_at' => '2026-09-13',
         ], $override)));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
     }
 
     public function test_a_line_cannot_be_refunded_twice(): void
@@ -709,7 +709,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->assertRejected('quantity', fn () => $this->refund($line, 180));
 
-        $this->assertSame(1, OrderItemResolution::count());
+        $this->assertSame(1, ReturnRefundResolution::count());
     }
 
     public function test_refunds_share_out_the_units_that_were_bought(): void
@@ -786,7 +786,7 @@ class OrderItemResolutionServiceTest extends TestCase
 
         $this->assertRejected('order_item_id', fn () => $this->refund($line, 180));
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
     }
 
     public function test_a_deleted_order_does_not_accept_a_resolution(): void
@@ -813,7 +813,7 @@ class OrderItemResolutionServiceTest extends TestCase
             'processed_at' => '2026-09-13',
         ]), AuthorizationException::class);
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(6, $mug->fresh()->stock_quantity);
         $this->assertSame(9, $tumbler->fresh()->stock_quantity);
     }
@@ -830,7 +830,7 @@ class OrderItemResolutionServiceTest extends TestCase
         $shirt->forceDelete();
         $hoodie->forceDelete();
 
-        $resolution = OrderItemResolution::find($resolution->id);
+        $resolution = ReturnRefundResolution::find($resolution->id);
         $this->assertNotNull($resolution, 'Removing catalogue rows must not take the history with it.');
         $this->assertNull($resolution->replacement_product_id);
         $this->assertNull($resolution->replacement_variant_id);

@@ -6,7 +6,7 @@ use App\Enums\OrderItemResolutionType;
 use App\Filament\Resources\ReturnRefunds\ReturnRefundResource;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Services\OrderItemResolutionService;
+use App\Services\ReturnRefundResolutionService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -55,7 +55,7 @@ class CreateReturnRefund extends CreateRecord
                 throw ValidationException::withMessages(['order_item_id' => 'Choose a line from this order.']);
             }
 
-            $service = app(OrderItemResolutionService::class);
+            $service = app(ReturnRefundResolutionService::class);
 
             return $type === OrderItemResolutionType::Refund
                 ? $service->recordRefund($item, auth()->user(), $data)

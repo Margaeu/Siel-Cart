@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_item_resolutions', function (Blueprint $table) {
+        Schema::create('return_refund_resolutions', function (Blueprint $table) {
             $table->id();
 
             // Goes with the line, which goes with its order. That only happens
@@ -66,6 +66,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('order_item_resolutions');
+        Schema::dropIfExists('return_refund_resolutions');
     }
 };

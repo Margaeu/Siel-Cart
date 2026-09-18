@@ -42,15 +42,14 @@ class OrdersTable
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('claimant_name')
-                    ->label('Claimed By')
-                    ->placeholder('Name')
-                    ->toggleable(),
-
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total Amount')
                     ->money('PHP')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('or_number')
+                    ->label('OR Number')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
@@ -154,6 +153,10 @@ class OrdersTable
                             ->label('Contact Phone Number of Receiver')
                             ->placeholder('e.g. 0917123459')
                             ->required(),
+                        TextInput::make('or_number')
+                            ->label('Official Receipt Number')
+                            ->placeholder('e.g. or-2345')
+                            ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
                             $record->updateStatus('completed', 'Order was collected and completed.', auth()->id(),
@@ -162,6 +165,7 @@ class OrdersTable
                                     'completed_at'   => now(),
                                     'claimant_name'  => $data['claimant_name'],
                                     'claimant_phone' => $data['claimant_phone'],
+                                    'or_number' => $data['or_number'],
                                 ],
                             );
 

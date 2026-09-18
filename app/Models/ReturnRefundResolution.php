@@ -16,10 +16,10 @@ use LogicException;
  * is that record and nothing more. It does not run the return, and it never
  * changes the line, the order, or the order's status.
  *
- * Create these through OrderItemResolutionService, which validates them and
+ * Create these through ReturnRefundResolutionService, which validates them and
  * makes whatever stock change an exchange calls for in the same transaction.
  */
-class OrderItemResolution extends Model
+class ReturnRefundResolution extends Model
 {
     protected $fillable = [
         'order_item_id',

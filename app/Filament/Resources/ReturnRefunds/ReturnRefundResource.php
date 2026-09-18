@@ -9,7 +9,7 @@ use App\Filament\Resources\ReturnRefunds\Pages\ViewReturnRefund;
 use App\Filament\Resources\ReturnRefunds\Schemas\ReturnRefundForm;
 use App\Filament\Resources\ReturnRefunds\Schemas\ReturnRefundInfolist;
 use App\Filament\Resources\ReturnRefunds\Tables\ReturnRefundsTable;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -24,14 +24,14 @@ use UnitEnum;
  * Refunds and exchanges UBAP has already carried out, each recorded against
  * the order line it was for.
  *
- * Every record is an OrderItemResolution. They are created only through
- * OrderItemResolutionService (see CreateReturnRefund) and are never changed
+ * Every record is a ReturnRefundResolution. They are created only through
+ * ReturnRefundResolutionService (see CreateReturnRefund) and are never changed
  * afterwards, so there is no edit page and no delete action, and
- * OrderItemResolutionPolicy refuses those abilities too.
+ * ReturnRefundResolutionPolicy refuses those abilities too.
  */
 class ReturnRefundResource extends Resource
 {
-    protected static ?string $model = OrderItemResolution::class;
+    protected static ?string $model = ReturnRefundResolution::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedReceiptRefund;
 
@@ -92,7 +92,7 @@ class ReturnRefundResource extends Resource
     /** e.g. "Refund · ORD-1A2B3C4D" */
     public static function getRecordTitle(?Model $record): string|Htmlable|null
     {
-        if (! $record instanceof OrderItemResolution) {
+        if (! $record instanceof ReturnRefundResolution) {
             return parent::getRecordTitle($record);
         }
 
@@ -100,7 +100,7 @@ class ReturnRefundResource extends Resource
     }
 
     /** The order a resolution belongs to, for anyone allowed to open it. */
-    public static function getOrderUrl(OrderItemResolution $record): ?string
+    public static function getOrderUrl(ReturnRefundResolution $record): ?string
     {
         $order = $record->orderItem?->order;
 

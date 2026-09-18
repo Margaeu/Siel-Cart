@@ -40,6 +40,7 @@ class Order extends Model
         'status',
         'claimant_name',
         'claimant_phone',
+        'or_number',
         'admin_notes',
         // These were being written by the cancel and complete flows without
         // being fillable, so mass assignment dropped them silently -- orders

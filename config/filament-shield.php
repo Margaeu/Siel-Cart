@@ -179,7 +179,7 @@ return [
         ],
         'exclude' => [
             // Access follows the order permissions above -- see
-            // OrderItemResolutionPolicy -- so there is nothing of its own for
+            // ReturnRefundResolutionPolicy -- so there is nothing of its own for
             // Shield to generate, and a generated policy would replace that.
             \App\Filament\Resources\ReturnRefunds\ReturnRefundResource::class,
         ],

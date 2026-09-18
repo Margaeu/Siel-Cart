@@ -10,8 +10,8 @@ use App\Filament\Resources\ReturnRefunds\Pages\CreateReturnRefund;
 use App\Filament\Resources\ReturnRefunds\Pages\ListReturnRefunds;
 use App\Filament\Resources\ReturnRefunds\Pages\ViewReturnRefund;
 use App\Filament\Resources\ReturnRefunds\ReturnRefundResource;
-use App\Models\OrderItemResolution;
-use App\Services\OrderItemResolutionService;
+use App\Models\ReturnRefundResolution;
+use App\Services\ReturnRefundResolutionService;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
@@ -27,12 +27,12 @@ use Tests\TestCase;
 
 /**
  * The admin side, which lives under Returns & Refunds: listing what was
- * recorded, recording a refund or exchange through OrderItemResolutionService,
+ * recorded, recording a refund or exchange through ReturnRefundResolutionService,
  * reading one back, and the links the order page keeps to all of it.
  * Permissions are real here rather than a blanket Gate::before, since who may
  * record is part of what is under test.
  */
-class AdminOrderItemResolutionTest extends TestCase
+class AdminReturnRefundResolutionTest extends TestCase
 {
     use BuildsResolvableOrders, RefreshDatabase;
 
@@ -111,7 +111,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertActionHidden('record_resolution');
 
         // The service refuses this admin on its own as well -- see
-        // OrderItemResolutionServiceTest.
+        // ReturnRefundResolutionServiceTest.
         $this->assertFalse($orderEditor->can('recordResolution', $order));
     }
 
@@ -122,7 +122,7 @@ class AdminOrderItemResolutionTest extends TestCase
         $this->line($order, $this->product(['name' => 'CLSU Shirt', 'price' => 350]));
         $mug = $this->line($order, $this->product(['name' => 'CLSU Mug', 'price' => 180]));
 
-        $this->partialMock(OrderItemResolutionService::class, fn (MockInterface $mock) => $mock
+        $this->partialMock(ReturnRefundResolutionService::class, fn (MockInterface $mock) => $mock
             ->shouldReceive('recordRefund')->once()->passthru());
 
         $this->actingAs($admin);
@@ -143,12 +143,12 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified('Refund recorded');
 
-        $resolution = OrderItemResolution::sole();
+        $resolution = ReturnRefundResolution::sole();
         $page->assertRedirect(ReturnRefundResource::getUrl('view', ['record' => $resolution]));
 
         $this->assertTrue($resolution->orderItem->is($mug));
         $this->assertTrue($resolution->orderItem->order->is($order));
-        $this->assertDatabaseHas('order_item_resolutions', [
+        $this->assertDatabaseHas('return_refund_resolutions', [
             'order_item_id' => $mug->id,
             'type' => 'refund',
             'reason' => 'damaged',
@@ -169,7 +169,7 @@ class AdminOrderItemResolutionTest extends TestCase
         // Ordered in Medium, released in Large, which came back damaged.
         $line = $this->line($order, $shirt, $medium);
 
-        $this->partialMock(OrderItemResolutionService::class, fn (MockInterface $mock) => $mock
+        $this->partialMock(ReturnRefundResolutionService::class, fn (MockInterface $mock) => $mock
             ->shouldReceive('recordExchange')->once()->passthru());
 
         $this->actingAs($admin);
@@ -193,9 +193,9 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified('Exchange recorded');
 
-        $resolution = OrderItemResolution::sole();
+        $resolution = ReturnRefundResolution::sole();
         $this->assertTrue($resolution->orderItem->order->is($order));
-        $this->assertDatabaseHas('order_item_resolutions', [
+        $this->assertDatabaseHas('return_refund_resolutions', [
             'order_item_id' => $line->id,
             'type' => 'exchange',
             'reason' => 'seller_error',
@@ -238,7 +238,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $resolution = OrderItemResolution::sole();
+        $resolution = ReturnRefundResolution::sole();
         $this->assertSame($shirt->id, $resolution->replacement_product_id);
         $this->assertSame($medium->id, $resolution->replacement_variant_id);
         $this->assertSame('Green / Medium', $resolution->replacement_variant_name);
@@ -273,7 +273,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['reason']);
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(5, $medium->fresh()->stock_quantity);
         $this->assertSame(4, $large->fresh()->stock_quantity);
     }
@@ -313,7 +313,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified(ucfirst($type).' recorded');
 
-        $this->assertDatabaseHas('order_item_resolutions', [
+        $this->assertDatabaseHas('return_refund_resolutions', [
             'order_item_id' => $line->id,
             'type' => $type,
             'reason' => $reason,
@@ -383,7 +383,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified('Exchange recorded');
 
-        $this->assertDatabaseHas('order_item_resolutions', [
+        $this->assertDatabaseHas('return_refund_resolutions', [
             'order_item_id' => $line->id,
             'type' => 'exchange',
             'reason' => $reason,
@@ -417,7 +417,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasFormErrors(['quantity'])
             ->assertNotified('Exchange not recorded');
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(1, $medium->fresh()->stock_quantity);
     }
 
@@ -444,7 +444,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasFormErrors(['incorrect_product_id'])
             ->assertNotified('Exchange not recorded');
 
-        $this->assertSame(0, OrderItemResolution::count());
+        $this->assertSame(0, ReturnRefundResolution::count());
         $this->assertSame(6, $mug->fresh()->stock_quantity);
     }
 
@@ -469,7 +469,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->assertHasFormErrors(['refund_amount'])
             ->assertNotified('Refund not recorded');
 
-        $this->assertSame(1, OrderItemResolution::count());
+        $this->assertSame(1, ReturnRefundResolution::count());
     }
 
     public function test_a_recorded_exchange_reads_back_in_full_and_links_to_its_order(): void
@@ -567,7 +567,7 @@ class AdminOrderItemResolutionTest extends TestCase
         // An exchange carried over from before the item released in error was
         // recorded, with no admin on file -- written the way a data migration
         // would, not through the service.
-        $legacy = OrderItemResolution::create([
+        $legacy = ReturnRefundResolution::create([
             'order_item_id' => $line->id,
             'type' => 'exchange',
             'reason' => 'seller_error',
@@ -620,7 +620,7 @@ class AdminOrderItemResolutionTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $this->assertTrue(OrderItemResolution::sole()->orderItem->order->is($order));
+        $this->assertTrue(ReturnRefundResolution::sole()->orderItem->order->is($order));
     }
 
     public function test_the_record_link_is_not_offered_before_the_order_is_collected(): void

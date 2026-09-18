@@ -23,7 +23,7 @@ use Filament\Schemas\Schema;
 /**
  * Records what UBAP already did about an order line: a refund, or an exchange
  * for the item that was ordered, for any reason UBAP accepts a return for.
- * This only collects the details; OrderItemResolutionService decides whether
+ * This only collects the details; ReturnRefundResolutionService decides whether
  * they hold up and does the writing -- see CreateReturnRefund.
  */
 class ReturnRefundForm
