@@ -98,16 +98,50 @@ class EmailVerificationTest extends TestCase
         Notification::assertSentTo($customer, VerifyEmail::class);
     }
 
-    public function test_customer_can_request_another_verification_email_via_get(): void
+    /**
+     * A GET that sends mail can be triggered by a link, an <img> tag, or a
+     * browser prefetch, none of which carry a CSRF token.
+     */
+    public function test_a_get_request_cannot_send_a_verification_email(): void
     {
         Notification::fake();
 
         $customer = Customer::factory()->unverified()->create();
 
-        $response = $this->actingAs($customer, 'customer')->get(route('verification.send'));
+        $this->actingAs($customer, 'customer')
+            ->get(route('verification.send'))
+            ->assertMethodNotAllowed();
 
-        $response->assertSessionHas('status', 'verification-link-sent');
-        Notification::assertSentTo($customer, VerifyEmail::class);
+        Notification::assertNothingSent();
+    }
+
+    public function test_a_guest_cannot_request_a_verification_email(): void
+    {
+        Notification::fake();
+
+        $this->post(route('verification.send'))
+            ->assertRedirect(route('login'));
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_verification_email_requests_are_throttled(): void
+    {
+        Notification::fake();
+
+        $customer = Customer::factory()->unverified()->create();
+
+        for ($i = 0; $i < 6; $i++) {
+            $this->actingAs($customer, 'customer')
+                ->post(route('verification.send'))
+                ->assertSessionHas('status', 'verification-link-sent');
+        }
+
+        $this->actingAs($customer, 'customer')
+            ->post(route('verification.send'))
+            ->assertTooManyRequests();
+
+        Notification::assertSentToTimes($customer, VerifyEmail::class, 6);
     }
 
     public function test_email_can_be_verified(): void

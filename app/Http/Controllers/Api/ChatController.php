@@ -12,10 +12,14 @@ use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
+    public const MAX_MESSAGE_LENGTH = 2000;
+
     public function store(Request $request)
     {
+        // The cap bounds what an anonymous caller can write into chat_messages
+        // and forward to the paid model API in a single request.
         $request->validate([
-            'message' => 'required|string',
+            'message' => 'required|string|max:'.self::MAX_MESSAGE_LENGTH,
         ]);
 
         // 1. Resolve customer ID safely.

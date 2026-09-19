@@ -18,7 +18,6 @@ class ActiveProductsStat extends StatsOverviewWidget
         return [
             Stat::make('Active products', number_format(Product::where('is_active', true)->count()))
                 ->description('Visible in the storefront')
-                ->descriptionIcon('heroicon-m-eye')
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),

@@ -22,7 +22,7 @@ class StatsOverview extends StatsOverviewWidget
         return [
             'default' => 1,
             '@sm' => 2,
-            '@xl' => 3,
+            '@xl' => 2,
         ];
     }
 
@@ -40,7 +40,6 @@ class StatsOverview extends StatsOverviewWidget
         return [
             Stat::make('Pending orders', number_format($pendingOrders))
                 ->description('Needs review')
-                ->descriptionIcon('heroicon-m-clock')
                 ->icon('heroicon-o-shopping-cart')
                 ->color('warning')
                 ->url(route('filament.admin.resources.orders.index', ['tab' => 'pending']))
@@ -56,7 +55,6 @@ class StatsOverview extends StatsOverviewWidget
             */
             Stat::make('Customers', number_format($totalCustomers))
                 ->description(number_format($newCustomersThisMonth).' new this month')
-                ->descriptionIcon('heroicon-m-user-group')
                 ->icon('heroicon-o-user-group')
                 ->color('success')
                 ->url(route('filament.admin.resources.customers.index'))

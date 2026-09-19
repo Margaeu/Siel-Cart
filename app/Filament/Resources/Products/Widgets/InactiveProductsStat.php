@@ -18,7 +18,6 @@ class InactiveProductsStat extends StatsOverviewWidget
         return [
             Stat::make('Inactive products', number_format(Product::where('is_active', false)->count()))
                 ->description('Hidden from customers')
-                ->descriptionIcon('heroicon-m-eye-slash')
                 ->icon('heroicon-o-pause-circle')
                 ->color('warning')
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--yellow']),

@@ -146,7 +146,7 @@
                                         <div class="text-right">
                                             <p class="font-bold text-[var(--color-primary)]">₱{{ number_format($order->total, 2) }}</p>
                                             <span class="inline-block px-2.5 py-1 text-xs font-medium rounded-full {{ 
-                                                $order->status === 'delivered' ? 'bg-emerald-100 text-[var(--color-primary)]' : 
+                                                $order->status === 'completed' ? 'bg-emerald-100 text-[var(--color-primary)]' : 
                                                 ($order->status === 'cancelled' ? 'bg-red-100 text-red-800' : 
                                                 'bg-[#FEF8EA] text-[var(--color-secondary)]') 
                                             }}">

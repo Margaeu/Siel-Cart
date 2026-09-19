@@ -13,7 +13,6 @@ use App\Livewire\ProductDetails;
 use App\Livewire\ProductListing;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Http\Controllers\EmailVerificationNotificationController;
 
 
 /*
@@ -45,9 +44,10 @@ Route::view('/return-refund-policy', 'pages.return-refund-policy')
 Route::view('/faqs', 'pages.faqs')
     ->name('faqs');
 
-Route::match(['GET', 'POST'], '/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-    ->middleware('auth:customer')
-    ->name('verification.send');
+// verification.send is deliberately NOT redefined here. Fortify registers it as
+// POST-only behind auth:customer and throttle:6,1. A GET|POST override used to
+// shadow that route, which let any link, <img> tag, or prefetch mail a new
+// verification email with no CSRF token and no rate limit.
 
 
 /*
@@ -65,10 +65,12 @@ Route::middleware('guest:customer')->group(function () {
     ])->name('password.request');
 
     // Send Password Reset Link
+    // Throttled per IP: every request can send an email, so an unthrottled
+    // endpoint is both a mail-bombing vector and an enumeration oracle.
     Route::post('/forgot-password', [
         ForgotPasswordController::class,
         'sendResetLinkEmail'
-    ])->name('password.email');
+    ])->middleware('throttle:6,1')->name('password.email');
 
     // Reset Password Form
     Route::get('/reset-password/{token}', [
@@ -90,10 +92,13 @@ Route::middleware('guest:customer')->group(function () {
 |--------------------------------------------------------------------------
 */
 
+// Open to guests on purpose, so the throttle is the only thing standing between
+// an anonymous caller and unlimited writes to chat_messages plus paid OpenRouter
+// calls. Stays in the web group so CSRF still applies.
 Route::post('/api/chat', [
     ChatController::class,
     'store'
-]);
+])->middleware('throttle:10,1');
 
 
 /*
@@ -147,7 +152,12 @@ Route::middleware('auth:customer')->group(function () {
 
         $guard->logout();
 
-        request()->session()->regenerate();
+        // invalidate(), not regenerate(): regenerate() only changes the session
+        // id and carries every stored value (intended URL, flashed data, anything
+        // a component stashed) over to the new session. invalidate() flushes it,
+        // and the fresh CSRF token stops a form captured before logout from being
+        // replayed.
+        request()->session()->invalidate();
         request()->session()->regenerateToken();
 
         return redirect('/');

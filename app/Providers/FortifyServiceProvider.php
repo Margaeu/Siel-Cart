@@ -49,11 +49,22 @@ class FortifyServiceProvider extends ServiceProvider
 
             $customer = Customer::where('email', $request->email)->first();
 
-            if (! $customer) {
-                return null;
+            // An unknown email and a wrong password must be indistinguishable to
+            // the caller, so both go down this one branch: same message, same
+            // counted attempt, same lockout. Previously an unknown email returned
+            // null (Fortify's generic message, no lockout) while a wrong password
+            // said "You entered a wrong password." and could lock out, so either
+            // the message or the lockout confirmed the address was registered.
+            // Hashing the submitted password when there is no customer keeps the
+            // response time close to that of a real Hash::check.
+            if ($customer) {
+                $passwordMatches = Hash::check($request->password, $customer->password);
+            } else {
+                Hash::make($request->password);
+                $passwordMatches = false;
             }
 
-            if (! Hash::check($request->password, $customer->password)) {
+            if (! $passwordMatches) {
                 RateLimiter::hit($throttleKey, $decaySeconds);
 
                 // If this hit reached the maximum attempts, show the lockout message immediately.
@@ -66,7 +77,7 @@ class FortifyServiceProvider extends ServiceProvider
                 }
 
                 throw ValidationException::withMessages([
-                    Fortify::username() => __('You entered a wrong password.'),
+                    Fortify::username() => __('auth.failed'),
                 ]);
             }
 

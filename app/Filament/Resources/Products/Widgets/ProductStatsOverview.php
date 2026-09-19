@@ -18,7 +18,6 @@ class ProductStatsOverview extends StatsOverviewWidget
         return [
             Stat::make('Products', number_format(Product::count()))
                 ->description('Catalog items')
-                ->descriptionIcon('heroicon-m-cube')
                 ->icon('heroicon-o-cube')
                 ->color('success')
                 ->extraAttributes(['class' => 'clsu-stat clsu-stat--green']),
