@@ -44,5 +44,11 @@ class AppServiceProvider extends ServiceProvider
             echo " Chatbot server starting on port 3000" . PHP_EOL;
             echo PHP_EOL;
         }
+
+        // The auth activity-log listeners (LogSuccessfulAdminLogin, LogAdminLogout,
+        // LogFailedAdminLogin) are NOT registered here on purpose: Laravel's event
+        // discovery already picks up everything in app/Listeners. Registering them
+        // with Event::listen() as well made every login/logout/failed attempt
+        // write two identical activity-log rows.
     }
 }

@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
 
     /**
      * Statuses that mean the order is no longer a sale, so its units belong
@@ -61,6 +63,33 @@ class Order extends Model
             'completed_at' => 'datetime',
             'stock_restored_at' => 'datetime',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'order_number',
+                'customer_id',
+                'subtotal',
+                'total',
+                'pickup_date',
+                'pickup_slot',
+                'pickup_location',
+                'claim_number',
+                'payment_method',
+                'payment_status',
+                'status',
+                'claimant_name',
+                'claimant_phone',
+                'or_number',
+                'admin_notes',
+                'cancellation_reason',
+                'cancelled_at',
+                'completed_at',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     /**
