@@ -6,83 +6,85 @@
     <title>Login - {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#f4f7ef]">
+<body class="bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] min-h-screen">
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full">
-            <!-- University logo and store name -->
-            <div class="text-center mb-8">
-                {{-- University logo header (temporarily disabled) --}}
-                {{-- <x-customer-auth-brand /> --}}
+        <div class="w-full max-w-md">
+            <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-xl shadow-black/5 sm:p-8">
+                <!-- Brand -->
+                <x-customer-auth-brand />
 
-                <a href="{{ route('home') }}" class="text-3xl font-bold text-[#557F13]">
-                    {{ config('app.name') }}
-                </a>
-                <h2 class="mt-6 text-3xl font-bold text-gray-900">
-                    Welcome back
-                </h2>
-                <p class="mt-2 text-sm text-gray-600">
-                    Don't have an account?
-                    <a href="{{ route('register') }}" class="font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:underline transition">
-                        Sign up
-                    </a>
-                </p>
-            </div>
+                <!-- Heading -->
+                <div class="mt-7">
+                    <h1 class="text-2xl font-bold text-gray-900">Welcome back</h1>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Don't have an account?
+                        <a href="{{ route('register') }}" class="font-semibold text-[#557F13] hover:text-[#3E5D0E] hover:underline transition">
+                            Register here
+                        </a>
+                    </p>
+                </div>
 
-            <!-- Login Form Card -->
-            <div class="bg-white py-8 px-6 shadow-lg rounded-lg border-t-4 border-[#E0A70D]">
                 @if (session('status'))
-                    <div class="mb-4 bg-green-50 border border-[#557F13] text-[#557F13] px-4 py-3 rounded-lg text-sm">
+                    <div class="mt-6 rounded-lg border border-[#557F13]/30 bg-[#557F13]/5 px-4 py-3 text-sm text-[#3E5D0E]">
                         {{ session('status') }}
                     </div>
                 @endif
 
-                @php
-                    // A failed sign-in clears both fields (the email is not
-                    // repopulated) but highlights both so the error stays clear.
-                    $loginFailed = $errors->has('email');
-                    $inputBase = 'w-full px-4 py-2 border rounded-lg focus:outline-none transition';
-                    $inputValid = 'border-gray-300 focus:border-[#557F13]';
-                    $inputInvalid = 'border-red-500 focus:border-red-600';
-                @endphp
-
-                <form method="POST" action="{{ route('login') }}">
+                <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-5">
                     @csrf
 
                     <!-- Email -->
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                            Email Address
+                    <div>
+                        <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Email
                         </label>
-                        <input id="email"
-                               type="email"
-                               name="email"
-                               required
-                               autofocus
-                               @if ($loginFailed) aria-invalid="true" @endif
-                               @class([$inputBase, $inputInvalid => $loginFailed, $inputValid => ! $loginFailed])>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.007 1.872l-7.5 5a2.25 2.25 0 0 1-2.486 0l-7.5-5A2.25 2.25 0 0 1 2.25 6.993V6.75" />
+                                </svg>
+                            </span>
+                            <input id="email"
+                                   type="email"
+                                   name="email"
+                                   value="{{ old('email') }}"
+                                   required
+                                   autofocus
+                                   placeholder="you@clsu.edu.ph"
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                        </div>
                         @error('email')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Password -->
-                    <div class="mb-4">
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                            Password
-                        </label>
+                    <div>
+                        <div class="mb-1.5 flex items-center justify-between">
+                            <label for="password" class="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Password
+                            </label>
+                            <a href="{{ route('password.request') }}" class="text-xs font-medium text-[#557F13] hover:text-[#E0A70D] transition">
+                                Forgot password?
+                            </a>
+                        </div>
                         <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                </svg>
+                            </span>
                             <input id="password"
                                    type="password"
                                    name="password"
                                    required
-                                   @if ($loginFailed || $errors->has('password')) aria-invalid="true" @endif
-                                   @class([$inputBase, 'pr-11', $inputInvalid => $loginFailed || $errors->has('password'), $inputValid => ! ($loginFailed || $errors->has('password'))])>
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
                             <button type="button"
                                     data-password-toggle="password"
                                     aria-controls="password"
                                     aria-pressed="false"
                                     aria-label="Show password"
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
                                 <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -93,39 +95,38 @@
                             </button>
                         </div>
                         @error('password')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Remember Me & Forgot Password -->
-                    <div class="flex items-center justify-between mb-6">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="checkbox" 
-                                   name="remember" 
-                                   class="w-4 h-4 text-[#557F13] border-gray-300 rounded focus:ring-[#E0A70D]">
-                            <span class="ml-2 text-sm text-gray-600">Remember me</span>
-                        </label>
+                    <!-- Remember Me -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox"
+                               name="remember"
+                               class="size-4 rounded border-gray-300 text-[#557F13] focus:ring-[#E0A70D]">
+                        <span class="text-sm text-gray-600">Remember me for 30 days</span>
+                    </label>
 
-                        <a href="{{ route('password.request') }}" 
-                           class="text-sm font-medium text-[#557F13] hover:text-[#E0A70D] transition">
-                            Forgot password?
-                        </a>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit" 
-                            class="w-full bg-[#557F13] text-white py-3 px-4 rounded-lg hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2 transition font-semibold shadow-md">
+                    <!-- Submit -->
+                    <button type="submit"
+                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#557F13] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2">
                         Sign In
+                        <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                        </svg>
                     </button>
                 </form>
-            </div>
 
-            <!-- Back to Home -->
-            <p class="mt-6 text-center text-sm text-gray-600">
-                <a href="{{ route('home') }}" class="font-medium text-[#557F13] hover:text-[#E0A70D] transition">
-                    ← Back to Home
-                </a>
-            </p>
+                <!-- Trust footer -->
+                <p class="mt-6 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-xs text-gray-500">
+                    <svg class="size-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z" />
+                    </svg>
+                    <span>Secure sign-in</span>
+                    <span aria-hidden="true">&middot;</span>
+                    <a href="{{ route('privacy-policy') }}" class="underline hover:text-[#557F13] transition">Privacy Policy</a>
+                </p>
+            </div>
         </div>
     </div>
 
