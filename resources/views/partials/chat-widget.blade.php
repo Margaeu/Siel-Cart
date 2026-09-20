@@ -8,23 +8,19 @@
     Accent colours: #557F13 (site primary) with #FFD801 highlights.
 --}}
 
-<style>
-    /* Hide native scrollbars for suggestion chips row */
-    .no-scrollbar {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
-    }
-    .no-scrollbar::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Opera */
-    }
-    /*
-        The .chat-mobile fullscreen override that used to live here was dropped:
-        the widget now sizes itself responsively through its own utility classes
-        (see the panel below), so a JS-toggled class forcing 100vw/100vh is both
-        redundant and wrong -- it cancelled the 16px mobile gutter and used vh,
-        which overflows a phone whose browser chrome is showing.
-    */
-</style>
+{{--
+    This partial used to carry a style block with two rules, both now gone:
+
+    .no-scrollbar hid the scrollbar on the horizontal suggestion strip. The
+    suggestions stack vertically inside the transcript now, so there is no strip
+    and nothing to hide -- and the transcript's own scrollbar should stay
+    visible.
+
+    .chat-mobile forced the panel to 100vw/100vh on small screens. The panel
+    sizes itself responsively through its own utility classes below, so the
+    override was both redundant and wrong: it cancelled the 16px mobile gutter
+    and used vh, which overflows a phone whose browser chrome is showing.
+--}}
 
 <!-- Floating AI Chatbot Toggle Button -->
 {{--
@@ -79,10 +75,16 @@
         <div class="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-none bg-white text-gray-800 border border-gray-100 shadow-sm">
             Hello! How can I help you find what you're looking for today?
         </div>
-    </div>
-    <!-- Suggested quick questions (moved below messages so messages can fill the area) -->
-    <div id="chat-suggestions" class="px-3 pt-2 pb-3 bg-transparent border-t border-gray-100">
-        <!-- Buttons inserted by JS -->
+        {{--
+            The quick questions belong to the greeting, so they sit inside the
+            transcript directly beneath it rather than in their own strip above
+            the input. They scroll away with the greeting once the conversation
+            moves on, which is the point: they are an opening prompt, not a
+            permanent toolbar competing with the input field.
+        --}}
+        <div id="chat-suggestions">
+            <!-- Buttons inserted by JS -->
+        </div>
     </div>
 
     <!-- Input Area -->
@@ -144,7 +146,6 @@
             msgDiv.innerText = text;
             messagesBox.appendChild(msgDiv);
             messagesBox.scrollTop = messagesBox.scrollHeight;
-            adjustMessagesPadding();
         }
 
         // Send a prepared message (used by suggestion buttons)
@@ -273,16 +274,26 @@
             if (!container) return;
             container.innerHTML = '';
 
+            // Stacked vertically, not in a horizontal strip. The strip clipped
+            // every question past the first: "Where and when do I pick up my
+            // order?" rendered as "Where and when do I pi" with the rest behind
+            // a hidden-scrollbar overflow, so the options were unreadable
+            // without a drag that nothing advertised.
+            //
+            // items-start keeps each chip the width of its own text instead of
+            // stretching it across the panel, so the column reads as a list of
+            // replies under the greeting rather than a menu bar. max-w matches
+            // the message bubbles above it; whitespace-normal lets a long
+            // question wrap to a second line instead of overflowing.
             const wrapper = document.createElement('div');
-            wrapper.className = 'flex gap-2 overflow-x-auto no-scrollbar py-1';
-            wrapper.style.whiteSpace = 'nowrap';
+            wrapper.className = 'flex flex-col items-start gap-2 pt-1';
 
             SUGGESTED_QUESTIONS.forEach(q => {
                 if (usedSuggestions.has(q)) return; // skip used ones
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'inline-block text-sm px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition';
+                btn.className = 'max-w-[85%] text-left whitespace-normal text-sm px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:border-[var(--color-primary)] transition';
                 btn.innerText = q;
                 btn.onclick = () => {
                     usedSuggestions.add(q);
@@ -293,22 +304,17 @@
             });
 
             container.appendChild(wrapper);
-            adjustMessagesPadding();
         }
 
-        // Ensure messages area has bottom padding to avoid overlap with suggestions + input
-        function adjustMessagesPadding() {
-            const suggestions = document.getElementById('chat-suggestions');
-            const inputArea = document.querySelector('#chat-widget > div:last-of-type');
-            if (!messagesBox) return;
-            let extra = 0;
-            if (suggestions) extra += suggestions.offsetHeight;
-            if (inputArea) extra += inputArea.offsetHeight;
-            // add some breathing room
-            extra += 18;
-            messagesBox.style.paddingBottom = extra + 'px';
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-        }
+        // adjustMessagesPadding() used to run here and after every appended
+        // message. It added the suggestion and input heights as bottom padding
+        // on the message list to stop them overlapping it, but they never
+        // overlapped -- #chat-widget is a flex column and they were siblings, so
+        // the flex-1 list was already laid out above them. It also scrolled the
+        // list to the bottom, which is now actively wrong: the suggestions sit
+        // under the greeting, and scrolling to the bottom on first render pushed
+        // the greeting they belong to off the top of a short panel. appendMessage
+        // still scrolls on its own, which is the only place that should.
 
         // Render suggestions immediately so users see them before typing
         renderSuggestions();

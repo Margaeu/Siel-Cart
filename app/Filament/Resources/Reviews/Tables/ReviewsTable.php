@@ -140,7 +140,7 @@ class ReviewsTable
                     })
                     ->visible(fn (Review $record): bool => $record->is_approved),
 
-                EditAction::make(),
+                //EditAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

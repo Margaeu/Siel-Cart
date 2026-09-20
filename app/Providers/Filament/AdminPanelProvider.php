@@ -46,6 +46,19 @@ class AdminPanelProvider extends PanelProvider
                 provider: LocalFontProvider::class,
             )
             // ->databaseNotifications()
+            // Filament turns the topbar search on by itself as soon as any resource is
+            // globally searchable (a `$recordTitleAttribute` is enough — CustomerResource
+            // and others set one). Admins navigate through the sidebar groups instead, so
+            // the field is switched off at the panel rather than by stripping the
+            // attribute off every resource, which would also break relation-manager and
+            // select-field record labels.
+            ->globalSearch(false)
+            // The panel is light-only: no light/dark/system switcher in the user menu.
+            // darkMode(false) is what removes it — themeSwitcher(false) alone would hide
+            // the control while still letting a stored `theme` render the panel dark.
+            // It also has the layout write localStorage.theme = 'light' on every load, so
+            // an admin who had already picked dark is reset instead of stuck there.
+            ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()
             // The desktop sidebar toggle ships as a chevron that flips direction with
             // the sidebar state. Both aliases get the hamburger so the control keeps one

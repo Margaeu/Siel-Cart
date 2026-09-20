@@ -19,13 +19,6 @@ class BannersTable
                     ->label('')
                     ->disk('r2')
                     ->square(),
-                TextColumn::make('title')
-                    ->searchable()
-                    ->placeholder('—'),
-                TextColumn::make('subtitle')
-                    ->searchable()
-                    ->placeholder('—')
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('is_active')
                     ->label('Active')
                     ->badge()

@@ -104,19 +104,12 @@ class ProductForm
                                         TextInput::make('price')
                                             ->required()
                                             ->numeric()
-                                            // numeric()/integer() render type="number", whose spinner
-                                            // arrows and mouse-wheel stepping let a price or stock count
-                                            // change by accident while scrolling the form. A text input
-                                            // is typed-only; the numeric/integer/min rules still validate
-                                            // server-side, and inputMode keeps the numeric mobile keypad.
                                             ->type('text')
                                             ->minValue(0)
                                             ->step(0.01)
                                             ->helperText('Selling price')
                                             ->prefix('₱'),
                                     ])->columns(2),
-                                // Labels and hints match the variant card in the Product
-                                // Variants tab, so the same field reads the same either way.
                                 Section::make('Inventory')
                                     ->description('Track available units and choose when the dashboard should flag low stock.')
                                     ->schema([
@@ -146,6 +139,7 @@ class ProductForm
                                     ->description('Shared images shown for every variant — size charts, packaging, model displays. The first image will be the primary image. Per-variant photos are uploaded under the Product Variants tab.')
                                     ->schema([
                                         FileUpload::make('generalImages')
+                                            ->helperText('Recommended size: Max 2MB.')
                                             ->disk('r2')
                                             ->visibility('public')
                                             ->label('Product Images')
@@ -295,7 +289,7 @@ class ProductForm
                                                     ->disk('r2')
                                                     ->visibility('public')
                                                     ->label('Variant Images')
-                                                    ->helperText('Shown when a customer selects this variant. Leave empty to keep showing the shared product images.')
+                                                    ->helperText('Shown when a customer selects this variant. Leave empty to keep showing the shared product images. Recommended size: Max 2MB.')
                                                     ->multiple()
                                                     ->image()
                                                     ->panelLayout('grid')

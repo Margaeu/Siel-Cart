@@ -32,7 +32,7 @@ class CategoriesTable
                     ->counts('products')
                     ->sortable(),
                 TextColumn::make('sort_order')
-                    ->label('Order')
+                    ->label('Sort Order')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('is_active')

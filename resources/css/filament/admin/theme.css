@@ -15,7 +15,12 @@
 
        These rules are same-specificity overrides of Filament's own `.fi-topbar` block.
        They work because this file is imported after Filament's stylesheet and both sit
-       in `layer(components)`, so source order decides. Keep them in this layer. */
+       in `layer(components)`, so source order decides. Keep them in this layer.
+
+       The `.dark` rules further down are inert: AdminPanelProvider calls
+       `->darkMode(false)`, so `.dark` is never applied and the panel is light-only.
+       They are kept as the correct dark styling should the switcher ever come back —
+       if you add a component here, note that its dark variant is currently untestable. */
 
     /* 4rem is Filament's default and leaves the brand cramped at storefront scale.
        Filament drives the topbar, the sidebar's top offset and height, the sidebar
@@ -49,9 +54,9 @@
 
     /* The sidebar toggles are `color="gray"` icon buttons (gray-500, gray-600 on
        hover). The hover selector carries Filament's specificity, hence the second
-       selector rather than a single rule. Scoped to the toggles themselves so the
-       global search results panel — which renders inside .fi-topbar on its own white
-       surface — keeps its own colours. */
+       selector rather than a single rule. Scoped with `>` to the toggles sitting
+       directly on the green bar, so any panel that renders inside .fi-topbar on its
+       own white surface (dropdowns, the user menu) keeps its own colours. */
     .fi-topbar > .fi-icon-btn,
     .fi-topbar-collapse-sidebar-btn-ctn .fi-icon-btn,
     .fi-topbar > .fi-icon-btn:not(.fi-disabled):not([disabled]):hover,
