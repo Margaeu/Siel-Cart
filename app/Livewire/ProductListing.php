@@ -156,6 +156,11 @@ class ProductListing extends Component
 
         $products = $query->paginate(12);
 
+        // Keep the "All Products" count independent from the filters applied
+        // to the paginated listing. Using $products->total() in the sidebar
+        // makes this number become the selected category's result count.
+        $allProductsCount = Product::active()->count();
+
         // Count only what the listing itself will show, so the sidebar total
         // cannot claim more products than the category actually renders.
         $categories = Category::where('is_active', true)
@@ -166,6 +171,7 @@ class ProductListing extends Component
         return view('livewire.product-listing', [
             'products' => $products,
             'categories' => $categories,
+            'allProductsCount' => $allProductsCount,
         ])
             ->layout('components.layouts.front-end-layout');
     }

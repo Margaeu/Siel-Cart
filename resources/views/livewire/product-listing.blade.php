@@ -17,17 +17,13 @@
         (bool) $inStock,
     ])->filter()->count();
 
-    // Which price shortcut the current bounds correspond to, so the radios can
-    // show the customer what is already applied instead of always reading as
-    // unset. Anything the shortcuts cannot express (a hand-typed range) falls
-    // through to null and leaves every radio unchecked.
-    $pricePreset = match (true) {
-        ! $minPriceActive && $maxPriceActive && (float) $maxPrice === 300.0 => 'under-300',
-        $minPriceActive && (float) $minPrice === 300.0 && $maxPriceActive && (float) $maxPrice === 500.0 => '300-500',
-        $minPriceActive && (float) $minPrice === 500.0 && ! $maxPriceActive => 'over-500',
-        ! $minPriceActive && ! $maxPriceActive => 'any',
-        default => null,
-    };
+    $sortOptions = [
+        'newest' => 'Newest',
+        'price_low' => 'Price: Low to High',
+        'price_high' => 'Price: High to Low',
+        'popular' => 'Popular',
+    ];
+    $currentSortLabel = $sortOptions[$sort] ?? $sortOptions['newest'];
 
     // Shared control chrome. Every interactive target on this page clears the
     // 44px minimum, which is why these all carry a min-h-11 rather than
@@ -100,7 +96,7 @@
         </div>
 
         {{-- Control bar: filters disclosure on the left, sorting always on the right --}}
-        <div class="flex items-center justify-between gap-3 py-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 py-4">
             {{-- Small-screen filter disclosure --}}
             <button
                 type="button"
@@ -136,18 +132,91 @@
             </button>
 
             {{-- Sorting stays reachable without opening the filters --}}
-            <div class="flex min-w-0 items-center gap-2">
-                <label for="catalog-sort" class="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Sort</label>
-                <select
-                    id="catalog-sort"
-                    wire:model.live="sort"
-                    class="h-11 min-w-0 rounded-full border border-gray-300 bg-white py-0 pl-3 pr-8 text-sm font-semibold text-gray-900 transition hover:border-gray-400 {{ $focusRing }}"
-                >
-                    <option value="newest">Newest</option>
-                    <option value="price_low">Price: Low to High</option>
-                    <option value="price_high">Price: High to Low</option>
-                    <option value="popular">Popular</option>
-                </select>
+            <div
+                class="ml-auto flex w-full min-w-0 items-center justify-end gap-2 sm:w-auto"
+                x-data="{
+                    open: false,
+                    focusOption(step) {
+                        const options = [...this.$refs.menu.querySelectorAll('[role=menuitemradio]')];
+                        const current = options.indexOf(document.activeElement);
+                        const next = current === -1
+                            ? (step > 0 ? 0 : options.length - 1)
+                            : (current + step + options.length) % options.length;
+
+                        options[next]?.focus();
+                    },
+                }"
+                x-on:click.outside="open = false"
+            >
+                <span id="catalog-sort-label" class="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Sort</span>
+
+                <div class="relative min-w-0">
+                    <button
+                        id="catalog-sort-button"
+                        x-ref="trigger"
+                        type="button"
+                        aria-haspopup="menu"
+                        aria-labelledby="catalog-sort-label catalog-sort-value"
+                        x-bind:aria-expanded="open ? 'true' : 'false'"
+                        x-on:click="open = ! open"
+                        x-on:keydown.arrow-down.prevent="open = true; $nextTick(() => focusOption(1))"
+                        x-on:keydown.arrow-up.prevent="open = true; $nextTick(() => focusOption(-1))"
+                        x-on:keydown.escape.prevent="open = false"
+                        class="group flex h-11 w-56 max-w-[calc(100vw-6.5rem)] items-center justify-between gap-3 rounded-full border border-gray-300 bg-white px-4 text-left text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:shadow {{ $focusRing }}"
+                    >
+                        <span id="catalog-sort-value" class="min-w-0 truncate">{{ $currentSortLabel }}</span>
+                        <svg
+                            class="size-4 shrink-0 text-[var(--color-primary)] transition-transform duration-200"
+                            x-bind:class="open ? 'rotate-180' : ''"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6" />
+                        </svg>
+                    </button>
+
+                    <div
+                        x-ref="menu"
+                        x-show="open"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="scale-95 opacity-0"
+                        x-transition:enter-end="scale-100 opacity-100"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="scale-100 opacity-100"
+                        x-transition:leave-end="scale-95 opacity-0"
+                        x-on:keydown.escape.stop.prevent="open = false; $refs.trigger.focus()"
+                        x-on:keydown.arrow-down.prevent="focusOption(1)"
+                        x-on:keydown.arrow-up.prevent="focusOption(-1)"
+                        x-on:keydown.home.prevent="$el.querySelector('[role=menuitemradio]')?.focus()"
+                        x-on:keydown.end.prevent="$el.querySelector('[role=menuitemradio]:last-of-type')?.focus()"
+                        role="menu"
+                        aria-labelledby="catalog-sort-button"
+                        class="absolute right-0 z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] origin-top-right overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-[0_18px_45px_-18px_rgba(17,24,39,0.35)]"
+                    >
+                        @foreach($sortOptions as $value => $label)
+                            <button
+                                type="button"
+                                role="menuitemradio"
+                                aria-checked="{{ $sort === $value ? 'true' : 'false' }}"
+                                wire:click="$set('sort', '{{ $value }}')"
+                                x-on:click="open = false; $nextTick(() => $refs.trigger.focus())"
+                                class="flex min-h-11 w-full items-center justify-between gap-4 rounded-xl px-3.5 text-left text-sm transition {{ $sort === $value ? 'bg-[color-mix(in_srgb,var(--color-primary)_9%,white)] font-bold text-[var(--color-primary)]' : 'font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-950' }} {{ $focusRing }}"
+                            >
+                                <span>{{ $label }}</span>
+                                @if($sort === $value)
+                                    <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-white" aria-hidden="true">
+                                        <svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m5 12 4 4L19 6" />
+                                        </svg>
+                                    </span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -193,7 +262,7 @@
                                 <span class="h-4 w-[3px] shrink-0 rounded-full {{ ! $category ? 'bg-[var(--color-primary)]' : 'bg-transparent' }}" aria-hidden="true"></span>
                                 All Products
                             </span>
-                            <span class="text-xs text-gray-500">{{ $products->total() }}</span>
+                            <span data-testid="all-products-count" class="text-xs text-gray-500">{{ $allProductsCount }}</span>
                         </button>
 
                         @foreach($categories as $cat)
@@ -233,41 +302,7 @@
                     </button>
 
                     <div id="filter-price" x-show="open" class="text-sm text-gray-700">
-                        {{--
-                            Radios, not checkboxes: the shortcuts are mutually
-                            exclusive bounds on one range, and as checkboxes they
-                            never reflected what was applied. Each one sets both
-                            ends in a single round trip -- $set with live=false
-                            stages the first value so only the second commits.
-                        --}}
-                        @php
-                            // Clearing an upper bound means putting it back at the
-                            // top of the range, not emptying it: render() treats an
-                            // empty maxPrice as the ceiling anyway, but leaving the
-                            // number input blank would hide which range is in force.
-                            $ceiling = (int) $priceCeiling;
-                        @endphp
-                        @foreach([
-                            ['any', 'Any price', "''", $ceiling],
-                            ['under-300', 'Under ₱300', "''", 300],
-                            ['300-500', '₱300 – ₱500', 300, 500],
-                            ['over-500', 'Over ₱500', 500, $ceiling],
-                        ] as [$value, $label, $min, $max])
-                            <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-1 transition hover:bg-gray-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--color-primary)] has-[:focus-visible]:ring-offset-2">
-                                <input
-                                    type="radio"
-                                    name="price-preset"
-                                    value="{{ $value }}"
-                                    @checked($pricePreset === $value)
-                                    x-on:change="$wire.$set('minPrice', {!! $min !!}, false); $wire.$set('maxPrice', {!! $max !!})"
-                                    class="size-4 shrink-0 border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                >
-                                <span>{{ $label }}</span>
-                            </label>
-                        @endforeach
-
-                        {{-- Custom range --}}
-                        <div class="flex items-end gap-2 pt-3">
+                        <div class="flex items-end gap-2 pt-2">
                             <div class="min-w-0 flex-1">
                                 <label for="price-min" class="mb-1 block text-[11px] font-medium text-gray-500">Min</label>
                                 <div class="relative">
