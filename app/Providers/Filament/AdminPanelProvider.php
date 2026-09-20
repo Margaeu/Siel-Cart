@@ -13,7 +13,8 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsIconAlias;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -42,8 +43,21 @@ class AdminPanelProvider extends PanelProvider
             )
             //->databaseNotifications()
             ->sidebarCollapsibleOnDesktop()
+            // The desktop sidebar toggle ships as a chevron that flips direction with
+            // the sidebar state. Both aliases get the hamburger so the control keeps one
+            // icon either way, matching the mobile toggle (already Heroicon::OutlinedBars3).
+            // The RTL aliases need no entry: the blade passes [rtlAlias, alias] and
+            // IconManager::resolve() walks that list in order, so these cover RTL too.
+            ->icons([
+                PanelsIconAlias::SIDEBAR_COLLAPSE_BUTTON => Heroicon::OutlinedBars3,
+                PanelsIconAlias::SIDEBAR_EXPAND_BUTTON => Heroicon::OutlinedBars3,
+            ])
             ->defaultAvatarProvider(SielAvatarProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
+            // Only `primary` is overridden; every other slot (gray, info, success,
+            // warning, danger) is left at Filament's default so the panel keeps the
+            // stock Filament look with CLSU green as the accent. theme.css reads these
+            // through --color-*-* rather than repeating the hex values.
             ->colors([
                 'primary' => [
                     50 => '#f4f8ec',
@@ -58,20 +72,6 @@ class AdminPanelProvider extends PanelProvider
                     900 => '#304415',
                     950 => '#172508',
                 ],
-                'secondary' => [
-                    50 => '#fffde6',
-                    100 => '#fff9b0',
-                    200 => '#fff475',
-                    300 => '#ffeb3b',
-                    400 => '#ffe514',
-                    500 => '#ffde0a',
-                    600 => '#ffd801',
-                    700 => '#c7a800',
-                    800 => '#9b8300',
-                    900 => '#806c00',
-                    950 => '#493d00',
-                ],
-                'warning' => Color::Amber,
             ])
             ->navigationGroups([
                 'System Administration',

@@ -4,205 +4,23 @@
 @source '../../../../resources/views/filament/**/*';
 
 @layer components {
-    :root {
-        --clsu-page: #f6f8f3;
-        --clsu-surface: #ffffff;
-        --clsu-leaf: #557f13;
-        --clsu-leaf-dark: #436611;
-        --clsu-sun: #ffd801;
-        --clsu-sun-hover: #e6c200;
-        --clsu-mist: #e4eadc;
-        --clsu-ink: #20350f;
-    }
-
-    .fi-body {
-        background-color: var(--clsu-page);
-    }
-
-    .fi-main {
-        padding-inline: clamp(1rem, 2.5vw, 2.5rem);
-    }
-
-    .fi-page-header-main-ctn {
-        gap: clamp(1.75rem, 3vw, 2.5rem);
-        padding-block: clamp(1.5rem, 3vw, 2.5rem) 3rem;
-    }
-
-    .fi-header {
-        min-height: 8.25rem;
-        gap: 1.5rem;
-        border-radius: 1.25rem;
-        background-color: var(--clsu-leaf);
-        padding: clamp(1.35rem, 3vw, 2rem);
-        box-shadow: 0 8px 24px rgb(32 53 15 / 0.08);
-    }
-
-    .fi-header > div:first-child {
-        display: flex;
-        min-width: 0;
-        flex-direction: column;
-    }
-
-    .fi-header .fi-header-heading {
-        order: 1;
-        color: #ffffff;
-        font-size: clamp(1.65rem, 3vw, 2.15rem);
-        line-height: 1.15;
-        letter-spacing: -0.025em;
-    }
-
-    .fi-header .fi-breadcrumbs {
-        order: 2;
-        display: block;
-        margin: 0.7rem 0 0;
-    }
-
-    .fi-header .fi-breadcrumbs-item {
-        color: rgb(255 255 255 / 0.72);
-        font-size: 0.8125rem;
-        font-weight: 550;
-    }
-
-    .fi-header .fi-breadcrumbs-item-label {
-        color: inherit;
-    }
-
-    .fi-header a.fi-breadcrumbs-item-label:hover {
-        color: #ffffff;
-    }
-
-    .fi-header .fi-breadcrumbs-item-separator {
-        color: rgb(255 255 255 / 0.4);
-    }
-
-    .fi-header .fi-header-subheading {
-        order: 3;
-        color: rgb(255 255 255 / 0.75);
-    }
-
-    .fi-header.fi-header-has-breadcrumbs .fi-header-actions-ctn {
-        margin-top: 0;
-    }
-
-    .fi-header .fi-header-actions-ctn {
-        align-self: center;
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-primary,
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success,
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray,
-    .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color) {
-        background-color: var(--clsu-sun);
-        color: #111827;
-        box-shadow: 0 1px 2px rgb(66 32 6 / 0.16);
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-primary:hover,
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-success:hover,
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-gray:hover,
-    .fi-header .fi-header-actions-ctn .fi-btn:not(.fi-color):hover {
-        background-color: var(--clsu-sun-hover);
-        background-image: linear-gradient(135deg, var(--clsu-sun-hover) 0%, var(--clsu-sun) 100%);
-        color: #000000;
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning {
-        background-color: var(--clsu-sun);
-        color: #422006;
-        box-shadow: 0 1px 2px rgb(66 32 6 / 0.16);
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-warning:hover {
-        background-color: var(--clsu-sun-hover);
-        background-image: linear-gradient(135deg, var(--clsu-sun-hover) 0%, var(--clsu-sun) 100%);
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-danger {
-        background-color: #dc2626;
-        color: #ffffff;
-        box-shadow: 0 1px 2px rgb(127 29 29 / 0.2);
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn.fi-color-danger:hover {
-        background-color: #ef4444;
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-ac > .fi-btn:not(.fi-color-danger) + .fi-btn.fi-color-danger {
-        margin-inline-start: 0.75rem;
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn > .fi-icon {
-        color: inherit;
-    }
-
-    .fi-header .fi-header-actions-ctn .fi-btn:focus-visible {
-        outline: 2px solid #ffffff;
-        outline-offset: 3px;
-    }
-
-    .fi-section:not(.fi-section-not-contained),
-    .fi-ta-ctn {
-        border: 1px solid var(--clsu-mist);
-        box-shadow: 0 2px 8px rgb(32 53 15 / 0.035);
-    }
-
-    .fi-resource-create-record-page .fi-section:not(.fi-section-not-contained),
-    .fi-resource-edit-record-page .fi-section:not(.fi-section-not-contained) {
-        border-radius: 1rem;
-        background-color: var(--clsu-surface);
-    }
-
-    .fi-resource-create-record-page .fi-section-header-heading,
-    .fi-resource-edit-record-page .fi-section-header-heading {
-        color: var(--clsu-ink);
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-    }
+    /* Panel chrome — topbar, sidebar, page header, tables, sections — is deliberately
+       left to Filament's own stylesheet, so the panel keeps the stock Filament look.
+       Only the custom components below are styled here, and they pull their accent from
+       --color-primary-* / --color-gray-* / --color-danger-* instead of hardcoding hex
+       values, so recolouring the panel means editing AdminPanelProvider::panel() and
+       nothing else. Do not reintroduce brand hex codes in this file. */
 
     .fi-resource-create-record-page .fi-section-header-description,
     .fi-resource-edit-record-page .fi-section-header-description {
         max-width: 54rem;
-        color: #687361;
         line-height: 1.5;
     }
 
-    .fi-resource-create-record-page .fi-fo-field-label-content,
-    .fi-resource-edit-record-page .fi-fo-field-label-content {
-        color: #34412d;
-        font-weight: 650;
-    }
-
-    .fi-resource-create-record-page .fi-fo-field-content-col > .fi-sc-text,
-    .fi-resource-edit-record-page .fi-fo-field-content-col > .fi-sc-text {
-        color: #76816f;
-        font-size: 0.8125rem;
-        line-height: 1.4;
-    }
-
-    .fi-btn {
-        border-radius: 0.625rem;
-        font-weight: 650;
-    }
-
-    .fi-simple-page form .fi-btn.fi-color-primary {
-        background-color: var(--clsu-leaf);
-        color: #ffffff;
-        box-shadow: 0 1px 2px rgb(23 37 8 / 0.18);
-    }
-
-    .fi-simple-page form .fi-btn.fi-color-primary:hover {
-        background-color: #436611;
-        color: #ffffff;
-    }
-
-    .fi-simple-page form .fi-btn.fi-color-primary:focus-visible {
-        outline: 2px solid var(--clsu-leaf);
-        outline-offset: 3px;
-    }
-
-    .fi-simple-page form .fi-btn.fi-color-primary > .fi-icon {
-        color: inherit;
+    .fi-resource-create-record-page form#form > .fi-sc-actions,
+    .fi-resource-edit-record-page form#form > .fi-sc-actions {
+        border-top: 1px solid var(--color-gray-200);
+        padding-top: 1.25rem;
     }
 
     .fi-simple-page form .fi-input-wrp.fi-invalid:focus-within {
@@ -213,15 +31,14 @@
         display: flex;
         align-items: flex-start;
         gap: 0.75rem;
-        border: 1px solid #fda4af;
+        border: 1px solid var(--color-danger-300);
         border-radius: 0.625rem;
-        background-color: #fff1f2;
+        background-color: var(--color-danger-50);
         padding: 0.875rem 1rem;
-        color: #9f1239;
+        color: var(--color-danger-700);
         font-size: 0.875rem;
         font-weight: 600;
         line-height: 1.5;
-        box-shadow: 0 1px 2px rgb(159 18 57 / 0.08);
     }
 
     .clsu-login-error__icon {
@@ -232,23 +49,17 @@
     }
 
     .dark .clsu-login-error {
-        border-color: #9f1239;
-        background-color: #4c0519;
-        color: #ffe4e6;
-    }
-
-    .fi-resource-create-record-page form#form > .fi-sc-actions,
-    .fi-resource-edit-record-page form#form > .fi-sc-actions {
-        border-top: 1px solid var(--clsu-mist);
-        padding-top: 1.25rem;
+        border-color: var(--color-danger-800);
+        background-color: var(--color-danger-950);
+        color: var(--color-danger-200);
     }
 
     .clsu-user-profile {
         max-width: 70rem;
-        border: 1px solid var(--clsu-mist);
+        border: 1px solid var(--color-gray-200);
         border-radius: 0.75rem;
-        background: var(--clsu-surface);
-        color: var(--clsu-ink);
+        background: #ffffff;
+        color: var(--color-gray-950);
         overflow: hidden;
         container-type: inline-size;
     }
@@ -259,7 +70,7 @@
         justify-content: space-between;
         gap: 1rem;
         padding: 1.5rem;
-        border-bottom: 1px solid var(--clsu-mist);
+        border-bottom: 1px solid var(--color-gray-200);
     }
 
     .clsu-user-profile__header h2 {
@@ -280,15 +91,15 @@
     }
 
     .clsu-user-profile__status--active {
-        border-color: #bbf7d0;
-        background: #f0fdf4;
-        color: #15803d;
+        border-color: var(--color-success-200);
+        background: var(--color-success-50);
+        color: var(--color-success-700);
     }
 
     .clsu-user-profile__status--inactive {
-        border-color: #fecaca;
-        background: #fef2f2;
-        color: #b91c1c;
+        border-color: var(--color-danger-200);
+        background: var(--color-danger-50);
+        color: var(--color-danger-700);
     }
 
     .clsu-user-profile__content {
@@ -302,7 +113,7 @@
     }
 
     .clsu-user-profile__section--history {
-        border-left: 1px solid var(--clsu-mist);
+        border-left: 1px solid var(--color-gray-200);
     }
 
     .clsu-user-profile__section h3 {
@@ -323,7 +134,7 @@
     }
 
     .clsu-user-profile__list dt {
-        color: #63705d;
+        color: var(--color-gray-500);
         font-size: 0.875rem;
     }
 
@@ -335,13 +146,13 @@
     }
 
     .clsu-user-profile a {
-        color: var(--clsu-leaf-dark);
+        color: var(--color-primary-600);
         text-decoration: underline;
         text-underline-offset: 2px;
     }
 
     .clsu-user-profile a:focus-visible {
-        outline: 2px solid var(--clsu-leaf);
+        outline: 2px solid var(--color-primary-600);
         outline-offset: 3px;
     }
 
@@ -351,15 +162,15 @@
         }
 
         .clsu-user-profile__section--history {
-            border-top: 1px solid var(--clsu-mist);
+            border-top: 1px solid var(--color-gray-200);
             border-left: 0;
         }
     }
 
     .clsu-image-upload .filepond--root {
         min-height: 10rem;
-        border: 1px dashed #b9cbaa;
-        background-color: #f7faf4;
+        border: 1px dashed var(--color-gray-300);
+        background-color: var(--color-gray-50);
         box-shadow: none;
     }
 
@@ -371,21 +182,23 @@
         border-radius: 0.75rem;
     }
 
+    /* box-shadow: none removes Filament's ring so the explicit border below is the only
+       outline — without it the critical variant would draw a second one. */
     .fi-wi-stats-overview-stat.clsu-stat {
         overflow: hidden;
-        border: 1px solid var(--clsu-mist);
-        border-radius: 1rem;
+        border: 1px solid var(--color-gray-200);
+        border-radius: 0.75rem;
         box-shadow: none;
         transition: border-color 150ms ease, transform 150ms ease;
     }
 
     a.fi-wi-stats-overview-stat.clsu-stat:hover {
-        border-color: #cbd5e1;
+        border-color: var(--color-gray-300);
         transform: translateY(-1px);
     }
 
     .fi-wi-stats-overview-stat.clsu-stat:focus-visible {
-        outline: 2px solid var(--clsu-leaf);
+        outline: 2px solid var(--color-primary-600);
         outline-offset: 3px;
     }
 
@@ -397,64 +210,28 @@
     }
 
     .clsu-stat--green .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
-        background-color: #eef5e6;
-        color: var(--clsu-leaf);
+        background-color: var(--color-primary-50);
+        color: var(--color-primary-600);
     }
 
     .clsu-stat--yellow .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
-        background-color: #fff7da;
-        color: #a96705;
+        background-color: var(--color-warning-50);
+        color: var(--color-warning-600);
     }
 
     .clsu-stat--critical {
-        border-color: #fecaca !important;
-        background: linear-gradient(135deg, #fff7f7 0%, #ffffff 58%);
-        box-shadow: inset 0 3px 0 #dc2626, 0 3px 12px rgb(185 28 28 / 0.08) !important;
+        border-color: var(--color-danger-200) !important;
+        box-shadow: inset 0 3px 0 var(--color-danger-600) !important;
     }
 
     .clsu-stat--critical .fi-wi-stats-overview-stat-label,
     .clsu-stat--critical .fi-wi-stats-overview-stat-value {
-        color: #991b1b;
+        color: var(--color-danger-700);
     }
 
     .clsu-stat--critical .fi-wi-stats-overview-stat-label-ctn > .fi-icon {
-        background-color: #fee2e2;
-        color: #dc2626;
-    }
-
-    .fi-wi-chart .fi-section,
-    .fi-wi-table .fi-ta-ctn {
-        border-radius: 1.125rem;
-        background-color: var(--clsu-surface);
-    }
-
-    .fi-ta-ctn {
-        isolation: isolate;
-        border-radius: 1.125rem;
-        background-color: var(--clsu-surface);
-    }
-
-    .fi-ta-ctn .fi-ta-header,
-    .fi-ta-ctn .fi-ta-header-toolbar,
-    .fi-ta-ctn .fi-ta-filters-above-content-ctn {
-        border-color: var(--clsu-mist);
-        background-color: #fbfcf9;
-    }
-
-    .fi-ta-ctn .fi-ta-header-heading {
-        color: var(--clsu-ink);
-    }
-
-    .fi-ta-table > thead {
-        background-color: #edf4e6;
-    }
-
-    .fi-ta-table > thead .fi-ta-header-cell,
-    .fi-ta-table > thead .fi-ta-header-group-cell {
-        color: #30451e;
-        font-size: 0.75rem;
-        letter-spacing: 0.035em;
-        text-transform: uppercase;
+        background-color: var(--color-danger-100);
+        color: var(--color-danger-600);
     }
 
     .fi-ta-search-field {
@@ -472,152 +249,7 @@
         line-height: 1rem;
     }
 
-    .fi-ta-row .fi-ta-actions .fi-link:hover {
-        background-color: #f1f6eb;
-    }
-
-    .fi-ta-row .fi-ta-actions .fi-link.fi-color-danger:hover {
-        background-color: #fff1f2;
-    }
-
-    .fi-ta-ctn .fi-badge {
-        font-weight: 650;
-    }
-
-    .fi-topbar {
-        border-bottom: 1px solid var(--clsu-mist);
-        background-color: #ffffff;
-        box-shadow: none;
-    }
-
-    .fi-topbar .fi-logo {
-        color: #20350f;
-    }
-
-    .fi-topbar .fi-icon-btn {
-        color: #557f13;
-    }
-
-    .fi-topbar .fi-icon-btn:hover {
-        background-color: #f4f8ec;
-        color: #436611;
-    }
-
-    .fi-topbar .fi-icon-btn:focus-visible,
-    .fi-topbar .fi-user-menu-trigger:focus-visible {
-        border-radius: 9999px;
-        outline: 2px solid #557f13;
-        outline-offset: 3px;
-    }
-
-    .fi-topbar .fi-user-menu-trigger {
-        border-radius: 9999px;
-    }
-
-    .fi-topbar .fi-user-avatar {
-        width: 2.5rem;
-        height: 2.5rem;
-        border: 2px solid #e5efcf;
-        border-radius: 9999px;
-        background-color: #557f13;
-        box-shadow: 0 0 0 1px rgb(85 127 19 / 0.15), 0 3px 8px rgb(23 37 8 / 0.12);
-    }
-
-    .fi-topbar .fi-topbar-database-notifications-btn > .fi-icon-btn-badge-ctn {
-        background-color: #ffffff;
-    }
-
-    .fi-main-sidebar {
-        background-color: var(--clsu-leaf);
-        color: #ffffff;
-    }
-
-    .fi-main-sidebar .fi-sidebar-header {
-        background-color: var(--clsu-leaf);
-        box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.12);
-    }
-
-    .fi-main-sidebar .fi-logo {
-        color: #ffffff;
-    }
-
-    .fi-main-sidebar .fi-sidebar-nav {
-        scrollbar-color: rgb(255 255 255 / 0.32) transparent;
-    }
-
-    .fi-main-sidebar .fi-sidebar-group-label {
-        color: #dcebbf;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .fi-main-sidebar .fi-sidebar-group-btn > .fi-icon,
-    .fi-main-sidebar .fi-sidebar-group-collapse-btn .fi-icon {
-        color: rgb(255 255 255 / 0.65);
-    }
-
-    .fi-main-sidebar .fi-sidebar-item-btn {
-        border-inline-start: 3px solid transparent;
-    }
-
-    .fi-main-sidebar .fi-sidebar-item-label {
-        color: rgb(255 255 255 / 0.9);
-    }
-
-    .fi-main-sidebar .fi-sidebar-item-btn > .fi-icon {
-        color: rgb(255 255 255 / 0.72);
-    }
-
-    .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover,
-    .fi-main-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:focus-visible,
-    .fi-main-sidebar .fi-sidebar-group-dropdown-trigger-btn:hover,
-    .fi-main-sidebar .fi-sidebar-group-dropdown-trigger-btn:focus-visible {
-        background-color: rgb(255 255 255 / 0.1);
-    }
-
-    .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
-        border-inline-start-color: var(--clsu-sun);
-        background-color: var(--clsu-leaf-dark);
-        box-shadow: 0 5px 14px rgb(23 37 8 / 0.2);
-    }
-
-    .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
-    .fi-main-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
-        color: #ffffff;
-    }
-
-    .fi-main-sidebar .fi-sidebar-item-btn:focus-visible,
-    .fi-main-sidebar .fi-sidebar-group-collapse-btn:focus-visible,
-    .fi-main-sidebar .fi-sidebar-close-sidebar-btn:focus-visible {
-        outline: 2px solid var(--clsu-sun);
-        outline-offset: 2px;
-    }
-
-    .fi-main-sidebar .fi-sidebar-database-notifications-btn-label {
-        color: rgb(255 255 255 / 0.9);
-    }
-
-    .fi-main-sidebar .fi-sidebar-database-notifications-btn > .fi-icon {
-        color: rgb(255 255 255 / 0.72);
-    }
-
     @media (max-width: 639px) {
-        .fi-header {
-            min-height: auto;
-        }
-
-        .fi-header .fi-header-actions-ctn,
-        .fi-header .fi-header-actions-ctn > .fi-ac {
-            width: 100%;
-        }
-
-        .fi-header .fi-header-actions-ctn .fi-btn {
-            flex: 1;
-            justify-content: center;
-        }
-
         .clsu-user-profile__header,
         .clsu-user-profile__section {
             padding-inline: 1rem;
@@ -640,95 +272,62 @@
         }
     }
 
-    .dark .fi-body {
-        background-color: #11180d;
+    .dark .fi-resource-create-record-page form#form > .fi-sc-actions,
+    .dark .fi-resource-edit-record-page form#form > .fi-sc-actions {
+        border-color: var(--color-gray-700);
     }
 
     .dark .clsu-user-profile {
-        border-color: #35462d;
-        background: #182015;
-        color: #edf4e7;
+        border-color: var(--color-gray-700);
+        background: var(--color-gray-900);
+        color: var(--color-gray-100);
     }
 
     .dark .clsu-user-profile__header,
     .dark .clsu-user-profile__section--history {
-        border-color: #35462d;
+        border-color: var(--color-gray-700);
     }
 
     .dark .clsu-user-profile__list dt {
-        color: #a8b5a0;
+        color: var(--color-gray-400);
     }
 
     .dark .clsu-user-profile__status--active {
-        border-color: #166534;
-        background: #052e16;
-        color: #bce9c7;
+        border-color: var(--color-success-800);
+        background: var(--color-success-950);
+        color: var(--color-success-200);
     }
 
     .dark .clsu-user-profile__status--inactive {
-        border-color: #991b1b;
-        background: #450a0a;
-        color: #fecaca;
+        border-color: var(--color-danger-800);
+        background: var(--color-danger-950);
+        color: var(--color-danger-200);
     }
 
     .dark .clsu-user-profile a {
-        color: #c6dda7;
-    }
-
-    .dark .fi-section:not(.fi-section-not-contained),
-    .dark .fi-ta-ctn {
-        border-color: rgb(255 255 255 / 0.1);
-        box-shadow: none;
-    }
-
-    .dark .fi-resource-create-record-page .fi-section:not(.fi-section-not-contained),
-    .dark .fi-resource-edit-record-page .fi-section:not(.fi-section-not-contained) {
-        background-color: #182015;
-    }
-
-    .dark .fi-resource-create-record-page .fi-section-header-heading,
-    .dark .fi-resource-edit-record-page .fi-section-header-heading,
-    .dark .fi-resource-create-record-page .fi-fo-field-label-content,
-    .dark .fi-resource-edit-record-page .fi-fo-field-label-content {
-        color: #edf4e7;
-    }
-
-    .dark .fi-resource-create-record-page .fi-section-header-description,
-    .dark .fi-resource-edit-record-page .fi-section-header-description,
-    .dark .fi-resource-create-record-page .fi-fo-field-content-col > .fi-sc-text,
-    .dark .fi-resource-edit-record-page .fi-fo-field-content-col > .fi-sc-text {
-        color: #a8b5a0;
+        color: var(--color-primary-400);
     }
 
     .dark .clsu-image-upload .filepond--root {
-        border-color: #52634a;
-        background-color: #202b1c;
+        border-color: var(--color-gray-600);
+        background-color: var(--color-gray-800);
     }
 
-    .dark .fi-wi-stats-overview-stat.clsu-stat,
-    .dark .fi-wi-chart .fi-section,
-    .dark .fi-wi-table .fi-ta-ctn,
-    .dark .fi-ta-ctn {
-        border-color: rgb(255 255 255 / 0.1);
-        background: #182015;
+    .dark .fi-wi-stats-overview-stat.clsu-stat {
+        border-color: var(--color-gray-700);
+        background: var(--color-gray-900);
     }
 
-    .dark .fi-ta-ctn .fi-ta-header,
-    .dark .fi-ta-ctn .fi-ta-header-toolbar,
-    .dark .fi-ta-ctn .fi-ta-filters-above-content-ctn,
-    .dark .fi-ta-table > thead {
-        border-color: rgb(255 255 255 / 0.1);
-        background-color: #202b1c;
+    .dark a.fi-wi-stats-overview-stat.clsu-stat:hover {
+        border-color: var(--color-gray-600);
     }
 
-    .dark .fi-ta-table > thead .fi-ta-header-cell,
-    .dark .fi-ta-table > thead .fi-ta-header-group-cell,
-    .dark .fi-ta-ctn .fi-ta-header-heading {
-        color: #e6efdf;
+    .dark .clsu-stat--critical {
+        border-color: var(--color-danger-800) !important;
     }
 
     .dark .clsu-stat--critical .fi-wi-stats-overview-stat-label,
     .dark .clsu-stat--critical .fi-wi-stats-overview-stat-value {
-        color: #fecaca;
+        color: var(--color-danger-200);
     }
 }
