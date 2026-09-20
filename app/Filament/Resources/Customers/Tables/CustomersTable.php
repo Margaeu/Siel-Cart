@@ -26,6 +26,8 @@ class CustomersTable
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),
+                TextColumn::make('date_of_birth')
+                    ->label('Birthdate'),
                 ToggleColumn::make('is_active')
                     ->label('Active'),
                 TextColumn::make('created_at')

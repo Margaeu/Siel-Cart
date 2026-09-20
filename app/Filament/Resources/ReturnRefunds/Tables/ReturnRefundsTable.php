@@ -5,7 +5,7 @@ namespace App\Filament\Resources\ReturnRefunds\Tables;
 use App\Enums\OrderItemResolutionReason;
 use App\Enums\OrderItemResolutionType;
 use App\Filament\Resources\ReturnRefunds\ReturnRefundResource;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -31,7 +31,7 @@ class ReturnRefundsTable
                 // Orders are soft-deleted, and their history is still searchable.
                 TextColumn::make('orderItem.order.order_number')
                     ->label('Order #')
-                    ->url(fn (OrderItemResolution $record): ?string => ReturnRefundResource::getOrderUrl($record))
+                    ->url(fn (ReturnRefundResolution $record): ?string => ReturnRefundResource::getOrderUrl($record))
                     ->color('primary')
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
                         'orderItem.order',
@@ -54,7 +54,7 @@ class ReturnRefundsTable
 
                 TextColumn::make('order_item')
                     ->label('Order item')
-                    ->state(fn (OrderItemResolution $record): string => collect([
+                    ->state(fn (ReturnRefundResolution $record): string => collect([
                         $record->orderItem->product_name,
                         $record->orderItem->variant_name,
                     ])->filter()->implode(' — '))
@@ -70,7 +70,7 @@ class ReturnRefundsTable
 
                 TextColumn::make('reason')
                     ->label('Reason'),
-
+                /*
                 TextColumn::make('quantity')
                     ->label('Order Quantity')
                     ->numeric(),
@@ -90,6 +90,7 @@ class ReturnRefundsTable
                     ->label('Returned as')
                     ->placeholder('—')
                     ->toggleable(),
+                */
 
                 TextColumn::make('processedBy.name')
                     ->label('Processed by')

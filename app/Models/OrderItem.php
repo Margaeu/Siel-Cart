@@ -63,7 +63,7 @@ class OrderItem extends Model
      */
     public function resolutions()
     {
-        return $this->hasMany(OrderItemResolution::class)
+        return $this->hasMany(ReturnRefundResolution::class)
             ->orderBy('processed_at')
             ->orderBy('id');
     }

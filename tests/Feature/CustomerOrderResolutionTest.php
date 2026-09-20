@@ -203,7 +203,7 @@ class CustomerOrderResolutionTest extends TestCase
         Livewire::test(Orders::class)->assertOk();
         $queries = array_filter(
             DB::getQueryLog(),
-            fn (array $query): bool => str_contains($query['query'], 'order_item_resolutions'),
+            fn (array $query): bool => str_contains($query['query'], 'return_refund_resolutions'),
         );
         DB::disableQueryLog();
 

@@ -31,7 +31,7 @@ class UsersTable
                     ->color(fn($state) => match ($state) {
                         'super_admin' => 'success',
                         'ubap' => 'warning',
-                        'stratcomm' => 'info',
+                        'stratcom' => 'info',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn($state) => str($state)->replace('_',' ')->title())
@@ -39,9 +39,11 @@ class UsersTable
                     
                 TextColumn::make('phone')
                     ->searchable(),
+                /*
                 TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable(),
+                */
                 ToggleColumn::make('is_active')
                     ->label('Active')
                     // `disabled()` is re-evaluated server-side before the write,

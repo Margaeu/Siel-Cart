@@ -342,7 +342,7 @@ class ProductDetails extends Component
 
     public function render()
     {
-        $relatedProducts = Product::active()
+        $relatedProducts = Product::where('is_active', true)
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
             ->with(['category', 'cardImage', 'variants'])

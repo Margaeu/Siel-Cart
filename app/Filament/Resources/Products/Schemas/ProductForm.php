@@ -34,12 +34,12 @@ class ProductForm
                             ->schema([
                                 Section::make('Product details')
                                     ->description('Set the product name and the category customers will browse.')
+                                    // Name and category share the first row. The slug only
+                                    // exists on edit, so it sits on its own full-width row
+                                    // below rather than pushing category onto a half-empty
+                                    // second row next to nothing.
                                     ->schema([
                                         TextInput::make('name')
-                                            ->required(),
-                                        TextInput::make('slug')
-                                            ->unique(ignoreRecord: true)
-                                            ->visible(fn(string $operation) => $operation === 'edit')
                                             ->required(),
                                         Select::make('category_id')
                                             ->relationship('category', 'name')
@@ -54,17 +54,40 @@ class ProductForm
                                                     ->readOnly()
                                                     ->visibleOn('edit'),
                                             ]),
+                                        TextInput::make('slug')
+                                            ->unique(ignoreRecord: true)
+                                            ->visible(fn(string $operation) => $operation === 'edit')
+                                            ->helperText('Used in the product page address.')
+                                            ->required(),
                                     ])->columns(2),
                                 Section::make('Product description')
                                     ->description('Add a concise summary and the full details shown on the product page.')
                                     ->schema([
                                         Textarea::make('short_description')
                                             ->default(null)
+                                            ->rows(3)
                                             ->columnSpanFull(),
                                         RichEditor::make('description')
                                             ->default(null)
                                             ->columnSpanFull(),
+                                    ]),
+                                Section::make('Product status')
+                                    ->description('Control whether this item is available and highlighted in the storefront.')
+                                    // A toggle always holds true or false, so the required
+                                    // asterisk is noise; the rule itself is kept.
+                                    ->schema([
+                                        Toggle::make('is_active')
+                                            ->label('Active')
+                                            ->helperText('Inactive products are hidden from the storefront.')
+                                            ->required()
+                                            ->markAsRequired(false),
+                                        Toggle::make('is_featured')
+                                            ->label('Featured')
+                                            ->helperText('Featured products are shown on the home page.')
+                                            ->required()
+                                            ->markAsRequired(false),
                                     ])
+                                    ->columns(2)
                             ]),
                         Tab::make('Pricing & Inventory')
                             ->icon(Heroicon::Banknotes)
@@ -76,16 +99,24 @@ class ProductForm
                                         TextInput::make('sku')
                                             ->label('SKU')
                                             ->unique(ignoreRecord: true)
-                                            ->helperText('Stock keeping Unit - unique identifier')
+                                            ->helperText('Stock keeping unit - unique identifier')
                                             ->required(),
                                         TextInput::make('price')
                                             ->required()
                                             ->numeric()
+                                            // numeric()/integer() render type="number", whose spinner
+                                            // arrows and mouse-wheel stepping let a price or stock count
+                                            // change by accident while scrolling the form. A text input
+                                            // is typed-only; the numeric/integer/min rules still validate
+                                            // server-side, and inputMode keeps the numeric mobile keypad.
+                                            ->type('text')
                                             ->minValue(0)
                                             ->step(0.01)
-                                            ->helperText('Selling Price')
+                                            ->helperText('Selling price')
                                             ->prefix('₱'),
                                     ])->columns(2),
+                                // Labels and hints match the variant card in the Product
+                                // Variants tab, so the same field reads the same either way.
                                 Section::make('Inventory')
                                     ->description('Track available units and choose when the dashboard should flag low stock.')
                                     ->schema([
@@ -93,16 +124,18 @@ class ProductForm
                                             ->label('Stock Quantity')
                                             ->required()
                                             ->integer()
+                                            ->type('text')
                                             ->minValue(0)
-                                            ->helperText('Stock status is automatic: more than zero is in stock; zero is out of stock.')
+                                            ->helperText('Stock status is calculated from this quantity.')
                                             ->default(0),
                                         TextInput::make('low_stock_threshold')
-                                            ->label('Low stock Alert Threshold')
+                                            ->label('Low Stock Alert Threshold')
                                             ->required()
                                             ->integer()
+                                            ->type('text')
                                             ->minValue(0)
                                             ->default(10)
-                                            ->helperText('Flag when remaining stock is at or below this threshold. Set to 0 to disable.'),
+                                            ->helperText('Flag at or below this number. Set to 0 to disable.'),
                                     ])
                                     ->columns(2)
                             ]),
@@ -202,49 +235,62 @@ class ProductForm
                                     ->description('Choose whether sizes, colors, or other options have their own price and stock.')
                                     ->schema([
                                         Toggle::make('has_variants')
+                                            ->label('Has variants')
                                             ->live()
                                             ->required()
+                                            ->markAsRequired(false)
                                             ->helperText('When on, this product is priced and stocked per variant, and the Pricing & Inventory tab is hidden.'),
                                     ]),
                                 Section::make('Product Variants')
                                     ->description('Enter stock for each size or color. The product is in stock when at least one active variant has stock.')
                                     ->schema([
+                                        // Three-column card: identity (name + SKU) on the first row,
+                                        // the three numbers side by side on the second, then the
+                                        // Active toggle and images on their own full-width rows so
+                                        // the toggle never sits beside a text input.
                                         Repeater::make('variants')
                                             ->relationship('variants')
                                             ->schema([
                                                 TextInput::make('name')
                                                     ->required()
                                                     ->label('Variant Name')
-                                                    ->placeholder('e.g., Red - Large'),
+                                                    ->placeholder('e.g., Red - Large')
+                                                    ->columnSpan(2),
                                                 TextInput::make('sku')
                                                     ->label('SKU')
                                                     ->unique(ignoreRecord: true)
-                                                    ->helperText('Stock keeping Unit - unique identifier')
-                                                    ->required()
-                                                    ->columnSpan(2),
+                                                    ->helperText('Stock keeping unit - unique identifier')
+                                                    ->required(),
                                                 TextInput::make('price')
                                                     ->required()
                                                     ->numeric()
+                                                    // Typed-only, same as the Pricing & Inventory tab.
+                                                    ->type('text')
                                                     ->prefix('₱')
                                                     ->minValue(0)
-                                                    ->step(0.01),
+                                                    ->step(0.01)
+                                                    ->helperText('Selling price'),
                                                 TextInput::make('stock_quantity')
                                                     ->label('Stock Quantity')
                                                     ->required()
                                                     ->integer()
+                                                    ->type('text')
                                                     ->minValue(0)
-                                                    ->helperText('Stock status is calculated automatically from this quantity.')
+                                                    ->helperText('Stock status is calculated from this quantity.')
                                                     ->default(0),
                                                 TextInput::make('low_stock_threshold')
                                                     ->label('Low Stock Alert Threshold')
                                                     ->required()
                                                     ->integer()
+                                                    ->type('text')
                                                     ->minValue(0)
                                                     ->default(10)
-                                                    ->helperText('Flag when remaining stock is at or below this threshold. Set to 0 to disable.'),
+                                                    ->helperText('Flag at or below this number. Set to 0 to disable.'),
                                                 Toggle::make('is_active')
                                                     ->label('Active')
-                                                    ->default(true),
+                                                    ->helperText('Inactive variants are hidden from the storefront.')
+                                                    ->default(true)
+                                                    ->columnSpanFull(),
                                                 FileUpload::make('images')
                                                     ->disk('r2')
                                                     ->visibility('public')
@@ -316,7 +362,7 @@ class ProductForm
                                                     })
                                                     ->dehydrated(false),
                                             ])
-                                            ->columns(2)
+                                            ->columns(3)
                                             ->defaultItems(0)
                                             ->collapsible()
                                             // Without this the drag handle reorders the rows on screen
@@ -328,19 +374,8 @@ class ProductForm
                                     ])
                                     ->visible(fn(callable $get) => $get('has_variants'))
                                     ->columnSpanFull()
-                            ]),
-                        Tab::make('Settings')
-                            ->icon(Heroicon::Cog6Tooth)
-                            ->schema([
-                                Section::make('Product status')
-                                    ->description('Control whether this item is available and highlighted in the storefront.')
-                                    ->schema([
-                                        Toggle::make('is_active')
-                                            ->required(),
-                                        Toggle::make('is_featured')
-                                            ->required(),
-                                    ])
-                                    ->columns(2),
+                            ]),                                                 
+                                /*
                                 Section::make('Statistics')
                                     ->description('Read-only activity information for this product.')
                                     ->schema([
@@ -350,7 +385,7 @@ class ProductForm
                                             ->label('Created')
                                             ->state(fn($record) => $record?->created_at?->diffForHumans() ?? '-'),
                                     ])
-                            ]),
+                                */
                     ]),
             ]);
     }

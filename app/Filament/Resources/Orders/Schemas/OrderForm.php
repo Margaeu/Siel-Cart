@@ -62,6 +62,10 @@ class OrderForm
                             ->label('Claimant contact number')
                             ->placeholder('Phone number of person receiving order')
                             ->default(null),
+                        
+                        TextInput::make('or_number')
+                            ->label('Official Receipt Number')
+                            ->placeholder('e.g. or-2345'),
 
                         DatePicker::make('pickup_date')
                             ->label('Scheduled pickup date')
@@ -75,6 +79,7 @@ class OrderForm
                                 'regex' => 'Enter a time interval such as 8:00 AM - 5:00 PM.',
                             ])
                             ->nullable(),
+
                     ]),
 
                 Section::make('Internal notes')

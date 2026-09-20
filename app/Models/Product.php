@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 
 class Product extends Model
 {
-    use SoftDeletes, HasFactory;
+    use SoftDeletes, HasFactory, LogsActivity; 
+
     protected $fillable = [
         'category_id',
         'name',
@@ -41,6 +44,27 @@ class Product extends Model
             'is_featured' => 'boolean',
             'has_variants' => 'boolean',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'category_id',
+                'name',
+                'slug',
+                'sku',
+                'short_description',
+                'description',
+                'price',
+                'stock_quantity',
+                'low_stock_threshold',
+                'is_active',
+                'is_featured',
+                'has_variants',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
      /**

@@ -78,4 +78,14 @@ class Profile extends Component
         session()->flash('password_success', 'Password updated successfully!');
     }
 
+    public function render()
+    {
+        // Must use the storefront layout explicitly. Without it Livewire falls
+        // back to config('livewire.layout') = components.layouts.app, which has
+        // no header/footer and never includes partials.theme-styles — so
+        // --color-primary is undefined and the avatar and submit buttons render
+        // as white-on-white (present but invisible).
+        return view('livewire.customer.profile')
+            ->layout('components.layouts.front-end-layout', ['title' => 'My Profile - '.config('app.name')]);
+    }
 }

@@ -23,7 +23,7 @@ class SystemSetupSeeder extends Seeder
                 'first_name' => 'System',
                 'last_name' => 'Admin',
                 'password' => Hash::make('password'), // Change this in production
-                'email_verified_at' => now(),
+                //'email_verified_at' => now(),
             ]
         );
 

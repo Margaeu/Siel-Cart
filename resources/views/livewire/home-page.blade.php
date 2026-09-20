@@ -233,10 +233,66 @@
                 </a>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach($featuredProducts as $product)
-                    <livewire:product-card :product="$product" :key="$product->id" lazy />
-                @endforeach
+            <div
+                x-data="{
+                    canScrollLeft: false,
+                    canScrollRight: true,
+                    updateScrollState() {
+                        const el = $refs.featuredTrack;
+                        this.canScrollLeft = el.scrollLeft > 8;
+                        this.canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 8;
+                    },
+                    scrollByCard(direction) {
+                        const el = $refs.featuredTrack;
+                        const card = el.querySelector('[data-carousel-item]');
+                        const distance = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
+                        el.scrollBy({ left: direction * distance, behavior: 'smooth' });
+                    }
+                }"
+                x-init="updateScrollState()"
+                class="relative"
+            >
+                <!-- Left arrow -->
+                <button
+                    type="button"
+                    x-show="canScrollLeft"
+                    x-cloak
+                    x-on:click="scrollByCard(-1)"
+                    class="absolute left-0 top-[38%] z-10 hidden size-11 -translate-x-4 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-[var(--color-primary)] sm:flex"
+                    aria-label="Scroll to previous products"
+                >
+                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                    </svg>
+                </button>
+
+                <!-- Scrollable track -->
+                <div
+                    x-ref="featuredTrack"
+                    x-on:scroll.debounce.75ms="updateScrollState()"
+                    x-on:resize.window="updateScrollState()"
+                    class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                    @foreach($featuredProducts as $product)
+                        <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[240px] lg:w-[260px]">
+                            <livewire:product-card :product="$product" :key="$product->id" />
+                        </div>
+                    @endforeach
+                </div>
+
+                <!-- Right arrow -->
+                <button
+                    type="button"
+                    x-show="canScrollRight"
+                    x-cloak
+                    x-on:click="scrollByCard(1)"
+                    class="absolute right-0 top-[38%] z-10 hidden size-11 -translate-y-1/2 translate-x-4 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-[var(--color-primary)] sm:flex"
+                    aria-label="Scroll to next products"
+                >
+                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                </button>
             </div>
         </div>
     </section>

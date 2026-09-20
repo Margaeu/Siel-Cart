@@ -11,23 +11,23 @@ class HomePage extends Component
 {
     public function render()
     {
-        $banners = Banner::active()
+        $banners = Banner::where('is_active', true)
             ->ordered()
             ->get();
 
-        $featuredProducts = Product::active()
+        $featuredProducts = Product::where('is_active', true)
             ->featured()
             ->inStock()
             ->with(['category', 'cardImage'])
             ->limit(8)
             ->get();
 
-        $categories = Category::active()
+        $categories = Category::where('is_active', true)
             ->sorted()
             ->withCount('products')
             ->limit(6)
             ->get(); 
-        $newArrivals = Product::active()
+        $newArrivals = Product::where('is_active', true)
             ->inStock()
             ->with(['category', 'cardImage'])
             ->latest()

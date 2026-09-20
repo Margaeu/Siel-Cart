@@ -5,11 +5,11 @@ namespace Tests\Feature\Concerns;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\OrderItemResolution;
+use App\Models\ReturnRefundResolution;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
-use App\Services\OrderItemResolutionService;
+use App\Services\ReturnRefundResolutionService;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 
@@ -104,12 +104,12 @@ trait BuildsResolvableOrders
         return $line;
     }
 
-    protected function resolutions(): OrderItemResolutionService
+    protected function resolutions(): ReturnRefundResolutionService
     {
-        return app(OrderItemResolutionService::class);
+        return app(ReturnRefundResolutionService::class);
     }
 
-    protected function refund(OrderItem $line, float $amount, int $quantity = 1, array $extra = []): OrderItemResolution
+    protected function refund(OrderItem $line, float $amount, int $quantity = 1, array $extra = []): ReturnRefundResolution
     {
         return $this->resolutions()->recordRefund($line, $this->recordingAdmin(), array_merge([
             'reason' => 'defective',
@@ -130,7 +130,7 @@ trait BuildsResolvableOrders
         string $condition = 'sellable',
         int $quantity = 1,
         array $extra = [],
-    ): OrderItemResolution {
+    ): ReturnRefundResolution {
         return $this->resolutions()->recordExchange($line, $this->recordingAdmin(), array_merge([
             'reason' => 'seller_error',
             'quantity' => $quantity,
@@ -150,7 +150,7 @@ trait BuildsResolvableOrders
         string $reason = 'defective',
         int $quantity = 1,
         array $extra = [],
-    ): OrderItemResolution {
+    ): ReturnRefundResolution {
         return $this->resolutions()->recordExchange($line, $this->recordingAdmin(), array_merge([
             'reason' => $reason,
             'quantity' => $quantity,

@@ -35,11 +35,11 @@ class ProductListing extends Component
         // product's own price column is not for sale, so it is not a ceiling.
         // This must match what inPriceRange() filters on, or the top of the
         // slider excludes products that the filter would have matched.
-        $maxSimplePrice = Product::active()
+        $maxSimplePrice = Product::where('is_active', true)
             ->where('has_variants', false)
             ->max('price');
 
-        $maxVariantPrice = ProductVariant::active()
+        $maxVariantPrice = ProductVariant::where('is_active', true)
             ->whereHas('product', fn (Builder $product) => $product->active())
             ->max('price');
 
@@ -142,7 +142,7 @@ class ProductListing extends Component
 
         // Count only what the listing itself will show, so the sidebar total
         // cannot claim more products than the category actually renders.
-        $categories = Category::active()
+        $categories = Category::where('is_active', true)
             ->sorted()
             ->withCount(['products' => fn (Builder $products) => $products->active()])
             ->get();

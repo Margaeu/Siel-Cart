@@ -33,6 +33,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'processing', 'ready_for_pickup', 'completed', 'cancelled'])->default('pending');
             $table->string('claimant_name')->nullable(); // who received the order
             $table->string('claimant_phone')->nullable(); // number of the claimant
+            $table->string('or_number')->nullable();
             $table->text('admin_notes')->nullable();
             $table->string('cancellation_reason')->nullable();
             $table->timestamp('cancelled_at')->nullable();

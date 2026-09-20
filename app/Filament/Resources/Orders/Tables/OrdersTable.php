@@ -42,15 +42,14 @@ class OrdersTable
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('claimant_name')
-                    ->label('Claimed By')
-                    ->placeholder('Name')
-                    ->toggleable(),
-
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total Amount')
                     ->money('PHP')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('or_number')
+                    ->label('OR Number')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
@@ -70,11 +69,15 @@ class OrdersTable
                     ->date('M d, Y')
                     ->sortable(['created_at']),
 
-                Tables\Columns\TextColumn::make('order_time')
-                    ->label('Order Time')
-                    ->state(fn (Order $record) => $record->created_at)
-                    ->time('h:i A')
-                    ->sortable(['created_at']),
+                Tables\Columns\TextColumn::make('completed_at')
+                    ->label('Collected / Cancelled')
+                    ->state(fn (Order $record) => $record->status === 'cancelled'
+                        ? $record->cancelled_at
+                        : $record->completed_at)
+                    ->dateTime('M d, Y')
+                    ->placeholder(fn (Order $record): string => $record->status === 'cancelled'
+                        ? 'Cancellation date unavailable'
+                        : 'Not yet collected'),
             ])
 
             ->filters([
@@ -148,7 +151,11 @@ class OrdersTable
                             ->required(),
                         TextInput::make('claimant_phone')
                             ->label('Contact Phone Number of Receiver')
-                            ->placeholder('e.g. 09171234567')
+                            ->placeholder('e.g. 0917123459')
+                            ->required(),
+                        TextInput::make('or_number')
+                            ->label('Official Receipt Number')
+                            ->placeholder('e.g. or-2345')
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
@@ -158,6 +165,7 @@ class OrdersTable
                                     'completed_at'   => now(),
                                     'claimant_name'  => $data['claimant_name'],
                                     'claimant_phone' => $data['claimant_phone'],
+                                    'or_number' => $data['or_number'],
                                 ],
                             );
 

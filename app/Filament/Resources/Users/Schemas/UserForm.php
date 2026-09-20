@@ -39,7 +39,14 @@ class UserForm
                         TextInput::make('password')
                             ->password()
                             ->revealable()
-                            ->required(),
+                            // A password is only mandatory when creating an account.
+                            // On edit, a blank field keeps the current password, so
+                            // it is left out of the save instead of wiping it.
+                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->dehydrated(fn (?string $state): bool => filled($state))
+                            ->helperText(fn (string $operation): ?string => $operation === 'edit'
+                                ? 'Leave blank to keep the current password.'
+                                : null),
                         Select::make('roles')
                             ->relationship('roles', 'name')
                             ->multiple()
