@@ -217,26 +217,6 @@
                        class="inline-block transform rounded-lg bg-[var(--color-secondary)] px-8 py-3.5 font-bold text-[var(--color-primary)] shadow-lg transition hover:-translate-y-0.5 hover:bg-amber-400 active:bg-amber-500">
                         Shop Now
                     </a>
-                    <a href="{{ route('products.index', ['featured' => 1]) }}"
-                       class="inline-block rounded-lg border border-white/25 px-8 py-3.5 font-semibold text-white transition hover:bg-white/10">
-                        View Featured
-                    </a>
-                </div>
-
-                <!-- Trust strip -->
-                <div class="mx-auto mt-12 flex max-w-xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-white/70">
-                    <span class="inline-flex items-center gap-1.5">
-                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                        Verified merch
-                    </span>
-                    <span class="inline-flex items-center gap-1.5">
-                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        Fast campus pickup
-                    </span>
-                    <span class="inline-flex items-center gap-1.5">
-                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                        Secure checkout
-                    </span>
                 </div>
             </div>
         </section>

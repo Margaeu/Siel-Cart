@@ -359,7 +359,7 @@
                                                             <div class="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
                                                                 <p class="text-xs font-bold uppercase tracking-wider text-gray-700">Report this user</p>
                                                                 <div>
-                                                                    <select wire:model="reportReason" class="w-full rounded-xl border-gray-200 text-xs focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
+                                                                    <select wire:model="reportReason" class="w-full rounded-xl border border-gray-200 text-xs focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                                                                         <option value="">Select a reason…</option>
                                                                         <option value="Spam or advertising">Spam or advertising</option>
                                                                         <option value="Abusive or offensive language">Abusive or offensive language</option>
@@ -370,7 +370,7 @@
                                                                     @error('reportReason') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                                                 </div>
                                                                 <div>
-                                                                    <textarea wire:model="reportDetails" rows="2" maxlength="1000" placeholder="Additional details (optional)" class="w-full rounded-xl border-gray-200 text-xs focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
+                                                                    <textarea wire:model="reportDetails" rows="2" maxlength="1000" placeholder="Additional details (optional)" class="w-full rounded-xl border border-gray-200 text-xs focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
                                                                     @error('reportDetails') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                                                 </div>
                                                                 <div class="flex gap-2">
@@ -445,14 +445,14 @@
                                     <div>
                                         <label for="review-title" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Title <span class="text-gray-400 font-normal">(optional)</span></label>
                                         <input id="review-title" type="text" wire:model="reviewTitle" maxlength="255"
-                                               class="w-full rounded-xl border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] text-sm">
+                                               class="w-full rounded-xl border border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] text-sm">
                                         @error('reviewTitle') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
 
                                     <div>
                                         <label for="review-comment" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Review</label>
                                         <textarea id="review-comment" wire:model="reviewComment" rows="4" maxlength="2000"
-                                                  class="w-full rounded-xl border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] text-sm"></textarea>
+                                                  class="w-full rounded-xl border border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] text-sm"></textarea>
                                         @error('reviewComment') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                         @error('review') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
