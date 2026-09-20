@@ -15,6 +15,8 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\EmailVerificationNotificationController;
 
@@ -156,4 +158,35 @@ Route::middleware('auth:customer')->group(function () {
         return redirect('/');
 
     })->name('logout');
+
+
+// Development-only session debug route. Shows whether the session cookie
+// exists, whether the `customer` guard is authenticated, and the sessions
+// table row for the cookie value. Only available in local or staging.
+Route::get('/dev/session-debug', function (Request $request) {
+    if (! app()->environment('local', 'staging')) {
+        abort(404);
+    }
+
+    $cookieName = config('session.cookie');
+    $cookieValue = $request->cookie($cookieName);
+
+    $auth = auth('customer')->check();
+    $userId = auth('customer')->id();
+
+    $sessionRow = null;
+    if ($cookieValue) {
+        $sessionRow = DB::table(config('session.table'))->where('id', $cookieValue)->first();
+    }
+
+    return response()->json([
+        'environment' => app()->environment(),
+        'session_cookie_name' => $cookieName,
+        'session_cookie_value' => $cookieValue,
+        'auth_customer_check' => $auth,
+        'auth_customer_id' => $userId,
+        'session_row' => $sessionRow,
+    ]);
+
+})->name('dev.session-debug');
 });

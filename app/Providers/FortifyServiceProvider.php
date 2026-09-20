@@ -99,7 +99,17 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn () => view('auth.customer.login'));
+        Fortify::loginView(function () {
+            if (auth('customer')->check()) {
+                return redirect()->route('customer.dashboard');
+            }
+
+            // Return login view with no-cache headers so browsers revalidate when using Back.
+            return response()->view('auth.customer.login')
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        });
         Fortify::verifyEmailView(fn () => view('auth.customer.verify-email'));
         Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
         Fortify::registerView(fn () => view('auth.customer.register'));
