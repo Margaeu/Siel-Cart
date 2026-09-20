@@ -36,14 +36,6 @@ class UsersTable
                     })
                     ->formatStateUsing(fn($state) => str($state)->replace('_',' ')->title())
                     ->toggleable(isToggledHiddenByDefault: false),
-                    
-                TextColumn::make('phone')
-                    ->searchable(),
-                /*
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                */
                 ToggleColumn::make('is_active')
                     ->label('Active')
                     // `disabled()` is re-evaluated server-side before the write,

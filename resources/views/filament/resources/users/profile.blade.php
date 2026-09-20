@@ -17,7 +17,7 @@
             <dl class="clsu-user-profile__list">
                 <div><dt>First name</dt><dd>{{ $user->first_name ?: 'Not provided' }}</dd></div>
                 <div><dt>Last name</dt><dd>{{ $user->last_name ?: 'Not provided' }}</dd></div>
-                <div><dt>Email address</dt><dd><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></dd></div>
+                <div><dt>Email address</dt><dd>{{ $user->email }}</dd></div>
                 <div><dt>Assigned role</dt><dd>{{ $role }}</dd></div>
             </dl>
         </section>

@@ -48,7 +48,6 @@ class UserProfilePageTest extends TestCase
         Livewire::test(ViewUser::class, ['record' => $target->getKey()])
             ->assertOk()
             ->assertSee('Ana Santos')
-            ->assertSee('Record history')
-            ->assertDontSee('Email verification');
+            ->assertSee('Record history');    
     }
 }

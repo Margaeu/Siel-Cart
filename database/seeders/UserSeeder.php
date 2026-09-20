@@ -22,7 +22,6 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'phone' => '+1234567890',
             'is_active' => true,
-            'email_verified_at' => now(),
         ]);
 
         // Create additional admin users
@@ -33,7 +32,6 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'phone' => '+1234567891',
             'is_active' => true,
-            'email_verified_at' => now(),
         ]);
 
         $this->command->info('Admin users created successfully!');

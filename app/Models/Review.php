@@ -41,11 +41,11 @@ class Review extends Model
     // Accessor for video URL
     public function getVideoUrlAttribute(): ?string
     {
-        if (empty($this->video)) {
+        if (empty($this->video_path)) {
             return null;
         }
 
-        return Storage::disk('r2')->url($this->video);
+        return Storage::disk('r2')->url($this->video_path);
     }
 
     public function customer()

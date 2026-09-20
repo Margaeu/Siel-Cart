@@ -31,7 +31,6 @@ class User extends Authenticatable implements FilamentUser
         'last_name',
         'email',
         'password',
-        'phone',
         'is_active'
     ];
 
@@ -66,9 +65,7 @@ class User extends Authenticatable implements FilamentUser
                 'first_name',
                 'last_name',
                 'email',
-                'phone',
                 'is_active',
-                //'email_verified_at',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
