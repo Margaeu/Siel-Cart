@@ -130,10 +130,7 @@
                     x-on:transitionend.self="settleLoop()"
                 >
                     {{-- Cloned edge slides make the first/last transition loop without a visible jump. --}}
-                    <div
-                        class="relative h-full w-full shrink-0"
-                        aria-hidden="true"
-                    >
+                    <div class="relative h-full w-full shrink-0" aria-hidden="true">
                         <x-storefront.banner-slide :banner="$banners->last()" />
                     </div>
 
@@ -153,10 +150,7 @@
                         </div>
                     @endforeach
 
-                    <div
-                        class="relative h-full w-full shrink-0"
-                        aria-hidden="true"
-                    >
+                    <div class="relative h-full w-full shrink-0" aria-hidden="true">
                         <x-storefront.banner-slide :banner="$banners->first()" />
                     </div>
                 </div>
@@ -201,170 +195,220 @@
         </section>
     @else
         <!-- Fallback hero (shown until banners are uploaded in the admin) -->
-        <section class="bg-[var(--color-primary)] text-white py-20 relative overflow-hidden">
-            <!-- Subtle background accent element -->
-            <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-[var(--color-secondary)]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <section class="relative overflow-hidden bg-[var(--color-primary)] py-24 text-white">
+            <!-- Soft background accents -->
+            <div class="pointer-events-none absolute -right-16 -top-16 h-80 w-80 rounded-full bg-[var(--color-secondary)]/10 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-24 -left-16 h-96 w-96 rounded-full bg-white/5 blur-3xl"></div>
 
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="text-center">
-                    <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-                        Welcome to {{ config('app.name') }}
-                    </h1>
-                    <p class="text-xl md:text-2xl mb-8 text-[var(--color-secondary)] font-medium">
-                        Discover the official merchandise of UPC!
-                    </p>
-                    <a href="{{ route('products.index') }}" 
-                       class="inline-block bg-[var(--color-secondary)] text-[var(--color-primary)] px-8 py-3.5 rounded-lg font-bold hover:bg-amber-400 active:bg-amber-500 transition shadow-lg transform hover:-translate-y-0.5">
+            <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+                <span class="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-[var(--color-secondary)] ring-1 ring-inset ring-white/15">
+                    Official campus store
+                </span>
+
+                <h1 class="text-4xl font-bold tracking-tight md:text-6xl">
+                    Welcome to {{ config('app.name') }}
+                </h1>
+                <p class="mx-auto mt-4 max-w-2xl text-xl text-white/85 md:text-2xl">
+                    Discover the official merchandise of UPC — made for students, by students.
+                </p>
+
+                <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <a href="{{ route('products.index') }}"
+                       class="inline-block transform rounded-lg bg-[var(--color-secondary)] px-8 py-3.5 font-bold text-[var(--color-primary)] shadow-lg transition hover:-translate-y-0.5 hover:bg-amber-400 active:bg-amber-500">
                         Shop Now
                     </a>
+                    <a href="{{ route('products.index', ['featured' => 1]) }}"
+                       class="inline-block rounded-lg border border-white/25 px-8 py-3.5 font-semibold text-white transition hover:bg-white/10">
+                        View Featured
+                    </a>
+                </div>
+
+                <!-- Trust strip -->
+                <div class="mx-auto mt-12 flex max-w-xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-white/70">
+                    <span class="inline-flex items-center gap-1.5">
+                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Verified merch
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        Fast campus pickup
+                    </span>
+                    <span class="inline-flex items-center gap-1.5">
+                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                        Secure checkout
+                    </span>
                 </div>
             </div>
         </section>
     @endif
 
     <!-- Featured Products -->
-    <section class="py-16 bg-emerald-50/40">
+    <section class="bg-emerald-50/40 py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 border-l-4 border-[var(--color-secondary)] pl-3">Featured Products</h2>
+            <div class="mb-8 flex items-end justify-between">
+                <div>
+                    <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-3xl font-bold text-gray-900">Featured Products</h2>
+                    <p class="mt-2 pl-3 text-sm text-gray-500">Hand-picked favorites from the store</p>
+                </div>
                 <a href="{{ route('products.index', ['featured' => 1]) }}"
-                   class="text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-semibold transition">
+                   class="shrink-0 font-semibold text-[var(--color-primary)] transition hover:text-[var(--color-secondary)]">
                     View All →
                 </a>
             </div>
 
-            <div
-                x-data="{
-                    canScrollLeft: false,
-                    canScrollRight: true,
-                    updateScrollState() {
-                        const el = $refs.featuredTrack;
-                        this.canScrollLeft = el.scrollLeft > 8;
-                        this.canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 8;
-                    },
-                    scrollByCard(direction) {
-                        const el = $refs.featuredTrack;
-                        const card = el.querySelector('[data-carousel-item]');
-                        const distance = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
-                        el.scrollBy({ left: direction * distance, behavior: 'smooth' });
-                    }
-                }"
-                x-init="updateScrollState()"
-                class="relative"
-            >
-                <!-- Left arrow -->
-                <button
-                    type="button"
-                    x-show="canScrollLeft"
-                    x-cloak
-                    x-on:click="scrollByCard(-1)"
-                    class="absolute left-0 top-[38%] z-10 hidden size-11 -translate-x-4 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-[var(--color-primary)] sm:flex"
-                    aria-label="Scroll to previous products"
-                >
-                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                    </svg>
-                </button>
-
-                <!-- Scrollable track -->
+            @if($featuredProducts->isNotEmpty())
                 <div
-                    x-ref="featuredTrack"
-                    x-on:scroll.debounce.75ms="updateScrollState()"
-                    x-on:resize.window="updateScrollState()"
-                    class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    x-data="{
+                        canScrollLeft: false,
+                        canScrollRight: true,
+                        updateScrollState() {
+                            const el = $refs.featuredTrack;
+                            this.canScrollLeft = el.scrollLeft > 8;
+                            this.canScrollRight = el.scrollLeft < el.scrollWidth - el.clientWidth - 8;
+                        },
+                        scrollByCard(direction) {
+                            const el = $refs.featuredTrack;
+                            const card = el.querySelector('[data-carousel-item]');
+                            const distance = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
+                            el.scrollBy({ left: direction * distance, behavior: 'smooth' });
+                        }
+                    }"
+                    x-init="updateScrollState()"
+                    class="relative"
                 >
-                    @foreach($featuredProducts as $product)
-                        <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[240px] lg:w-[260px]">
-                            <livewire:product-card :product="$product" :key="$product->id" />
-                        </div>
-                    @endforeach
-                </div>
+                    <!-- Left arrow -->
+                    <button
+                        type="button"
+                        x-show="canScrollLeft"
+                        x-cloak
+                        x-on:click="scrollByCard(-1)"
+                        class="absolute left-0 top-[38%] z-10 hidden size-11 -translate-x-4 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-[var(--color-primary)] sm:flex"
+                        aria-label="Scroll to previous products"
+                    >
+                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
 
-                <!-- Right arrow -->
-                <button
-                    type="button"
-                    x-show="canScrollRight"
-                    x-cloak
-                    x-on:click="scrollByCard(1)"
-                    class="absolute right-0 top-[38%] z-10 hidden size-11 -translate-y-1/2 translate-x-4 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-[var(--color-primary)] sm:flex"
-                    aria-label="Scroll to next products"
-                >
-                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
-                </button>
-            </div>
+                    <!-- Scrollable track -->
+                    <div
+                        x-ref="featuredTrack"
+                        x-on:scroll.debounce.75ms="updateScrollState()"
+                        x-on:resize.window="updateScrollState()"
+                        class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                        @foreach($featuredProducts as $product)
+                            <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[240px] lg:w-[260px]">
+                                <livewire:product-card :product="$product" :key="$product->id" />
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Right arrow -->
+                    <button
+                        type="button"
+                        x-show="canScrollRight"
+                        x-cloak
+                        x-on:click="scrollByCard(1)"
+                        class="absolute right-0 top-[38%] z-10 hidden size-11 -translate-y-1/2 translate-x-4 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-[var(--color-primary)] sm:flex"
+                        aria-label="Scroll to next products"
+                    >
+                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                </div>
+            @else
+                <div class="rounded-xl border border-dashed border-emerald-200 bg-white/60 py-14 text-center">
+                    <p class="text-gray-500">No featured products yet — check back soon.</p>
+                </div>
+            @endif
         </div>
     </section>
 
     <!-- Categories Section -->
-    <section class="py-16 bg-white">
+    <section class="bg-white py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-[var(--color-secondary)] pl-3">Shop by Category</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div class="mb-8">
+                <h2 class="border-l-4 border-[var(--color-primary)] pl-3 text-3xl font-bold text-gray-900">Shop by Category</h2>
+                <p class="mt-2 pl-3 text-sm text-gray-500">Find exactly what you're looking for</p>
+            </div>
+            <div class="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
                 @foreach($categories as $category)
-                    <a href="{{ route('products.index', ['category' => $category->slug]) }}" 
-                       class="group">
-                        <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3 border border-gray-100 group-hover:border-[var(--color-secondary)] transition">
+                    <a href="{{ route('products.index', ['category' => $category->slug]) }}"
+                       class="group block">
+                        <div class="relative mb-3 aspect-square overflow-hidden rounded-2xl bg-[var(--color-primary)] shadow-sm ring-1 ring-black/5 transition-all duration-300 group-hover:shadow-lg">
+                            {{--
+                                Every category gets the same letter-avatar backdrop first, so a missing
+                                or broken photo never shows as an empty/broken tile — the image (when it
+                                loads) simply layers on top and hides it via onerror.
+                            --}}
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="flex size-16 items-center justify-center rounded-full bg-white/10 text-3xl font-bold text-[var(--color-secondary)] sm:size-20 sm:text-4xl">
+                                    {{ substr($category->name, 0, 1) }}
+                                </span>
+                            </div>
+
                             @if($category->image)
-                                <img src="{{ $category->image_url }}" 
+                                <img src="{{ $category->image_url }}"
                                      alt="{{ $category->name }}"
-                                     class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center bg-[var(--color-primary)]">
-                                    <span class="text-4xl text-[var(--color-secondary)] font-bold">{{ substr($category->name, 0, 1) }}</span>
-                                </div>
+                                     onerror="this.remove();"
+                                     class="absolute inset-0 h-full w-full object-cover transition duration-500 ease-out group-hover:scale-110">
                             @endif
+
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+
+                            <!-- Name + count sit on the image itself, so the tile reads as one clean unit -->
+                            <div class="absolute inset-x-0 bottom-0 p-3">
+                                <h3 class="text-sm font-semibold leading-snug text-white sm:text-base">
+                                    {{ $category->name }}
+                                </h3>
+                                <p class="mt-0.5 text-[11px] text-white/75 sm:text-xs">{{ $category->products_count }} items</p>
+                            </div>
                         </div>
-                        <h3 class="text-center font-medium text-gray-900 group-hover:text-[var(--color-primary)] transition">
-                            {{ $category->name }}
-                        </h3>
-                        <p class="text-center text-sm text-gray-500">{{ $category->products_count }} items</p>
                     </a>
                 @endforeach
             </div>
         </div>
     </section>
-    
-    <!-- Benefits Section 
-    <section class="py-16 bg-[var(--color-primary)]/5 border-t border-emerald-100">
+
+    <!-- Trust / Benefits Section -->
+    <section class="border-t border-emerald-100 bg-[var(--color-primary)]/5 py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                Quality Guarantee 
-                <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-emerald-100">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[var(--color-primary)] rounded-full mb-4">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <!-- Quality Guarantee -->
+                <div class="rounded-xl border border-emerald-100 bg-white p-6 text-center shadow-sm transition hover:shadow-md">
+                    <div class="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-emerald-50 text-[var(--color-primary)]">
+                        <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2 text-gray-900">Quality Guarantee</h3>
-                    <p class="text-gray-600">All products are carefully selected and quality tested</p>
+                    <h3 class="mb-2 text-xl font-semibold text-gray-900">Quality Guarantee</h3>
+                    <p class="text-gray-600">Every item is carefully checked before it reaches you.</p>
                 </div>
 
-              Fast Shipping
-                <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-[#FEF8EA]">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-[#FEF8EA] text-[var(--color-secondary)] rounded-full mb-4">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Fast Shipping -->
+                <div class="rounded-xl border border-[#FEF8EA] bg-white p-6 text-center shadow-sm transition hover:shadow-md">
+                    <div class="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-[#FEF8EA] text-[var(--color-secondary)]">
+                        <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2 text-gray-900">Fast Shipping</h3>
-                    <p class="text-gray-600">Quick delivery right to your doorstep</p>
+                    <h3 class="mb-2 text-xl font-semibold text-gray-900">Fast Campus Delivery</h3>
+                    <p class="text-gray-600">Quick pickup and delivery right on campus.</p>
                 </div>
-    
 
-               Secure Payment 
-                <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-emerald-100">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 text-[var(--color-primary)] rounded-full mb-4">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Secure Payment -->
+                <div class="rounded-xl border border-emerald-100 bg-white p-6 text-center shadow-sm transition hover:shadow-md">
+                    <div class="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-emerald-50 text-[var(--color-primary)]">
+                        <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2 text-gray-900">Secure Payment</h3>
-                    <p class="text-gray-600">Your payment information is safe with us</p>
+                    <h3 class="mb-2 text-xl font-semibold text-gray-900">Secure Payment</h3>
+                    <p class="text-gray-600">Your payment information is always protected.</p>
                 </div>
             </div>
         </div>
     </section>
-    -->
 </div>
