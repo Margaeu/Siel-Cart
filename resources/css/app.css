@@ -8,6 +8,68 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Acumin Pro — the single site typeface, storefront and admin panel alike.
+ *
+ * The files are the ones Filament serves to the panel
+ * (public/fonts/filament/filament/acumin-pro/, registered in
+ * AdminPanelProvider::panel() via LocalFontProvider). They are declared again
+ * here rather than @import-ed from that index.css because this file is compiled
+ * by Vite and that one is not: a root-relative @import would be resolved at
+ * build time.
+ *
+ * The url()s below are relative rather than root-relative ("/fonts/...") on
+ * purpose, and reaching back into public/ from resources/css/ is deliberate.
+ * A root-relative url resolves against the origin serving THIS stylesheet, and
+ * in dev that origin is the Vite server, not the app -- laravel-vite-plugin
+ * turns Vite's publicDir off, so every face 404-ed and the whole storefront
+ * silently fell back to sans-serif for as long as `npm run dev` was running
+ * (the panel was unaffected: Filament links its own index.css from the app
+ * origin, which is why /admin looked right while the storefront did not).
+ * Relative urls make these real Vite assets instead: served from the dev server
+ * with the CORS headers fonts require (server.cors in vite.config.js), and
+ * fingerprinted into public/build/assets on build. Do not "tidy" them back into
+ * absolute paths, and do not copy the files into resources/ -- the panel loads
+ * them straight out of public/ and these must stay the same four files.
+ *
+ * Only 400 and 700 ship. A request for 500 (font-medium) therefore renders at
+ * 400 and 600 (font-semibold) at 700 -- CSS picks the nearest available face,
+ * so there is no faux-bold, but the four-step weight ramp the storefront markup
+ * assumes collapses to two. Adding Acumin's Light/Medium/Semibold cuts here is
+ * all it would take to restore it.
+ */
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-RPro.otf') format('opentype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-ItPro.otf') format('opentype');
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-BdPro.otf') format('opentype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Acumin Pro';
+    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-BdItPro.otf') format('opentype');
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+}
+
 @theme {
     /*
      * Two extra breakpoints for the catalog grid, registered as named screens
@@ -22,7 +84,16 @@
     --breakpoint-xs: 22.5rem;
     --breakpoint-3xl: 90rem;
 
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    /*
+     * Was 'Instrument Sans', a starter-kit leftover that no stylesheet ever
+     * loaded -- every page using this token silently fell through to the system
+     * UI sans. Tailwind resolves --default-font-family from this, so setting it
+     * here puts Acumin Pro on Preflight's html rule and on font-sans at once,
+     * which is what dresses the standalone customer auth documents
+     * (resources/views/auth/customer/*.blade.php): they pull in this stylesheet
+     * but not partials.theme-styles, so this token is their only font source.
+     */
+    --font-sans: 'Acumin Pro', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;

@@ -15,7 +15,7 @@ class Review extends Model
         'title',
         'comment',
         'photos',
-        'video',
+        'video_path',
         'is_verified_purchase',
         'is_approved',
     ];

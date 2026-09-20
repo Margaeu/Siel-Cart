@@ -4,12 +4,71 @@
 @source '../../../../resources/views/filament/**/*';
 
 @layer components {
-    /* Panel chrome — topbar, sidebar, page header, tables, sections — is deliberately
-       left to Filament's own stylesheet, so the panel keeps the stock Filament look.
-       Only the custom components below are styled here, and they pull their accent from
-       --color-primary-* / --color-gray-* / --color-danger-* instead of hardcoding hex
-       values, so recolouring the panel means editing AdminPanelProvider::panel() and
-       nothing else. Do not reintroduce brand hex codes in this file. */
+    /* Panel chrome — sidebar, page header, tables, sections — is deliberately left to
+       Filament's own stylesheet, so the panel keeps the stock Filament look. The topbar
+       is the one exception (see below): it is the masthead, and it carries the same CLSU
+       green as the storefront header so the two halves of the site read as one product.
+       Everything styled here pulls its accent from --color-primary-* / --color-gray-* /
+       --color-danger-* instead of hardcoding hex values, so recolouring the panel means
+       editing AdminPanelProvider::panel() and nothing else. Do not reintroduce brand hex
+       codes in this file — `primary-600` IS #557F13.
+
+       These rules are same-specificity overrides of Filament's own `.fi-topbar` block.
+       They work because this file is imported after Filament's stylesheet and both sit
+       in `layer(components)`, so source order decides. Keep them in this layer. */
+
+    /* 4rem is Filament's default and leaves the brand cramped at storefront scale.
+       Filament drives the topbar, the sidebar's top offset and height, the sidebar
+       header and the main container all off this one variable, so raising it here
+       keeps the whole layout in step — do not set heights on .fi-topbar directly.
+       4.5rem lines up with the storefront masthead's 76px. */
+    .fi-body {
+        --topbar-height: 4.5rem;
+    }
+
+    /* The topbar is green in BOTH themes, so its contents are keyed to white rather
+       than flipped with the theme — including the seal, which brand.blade.php swaps
+       to the white cut inside `.fi-topbar`. */
+    .fi-topbar {
+        background-color: var(--color-primary-600);
+        color: #ffffff;
+        /* ring-1 ring-gray-950/5 is invisible on green; darken it into a hairline
+           edge. --tw-ring-shadow reads this var, so setting it is enough. */
+        --tw-ring-color: rgb(0 0 0 / 0.15);
+    }
+
+    /* brand.blade.php sets `color: inherit` so it can follow whatever surface it
+       lands on, but Filament puts `text-gray-950 dark:text-white` on `.fi-logo`
+       itself — a declaration on the wrapper, which inheritance from `.fi-topbar`
+       can never outrank. Without this the seal turned white while the wordmark
+       stayed near-black. Only inside the topbar: the same view renders on the
+       white login card and mobile drawer, where gray-950 is correct. */
+    .fi-topbar .fi-logo {
+        color: #ffffff;
+    }
+
+    /* The sidebar toggles are `color="gray"` icon buttons (gray-500, gray-600 on
+       hover). The hover selector carries Filament's specificity, hence the second
+       selector rather than a single rule. Scoped to the toggles themselves so the
+       global search results panel — which renders inside .fi-topbar on its own white
+       surface — keeps its own colours. */
+    .fi-topbar > .fi-icon-btn,
+    .fi-topbar-collapse-sidebar-btn-ctn .fi-icon-btn,
+    .fi-topbar > .fi-icon-btn:not(.fi-disabled):not([disabled]):hover,
+    .fi-topbar-collapse-sidebar-btn-ctn .fi-icon-btn:not(.fi-disabled):not([disabled]):hover {
+        color: #ffffff;
+    }
+
+    .fi-topbar > .fi-icon-btn:hover,
+    .fi-topbar-collapse-sidebar-btn-ctn .fi-icon-btn:hover {
+        background-color: rgb(255 255 255 / 0.12);
+    }
+
+    /* Focus rings default to primary-600, which vanishes against the green. */
+    .fi-topbar .fi-icon-btn:focus-visible,
+    .fi-topbar .fi-user-menu-trigger:focus-visible {
+        --tw-ring-color: #ffffff;
+    }
 
     .fi-resource-create-record-page .fi-section-header-description,
     .fi-resource-edit-record-page .fi-section-header-description {

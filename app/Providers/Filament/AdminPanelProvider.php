@@ -35,13 +35,17 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             ->brandName('Siel Cart')
             ->brandLogo(fn () => view('filament.admin.brand'))
-            ->brandLogoHeight('2.75rem')
+            // The brand view is sized off this: Filament wraps it in a div with
+            // `height: <this>`, and the seal inside stretches to 100% of it. 3.5rem
+            // matches the storefront header's seal; it needs the taller topbar that
+            // theme.css sets via --topbar-height, so change the two together.
+            ->brandLogoHeight('3.5rem')
             ->font(
                 'Acumin Pro',
                 url: asset('fonts/filament/filament/acumin-pro/index.css'),
                 provider: LocalFontProvider::class,
             )
-            //->databaseNotifications()
+            // ->databaseNotifications()
             ->sidebarCollapsibleOnDesktop()
             // The desktop sidebar toggle ships as a chevron that flips direction with
             // the sidebar state. Both aliases get the hamburger so the control keeps one
@@ -85,12 +89,12 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            
+
             ->widgets([
                 AccountWidget::class,
-                //FilamentInfoWidget::class,
+                // FilamentInfoWidget::class,
             ])
-           
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

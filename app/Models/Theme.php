@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Theme extends Model
 {
@@ -16,9 +15,6 @@ class Theme extends Model
         'name',
         'primary_color',
         'secondary_color',
-        'font_family',
-        'custom_font_name',
-        'custom_font_path',
         'is_active',
     ];
 
@@ -49,26 +45,5 @@ class Theme extends Model
                     ->update(['is_active' => false]);
             }
         });
-    }
-
-    /**
-     * Absolute R2 URL for the custom font file, if one is attached.
-     */
-    public function getCustomFontUrlAttribute(): ?string
-    {
-        if (!$this->custom_font_path) {
-            return null;
-        }
-
-        return Storage::disk('r2')->url($this->custom_font_path);
-    }
-
-    /**
-     * The name to use in CSS `font-family:` — the custom font's name if one
-     * is attached, otherwise the chosen preset (e.g. 'Inter').
-     */
-    public function getResolvedFontNameAttribute(): string
-    {
-        return $this->custom_font_name ?: ($this->font_family ?: 'Inter');
     }
 }

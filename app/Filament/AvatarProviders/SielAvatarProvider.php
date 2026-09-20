@@ -27,10 +27,14 @@ class SielAvatarProvider implements AvatarProvider
 
         $initials = htmlspecialchars($initials, ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
+        // White disc, CLSU green initials. The green ring is not decoration: the
+        // avatar sits on the green topbar *and* on white surfaces (the account
+        // widget, the user menu panel), and without an outline the disc would
+        // disappear into the white ones, leaving the initials floating.
         $svg = <<<SVG
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img">
-            <rect width="40" height="40" rx="20" fill="#557F13"/>
-            <text x="20" y="21" fill="#FFFFFF" font-family="'Acumin Pro', sans-serif" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="middle">{$initials}</text>
+            <circle cx="20" cy="20" r="19.25" fill="#FFFFFF" stroke="#557F13" stroke-width="1.5"/>
+            <text x="20" y="21" fill="#557F13" font-family="'Acumin Pro', sans-serif" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="middle">{$initials}</text>
         </svg>
         SVG;
 
@@ -62,9 +66,15 @@ class SielAvatarProvider implements AvatarProvider
         imagefill($image, 0, 0, $transparent);
         imagealphablending($image, true);
 
-        $background = imagecolorallocate($image, 85, 127, 19);
-        $foreground = imagecolorallocate($image, 255, 255, 255);
-        imagefilledellipse($image, $size / 2, $size / 2, $size, $size, $background);
+        // Mirrors the SVG fallback below: white disc, CLSU green ring and initials.
+        // The ring is drawn as a green disc with a smaller white one on top of it
+        // rather than with imageellipse(), whose stroke comes out ragged.
+        $green = imagecolorallocate($image, 85, 127, 19);
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $foreground = $green;
+        $ring = 4;
+        imagefilledellipse($image, $size / 2, $size / 2, $size, $size, $green);
+        imagefilledellipse($image, $size / 2, $size / 2, $size - ($ring * 2), $size - ($ring * 2), $white);
 
         $fontSize = 42;
         $bounds = imagettfbbox($fontSize, 0, $font, $initials);

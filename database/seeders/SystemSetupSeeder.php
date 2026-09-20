@@ -23,7 +23,7 @@ class SystemSetupSeeder extends Seeder
                 'first_name' => 'System',
                 'last_name' => 'Admin',
                 'password' => Hash::make('password'), // Change this in production
-                //'email_verified_at' => now(),
+                // 'email_verified_at' => now(),
             ]
         );
 
@@ -50,7 +50,6 @@ class SystemSetupSeeder extends Seeder
             [
                 'primary_color' => '#1E6031',
                 'secondary_color' => '#E0A70D',
-                'font_family' => 'Inter',
                 'is_active' => true,
             ]
         );

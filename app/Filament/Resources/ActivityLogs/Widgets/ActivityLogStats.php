@@ -57,8 +57,7 @@ class ActivityLogStats extends StatsOverviewWidget
             Stat::make('Failed login attempts today', number_format($counts['failed']))
                 ->description($counts['throttled'] > 0
                     ? number_format($counts['throttled']).' blocked by the lockout'
-                    : 'Wrong passwords and lockouts')
-                ->descriptionIcon($counts['failed'] > 0 ? 'heroicon-m-exclamation-triangle' : null)
+                    : 'Wrong email or password')
                 ->icon(Heroicon::OutlinedExclamationTriangle)
                 ->color($counts['failed'] > 0 ? 'danger' : 'gray'),
 
