@@ -83,7 +83,7 @@
                                     'text-white/75 hover:text-white' => ! request()->routeIs('products.*'),
                                 ])
                                 @if(request()->routeIs('products.*')) aria-current="page" @endif
-                            >Shop</a>
+                            >Products</a>
                         </li>
                         <li>
                             <a

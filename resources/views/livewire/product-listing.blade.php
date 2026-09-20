@@ -64,7 +64,7 @@
             <ol class="flex items-center gap-1.5">
                 <li><a href="{{ route('home') }}" class="rounded transition hover:text-gray-900 {{ $focusRing }}">Home</a></li>
                 <li aria-hidden="true">/</li>
-                <li class="font-medium text-gray-700" aria-current="page">Shop</li>
+                <li class="font-medium text-gray-700" aria-current="page">Products</li>
             </ol>
         </nav>
 
