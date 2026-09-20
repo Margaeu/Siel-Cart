@@ -9,6 +9,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+    /*
+     * Two extra breakpoints for the catalog grid, registered as named screens
+     * rather than written inline as min-[360px]/min-[1440px].
+     *
+     * Tailwind groups arbitrary pixel variants ahead of the rem-based default
+     * screens in the output, so an inline min-[1440px]:grid-cols-4 is emitted
+     * *before* md:grid-cols-3 and loses the cascade on a 1440px display --
+     * the grid silently stayed at three columns. A registered breakpoint sorts
+     * by its value, so 3xl lands after lg and xl where it belongs.
+     */
+    --breakpoint-xs: 22.5rem;
+    --breakpoint-3xl: 90rem;
+
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --color-zinc-50: #fafafa;
@@ -44,6 +57,27 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+/*
+ * Honour the operating system's "reduce motion" setting storefront-wide.
+ *
+ * The motion-safe: variant covers markup we control, but three things on the
+ * storefront animate from outside a class list: Alpine's x-transition writes
+ * inline styles onto the filter panel, the chat widget builds its typing
+ * indicator in JavaScript, and Livewire's own transitions are library CSS.
+ * A preference query is the only place that catches all of them at once.
+ */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }
 

@@ -26,6 +26,8 @@ class ProductListing extends Component
     public $sort = 'newest';
     #[Url]
     public $featured = '';
+    #[Url]
+    public $inStock = false;
     public $priceRange = [0, 10000];
 
     public function mount()
@@ -71,6 +73,11 @@ class ProductListing extends Component
         $this->resetPage();
     }
 
+    public function updatingInStock()
+    {
+        $this->resetPage();
+    }
+
     public function applyPriceFilter()
     {
         $this->resetPage();
@@ -78,7 +85,7 @@ class ProductListing extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'category', 'minPrice', 'maxPrice', 'featured']);
+        $this->reset(['search', 'category', 'minPrice', 'maxPrice', 'featured', 'inStock']);
         $this->maxPrice = $this->priceRange[1];
         $this->resetPage();
         $this->dispatch('category-changed', category: '');
@@ -120,6 +127,15 @@ class ProductListing extends Component
         // Featured filter
         if ($this->featured) {
             $query->featured();
+        }
+
+        // Availability filter. inStock() reads a simple product's own stock and
+        // a variable product's active variant stock, so a variable product
+        // stays visible while any one of its variants can still be sold --
+        // filtering on products.stock_quantity would hide it, because that
+        // column means nothing once has_variants is set.
+        if ($this->inStock) {
+            $query->inStock();
         }
 
         // Sorting. Price sorts go through orderByDisplayPrice() so a variable

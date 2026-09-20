@@ -9,15 +9,31 @@
 --}}
 
 <!-- Floating AI Chatbot Toggle Button -->
-<button id="chat-toggle" class="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-5 py-3 bg-[#557F13] text-white font-semibold rounded-full shadow-xl hover:bg-[#3E5D0E] active:scale-95 transition-all duration-200 group">
-    <svg class="w-6 h-6 text-[#FFD801] group-hover:rotate-12 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+{{--
+    Icon-only 48x48 below sm, the original labelled pill from sm up. The pill
+    was 110px wide at every width and sat over the product grid on a phone;
+    the square button keeps the same corner without reaching into a card's
+    name or price.
+--}}
+<button id="chat-toggle" type="button"
+        aria-label="Open shopping assistant"
+        aria-expanded="false"
+        aria-controls="chat-widget"
+        class="group fixed bottom-4 right-4 z-50 inline-flex size-12 items-center justify-center rounded-full bg-[#557F13] font-semibold text-white shadow-xl transition-all duration-200 hover:bg-[#3E5D0E] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#557F13] focus-visible:ring-offset-2 sm:bottom-6 sm:right-6 sm:size-auto sm:gap-2.5 sm:px-5 sm:py-3">
+    <svg class="size-6 shrink-0 text-[#FFD801] transition-transform duration-200 motion-safe:group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
     </svg>
-    <span>Chat</span>
+    <span class="hidden sm:inline">Chat</span>
 </button>
 
 <!-- Chatbot Window -->
-<div id="chat-widget" wire:ignore class="hidden fixed bottom-24 right-6 z-50 w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex-col overflow-hidden transition-all duration-300">
+{{--
+    Below sm the window spans the viewport minus the 16px mobile gutter and
+    takes its height from dvh, so it fits a 320px phone instead of overflowing
+    it -- the old fixed w-80 plus right-6 measured 344px. From sm up the
+    original 384x500 panel is unchanged.
+--}}
+<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[500px] sm:w-96">
     <!-- Header -->
     <div class="bg-[#557F13] text-white p-4 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-3">
@@ -31,7 +47,7 @@
                 </span>
             </div>
         </div>
-        <button id="chat-close" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+        <button id="chat-close" type="button" aria-label="Close chat" class="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -47,9 +63,10 @@
 
     <!-- Input Area -->
     <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
-        <input type="text" id="chat-input" placeholder="Ask about products, orders..." class="flex-1 px-4 py-2.5 bg-gray-100 border border-transparent rounded-xl focus:bg-white focus:border-[#557F13] focus:outline-none text-sm text-gray-900 placeholder-gray-400 transition">
-        <button id="chat-send" class="p-2.5 bg-[#557F13] text-white rounded-xl hover:bg-[#3E5D0E] active:scale-95 transition shadow-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <label for="chat-input" class="sr-only">Message the shopping assistant</label>
+        <input type="text" id="chat-input" placeholder="Ask about products, orders..." class="h-11 min-w-0 flex-1 rounded-xl border border-transparent bg-gray-100 px-4 text-sm text-gray-900 placeholder-gray-500 transition focus:border-[#557F13] focus:bg-white focus:outline-none">
+        <button id="chat-send" type="button" aria-label="Send message" class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#557F13] text-white shadow-sm transition hover:bg-[#3E5D0E] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#557F13] focus-visible:ring-offset-2">
+            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
         </button>
@@ -67,15 +84,30 @@
 
         if (!toggleBtn || !chatWidget) return;
 
-        toggleBtn.onclick = () => {
+        // Open and close are two entry points for the same state, and the
+        // toggle button's aria-expanded has to follow both of them.
+        function openChat() {
             chatWidget.classList.remove('hidden');
             chatWidget.classList.add('flex');
+            toggleBtn.setAttribute('aria-expanded', 'true');
             inputField.focus();
-        };
-        closeBtn.onclick = () => {
+        }
+
+        function closeChat() {
             chatWidget.classList.add('hidden');
             chatWidget.classList.remove('flex');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            toggleBtn.focus();
+        }
+
+        toggleBtn.onclick = () => {
+            chatWidget.classList.contains('hidden') ? openChat() : closeChat();
         };
+        closeBtn.onclick = closeChat;
+
+        chatWidget.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeChat();
+        });
 
         function appendMessage(text, sender) {
             const msgDiv = document.createElement('div');
