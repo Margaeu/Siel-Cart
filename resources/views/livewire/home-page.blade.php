@@ -300,7 +300,7 @@
     <!-- Categories Section -->
     <section class="py-16 bg-white">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-[var(--color-primary)] pl-3">Shop by Category</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-[var(--color-secondary)] pl-3">Shop by Category</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 @foreach($categories as $category)
                     <a href="{{ route('products.index', ['category' => $category->slug]) }}" 

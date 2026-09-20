@@ -214,38 +214,116 @@
 
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-16">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <h3 class="text-lg font-bold mb-4">{{ $siteName }}</h3>
-                    <p class="text-gray-400">Your one-stop shop for quality products.</p>
+    {{--
+        Type and spacing here are fluid (clamp()) rather than fixed steps: the
+        footer is the one block that renders identically on a 360px phone and a
+        1440px monitor, and static px sizes made it cramped on one and oversized
+        on the other. The sizes live in a scoped style block instead of Tailwind
+        arbitrary values so the footer is not dependent on a Vite rebuild to keep
+        its proportions.
+    --}}
+    <style>
+        .site-footer {
+            --footer-logo: clamp(3.5rem, 2.25rem + 5vw, 6.5rem);
+            --footer-brand: clamp(1.15rem, 0.95rem + 0.9vw, 1.9rem);
+            --footer-heading: clamp(0.95rem, 0.88rem + 0.28vw, 1.15rem);
+            --footer-body: clamp(0.875rem, 0.83rem + 0.22vw, 1rem);
+            --footer-meta: clamp(0.78rem, 0.75rem + 0.16vw, 0.9rem);
+            --footer-gap: clamp(1.75rem, 1rem + 2.5vw, 3.5rem);
+            --footer-pad-y: clamp(2.5rem, 1.75rem + 3vw, 4.5rem);
+        }
+
+        .site-footer__logo {
+            width: var(--footer-logo);
+            height: var(--footer-logo);
+        }
+
+        .site-footer__brand { font-size: var(--footer-brand); }
+        .site-footer__heading { font-size: var(--footer-heading); }
+        .site-footer__text { font-size: var(--footer-body); }
+        .site-footer__meta { font-size: var(--footer-meta); }
+    </style>
+
+    <footer class="site-footer mt-16 bg-gray-800 text-white">
+        <div
+            class="mx-auto w-full max-w-[1400px] px-5 sm:px-8 lg:px-10"
+            style="padding-top: var(--footer-pad-y); padding-bottom: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);"
+        >
+            <!-- Brand block sits beside the link columns on wide screens and stacks above them on small ones -->
+            <div
+                class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-[minmax(0,2.2fr)_repeat(3,minmax(0,1fr))]"
+                style="gap: var(--footer-gap);"
+            >
+                {{-- Tablet keeps the three link columns on one row by giving the brand block the row above it --}}
+                <div class="md:col-span-3 lg:col-span-1">
+                    {{--
+                        Logo and contact details share one row: the seal sits to the
+                        left of the whole text stack (name, tagline, address, email)
+                        rather than only the name, so the block reads as one unit.
+                    --}}
+                    <div class="flex items-center gap-4 sm:gap-5">
+                        <img
+                            src="{{ asset('images/LOGO.png') }}"
+                            alt="{{ $siteName }} logo"
+                            class="site-footer__logo shrink-0 object-contain"
+                        >
+
+                        <div class="min-w-0">
+                            <p class="site-footer__brand font-bold leading-tight tracking-[-0.02em]">{{ $siteName }}</p>
+
+                            <!-- Replaces the old generic tagline: the office people actually walk to and write to -->
+                            <ul class="site-footer__text mt-3 space-y-2.5 text-gray-400">
+                                <li class="flex items-start gap-2.5">
+                                    <svg class="mt-0.5 size-5 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0Z" />
+                                    </svg>
+                                    <span class="min-w-0">UBAP Office, Central Luzon State University, Science City of Muñoz, Nueva Ecija, Philippines 3120</span>
+                                </li>
+                                <li class="flex items-start gap-2.5">
+                                    <svg class="mt-0.5 size-5 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 9.16a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                    </svg>
+                                    <a
+                                        class="min-w-0 break-all transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]"
+                                    >ubap@clsu.edu.ph</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
+
                 <div>
-                    <h4 class="font-semibold mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="{{ route('products.index') }}" class="text-gray-400 hover:text-white">Shop</a></li>
-                        <li><a href="{{ route('about') }}" class="text-gray-400 hover:text-white">About Us</a></li>
+                    <h4 class="site-footer__heading font-semibold text-white">Quick Links</h4>
+                    <ul class="site-footer__text mt-4 space-y-2.5">
+                        <li><a href="{{ route('products.index') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Shop</a></li>
+                        <li><a href="{{ route('about') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">About Us</a></li>
                     </ul>
                 </div>
+
                 <div>
-                    <h4 class="font-semibold mb-4">Customer Service</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white">Return/Refund Policy</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white">FAQ</a></li>
+                    <h4 class="site-footer__heading font-semibold text-white">Customer Service</h4>
+                    <ul class="site-footer__text mt-4 space-y-2.5">
+                        <li><a href="#" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Privacy Policy</a></li>
+                        <li><a href="#" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Return/Refund Policy</a></li>
+                        <li><a href="#" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">FAQ</a></li>
                     </ul>
                 </div>
+
                 <div>
-                    <h4 class="font-semibold mb-4">My Account</h4>
-                    <ul class="space-y-2">
-                        <li><a href="{{ route('customer.dashboard') }}" class="text-gray-400 hover:text-white">Dashboard</a></li>
-                        <li><a href="{{ route('customer.orders') }}" class="text-gray-400 hover:text-white">Orders</a></li>
-                        <li><a href="{{ route('customer.profile') }}" class="text-gray-400 hover:text-white">Profile</a></li>
+                    <h4 class="site-footer__heading font-semibold text-white">My Account</h4>
+                    <ul class="site-footer__text mt-4 space-y-2.5">
+                        <li><a href="{{ route('customer.dashboard') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Dashboard</a></li>
+                        <li><a href="{{ route('customer.orders') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Orders</a></li>
+                        <li><a href="{{ route('customer.profile') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Profile</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+
+            <div
+                class="site-footer__meta border-t border-white/10 text-center text-gray-400 sm:text-left"
+                style="margin-top: var(--footer-gap); padding-top: clamp(1.25rem, 1rem + 1vw, 2rem);"
+            >
                 <p>&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
             </div>
         </div>

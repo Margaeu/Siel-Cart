@@ -1,6 +1,6 @@
 <div class="bg-white min-h-screen text-gray-800" x-data="{ showFilters: true, inStockOnly: false }">
 
-    {{-- Top Announcement Bar --}}
+    {{-- Top Announcement Bar 
     <div class="border-b border-gray-100 bg-[#fbfbfa] py-2 text-xs text-gray-500">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
             <div class="flex items-center gap-2">
@@ -23,6 +23,7 @@
             </div>
         </div>
     </div>
+    --}}
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
