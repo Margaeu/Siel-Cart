@@ -4,226 +4,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - SIEL CART</title>
 
-    <title>Forgot Password - CobraCart</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: #f7f9f3;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #06264d;
-        }
-
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 105px;
-        }
-
-        .brand {
-            font-size: 34px;
-            font-weight: 700;
-            color: #4d850d;
-            margin-bottom: 27px;
-        }
-
-        .auth-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: #061c3a;
-            margin: 0 0 10px 0;
-            text-align: center;
-        }
-
-        .auth-subtitle {
-            font-size: 16px;
-            color: #17385f;
-            margin-bottom: 35px;
-            text-align: center;
-        }
-
-        .auth-card {
-            width: 490px;
-            background: #ffffff;
-            border-radius: 9px;
-            border-top: 4px solid #f2b500;
-            padding: 38px 27px 34px 27px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.10);
-        }
-
-        .form-group {
-            margin-bottom: 22px;
-        }
-
-        label {
-            display: block;
-            font-size: 16px;
-            font-weight: 600;
-            color: #09284e;
-            margin-bottom: 8px;
-        }
-
-        input[type="email"] {
-            width: 100%;
-            height: 50px;
-            padding: 0 16px;
-            border: 1px solid #cbd5e1;
-            border-radius: 9px;
-            background: #eaf2ff;
-            color: #071d3a;
-            font-size: 15px;
-            outline: none;
-        }
-
-        input[type="email"]:focus {
-            border: 2px solid #f2b500;
-            box-shadow: 0 0 0 1px #f2b500;
-        }
-
-        .error-message {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 7px;
-        }
-
-        .status-message {
-            background: #e9f7e8;
-            color: #34700a;
-            border: 1px solid #b8dcae;
-            border-radius: 7px;
-            padding: 12px 14px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .submit-button {
-            width: 100%;
-            height: 52px;
-            border: none;
-            border-radius: 8px;
-            background: #4d850d;
-            color: white;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12);
-            transition: 0.2s ease;
-        }
-
-        .submit-button:hover {
-            background: #416f0b;
-        }
-
-        .back-link {
-            margin-top: 32px;
-            color: #347500;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 600px) {
-            .auth-container {
-                padding: 70px 20px 40px;
-            }
-
-            .auth-card {
-                width: 100%;
-                max-width: 490px;
-            }
-
-            .brand {
-                font-size: 30px;
-            }
-
-            .auth-title {
-                font-size: 28px;
-            }
-        }
-    </style>
+    {{-- Tailwind & Fonts --}}
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body>
+<body class="min-h-screen bg-[#edf3ec] text-gray-800 font-sans antialiased flex items-center justify-center p-4">
 
-    <div class="auth-container">
+    {{-- Main Auth Card --}}
+    <div class="w-full max-w-[420px] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.06)] border border-gray-100">
 
-        <!-- CobraCart -->
-        <div class="brand">
-            CobraCart
+        {{-- Brand / Header --}}
+        <div class="mb-8 flex items-center">
+            <x-customer-auth-brand />
         </div>
 
-        <!-- Title -->
-        <h1 class="auth-title">
-            Forgot password?
-        </h1>
-
-        <div class="auth-subtitle">
-            Enter your email address to reset your password.
+        {{-- Card Title & Instructions --}}
+        <div class="mb-6">
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 leading-snug">
+                Forgot password?
+            </h1>
+            <p class="text-xs text-gray-500 mt-1">
+                Remember your password? 
+                <a href="{{ route('login') }}" class="text-[#4d7318] hover:underline font-semibold">Sign in here</a>
+            </p>
         </div>
 
-        <!-- Card -->
-        <div class="auth-card">
+        {{-- Success Session Alert --}}
+        @if (session('status'))
+            <div class="mb-5 rounded-xl bg-emerald-50 border border-emerald-200/60 p-3 text-xs text-emerald-800 flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ session('status') }}</span>
+            </div>
+        @endif
 
-            @if (session('status'))
-                <div class="status-message">
-                    {{ session('status') }}
-                </div>
-            @endif
+        {{-- Form --}}
+        <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
+            @csrf
 
-            @if ($errors->any())
-                <div class="status-message" style="background:#fff1f1; color:#b91c1c; border-color:#f1b5b5;">
-                    {{ $errors->first() }}
-                </div>
-            @endif
+            <div>
+                <label for="email" class="block text-[11px] font-bold tracking-wider text-gray-500 uppercase mb-1.5">
+                    EMAIL
+                </label>
 
-            <form method="POST" action="{{ route('password.email') }}">
-                @csrf
-
-                <div class="form-group">
-                    <label for="email">
-                        Email Address
-                    </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
 
                     <input
                         id="email"
                         type="email"
                         name="email"
                         value="{{ old('email') }}"
-                        placeholder="Enter your email address"
+                        placeholder="you@clsu.edu.ph"
                         required
                         autofocus
+                        class="w-full text-xs sm:text-sm pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#a37b12] focus:ring-2 focus:ring-[#f6e6aa] transition duration-150"
                     >
-
-                    @error('email')
-                        <div class="error-message">
-                            {{ $message }}
-                        </div>
-                    @enderror
                 </div>
 
-                <button type="submit" class="submit-button">
-                    Send Password Reset Link
-                </button>
-            </form>
+                @error('email')
+                    <p class="mt-1.5 text-xs text-red-600 flex items-center gap-1">
+                        <svg class="w-3 h-3 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+            </div>
 
+            {{-- Submit Button --}}
+            <button 
+                type="submit" 
+                class="w-full mt-2 py-2.5 px-4 bg-[#557e1b] hover:bg-[#466a15] active:bg-[#385611] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+            >
+                <span>Send Reset Link</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </button>
+        </form>
+
+        {{-- Footer Details --}}
+        <div class="mt-8 flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>Secure sign-in</span>
+            <span>·</span>
+            <a href="#" class="hover:underline hover:text-gray-600">Privacy Policy</a>
         </div>
-
-        <!-- Back to Login -->
-        <a href="{{ route('login') }}" class="back-link">
-            ← Back to Login
-        </a>
 
     </div>
 

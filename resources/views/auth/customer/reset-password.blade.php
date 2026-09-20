@@ -190,9 +190,7 @@
 
 <div class="page">
 
-    <div class="brand">
-        CobraCart
-    </div>
+    <x-customer-auth-brand />
 
     <div class="heading">
         <h1>Reset Password</h1>
