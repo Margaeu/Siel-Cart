@@ -15,8 +15,6 @@ class Banner extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title',
-        'subtitle',
         'image_path',
         'is_active',
         'sort_order',
@@ -31,8 +29,6 @@ class Banner extends Model
     {
         return LogOptions::defaults()
             ->logOnly([
-                'title',
-                'subtitle',
                 'image_path',
                 'is_active',
                 'sort_order',
