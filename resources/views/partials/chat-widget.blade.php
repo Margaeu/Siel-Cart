@@ -40,6 +40,79 @@
             border-radius: 0.75rem !important;
         }
     }
+    /* Minimal suggestion layout: two-column grid of pills, compact and non-scrolling */
+    #chat-suggestions .suggestions-card {
+        background: transparent;
+        padding: 0.12rem 0.2rem;
+        max-width: 96%;
+        margin: 0.08rem auto;
+        overflow: visible;
+    }
+    #chat-suggestions .suggestions-head {
+        font-size: 0.78rem;
+        color: #374151;
+        margin-bottom: 0.18rem;
+        font-weight: 600;
+        display: block;
+    }
+    /* collapsed toggle pill */
+    #chat-suggestions .suggestions-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: transparent;
+        border-radius: 9999px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.85rem;
+        color: #374151;
+        cursor: pointer;
+        border: 1px solid rgba(16,24,40,0.04);
+        box-shadow: none;
+    }
+    #chat-suggestions .suggestions-head-pill {
+        display: inline-block;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 0.18rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+    #chat-suggestions .suggestions-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.28rem;
+        align-items: start;
+        row-gap: 0.36rem;
+    }
+    #chat-suggestions .suggestion-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: #fff;
+        border: 1px solid rgba(16,24,40,0.04);
+        padding: 0.18rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        color: #111827;
+        cursor: pointer;
+        transition: background .08s ease, transform .08s ease;
+        justify-content: flex-start;
+        width: 100%;
+        box-sizing: border-box;
+        white-space: normal;
+    }
+    #chat-suggestions .suggestion-chip:hover { background: #f8fafc; transform: translateY(-1px); }
+    @media (max-width: 640px) {
+        #chat-suggestions .suggestions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* keep suggestions visible without an internal scrollbar and keep them compact */
+    #chat-suggestions {
+        overflow: visible;
+        -webkit-overflow-scrolling: touch;
+        display: block; /* container visible but content controlled by JS */
+    }
 </style>
 
 <!-- Floating AI Chatbot Toggle Button -->
@@ -174,9 +247,28 @@
                 if (data.response) {
                     appendMessage(data.response, 'bot');
                     renderSuggestions();
+                    // Ensure input stays visible: adjust padding, scroll messages and focus input
+                    setTimeout(() => {
+                        try {
+                            adjustMessagesPadding();
+                            messagesBox.scrollTop = messagesBox.scrollHeight;
+                            inputField.focus();
+                            inputField.scrollIntoView({ block: 'nearest' });
+                            chatWidget.scrollIntoView({ block: 'end' });
+                        } catch (e) { /* ignore */ }
+                    }, 50);
                 } else {
                     appendMessage('Error: Received invalid response from server.', 'bot');
                     renderSuggestions();
+                    setTimeout(() => {
+                        try {
+                            adjustMessagesPadding();
+                            messagesBox.scrollTop = messagesBox.scrollHeight;
+                            inputField.focus();
+                            inputField.scrollIntoView({ block: 'nearest' });
+                            chatWidget.scrollIntoView({ block: 'end' });
+                        } catch (e) { /* ignore */ }
+                    }, 50);
                 }
             } catch (error) {
                 removeTypingIndicator();
@@ -238,9 +330,12 @@
                 if (data.response) {
                     appendMessage(data.response, 'bot');
                     renderSuggestions();
+                    // Keep the input visible and focused after a reply
+                    try { inputField.focus(); } catch (e) { /* ignore */ }
                 } else {
                     appendMessage('Error: Received invalid response from server.', 'bot');
                     renderSuggestions();
+                    try { inputField.focus(); } catch (e) { /* ignore */ }
                 }
             } catch (error) {
                 removeTypingIndicator();
@@ -262,34 +357,78 @@
 
         // Track suggestions that the user has already used in this session
         const usedSuggestions = new Set();
+        let suggestionsCollapsed = true;
 
         function renderSuggestions() {
             const container = document.getElementById('chat-suggestions');
             if (!container) return;
             container.innerHTML = '';
 
-            const wrapper = document.createElement('div');
-            wrapper.className = 'flex gap-2 overflow-x-auto no-scrollbar py-1';
-            wrapper.style.whiteSpace = 'nowrap';
+            // If collapsed, show a small toggle pill
+            const remaining = SUGGESTED_QUESTIONS.filter(q => !usedSuggestions.has(q));
+            if (suggestionsCollapsed) {
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = 'suggestions-toggle';
+                pill.innerText = 'Quick actions';
+                pill.onclick = () => {
+                    suggestionsCollapsed = false;
+                    renderSuggestions();
+                    // scroll to bottom so expanded suggestions are visible
+                    messagesBox.scrollTop = messagesBox.scrollHeight;
+                };
+                container.appendChild(pill);
+                container.style.display = remaining.length > 0 ? '' : 'none';
+                adjustMessagesPadding();
+                return;
+            }
 
-            SUGGESTED_QUESTIONS.forEach(q => {
-                if (usedSuggestions.has(q)) return; // skip used ones
+            // expanded view: full card + grid
+            const card = document.createElement('div');
+            card.className = 'suggestions-card';
 
+            const head = document.createElement('div');
+            head.className = 'suggestions-head';
+            head.innerText = 'Quick actions';
+
+            const grid = document.createElement('div');
+            grid.className = 'suggestions-grid';
+
+            remaining.forEach(q => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'inline-block text-sm px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition';
+                btn.className = 'suggestion-chip';
                 btn.innerText = q;
                 btn.onclick = () => {
                     usedSuggestions.add(q);
+                    suggestionsCollapsed = true; // collapse after selection
                     renderSuggestions();
                     sendMessageWithText(q);
                 };
-                wrapper.appendChild(btn);
+                grid.appendChild(btn);
             });
 
-            container.appendChild(wrapper);
+            card.appendChild(head);
+            card.appendChild(grid);
+            if (grid.childElementCount > 0) {
+                container.appendChild(card);
+                container.style.display = '';
+            } else {
+                container.style.display = 'none';
+            }
+
             adjustMessagesPadding();
         }
+
+        // Auto-expand suggestions when user focuses or types
+        inputField.addEventListener('focus', () => {
+            suggestionsCollapsed = false;
+            renderSuggestions();
+        });
+        inputField.addEventListener('input', () => {
+            suggestionsCollapsed = false;
+            renderSuggestions();
+        });
 
         // Ensure messages area has bottom padding to avoid overlap with suggestions + input
         function adjustMessagesPadding() {
@@ -297,7 +436,7 @@
             const inputArea = document.querySelector('#chat-widget > div:last-of-type');
             if (!messagesBox) return;
             let extra = 0;
-            if (suggestions) extra += suggestions.offsetHeight;
+            // Do NOT reserve space for the suggestions area; only reserve for the input area.
             if (inputArea) extra += inputArea.offsetHeight;
             // add some breathing room
             extra += 18;
