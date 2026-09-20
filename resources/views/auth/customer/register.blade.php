@@ -212,15 +212,6 @@
                         </svg>
                     </button>
                 </form>
-
-                <!-- Trust footer -->
-                <p class="mt-6 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-xs text-gray-500">
-                    <svg class="size-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z" />
-                    </svg>
-                    <span>Secure sign-up</span>
-                    <span aria-hidden="true">&middot;</span>
-                    <a href="{{ route('privacy-policy') }}" class="underline hover:text-[#557F13] transition">Privacy Policy</a>
                 </p>
             </div>
         </div>
