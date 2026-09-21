@@ -13,7 +13,7 @@ Your order **#{{ $order->order_number }}** has been successfully collected.
 
 ## Returns, Refunds, and Exchanges
 
-For return, refund, or exchange concerns, please contact the UBAP Office directly. Any refund or exchange UBAP makes will be shown on your order details.
+For return, refund, or exchange concerns, you may contact UBAP via email or visit the UBAP Office directly. Any refund or exchange processed by UBAP will be reflected in your order details.
 
 <x-mail::button :url="route('customer.orders')">
 View Order Details

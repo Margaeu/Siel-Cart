@@ -1,17 +1,30 @@
-<div class="bg-gray-50 py-12" x-data="{ tab: 'profile' }">
-    <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+{{--
+    The tab follows the URL hash so the sidebar's "Password" link
+    (#password) opens the Security tab, including when it is clicked while
+    already on this page, where only the hash changes and nothing reloads.
+--}}
+<div class="bg-gray-50 min-h-screen py-10"
+     x-data="{ tab: location.hash === '#password' ? 'security' : 'profile' }"
+     x-on:hashchange.window="tab = location.hash === '#password' ? 'security' : 'profile'">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        <!-- Breadcrumb -->
-        <nav class="mb-5 text-sm">
-            <ol class="flex items-center gap-2">
-                <li><a href="{{ route('customer.dashboard') }}" class="text-gray-500 transition hover:text-[var(--color-primary)]">Account</a></li>
-                <li class="text-gray-400">/</li>
-                <li class="font-medium text-gray-900">Profile</li>
-            </ol>
-        </nav>
+            {{-- Left Sidebar --}}
+            <aside class="lg:col-span-3">
+                @include('partials.customer-account-sidebar', ['active' => 'profile'])
+            </aside>
+
+            {{-- Main Content Column --}}
+            <main class="lg:col-span-9 space-y-6">
+
+        <!-- Header -->
+        <div>
+            <span class="text-xs font-semibold tracking-wider text-gray-400 uppercase">My Account</span>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Profile</h1>
+        </div>
 
         <!-- Profile Cover -->
-<div class="mb-8 overflow-hidden rounded-2xl border border-[#eeebe2] bg-white shadow-sm">
+<div class="overflow-hidden rounded-2xl border border-[#eeebe2] bg-white shadow-sm">
     {{-- Header Banner --}}
     <div class="h-28 bg-gradient-to-r from-[#14532d] via-[#166534] to-[#ca8a04] sm:h-36"></div>
 
@@ -52,7 +65,7 @@
         <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
             <div class="flex gap-1 border-b border-gray-100 px-4">
                 <button type="button"
-                        @click="tab = 'profile'"
+                        @click="tab = 'profile'; history.replaceState(null, '', location.pathname)"
                         :class="tab === 'profile' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-gray-500 hover:text-gray-700'"
                         class="flex items-center gap-2 border-b-2 px-4 py-4 text-sm font-semibold transition">
                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -61,7 +74,7 @@
                     Profile Information
                 </button>
                 <button type="button"
-                        @click="tab = 'security'"
+                        @click="tab = 'security'; history.replaceState(null, '', '#password')"
                         :class="tab === 'security' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-gray-500 hover:text-gray-700'"
                         class="flex items-center gap-2 border-b-2 px-4 py-4 text-sm font-semibold transition">
                     <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -209,6 +222,8 @@
                 </div>
 
             </div>
+        </div>
+            </main>
         </div>
     </div>
 </div>

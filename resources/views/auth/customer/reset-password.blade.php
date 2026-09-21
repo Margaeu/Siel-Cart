@@ -11,6 +11,11 @@
             box-sizing: border-box;
         }
 
+        /* Same fluid root as resources/css/app.css, which this page doesn't load: 16px on phones, growing to 18px by a 1280px viewport. */
+        html {
+            font-size: clamp(1rem, 0.875rem + 0.3125vw, 1.125rem);
+        }
+
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
@@ -27,7 +32,7 @@
         }
 
         .brand {
-            font-size: 34px;
+            font-size: 2.125rem;
             font-weight: 700;
             color: #4d8508;
             margin-bottom: 28px;
@@ -40,18 +45,19 @@
 
         .heading h1 {
             margin: 0 0 12px;
-            font-size: 34px;
+            font-size: 2.125rem;
             color: #061d39;
         }
 
         .heading p {
             margin: 0;
-            font-size: 16px;
+            font-size: 1rem;
             color: #173d65;
         }
 
         .card {
-            width: 490px;
+            width: 30.625rem;
+            max-width: 100%;
             background: #ffffff;
             border-radius: 9px;
             border-top: 5px solid #f4b400;
@@ -65,7 +71,7 @@
 
         label {
             display: block;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
             margin-bottom: 8px;
             color: #09213d;
@@ -73,12 +79,12 @@
 
         input {
             width: 100%;
-            height: 50px;
+            height: 3.125rem;
             border: 1px solid #c9d2df;
             border-radius: 10px;
             background: #edf3fc;
             padding: 0 15px;
-            font-size: 15px;
+            font-size: 0.9375rem;
             color: #09213d;
             outline: none;
         }
@@ -111,8 +117,8 @@
         }
 
         .eye-button svg {
-            width: 21px;
-            height: 21px;
+            width: 1.3125rem;
+            height: 1.3125rem;
             stroke: #52657d;
         }
 
@@ -122,18 +128,18 @@
 
         .error {
             color: #d93025;
-            font-size: 14px;
+            font-size: 0.875rem;
             margin-top: 6px;
         }
 
         .reset-button {
             width: 100%;
-            height: 52px;
+            height: 3.25rem;
             border: none;
             border-radius: 8px;
             background: #4d850d;
             color: white;
-            font-size: 17px;
+            font-size: 1.0625rem;
             font-weight: 700;
             cursor: pointer;
             margin-top: 5px;
@@ -150,7 +156,7 @@
             color: #176b08;
             text-decoration: none;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 1rem;
         }
 
         .back-login:hover {
@@ -163,7 +169,7 @@
             padding: 12px;
             border-radius: 7px;
             margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         @media (max-width: 600px) {
@@ -176,11 +182,11 @@
             }
 
             .brand {
-                font-size: 30px;
+                font-size: 1.875rem;
             }
 
             .heading h1 {
-                font-size: 28px;
+                font-size: 1.75rem;
             }
         }
     </style>

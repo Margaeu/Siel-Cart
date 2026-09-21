@@ -31,15 +31,15 @@
             --}}
             <div class="absolute left-2 top-2 z-10 flex flex-col items-start gap-1.5 sm:left-3 sm:top-3 sm:gap-2">
                 @if($isOutOfStock)
-                    <span class="rounded-full bg-gray-900 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[11px]">
+                    <span class="rounded-full bg-gray-900 px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
                         Sold Out
                     </span>
                 @elseif($product->is_featured)
-                    <span class="rounded-full bg-[var(--color-secondary)] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-900 shadow-sm sm:px-2.5 sm:text-[11px]">
+                    <span class="rounded-full bg-[var(--color-secondary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-gray-900 shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
                         Featured
                     </span>
                 @elseif($isNew)
-                    <span class="rounded-full bg-[var(--color-primary)] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[11px]">
+                    <span class="rounded-full bg-[var(--color-primary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
                         New
                     </span>
                 @endif
@@ -103,7 +103,7 @@
             </div>
 
             <!-- Price Display -->
-            <div class="mt-auto pt-0.5 text-[15px] font-bold text-gray-900 sm:text-base">
+            <div class="mt-auto pt-0.5 text-[0.9375rem] font-bold text-gray-900 sm:text-base">
                 {{ $product->display_price_label }}
             </div>
 

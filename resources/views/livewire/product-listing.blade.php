@@ -76,7 +76,7 @@
                         All Products
                     @endif
                 </h1>
-                <span class="text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+                <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-gray-500">
                     {{ $products->total() }} {{ Str::plural('item', $products->total()) }}
                 </span>
             </div>
@@ -110,7 +110,7 @@
                 </svg>
                 <span>Filters</span>
                 @if($activeFilterCount)
-                    <span class="inline-flex size-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-[11px] font-bold text-white">
+                    <span class="inline-flex size-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-[0.6875rem] font-bold text-white">
                         {{ $activeFilterCount }}
                     </span>
                     <span class="sr-only">{{ $activeFilterCount }} {{ Str::plural('filter', $activeFilterCount) }} applied</span>
@@ -285,7 +285,7 @@
                                 @if($cat->products_count > 0)
                                     <span class="text-xs text-gray-500">{{ $cat->products_count }}</span>
                                 @else
-                                    <span class="text-[11px] font-medium uppercase tracking-wide text-gray-500">0</span>
+                                    <span class="text-[0.6875rem] font-medium uppercase tracking-wide text-gray-500">0</span>
                                 @endif
                             </button>
                         @endforeach
@@ -304,14 +304,14 @@
                     <div id="filter-price" x-show="open" class="text-sm text-gray-700">
                         <div class="flex items-end gap-2 pt-2">
                             <div class="min-w-0 flex-1">
-                                <label for="price-min" class="mb-1 block text-[11px] font-medium text-gray-500">Min</label>
+                                <label for="price-min" class="mb-1 block text-[0.6875rem] font-medium text-gray-500">Min</label>
                                 <div class="relative">
                                     <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-gray-500" aria-hidden="true">₱</span>
                                     <input id="price-min" type="number" min="0" inputmode="numeric" wire:model="minPrice" placeholder="0" class="h-11 w-full rounded-lg border border-gray-300 bg-white pl-6 pr-2 text-sm text-gray-900 {{ $focusRing }}">
                                 </div>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <label for="price-max" class="mb-1 block text-[11px] font-medium text-gray-500">Max</label>
+                                <label for="price-max" class="mb-1 block text-[0.6875rem] font-medium text-gray-500">Max</label>
                                 <div class="relative">
                                     <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-gray-500" aria-hidden="true">₱</span>
                                     <input id="price-max" type="number" min="0" inputmode="numeric" wire:model="maxPrice" placeholder="{{ (int) $priceCeiling }}" class="h-11 w-full rounded-lg border border-gray-300 bg-white pl-6 pr-2 text-sm text-gray-900 {{ $focusRing }}">

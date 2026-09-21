@@ -51,7 +51,7 @@
     it -- the old fixed w-80 plus right-6 measured 344px. From sm up the
     original 384x500 panel is unchanged.
 --}}
-<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[500px] sm:w-96">
+<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[31.25rem] sm:w-96">
     <!-- Header -->
     <div class="bg-[var(--color-primary)] text-white p-4 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-3">

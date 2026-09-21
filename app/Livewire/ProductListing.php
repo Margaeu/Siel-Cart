@@ -159,7 +159,7 @@ class ProductListing extends Component
         // Keep the "All Products" count independent from the filters applied
         // to the paginated listing. Using $products->total() in the sidebar
         // makes this number become the selected category's result count.
-        $allProductsCount = Product::active()->count();
+        $allProductsCount = Product::where('is_active', true)->count();
 
         // Count only what the listing itself will show, so the sidebar total
         // cannot claim more products than the category actually renders.

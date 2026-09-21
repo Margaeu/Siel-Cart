@@ -26,7 +26,7 @@
     @php
         $siteName = \App\Models\Setting::get('site_name') ?: config('app.name', 'SIEL CART');
         $siteTagline = \App\Models\Setting::get('tagline') ?: 'The CLSU Campus Store';
-        $desktopNavLink = 'relative flex h-[76px] items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)]';
+        $desktopNavLink = 'relative flex h-[4.75rem] items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)]';
         $mobileNavLink = 'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]';
     @endphp
 
@@ -36,7 +36,7 @@
         x-data="{ navigationOpen: false }"
         x-on:keydown.escape.window="navigationOpen = false"
     >
-        <div class="mx-auto flex min-h-[76px] w-full max-w-[1400px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+        <div class="mx-auto flex min-h-[4.75rem] w-full max-w-[87.5rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
             <!-- Brand -->
             <a
                 href="{{ route('home') }}"
@@ -246,7 +246,7 @@
 
     <footer class="site-footer mt-16 bg-gray-800 text-white">
         <div
-            class="mx-auto w-full max-w-[1400px] px-5 sm:px-8 lg:px-10"
+            class="mx-auto w-full max-w-[87.5rem] px-5 sm:px-8 lg:px-10"
             style="padding-top: var(--footer-pad-y); padding-bottom: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);"
         >
             <!-- Brand block sits beside the link columns on wide screens and stacks above them on small ones -->

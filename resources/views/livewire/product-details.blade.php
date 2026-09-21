@@ -148,9 +148,8 @@
                                                 class="relative p-3 rounded-xl border text-left transition-all duration-200 focus:outline-none flex flex-col justify-between gap-1 {{ $selectedVariant === $variant->id ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-1 ring-[var(--color-primary)]' : 'border-gray-200 hover:border-gray-300 bg-white' }}">
                                             <div>
                                                 <p class="font-semibold text-xs text-gray-900">{{ $variant->name }}</p>
-                                                <p class="text-sm font-bold text-gray-800">₱{{ number_format($variant->price, 2) }}</p>
                                             </div>
-                                            <span class="text-[10px] font-medium tracking-wider uppercase {{ $variant->stock_status === 'in_stock' ? 'text-emerald-600' : 'text-rose-500' }}">
+                                            <span class="text-[0.625rem] font-medium tracking-wider uppercase {{ $variant->stock_status === 'in_stock' ? 'text-emerald-600' : 'text-rose-500' }}">
                                                 {{ $variant->stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock' }}
                                             </span>
                                         </button>
@@ -279,7 +278,7 @@
                                                 <div class="flex items-center gap-2">
                                                     <h4 class="font-bold text-gray-900 text-sm">{{ $review->customer->name }}</h4>
                                                     @if($review->is_verified_purchase)
-                                                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.625rem] font-semibold px-2 py-0.5 rounded-full">
                                                             Verified Purchase
                                                         </span>
                                                     @endif
@@ -441,7 +440,7 @@
                                                     </button>
                                                 </template>
                                             </div>
-                                            <span class="text-xs font-semibold text-gray-600 min-w-[100px]" x-text="labels[hoverRating || rating]"></span>
+                                            <span class="text-xs font-semibold text-gray-600 min-w-[6.25rem]" x-text="labels[hoverRating || rating]"></span>
                                         </div>
                                         @error('reviewRating') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
@@ -531,7 +530,7 @@
         @if($relatedProducts->count() > 0)
             <section class="mt-12">
                 <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">Related Products</h2>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">Products You May Also Like</h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach($relatedProducts as $relatedProduct)

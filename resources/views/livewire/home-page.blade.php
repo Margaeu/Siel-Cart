@@ -278,7 +278,7 @@
                         class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                         @foreach($featuredProducts as $product)
-                            <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[240px] lg:w-[260px]">
+                            <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[15rem] lg:w-[16.25rem]">
                                 <livewire:product-card :product="$product" :key="$product->id" />
                             </div>
                         @endforeach
@@ -343,7 +343,7 @@
                                 <h3 class="text-sm font-semibold leading-snug text-white sm:text-base">
                                     {{ $category->name }}
                                 </h3>
-                                <p class="mt-0.5 text-[11px] text-white/75 sm:text-xs">{{ $category->products_count }} items</p>
+                                <p class="mt-0.5 text-[0.6875rem] text-white/75 sm:text-xs">{{ $category->products_count }} items</p>
                             </div>
                         </div>
                     </a>

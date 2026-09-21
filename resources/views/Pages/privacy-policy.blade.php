@@ -6,7 +6,7 @@
                 <h1 class="text-3xl font-bold leading-tight tracking-[-0.03em] text-[var(--color-primary)] sm:text-4xl">
                     Privacy Policy
                 </h1>
-                <p class="mt-3 text-sm text-slate-500">Last updated: {{ now()->format('F d, Y') }}</p>
+                {{--<p class="mt-3 text-sm text-slate-500">Last updated: {{ now()->format('F d, Y') }}</p>--}}
 
                 <div class="mt-10 space-y-10">
                     <section>
