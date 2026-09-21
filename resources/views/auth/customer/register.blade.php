@@ -200,7 +200,9 @@
                         <span class="text-sm text-gray-600">
                             I agree to the
                             <a href="{{ route('privacy-policy') }}" class="font-medium text-[#557F13] hover:text-[#E0A70D] transition">Privacy Policy</a>
-                        </span>
+                            and
+                             <a href="{{ route('terms-and-conditions') }}" class="font-medium text-[#557F13] hover:text-[#E0A70D] transition">Terms and Conditions</a>
+                        </span>  
                     </label>
 
                     <!-- Submit -->

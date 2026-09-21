@@ -3,6 +3,8 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Models\Setting;
+use App\Models\Theme;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -41,10 +43,23 @@ class OrderConfirmation extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+        // Mirrors resources/views/partials/theme-styles.blade.php so the
+        // email always matches whatever's set in Admin -> Design, instead
+        // of a color hardcoded here that can silently drift out of sync.
+        $activeTheme = Theme::active()->first();
+
+        $primaryColor = $activeTheme?->primary_color
+            ?? Setting::get('primary_color', '#1E6031');
+
+        $secondaryColor = $activeTheme?->secondary_color
+            ?? Setting::get('secondary_color', '#E0A70D');
+
         return new Content(
             view: 'mail.order-confirmation',
             with: [
-                'order' => $this->order
+                'order' => $this->order,
+                'primaryColor' => $primaryColor,
+                'secondaryColor' => $secondaryColor,
             ]
         );
     }

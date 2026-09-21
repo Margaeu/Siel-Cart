@@ -304,9 +304,8 @@
                 <div>
                     <h4 class="site-footer__heading font-semibold text-white">Customer Service</h4>
                     <ul class="site-footer__text mt-4 space-y-2.5">
-                        <li><a href="#" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Privacy Policy</a></li>
-                        <li><a href="#" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Return/Refund Policy</a></li>
-                        <li><a href="#" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">FAQ</a></li>
+                        <li><a href="{{ route('privacy-policy') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Privacy Policy</a></li>
+                        <li><a href="{{ route('terms-and-conditions') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Terms and Conditions</a></li>
                     </ul>
                 </div>
 

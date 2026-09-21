@@ -38,6 +38,9 @@ Route::view('/about', 'pages.about')
 Route::view('/privacy-policy', 'pages.privacy-policy')
     ->name('privacy-policy');
 
+Route::view('/terms-and-conditions', 'pages.terms-and-conditions')
+    ->name('terms-and-conditions');
+
 Route::view('/return-refund-policy', 'pages.return-refund-policy')
     ->name('return-refund-policy');
 
