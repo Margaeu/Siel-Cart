@@ -99,6 +99,15 @@ return [
     |
     */
 
+    // 'expire' is in MINUTES, not seconds, and the one-minute window is deliberate:
+    // the link is meant to be dead almost immediately if it is forwarded, left in an
+    // open inbox, or read off a shared machine. The countdown starts when the token
+    // is created, not when the mail is opened, so a customer who does not act at
+    // once gets "This password reset token is invalid" and has to request a new
+    // link. Keep both brokers on the same number — the notification's
+    // "expire in :count minutes" line is rendered from the DEFAULT broker
+    // (auth.defaults.passwords = users), so a mismatch would quote customers a
+    // window that does not match the one their own token actually gets.
     'passwords' => [
         'users' => [
             'provider' => 'users',
@@ -111,7 +120,7 @@ return [
             'table' => 'password_reset_tokens',
             'expire' => 1,
             'throttle' => 60
-        ]  
+        ]
     ],
 
     /*

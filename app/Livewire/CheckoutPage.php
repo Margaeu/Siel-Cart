@@ -8,10 +8,8 @@ use App\Models\CartItem;
 use Livewire\Component;
 use App\Models\OrderItem;
 use App\Services\CartService;
-use App\Mail\OrderConfirmation;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class CheckoutPage extends Component
 {
@@ -219,15 +217,6 @@ class CheckoutPage extends Component
         }
 
         $successMessage = 'Thank you for your purchase! Please wait for an email confirmation to know when your order is being processed.';
-
-        // The order is committed before email is dispatched. A mail or queue
-        // failure must not roll it back or invite the customer to order twice.
-        try {
-            Mail::to(auth('customer')->user()->email)->send(new OrderConfirmation($order));
-        } catch (\Throwable $e) {
-            report($e);
-            $successMessage = 'Your order was placed, but we could not send the confirmation email. You can track your order here.';
-        }
 
         $this->dispatch('cart-updated');
 

@@ -19,13 +19,6 @@ class BannersTable
                     ->label('')
                     ->disk('r2')
                     ->square(),
-                TextColumn::make('title')
-                    ->searchable()
-                    ->placeholder('—'),
-                TextColumn::make('subtitle')
-                    ->searchable()
-                    ->placeholder('—')
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('is_active')
                     ->label('Active')
                     ->badge()
@@ -33,7 +26,7 @@ class BannersTable
                     ->color(fn (mixed $state): string => $state ? 'success' : 'danger')
                     ->sortable(),
                 TextColumn::make('sort_order')
-                    ->label('Order')
+                    ->label('Sort Order')
                     ->numeric()
                     ->sortable(),
             ])

@@ -385,7 +385,11 @@
                                                         @endif
                                                     @endif
                                                 @else
-                                                    <a href="{{ route('customer.login') }}" class="text-xs text-gray-400 hover:text-gray-600 transition-colors underline">
+                                                    {{-- Fortify names the customer login route 'login'; there is no
+                                                         'customer.login'. Naming it that threw RouteNotFoundException and
+                                                         500'd the whole product page for every guest as soon as the product
+                                                         had one approved review to render this block for. --}}
+                                                    <a href="{{ route('login') }}" class="text-xs text-gray-400 hover:text-gray-600 transition-colors underline">
                                                         Log in to report
                                                     </a>
                                                 @endauth

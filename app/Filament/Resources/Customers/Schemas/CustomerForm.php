@@ -36,22 +36,23 @@ class CustomerForm
                     ])
                     ->columns(2),
 
+                // Edit-only: this form has no create operation (see
+                // CustomerResource::canCreate()), so the password is always a
+                // reset of an existing one and both fields stay optional.
                 Section::make('Password')
-                    ->description('Set a password for new customers, or leave both fields empty to keep the current password.')
+                    ->description('Leave both fields empty to keep the current password.')
                     ->schema([
                         TextInput::make('password')
                             ->password()
                             ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
                             ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn (string $operation) => $operation === 'create')
                             ->revealable(),
                         TextInput::make('password_confirmation')
                             ->label('Confirm password')
                             ->password()
                             ->same('password')
                             ->revealable()
-                            ->dehydrated(false)
-                            ->required(fn (string $operation) => $operation === 'create'),
+                            ->dehydrated(false),
                     ])
                     ->columns(2),
             ]);

@@ -7,7 +7,7 @@
 @endphp
 
 {{--
-    Styles are inline / in a scoped <style> rather than in
+    Styles are inline / in a scoped style block rather than in
     resources/css/filament/admin/theme.css on purpose: the panel theme is compiled
     through Vite, so putting the rules there would make the masthead depend on a
     build step. The only thing that needs a class is the seal swap, which cannot
@@ -25,6 +25,11 @@
     Hence the swap keys off `.fi-topbar` first and `.dark` second. Filament hides
     the sidebar header at lg and up (`.fi-body-has-topbar .fi-sidebar-header` is
     `lg:hidden`), so the two never show at once.
+
+    The panel is light-only since AdminPanelProvider set `->darkMode(false)`, so
+    `.dark` is never on <html> and the two `.dark` rules below are currently inert.
+    They are kept, not deleted, because they are the correct behaviour the moment
+    dark mode is switched back on.
 --}}
 <style>
     .clsu-brand__seal--dark { display: none; }

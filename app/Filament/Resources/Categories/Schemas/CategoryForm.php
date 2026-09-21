@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Categories\Schemas;
 
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -32,9 +32,18 @@ class CategoryForm
                                 ->unique(ignoreRecord: true)
                                 ->readOnly()
                                 ->visibleOn('edit'),
-                            Textarea::make('description')
-                                ->rows(4)
-                                ->default(null),
+                            Grid::make([
+                                'default' => 1,
+                                'sm' => 2,
+                            ])->schema([
+                                Toggle::make('is_active')
+                                    ->required(),
+                                TextInput::make('sort_order')
+                                    ->helperText('Categories with lower sort-order numbers appear first.')
+                                    ->required()
+                                    ->numeric()
+                                    ->default(0),
+                            ]),
                         ]),
 
                         FileUpload::make('image')
@@ -47,19 +56,9 @@ class CategoryForm
                             ->openable()
                             ->image()
                             ->imagePreviewHeight('220')
-                            ->extraAttributes(['class' => 'clsu-image-upload']),
-                    ]),
+                            ->extraAttributes(['class' => 'clsu-image-upload'])
+                            ->helperText('Recommended size: Max 2MB.'),
 
-                Section::make('Display settings')
-                    ->description('Choose whether this category is visible and set its storefront order.')
-                    ->columns(2)
-                    ->schema([
-                        Toggle::make('is_active')
-                            ->required(),
-                        TextInput::make('sort_order')
-                            ->required()
-                            ->numeric()
-                            ->default(0),
                     ]),
 
             ]);

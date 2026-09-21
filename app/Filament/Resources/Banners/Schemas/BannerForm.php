@@ -33,19 +33,6 @@ class BannerForm
                             ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 2MB.')
                             ->columnSpanFull(),
                     ]),
-                Section::make('Content')
-                    ->description('Add the short message displayed with the banner image.')
-                    ->schema([
-                        TextInput::make('title')
-                            ->default(null),
-                        TextInput::make('subtitle')
-                            ->default(null),
-                        // TextInput::make('link_url')
-                        //     ->label('Link URL')
-                        //     ->helperText('Where the banner takes shoppers when clicked (optional).')
-                        //     ->url()
-                        //     ->default(null),
-                    ])->columns(2),
                 Section::make('Display')
                     ->description('Control whether this banner is visible and where it appears in the carousel.')
                     ->schema([

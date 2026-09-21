@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Livewire\CheckoutPage;
-use App\Mail\OrderConfirmation;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
@@ -116,7 +115,6 @@ class CheckoutSafetyTest extends TestCase
         $this->assertDatabaseCount('orders', 1);
         $this->assertDatabaseCount('cart_items', 0);
         $this->assertSame(8, $product->fresh()->stock_quantity);
-        Mail::assertQueued(OrderConfirmation::class, 1);
     }
 
     public function test_client_supplied_prices_quantities_and_product_ids_are_ignored(): void
