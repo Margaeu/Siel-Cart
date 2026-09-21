@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 
 class ProductVariant extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $fillable = [
         'product_id',
         'sku',
@@ -39,6 +42,45 @@ class ProductVariant extends Model
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
+    }
+
+    /**
+     * For a product with variants, price and stock live here and the
+     * product's own columns mean nothing — so the Product log alone would
+     * miss every price or stock edit on a variable product.
+     *
+     * Like Product's `stock_quantity`, this also records the model-instance
+     * `decrement()`/`increment()` calls from checkout, restock, and
+     * return/refund resolution; those rows have no admin causer.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'product_id',
+                'sku',
+                'name',
+                'price',
+                'stock_quantity',
+                'low_stock_threshold',
+                'is_active',
+                'sort_order',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
+    /**
+     * A variant name like "Red - Large" is ambiguous on its own, so the log
+     * keeps which product it belongs to — readable even after deletion.
+     */
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $productName = Product::withTrashed()->whereKey($this->product_id)->value('name');
+
+        if (filled($productName)) {
+            $activity->properties = $activity->properties->put('product_name', $productName);
+        }
     }
 
     #[Scope]

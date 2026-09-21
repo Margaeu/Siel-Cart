@@ -52,6 +52,10 @@ class UserForm
                             ->multiple()
                             ->preload()
                             ->searchable()
+                            // The default relationship save is a raw pivot sync that
+                            // leaves no trace in the activity log; role changes are
+                            // privilege changes and must be audited.
+                            ->saveRelationshipsUsing(static fn (User $record, ?array $state) => $record->syncRolesAndLog($state ?? []))
                             // Dropping the super admin role locks an account out of
                             // the panel exactly like deactivating it, so it answers
                             // to the same guard as the toggle and the delete action.

@@ -75,8 +75,12 @@ final class ActivityLogPresenter
 
     private const USER_AGENT_KEYS = ['user_agent'];
 
-    /** Attributes tried, in order, when naming the affected record ("Order #105 · ORD-2026-0001"). */
-    private const SUBJECT_TITLE_KEYS = ['name', 'title', 'order_number', 'email', 'sku'];
+    /**
+     * Attributes tried, in order, when naming the affected record ("Order #105 · ORD-2026-0001").
+     * `image_path` comes last so records whose only identity is a file
+     * (product images, banners) still get a title.
+     */
+    private const SUBJECT_TITLE_KEYS = ['name', 'title', 'order_number', 'email', 'sku', 'image_path'];
 
     private const HIDDEN_VALUE = 'Hidden';
 

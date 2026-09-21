@@ -310,7 +310,7 @@
     <section class="bg-white py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h2 class="border-l-4 border-[var(--color-primary)] pl-3 text-3xl font-bold text-gray-900">Shop by Category</h2>
+                <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-3xl font-bold text-gray-900">Shop by Category</h2>
                 <p class="mt-2 pl-3 text-sm text-gray-500">Find exactly what you're looking for</p>
             </div>
             <div class="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">

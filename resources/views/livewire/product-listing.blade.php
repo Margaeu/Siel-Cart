@@ -95,15 +95,20 @@
             </div>
         </div>
 
-        {{-- Control bar: filters disclosure on the left, sorting always on the right --}}
-        <div class="flex flex-wrap items-center justify-between gap-3 py-4">
+        {{--
+            Control bar: filters disclosure on the left, sorting always on the right.
+            No wrapping: on phones the sort control used to take a full-width row
+            of its own under Filters. It now flexes into whatever width Filters
+            leaves, so both 2.75rem-tall controls sit on one line.
+        --}}
+        <div class="flex items-center justify-between gap-3 py-4">
             {{-- Small-screen filter disclosure --}}
             <button
                 type="button"
                 x-on:click="mobileFiltersOpen = !mobileFiltersOpen"
                 x-bind:aria-expanded="mobileFiltersOpen ? 'true' : 'false'"
                 aria-controls="catalog-filters"
-                class="inline-flex min-h-11 items-center gap-2 rounded-full border border-gray-300 px-4 text-sm font-semibold text-gray-900 transition hover:border-gray-400 hover:bg-gray-50 lg:hidden {{ $focusRing }}"
+                class="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 lg:hidden {{ $focusRing }}"
             >
                 <svg class="size-4 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M6 12h12M10 19h4" />
@@ -133,7 +138,7 @@
 
             {{-- Sorting stays reachable without opening the filters --}}
             <div
-                class="ml-auto flex w-full min-w-0 items-center justify-end gap-2 sm:w-auto"
+                class="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 sm:flex-none"
                 x-data="{
                     open: false,
                     focusOption(step) {
@@ -150,7 +155,7 @@
             >
                 <span id="catalog-sort-label" class="shrink-0 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Sort</span>
 
-                <div class="relative min-w-0">
+                <div class="relative min-w-0 flex-1 sm:w-56 sm:flex-none">
                     <button
                         id="catalog-sort-button"
                         x-ref="trigger"
@@ -162,7 +167,7 @@
                         x-on:keydown.arrow-down.prevent="open = true; $nextTick(() => focusOption(1))"
                         x-on:keydown.arrow-up.prevent="open = true; $nextTick(() => focusOption(-1))"
                         x-on:keydown.escape.prevent="open = false"
-                        class="group flex h-11 w-56 max-w-[calc(100vw-6.5rem)] items-center justify-between gap-3 rounded-full border border-gray-300 bg-white px-4 text-left text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:shadow {{ $focusRing }}"
+                        class="group flex h-11 w-full items-center justify-between gap-3 rounded-full border border-gray-300 bg-white px-4 text-left text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:shadow {{ $focusRing }}"
                     >
                         <span id="catalog-sort-value" class="min-w-0 truncate">{{ $currentSortLabel }}</span>
                         <svg

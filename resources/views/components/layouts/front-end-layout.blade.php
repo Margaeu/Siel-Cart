@@ -180,7 +180,7 @@
                             'text-gray-700 hover:bg-gray-50 hover:text-[var(--color-primary)]' => ! request()->routeIs('products.*'),
                         ])
                         @if(request()->routeIs('products.*')) aria-current="page" @endif
-                    >Shop</a>
+                    >Products</a>
                 </li>
                 <li>
                     <a
@@ -249,13 +249,17 @@
             class="mx-auto w-full max-w-[87.5rem] px-5 sm:px-8 lg:px-10"
             style="padding-top: var(--footer-pad-y); padding-bottom: clamp(1.5rem, 1rem + 1.5vw, 2.5rem);"
         >
-            <!-- Brand block sits beside the link columns on wide screens and stacks above them on small ones -->
+            {{--
+                Brand block sits beside the link columns on wide screens and takes
+                a full row above them on narrower ones. The link groups never fall
+                back to a single stacked column: phones get two columns (My Account
+                wraps under Quick Links), and from `sm` all three share one row.
+            --}}
             <div
-                class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-[minmax(0,2.2fr)_repeat(3,minmax(0,1fr))]"
+                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,2.2fr)_repeat(3,minmax(0,1fr))]"
                 style="gap: var(--footer-gap);"
             >
-                {{-- Tablet keeps the three link columns on one row by giving the brand block the row above it --}}
-                <div class="md:col-span-3 lg:col-span-1">
+                <div class="col-span-2 sm:col-span-3 lg:col-span-1">
                     {{--
                         Logo and contact details share one row: the seal sits to the
                         left of the whole text stack (name, tagline, address, email)
@@ -296,7 +300,7 @@
                 <div>
                     <h4 class="site-footer__heading font-semibold text-white">Quick Links</h4>
                     <ul class="site-footer__text mt-4 space-y-2.5">
-                        <li><a href="{{ route('products.index') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Shop</a></li>
+                        <li><a href="{{ route('products.index') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">Products</a></li>
                         <li><a href="{{ route('about') }}" class="inline-block text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">About Us</a></li>
                     </ul>
                 </div>

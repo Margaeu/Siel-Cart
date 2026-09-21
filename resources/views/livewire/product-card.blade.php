@@ -20,7 +20,13 @@
     >
 
         <!-- Product Image Tile -->
-        <div class="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-100">
+        {{--
+            Product photos are transparent PNGs, so this fill is the backdrop
+            the customer actually sees. It is neutral-100, not gray-100:
+            Tailwind's gray carries a blue-violet cast that read as pink
+            against the landing page's mint Featured Products section.
+        --}}
+        <div class="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-100">
 
             <!-- Status Badges (Top-Left) -->
             {{--
@@ -51,7 +57,7 @@
                      loading="lazy"
                      class="h-full w-full object-cover transition duration-500 ease-out motion-safe:group-hover:scale-105 {{ $isOutOfStock ? 'opacity-75' : '' }}">
             @else
-                <div class="flex h-full w-full items-center justify-center bg-gray-100">
+                <div class="flex h-full w-full items-center justify-center bg-neutral-100">
                     <span class="text-3xl font-light text-gray-400 sm:text-5xl">
                         {{ substr($product->name, 0, 1) }}
                     </span>

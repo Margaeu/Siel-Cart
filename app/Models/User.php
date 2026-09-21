@@ -72,6 +72,45 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Replace this admin's roles and record the change in the activity log.
+     *
+     * Roles live in Spatie's `model_has_roles` pivot, so assigning them never
+     * dirties a `users` column and LogsActivity above never sees it. Filament's
+     * relationship Select writes the pivot with a raw `sync()`, and Spatie's
+     * own RoleAttached/RoleDetached events don't fire for that either (and
+     * `syncRoles()` would report every kept role as freshly attached). So the
+     * before/after comparison is done here, and written as one `updated` row
+     * shaped like a model diff — the presenter shows it as "Roles: ubap →
+     * ubap, super_admin" with no special casing.
+     *
+     * This does not check panel-lockout rules; callers must already have run
+     * canLosePanelAccessBy() (UserForm's roles rule does).
+     *
+     * @param  iterable<int, int|string>  $roleIds
+     */
+    public function syncRolesAndLog(iterable $roleIds): void
+    {
+        $before = $this->roles()->pluck('name')->sort()->values()->all();
+
+        $this->syncRoles(collect($roleIds)->all());
+
+        $after = $this->roles()->pluck('name')->sort()->values()->all();
+
+        if ($before === $after) {
+            return;
+        }
+
+        activity()
+            ->performedOn($this)
+            ->event('updated')
+            ->withProperties([
+                'old' => ['roles' => $before],
+                'attributes' => ['roles' => $after],
+            ])
+            ->log('Changed roles');
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string

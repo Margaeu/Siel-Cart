@@ -49,30 +49,36 @@
     Below sm the window spans the viewport minus the 16px mobile gutter and
     takes its height from dvh, so it fits a 320px phone instead of overflowing
     it -- the old fixed w-80 plus right-6 measured 344px. From sm up the
-    original 384x500 panel is unchanged.
+    desktop/tablet panel stays compact enough to leave the storefront visible
+    behind it, while the narrow-screen layout still uses the available width.
 --}}
-<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[31.25rem] sm:w-96">
+<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[27rem] sm:w-80">
     <!-- Header -->
-    <div class="bg-[var(--color-primary)] text-white p-4 flex items-center justify-between shadow-sm">
-        <div class="flex items-center gap-3">
-            <div>
-                <h4 class="font-semibold text-sm leading-tight">Shopping Assistant</h4>
-                <span class="text-xs text-emerald-200 flex items-center gap-1.5 mt-0.5">
-                    <span class="w-2 h-2 rounded-full bg-[var(--color-secondary)] animate-pulse"></span>
+    <div class="flex h-16 shrink-0 items-center justify-between bg-[var(--color-primary)] px-4 text-white shadow-sm">
+        <div class="flex min-w-0 items-center gap-2.5">
+            <div class="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10" aria-hidden="true">
+                <svg class="size-5 text-[var(--color-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 10h.01M12 10h.01M16 10h.01M20 11.5c0 3.59-3.58 6.5-8 6.5a9.62 9.62 0 0 1-3.68-.72L4 18l1.28-3.06A5.62 5.62 0 0 1 4 11.5C4 7.91 7.58 5 12 5s8 2.91 8 6.5Z" />
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <h4 class="truncate text-sm font-semibold leading-tight">Shopping Assistant</h4>
+                <span class="mt-1 flex items-center gap-1.5 text-xs leading-none text-white/75">
+                    <span class="size-2 rounded-full bg-[var(--color-secondary)] animate-pulse"></span>
                     Online
                 </span>
             </div>
         </div>
-        <button id="chat-close" type="button" aria-label="Close chat" class="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="chat-close" type="button" aria-label="Close chat" class="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
         </button>
     </div>
 
     <!-- Messages Area -->
-    <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50/50 text-sm">
-        <div class="self-start max-w-[85%] p-3 rounded-2xl rounded-tl-none bg-white text-gray-800 border border-gray-100 shadow-sm">
+    <div id="chat-messages" class="flex-1 space-y-2.5 overflow-y-auto bg-gray-50/50 p-3 text-xs">
+        <div class="self-start max-w-[85%] rounded-2xl rounded-tl-none border border-gray-100 bg-white px-3 py-2.5 leading-relaxed text-gray-800 shadow-sm">
             Hello! How can I help you find what you're looking for today?
         </div>
         {{--
@@ -90,7 +96,7 @@
     <!-- Input Area -->
     <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
         <label for="chat-input" class="sr-only">Message the shopping assistant</label>
-        <input type="text" id="chat-input" maxlength="{{ \App\Http\Controllers\Api\ChatController::MAX_MESSAGE_LENGTH }}" placeholder="Ask about products, orders..." class="h-11 min-w-0 flex-1 rounded-xl border border-transparent bg-gray-100 px-4 text-sm text-gray-900 placeholder-gray-500 transition focus:border-[var(--color-primary)] focus:bg-white focus:outline-none">
+        <input type="text" id="chat-input" maxlength="{{ \App\Http\Controllers\Api\ChatController::MAX_MESSAGE_LENGTH }}" placeholder="Ask about products, orders..." class="h-11 min-w-0 flex-1 rounded-xl border border-transparent bg-gray-100 px-3 text-xs text-gray-900 placeholder-gray-500 transition focus:border-[var(--color-primary)] focus:bg-white focus:outline-none">
         <button id="chat-send" type="button" aria-label="Send message" class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white shadow-sm transition hover:bg-[var(--color-primary-hover)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2">
             <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -137,7 +143,7 @@
 
         function appendMessage(text, sender) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = `max-w-[85%] p-3 text-sm transition-all duration-200 ${
+            msgDiv.className = `max-w-[85%] px-3 py-2.5 text-xs leading-relaxed transition-all duration-200 ${
                 sender === 'user'
                     ? 'self-end bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-none shadow-sm ml-auto'
                     : 'self-start bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm mr-auto'
@@ -210,7 +216,7 @@
         function showTypingIndicator() {
             const indicatorDiv = document.createElement('div');
             indicatorDiv.id = 'typing-indicator';
-            indicatorDiv.className = 'self-start max-w-[85%] p-3 bg-white text-gray-400 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm flex items-center gap-1 mr-auto';
+            indicatorDiv.className = 'self-start max-w-[85%] px-3 py-2.5 bg-white text-gray-400 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm flex items-center gap-1 mr-auto';
             indicatorDiv.innerHTML = `
                 <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
                 <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
@@ -268,12 +274,12 @@
             if (remaining.length === 0) return;
 
             const wrapper = document.createElement('div');
-            wrapper.className = 'flex flex-col items-start gap-2 pt-1';
+            wrapper.className = 'flex flex-col items-start gap-1.5 pt-0.5';
 
             remaining.forEach(q => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'max-w-[85%] text-left whitespace-normal text-sm px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:border-[var(--color-primary)] transition';
+                btn.className = 'max-w-[85%] rounded-xl border border-gray-200 bg-white px-3 py-2 text-left text-xs leading-snug whitespace-normal shadow-sm transition hover:border-[var(--color-primary)] hover:bg-gray-50';
                 btn.innerText = q;
                 btn.onclick = () => {
                     usedSuggestions.add(q);

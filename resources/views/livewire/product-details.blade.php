@@ -11,7 +11,7 @@
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"/></svg>
                 </li>
                 <li>
-                    <a href="{{ route('products.index') }}" class="hover:text-[var(--color-primary)] transition-colors">Shop</a>
+                    <a href="{{ route('products.index') }}" class="hover:text-[var(--color-primary)] transition-colors">Products</a>
                 </li>
                 <li>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"/></svg>
@@ -121,8 +121,8 @@
                             </div>
                         @endif
 
-                        <!-- Price Banner -->
-                        <div class="bg-gray-50 p-4 rounded-xl mb-6 flex items-baseline gap-2">
+                        <!-- Price -->
+                        <div class="mb-6 flex items-baseline gap-2">
                             @if($selectedVariant)
                                 @php $variant = $product->variants->find($selectedVariant); @endphp
                                 <span class="text-3xl font-black text-gray-900">₱{{ number_format($variant->price, 2) }}</span>
@@ -245,7 +245,13 @@
             <div class="p-6 sm:p-8 lg:p-10">
                 <!-- Description Panel -->
                 <div x-show="activeTab === 'description'" x-cloak class="transition-opacity duration-200">
-                    <div class="prose max-w-none prose-gray text-gray-600 leading-relaxed">
+                    {{--
+                        text-sm on phones: the description inherited the 1rem body size,
+                        which on top of the fluid root read too large next to the text-sm
+                        tabs and short description. `prose` alone does not size it -- the
+                        typography plugin is not loaded -- so the size is set explicitly.
+                    --}}
+                    <div class="prose max-w-none prose-gray text-sm leading-relaxed text-gray-600 sm:text-base">
                         {!! $product->description !!}
                     </div>
                 </div>
