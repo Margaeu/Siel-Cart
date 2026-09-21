@@ -26,7 +26,7 @@ class BannersTable
                     ->color(fn (mixed $state): string => $state ? 'success' : 'danger')
                     ->sortable(),
                 TextColumn::make('sort_order')
-                    ->label('Order')
+                    ->label('Sort Order')
                     ->numeric()
                     ->sortable(),
             ])

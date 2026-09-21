@@ -21,12 +21,12 @@ class CategoryPolicy
     {
         return $authUser->can('View:Category');
     }
-
+    
     public function create(AuthUser $authUser): bool
     {
         return $authUser->can('Create:Category');
     }
-
+    
     public function update(AuthUser $authUser, Category $category): bool
     {
         return $authUser->can('Update:Category');
