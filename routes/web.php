@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ProfileController;
 use App\Livewire\CartPage;
 use App\Livewire\CheckoutPage;
 use App\Livewire\Customer\Dashboard;
@@ -110,6 +111,12 @@ Route::post('/api/chat', [
 */
 
 Route::middleware('auth:customer')->group(function () {
+    
+Route::post('/account/deactivate', [ProfileController::class, 'deactivateAccount'])
+        ->name('account.deactivate');
+
+    Route::post('/account/delete', [ProfileController::class, 'deleteAccount'])
+        ->name('account.delete');
 
     /*
     |--------------------------------------------------------------------------
@@ -138,9 +145,8 @@ Route::middleware('auth:customer')->group(function () {
         // Customer Profile
         Route::get('/my-account/profile', App\Livewire\Customer\Profile::class)
             ->name('customer.profile');
-    });
-
-
+        });
+   
     /*
     |--------------------------------------------------------------------------
     | Customer Logout
