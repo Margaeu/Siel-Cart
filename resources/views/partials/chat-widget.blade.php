@@ -90,7 +90,7 @@
     <!-- Input Area -->
     <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
         <label for="chat-input" class="sr-only">Message the shopping assistant</label>
-        <input type="text" id="chat-input" placeholder="Ask about products, orders..." class="h-11 min-w-0 flex-1 rounded-xl border border-transparent bg-gray-100 px-4 text-sm text-gray-900 placeholder-gray-500 transition focus:border-[var(--color-primary)] focus:bg-white focus:outline-none">
+        <input type="text" id="chat-input" maxlength="{{ \App\Http\Controllers\Api\ChatController::MAX_MESSAGE_LENGTH }}" placeholder="Ask about products, orders..." class="h-11 min-w-0 flex-1 rounded-xl border border-transparent bg-gray-100 px-4 text-sm text-gray-900 placeholder-gray-500 transition focus:border-[var(--color-primary)] focus:bg-white focus:outline-none">
         <button id="chat-send" type="button" aria-label="Send message" class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white shadow-sm transition hover:bg-[var(--color-primary-hover)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2">
             <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -148,7 +148,26 @@
             messagesBox.scrollTop = messagesBox.scrollHeight;
         }
 
-        // Send a prepared message (used by suggestion buttons)
+        // Map the statuses the /api/chat route actually produces to something a
+        // shopper can act on. 429 is the route's throttle:10,1, 422 is
+        // ChatController::MAX_MESSAGE_LENGTH, and 419 is an expired CSRF token --
+        // the token is baked into this script at render time, so it goes stale
+        // once the session is invalidated (e.g. logging out in another tab).
+        function errorMessageFor(status) {
+            switch (status) {
+                case 429: return "You're sending messages a little fast. Please wait a minute and try again.";
+                case 422: return 'That message is too long. Please keep it under {{ \App\Http\Controllers\Api\ChatController::MAX_MESSAGE_LENGTH }} characters.';
+                case 419: return 'Your session has expired. Please refresh the page and try again.';
+                default:  return `Server Error (${status}): Could not reach the shopping assistant.`;
+            }
+        }
+
+        // The one path to the backend. The input field and the suggestion
+        // buttons both come through here, so a reply, an error, and the
+        // follow-up re-render of the suggestions behave the same whichever
+        // one the shopper used. (They used to be two copies of this function
+        // and had already drifted: only one re-rendered suggestions on a
+        // server error.)
         async function sendMessageWithText(messageText) {
             const message = messageText.trim();
             if (!message) return;
@@ -165,31 +184,27 @@
                         'Accept': 'application/json'
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message })
                 });
 
                 removeTypingIndicator();
 
                 if (!response.ok) {
-                    appendMessage(`Server Error (${response.status}): Could not reach Laravel API.`, 'bot');
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (data.response) {
-                    appendMessage(data.response, 'bot');
-                    renderSuggestions();
+                    appendMessage(errorMessageFor(response.status), 'bot');
                 } else {
-                    appendMessage('Error: Received invalid response from server.', 'bot');
-                    renderSuggestions();
+                    const data = await response.json();
+                    appendMessage(data.response || 'Error: Received invalid response from server.', 'bot');
                 }
             } catch (error) {
                 removeTypingIndicator();
                 console.error('Fetch Error:', error);
                 appendMessage('Network Error: Check browser console (F12) for details.', 'bot');
-                renderSuggestions();
             }
+
+            renderSuggestions();
+            // Hand focus back to the input so the next question can be typed
+            // straight away, including after a suggestion button was clicked.
+            inputField.focus();
         }
 
         function showTypingIndicator() {
@@ -210,50 +225,10 @@
             if (indicator) indicator.remove();
         }
 
-        async function sendMessage() {
-            const message = inputField.value.trim();
-            if (!message) return;
-
-            appendMessage(message, 'user');
+        function sendMessage() {
+            const message = inputField.value;
             inputField.value = '';
-            showTypingIndicator();
-
-            try {
-                // Point fetch to Laravel's internal API route
-                const response = await fetch("{{ url('/api/chat') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ message })
-                });
-
-                removeTypingIndicator();
-
-                if (!response.ok) {
-                    appendMessage(`Server Error (${response.status}): Could not reach Laravel API.`, 'bot');
-                    renderSuggestions();
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (data.response) {
-                    appendMessage(data.response, 'bot');
-                    renderSuggestions();
-                } else {
-                    appendMessage('Error: Received invalid response from server.', 'bot');
-                    renderSuggestions();
-                }
-            } catch (error) {
-                removeTypingIndicator();
-                console.error('Fetch Error:', error);
-                appendMessage('Network Error: Check browser console (F12) for details.', 'bot');
-                renderSuggestions();
-            }
+            sendMessageWithText(message);
         }
 
         // Suggested questions derived from server-side allowed topics
@@ -285,12 +260,17 @@
             // replies under the greeting rather than a menu bar. max-w matches
             // the message bubbles above it; whitespace-normal lets a long
             // question wrap to a second line instead of overflowing.
+            const remaining = SUGGESTED_QUESTIONS.filter(q => !usedSuggestions.has(q));
+
+            // Once every question has been asked, leave the container empty
+            // rather than rendering a wrapper whose padding would sit as a gap
+            // under the greeting.
+            if (remaining.length === 0) return;
+
             const wrapper = document.createElement('div');
             wrapper.className = 'flex flex-col items-start gap-2 pt-1';
 
-            SUGGESTED_QUESTIONS.forEach(q => {
-                if (usedSuggestions.has(q)) return; // skip used ones
-
+            remaining.forEach(q => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'max-w-[85%] text-left whitespace-normal text-sm px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:border-[var(--color-primary)] transition';

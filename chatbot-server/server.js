@@ -35,7 +35,7 @@ const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (how to order, r
  * App\Models\Order, and App\Livewire\CancelOrderModal.
  */
 const STORE_FACTS = `STORE FACTS (the only accurate description of how Siel Cart works):
-CobraCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
+SielCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
 
 HOW TO ORDER (use these steps whenever the customer asks how to order, how to buy, or how checkout works):
 1. Browse the Siel Cart catalog and open the product you want.

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ProfileController;
 use App\Livewire\CartPage;
 use App\Livewire\CheckoutPage;
 use App\Livewire\Customer\Dashboard;
@@ -12,6 +13,8 @@ use App\Livewire\HomePage;
 use App\Livewire\ProductDetails;
 use App\Livewire\ProductListing;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 
@@ -111,6 +114,12 @@ Route::post('/api/chat', [
 */
 
 Route::middleware('auth:customer')->group(function () {
+    
+Route::post('/account/deactivate', [ProfileController::class, 'deactivateAccount'])
+        ->name('account.deactivate');
+
+    Route::post('/account/delete', [ProfileController::class, 'deleteAccount'])
+        ->name('account.delete');
 
     /*
     |--------------------------------------------------------------------------
@@ -139,9 +148,8 @@ Route::middleware('auth:customer')->group(function () {
         // Customer Profile
         Route::get('/my-account/profile', App\Livewire\Customer\Profile::class)
             ->name('customer.profile');
-    });
-
-
+        });
+   
     /*
     |--------------------------------------------------------------------------
     | Customer Logout
@@ -166,4 +174,35 @@ Route::middleware('auth:customer')->group(function () {
         return redirect('/');
 
     })->name('logout');
+
+
+// Development-only session debug route. Shows whether the session cookie
+// exists, whether the `customer` guard is authenticated, and the sessions
+// table row for the cookie value. Only available in local or staging.
+Route::get('/dev/session-debug', function (Request $request) {
+    if (! app()->environment('local', 'staging')) {
+        abort(404);
+    }
+
+    $cookieName = config('session.cookie');
+    $cookieValue = $request->cookie($cookieName);
+
+    $auth = auth('customer')->check();
+    $userId = auth('customer')->id();
+
+    $sessionRow = null;
+    if ($cookieValue) {
+        $sessionRow = DB::table(config('session.table'))->where('id', $cookieValue)->first();
+    }
+
+    return response()->json([
+        'environment' => app()->environment(),
+        'session_cookie_name' => $cookieName,
+        'session_cookie_value' => $cookieValue,
+        'auth_customer_check' => $auth,
+        'auth_customer_id' => $userId,
+        'session_row' => $sessionRow,
+    ]);
+
+})->name('dev.session-debug');
 });

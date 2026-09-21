@@ -7,11 +7,13 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Models\Customer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -21,7 +23,22 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind custom LoginResponse to override default redirect after login
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    // 1. Forget any stored "intended" URL so Laravel doesn't fall back to /dashboard
+                    $request->session()->forget('url.intended');
+
+                    // 2. Force immediate session write
+                    $request->session()->save();
+
+                    // 3. Redirect directly to /my-account
+                    return redirect('/my-account');
+                }
+            };
+        });
     }
 
     /**
@@ -49,14 +66,6 @@ class FortifyServiceProvider extends ServiceProvider
 
             $customer = Customer::where('email', $request->email)->first();
 
-            // An unknown email and a wrong password must be indistinguishable to
-            // the caller, so both go down this one branch: same message, same
-            // counted attempt, same lockout. Previously an unknown email returned
-            // null (Fortify's generic message, no lockout) while a wrong password
-            // said "You entered a wrong password." and could lock out, so either
-            // the message or the lockout confirmed the address was registered.
-            // Hashing the submitted password when there is no customer keeps the
-            // response time close to that of a real Hash::check.
             if ($customer) {
                 $passwordMatches = Hash::check($request->password, $customer->password);
             } else {
@@ -67,7 +76,6 @@ class FortifyServiceProvider extends ServiceProvider
             if (! $passwordMatches) {
                 RateLimiter::hit($throttleKey, $decaySeconds);
 
-                // If this hit reached the maximum attempts, show the lockout message immediately.
                 if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
                     $seconds = RateLimiter::availableIn($throttleKey);
                     $minutes = (int) ceil($seconds / 60);
@@ -81,16 +89,27 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
             }
 
-            // Clear failed attempts on successful login
             RateLimiter::clear($throttleKey);
 
-            // Only tell a caller the account is deactivated once they have
-            // proven the password, so this cannot be used to enumerate accounts.
-            if (! $customer->is_active) {
+            // 1. Reject permanently deleted accounts
+            if (str_starts_with($customer->email, 'deleted_')) {
                 throw ValidationException::withMessages([
-                    Fortify::username() => __('This account has been deactivated. Please contact the shop administrator.'),
+                    Fortify::username() => __('This account has been permanently deleted. Please register as a new user.'),
                 ]);
             }
+
+            // 2. Automatic Reactivation: Restore access if deactivated
+            if (! $customer->is_active) {
+                $customer->is_active = true;
+                $customer->deactivated_at = null;
+                $customer->save();
+
+                session()->flash('message', 'Welcome back! Your account has been automatically reactivated.');
+            }
+
+            // 3. Explicitly log the customer into the customer guard & regenerate session
+            Auth::guard('customer')->login($customer, $request->boolean('remember'));
+            $request->session()->regenerate();
 
             return $customer;
         });
@@ -110,7 +129,18 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn () => view('auth.customer.login'));
+        Fortify::loginView(function (Request $request) {
+            if (auth('customer')->check()) {
+                // Wipe intended destination if hit while authenticated
+                $request->session()->forget('url.intended');
+                return redirect('/my-account');
+            }
+
+            return response()->view('auth.customer.login')
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        });
         Fortify::verifyEmailView(fn () => view('auth.customer.verify-email'));
         Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
         Fortify::registerView(fn () => view('auth.customer.register'));

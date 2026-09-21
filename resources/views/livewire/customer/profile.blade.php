@@ -221,6 +221,49 @@
                     </div>
                 </div>
 
+                <!-- Deactivate Account (30-Day Recovery) -->
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-amber-200">
+                    <h2 class="text-xl font-bold text-amber-900 mb-2">Deactivate Account</h2>
+                    <p class="text-sm text-gray-600 mb-6">
+                        Temporarily disable your profile. You can log back in within <strong>30 days</strong> to restore access. If left inactive for more than 30 days, your account email will be automatically archived.
+                    </p>
+
+                    @if (session()->has('deactivate_error'))
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {{ session('deactivate_error') }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('account.deactivate') }}" method="POST" onsubmit="return confirm('Are you sure you want to deactivate your account? You can reactivate it within 30 days by logging back in.');">
+                        @csrf
+                        <button type="submit"
+                                class="w-full bg-amber-500 text-white py-2 px-4 rounded-lg hover:bg-amber-600 transition font-semibold">
+                            Deactivate Account
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Delete Account (Instant Permanent Deletion) -->
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-red-200">
+                    <h2 class="text-xl font-bold text-red-600 mb-2">Delete Account</h2>
+                    <p class="text-sm text-gray-600 mb-6">
+                        Once your account is deleted, you will be logged out immediately and your email address will be released, allowing you to re-register as a new account anytime. Order history remains preserved for accounting purposes.
+                    </p>
+
+                    @if (session()->has('error'))
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('account.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete your account? You will be logged out immediately.');">
+                        @csrf
+                        <button type="submit"
+                                class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition font-semibold">
+                            Delete Account
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
             </main>

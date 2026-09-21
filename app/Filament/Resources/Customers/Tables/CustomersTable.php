@@ -20,20 +20,37 @@ class CustomersTable
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
-                    ->searchable(['first_name', 'last_name']),
+                    ->searchable(['first_name', 'last_name'])
+                    ->description(function ($record): ?string {
+                        if (str_starts_with($record->email, 'deleted_')) {
+                            return 'Deleted Account';
+                        }
+
+                        if (! $record->is_active) {
+                            return 'Deactivated Account';
+                        }
+
+                        return null;
+                    }),
+
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
+
                 TextColumn::make('phone')
                     ->searchable(),
+
                 TextColumn::make('date_of_birth')
                     ->label('Birthdate'),
+
                 ToggleColumn::make('is_active')
                     ->label('Active'),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
