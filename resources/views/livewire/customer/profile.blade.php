@@ -1,4 +1,4 @@
-<div class="bg-emerald-50/40 py-12" x-data="{ tab: 'profile' }">
+<div class="bg-gray-50 py-12" x-data="{ tab: 'profile' }">
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
 
         <!-- Breadcrumb -->
@@ -11,28 +11,42 @@
         </nav>
 
         <!-- Profile Cover -->
-        <div class="mb-8 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div class="h-28 bg-gradient-to-r from-[var(--color-primary)] to-emerald-700 sm:h-36"></div>
-            <div class="px-6 pb-6 sm:px-8">
-                <div class="flex flex-col items-center gap-4 sm:flex-row sm:items-end">
-                    <div class="-mt-12 flex size-24 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-3xl font-bold text-[var(--color-secondary)] ring-4 ring-white sm:-mt-14 sm:size-28 sm:text-4xl">
-                        {{ auth('customer')->user()->initials() }}
-                    </div>
+<div class="mb-8 overflow-hidden rounded-2xl border border-[#eeebe2] bg-white shadow-sm">
+    {{-- Header Banner --}}
+    <div class="h-28 bg-gradient-to-r from-[#14532d] via-[#166534] to-[#ca8a04] sm:h-36"></div>
 
-                    <div class="flex-1 text-center sm:pb-1 sm:text-left">
-                        <h1 class="text-2xl font-bold text-gray-900">{{ auth('customer')->user()->name }}</h1>
-                        <p class="text-gray-500">{{ auth('customer')->user()->email }}</p>
-                    </div>
+    {{-- Body Container --}}
+    <div class="relative px-6 pb-6 pt-4 sm:px-8 sm:pb-8">
+        
+        {{-- Avatar positioned exactly over the border seam --}}
+        <div class="absolute -top-12 sm:-top-14 left-6 sm:left-8 flex size-24 sm:size-28 items-center justify-center rounded-full bg-[#14532d] ring-4 ring-white shadow-md">
+            {{-- Optical centering for capital letters --}}
+            <span class="translate-y-[1px] text-3xl sm:text-4xl font-black tracking-tight text-[#facc15] leading-none select-none text-center">
+                {{ auth('customer')->user()->initials() }}
+            </span>
+        </div>
 
-                    <div class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-xs text-gray-600 sm:mb-1">
-                        <svg class="size-4 text-[var(--color-primary)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Member since {{ auth('customer')->user()->created_at->format('M d, Y') }}
-                    </div>
-                </div>
+        {{-- Text & Controls with generous spacing from the banner line --}}
+        <div class="pt-14 sm:pt-2 sm:pl-32 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
+                    {{ auth('customer')->user()->name }}
+                </h1>
+                <p class="mt-1 text-sm font-medium text-gray-500">
+                    {{ auth('customer')->user()->email }}
+                </p>
+            </div>
+
+            <div class="inline-flex items-center gap-2 self-start sm:self-center rounded-full border border-[#eeebe2] bg-[#faf9f5] px-3.5 py-1.5 text-xs font-medium text-gray-600">
+                <svg class="size-3.5 text-[#14532d]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Member since {{ auth('customer')->user()->created_at->format('M d, Y') }}
             </div>
         </div>
+
+    </div>
+</div>
 
         <!-- Tabbed Settings -->
         <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
