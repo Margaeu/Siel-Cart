@@ -24,13 +24,13 @@ class BannerForm
                             ->directory('banners')
                             ->image()
                             ->required()
-                            ->maxSize(2048)
+                            ->maxSize(10240)
                             ->imageEditor()
                             ->imageEditorAspectRatioOptions(['16:9', '21:9', null])
                             ->orientImagesFromExif(false)
                             ->imagePreviewHeight('250')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
-                            ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 2MB.')
+                            ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 10MB.')
                             ->columnSpanFull(),
                     ]),
                 Section::make('Display')
