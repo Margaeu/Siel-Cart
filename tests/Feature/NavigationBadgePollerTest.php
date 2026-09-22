@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\Orders\OrderResource;
-use App\Livewire\Admin\PendingOrdersPoller;
+use App\Livewire\Admin\NavigationBadgePoller;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\Report;
+use App\Models\Review;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-class PendingOrdersPollerTest extends TestCase
+class NavigationBadgePollerTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -39,6 +42,30 @@ class PendingOrdersPollerTest extends TestCase
         ]);
     }
 
+    private function review(bool $isApproved = false, ?Customer $customer = null): Review
+    {
+        return Review::create([
+            'product_id' => Product::factory()->create()->id,
+            'customer_id' => ($customer ?? Customer::factory()->create())->id,
+            'rating' => 5,
+            'is_approved' => $isApproved,
+        ]);
+    }
+
+    private function report(string $status = 'pending'): Report
+    {
+        $reporter = Customer::factory()->create();
+        $reported = Customer::factory()->create();
+
+        return Report::create([
+            'reporter_customer_id' => $reporter->id,
+            'reported_customer_id' => $reported->id,
+            'review_id' => $this->review(customer: $reported)->id,
+            'reason' => 'inappropriate',
+            'status' => $status,
+        ]);
+    }
+
     public function test_badge_counts_only_pending_orders(): void
     {
         $this->assertNull(OrderResource::getNavigationBadge());
@@ -54,31 +81,53 @@ class PendingOrdersPollerTest extends TestCase
     {
         $this->order();
 
-        Livewire::test(PendingOrdersPoller::class)
+        Livewire::test(NavigationBadgePoller::class)
             ->call('check')
             ->assertNotDispatched('refresh-sidebar');
     }
 
     public function test_poll_refreshes_the_sidebar_when_a_new_order_arrives(): void
     {
-        $poller = Livewire::test(PendingOrdersPoller::class);
+        $poller = Livewire::test(NavigationBadgePoller::class);
 
         $this->order();
 
         $poller->call('check')
             ->assertDispatched('refresh-sidebar')
-            ->assertSet('badge', '1');
+            ->assertSet('ordersBadge', '1');
     }
 
     public function test_poll_refreshes_the_sidebar_when_the_last_pending_order_is_picked_up(): void
     {
         $order = $this->order();
-        $poller = Livewire::test(PendingOrdersPoller::class);
+        $poller = Livewire::test(NavigationBadgePoller::class);
 
         $order->update(['status' => 'processing']);
 
         $poller->call('check')
             ->assertDispatched('refresh-sidebar')
-            ->assertSet('badge', null);
+            ->assertSet('ordersBadge', null);
+    }
+
+    public function test_poll_refreshes_the_sidebar_when_a_new_unapproved_review_arrives(): void
+    {
+        $poller = Livewire::test(NavigationBadgePoller::class);
+
+        $this->review(isApproved: false);
+
+        $poller->call('check')
+            ->assertDispatched('refresh-sidebar')
+            ->assertSet('reviewsBadge', '1');
+    }
+
+    public function test_poll_refreshes_the_sidebar_when_a_new_pending_report_arrives(): void
+    {
+        $poller = Livewire::test(NavigationBadgePoller::class);
+
+        $this->report();
+
+        $poller->call('check')
+            ->assertDispatched('refresh-sidebar')
+            ->assertSet('reportsBadge', '1');
     }
 }

@@ -3,13 +3,13 @@
 namespace App\Filament\Resources\Reviews\Tables;
 
 use App\Models\Review;
+use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
@@ -23,6 +23,7 @@ class ReviewsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->poll('10s')
             // customer.name is an accessor, so the relations must be loaded up front.
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['product', 'customer']))
             ->defaultSort('created_at', 'desc')
@@ -142,7 +143,7 @@ class ReviewsTable
                     ->visible(fn (Review $record): bool => $record->is_approved),
 
                 ViewAction::make(),
-                //EditAction::make(),
+                // EditAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

@@ -5,6 +5,8 @@ namespace App\Providers\Filament;
 use App\Filament\AvatarProviders\SielAvatarProvider;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Reports\ReportResource;
+use App\Filament\Resources\Reviews\ReviewResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -15,8 +17,8 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Icons\Heroicon;
-use Filament\View\PanelsRenderHook;
 use Filament\View\PanelsIconAlias;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -48,7 +50,7 @@ class AdminPanelProvider extends PanelProvider
                 url: asset('fonts/filament/filament/acumin-pro/index.css'),
                 provider: LocalFontProvider::class,
             )
-            //->databaseNotifications()
+            // ->databaseNotifications()
             // Filament turns the topbar search on by itself as soon as any resource is
             // globally searchable (a `$recordTitleAttribute` is enough — CustomerResource
             // and others set one). Admins navigate through the sidebar groups instead, so
@@ -125,13 +127,15 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            // Refreshes the Orders sidebar badge when a new order comes in. Only
-            // mounted for a signed-in admin who can see orders — BODY_END also
-            // renders on the login page, where there is nothing to poll.
+            // Refreshes the Orders/Reviews/Reports sidebar badges when a new
+            // order, review, or report comes in. Only mounted for a signed-in
+            // admin who can see at least one of them — BODY_END also renders
+            // on the login page, where there is nothing to poll.
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn (): string => auth('web')->check() && OrderResource::canViewAny()
-                    ? Blade::render('@livewire(\App\Livewire\Admin\PendingOrdersPoller::class)')
+                fn (): string => auth('web')->check()
+                    && (OrderResource::canViewAny() || ReviewResource::canViewAny() || ReportResource::canViewAny())
+                    ? Blade::render('@livewire(\App\Livewire\Admin\NavigationBadgePoller::class)')
                     : '',
             )
             ->plugins([

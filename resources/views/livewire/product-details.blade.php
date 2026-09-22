@@ -609,7 +609,7 @@
                                     <!-- Video Upload Section -->
                                     <div>
                                         <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-                                            Video <span class="text-gray-400 font-normal uppercase">(optional, ~1 minute)</span>
+                                            Video <span class="text-gray-400 font-normal lowercase">(optional, 1 minute)</span>
                                         </label>
 
                                         @if($reviewVideo)
