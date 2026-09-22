@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Reviews\Schemas;
 use App\Models\Review;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -22,19 +23,19 @@ class ReviewForm
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
-                        Placeholder::make('product_name')
+                        TextEntry::make('product_name')
                             ->label('Product')
                             ->content(fn (?Review $record): string => $record?->product?->name ?? '—'),
 
-                        Placeholder::make('customer_name')
+                        TextEntry::make('customer_name')
                             ->label('Customer')
                             ->content(fn (?Review $record): string => $record?->customer?->name ?? '—'),
 
-                        Placeholder::make('order_number')
+                        TextEntry::make('order_number')
                             ->label('Order')
                             ->content(fn (?Review $record): string => $record?->order?->order_number ?? 'No linked order'),
 
-                        Placeholder::make('rating_stars')
+                        TextEntry::make('rating_stars')
                             ->label('Rating')
                             ->content(function (?Review $record): string {
                                 if (! $record) {
@@ -46,21 +47,21 @@ class ReviewForm
                                     ." ({$record->rating}/5)";
                             }),
 
-                        Placeholder::make('review_title')
+                        TextEntry::make('review_title')
                             ->label('Title')
                             ->columnSpanFull()
                             ->content(fn (?Review $record): string => $record?->title ?: 'No title'),
 
-                        Placeholder::make('review_comment')
+                        TextEntry::make('review_comment')
                             ->label('Comment')
                             ->columnSpanFull()
                             ->content(fn (?Review $record): string => $record?->comment ?: 'No comment'),
 
-                        Placeholder::make('submitted_at')
+                        TextEntry::make('submitted_at')
                             ->label('Submitted')
                             ->content(fn (?Review $record): string => $record?->created_at?->format('M d, Y h:i A') ?? '—'),
 
-                        Placeholder::make('verified_purchase')
+                        TextEntry::make('verified_purchase')
                             ->label('Verified purchase')
                             // Set by the storefront when a completed order is found; never edited here.
                             ->content(fn (?Review $record): string => $record?->is_verified_purchase ? 'Yes' : 'No'),

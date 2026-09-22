@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Tables;
 
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -14,8 +15,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class ProductsTable
@@ -23,7 +22,11 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('variants'))
+            // Deleted products are listed too, under the Deleted tab; the tabs
+            // on ListProducts apply the deleted_at condition themselves.
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->withoutGlobalScopes([SoftDeletingScope::class])
+                ->with('variants'))
             ->columns([
                 ImageColumn::make('primaryImage.image_path')
                     ->label('')
@@ -76,9 +79,9 @@ class ProductsTable
                 SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship('category', 'name'),
-                TernaryFilter::make('is_active')
-                    ->label('Active'),
-                TrashedFilter::make(),
+                // No is_active or Trashed filter: the All/Active/Inactive/Deleted
+                // tabs on ListProducts cover both, and a TrashedFilter's default
+                // "without deleted" would leave the Deleted tab empty.
             ])
             ->recordActions([
                 ViewAction::make(),

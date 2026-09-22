@@ -8,8 +8,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CustomersTable
 {
@@ -22,6 +23,9 @@ class CustomersTable
             : $record->{$column};
 
         return $table
+            // Deleted accounts are listed too, under the Deleted tab; the tabs
+            // on ListCustomers apply the deleted_at condition themselves.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->withoutGlobalScopes([SoftDeletingScope::class]))
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
@@ -74,10 +78,9 @@ class CustomersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                TrashedFilter::make()
-                    ->label('Deleted accounts'),
-            ])
+            // No TrashedFilter: the All/Active/Inactive/Deleted tabs on
+            // ListCustomers decide which accounts are shown. A TrashedFilter's
+            // default "without deleted" would leave the Deleted tab empty.
             ->recordActions([
                 ViewAction::make(),
                 // Hidden explicitly: EditAction authorizes through the policy,

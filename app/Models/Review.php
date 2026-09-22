@@ -60,4 +60,11 @@ class Review extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    // withTrashed(): orders are soft-deleted, and the review's link to the
+    // purchase it verifies should still resolve in the admin.
+    public function order()
+    {
+        return $this->belongsTo(Order::class)->withTrashed();
+    }
 }

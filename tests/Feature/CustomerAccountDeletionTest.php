@@ -476,19 +476,26 @@ class CustomerAccountDeletionTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_deleted_customers_are_listed_under_the_trashed_filter(): void
+    public function test_customer_list_tabs_separate_active_inactive_and_deleted(): void
     {
         $deleted = $this->customer();
         $deleted->deleteAccount();
-        $live = Customer::factory()->create();
+        $active = Customer::factory()->create(['is_active' => true]);
+        $inactive = Customer::factory()->create(['is_active' => false]);
         $this->actingAsAdmin();
 
         Livewire::test(ListCustomers::class)
-            ->assertCanSeeTableRecords([$live])
-            ->assertCanNotSeeTableRecords([$deleted])
-            ->filterTable('trashed', false)
+            ->assertCanSeeTableRecords([$active, $inactive, $deleted])
+            ->set('activeTab', 'active')
+            ->assertCanSeeTableRecords([$active])
+            ->assertCanNotSeeTableRecords([$inactive, $deleted])
+            ->set('activeTab', 'inactive')
+            ->assertCanSeeTableRecords([$inactive])
+            // A deleted account is also inactive; it belongs only under Deleted.
+            ->assertCanNotSeeTableRecords([$active, $deleted])
+            ->set('activeTab', 'deleted')
             ->assertCanSeeTableRecords([$deleted])
-            ->assertCanNotSeeTableRecords([$live]);
+            ->assertCanNotSeeTableRecords([$active, $inactive]);
     }
 
     public function test_no_generic_delete_force_delete_or_restore_is_offered(): void

@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ColorColumn;
@@ -47,7 +48,7 @@ class ThemesTable
                     ->label('Set Active')
                     ->icon(Heroicon::Check)
                     ->color('success')
-                    ->visible(fn (Theme $record) => !$record->is_active)
+                    ->visible(fn (Theme $record) => ! $record->is_active)
                     ->action(function (Theme $record) {
                         $record->update(['is_active' => true]);
 
@@ -56,6 +57,7 @@ class ThemesTable
                             ->success()
                             ->send();
                     }),
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

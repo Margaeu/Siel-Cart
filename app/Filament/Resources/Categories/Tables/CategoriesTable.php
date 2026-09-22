@@ -8,7 +8,6 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class CategoriesTable
@@ -45,10 +44,8 @@ class CategoriesTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                TernaryFilter::make('is_active')
-                    ->label('Active'),
-            ])
+            // No is_active filter: the All/Active/Inactive tabs on
+            // ListCategories cover it.
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),

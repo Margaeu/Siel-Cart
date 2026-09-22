@@ -8,6 +8,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Tables;
@@ -140,6 +141,7 @@ class ReviewsTable
                     })
                     ->visible(fn (Review $record): bool => $record->is_approved),
 
+                ViewAction::make(),
                 //EditAction::make(),
                 DeleteAction::make(),
             ])
