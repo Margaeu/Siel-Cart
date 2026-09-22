@@ -45,6 +45,27 @@ class OrderResource extends Resource
         return OrdersTable::configure($table);
     }
 
+    // "New" means pending: an order sits there from checkout until an admin
+    // marks it processing, so the badge clears itself as orders are picked
+    // up rather than needing a separate "seen" flag. Trashed orders are
+    // excluded by the model's soft-delete scope.
+    public static function getNavigationBadge(): ?string
+    {
+        $pending = Order::ofStatus('pending')->count();
+
+        return $pending > 0 ? (string) $pending : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'New orders waiting to be processed';
+    }
+
     public static function canCreate(): bool
     {
         return false;
