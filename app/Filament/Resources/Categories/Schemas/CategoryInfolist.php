@@ -33,11 +33,6 @@ class CategoryInfolist
                     TextEntry::make('slug')
                         ->label('Slug')
                         ->copyable(),
-
-                    TextEntry::make('description')
-                        ->label('Description')
-                        ->placeholder('No description')
-                        ->columnSpanFull(),
                 ]),
 
             Section::make('Category image')
