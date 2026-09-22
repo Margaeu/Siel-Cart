@@ -8,13 +8,13 @@
                     <a href="{{ route('home') }}" class="hover:text-[var(--color-primary)] transition-colors">Home</a>
                 </li>
                 <li>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"/></svg>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </li>
                 <li>
                     <a href="{{ route('products.index') }}" class="hover:text-[var(--color-primary)] transition-colors">Products</a>
                 </li>
                 <li>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"/></svg>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </li>
                 <li>
                     <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" class="hover:text-[var(--color-primary)] transition-colors">
@@ -22,7 +22,7 @@
                     </a>
                 </li>
                 <li>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 5l7 7-7 7"/></svg>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </li>
                 <li class="text-gray-900 font-semibold truncate max-w-xs" aria-current="page">
                     {{ $product->name }}
@@ -73,7 +73,42 @@
                 </div>
 
                 <!-- Right Column: Info & Actions -->
-                <div class="lg:col-span-6 flex flex-col justify-between">
+                {{--
+                    Quantity lives in Alpine, not on the Livewire component: the
+                    stepper used to be wire:click calls, and each tap re-rendered
+                    the whole page on the server (about a second per tap). The
+                    value only goes to the server with addToCart().
+
+                    wire:key on the selection resets the stepper to 1 and picks up
+                    the new stock cap when the customer switches variant, since
+                    Livewire's morph would otherwise keep the old Alpine state.
+                --}}
+                <div class="lg:col-span-6 flex flex-col justify-between"
+                     wire:key="purchase-{{ $selectedVariant ?? 'simple' }}"
+                     x-data="{
+                         qty: 1,
+                         max: {{ $maxQuantity }},
+                         adding: false,
+                         clamp(value) {
+                             const n = parseInt(value, 10);
+                             if (Number.isNaN(n) || n < 1) return 1;
+                             return Math.min(n, this.max);
+                         },
+                         step(by) { this.qty = this.clamp(this.clamp(this.qty) + by); },
+                         typed(el) {
+                             // Digits only; an empty box is allowed while typing
+                             // and becomes 1 again on blur.
+                             const digits = el.value.replace(/\D/g, '');
+                             el.value = digits;
+                             this.qty = digits;
+                         },
+                         add() {
+                             if (this.adding) return;
+                             this.qty = this.clamp(this.qty);
+                             this.adding = true;
+                             $wire.addToCart(this.qty).finally(() => this.adding = false);
+                         },
+                     }">
                     <div>
                         <!-- Header & Badges -->
                         <div class="flex items-center justify-between gap-4 mb-3">
@@ -162,16 +197,30 @@
                         <div class="mb-8">
                             <label class="block text-sm font-semibold text-gray-900 mb-3">Quantity</label>
                             <div class="inline-flex items-center rounded-xl border border-gray-200 p-1 bg-white shadow-sm">
-                                <button wire:click="decrementQuantity" 
-                                        class="w-9 h-9 rounded-lg text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors active:scale-95">
+                                <button type="button"
+                                        @click="step(-1)"
+                                        :disabled="clamp(qty) <= 1"
+                                        aria-label="Decrease quantity"
+                                        class="w-9 h-9 rounded-lg text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
                                 </button>
-                                <input type="number" 
-                                       wire:model="quantity" 
-                                       min="1" 
+                                {{-- type="text", not "number": a number input changes value on
+                                     mouse-wheel scroll and shows browser spinner arrows. --}}
+                                <input type="text"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
+                                       autocomplete="off"
+                                       aria-label="Quantity"
+                                       :value="qty"
+                                       @input="typed($event.target)"
+                                       @blur="qty = clamp(qty)"
+                                       @keydown.enter.prevent="$event.target.blur()"
                                        class="w-14 text-center text-sm font-bold text-gray-900 border-none focus:ring-0 p-0">
-                                <button wire:click="incrementQuantity" 
-                                        class="w-9 h-9 rounded-lg text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors active:scale-95">
+                                <button type="button"
+                                        @click="step(1)"
+                                        :disabled="clamp(qty) >= max"
+                                        aria-label="Increase quantity"
+                                        class="w-9 h-9 rounded-lg text-gray-600 hover:bg-gray-100 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 </button>
                             </div>
@@ -181,11 +230,14 @@
                     <!-- CTA Actions -->
                     <div>
                         @if($selectionInStock)
-                            <button wire:click="addToCart"
+                            <button type="button"
+                                    @click="add()"
+                                    :disabled="adding"
                                     style="background-color: var(--color-primary);"
-                                    class="w-full text-white py-4 px-6 rounded-xl hover:brightness-110 active:scale-[0.99] transition-all duration-150 font-bold text-base shadow-lg shadow-[var(--color-primary)]/20 flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                Add to Cart
+                                    class="w-full text-white py-4 px-6 rounded-xl hover:brightness-110 active:scale-[0.99] transition-all duration-150 font-bold text-base shadow-lg shadow-[var(--color-primary)]/20 flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-wait">
+                                <svg x-show="!adding" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                <svg x-show="adding" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                                <span x-text="adding ? 'Adding…' : 'Add to Cart'">Add to Cart</span>
                             </button>
                         @else
                             <button disabled

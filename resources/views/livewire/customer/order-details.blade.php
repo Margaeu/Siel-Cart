@@ -4,10 +4,12 @@
         // the dashboard's recent orders, so a status reads the same everywhere.
         [$statusDot, $statusText] = match ($order->status) {
             'completed', 'return_completed' => ['bg-emerald-500', 'text-emerald-700'],
-            'ready_for_pickup'              => ['bg-amber-500', 'text-amber-700'],
+            'ready_for_pickup'              => ['bg-purple-500', 'text-purple-700'],
             'processing'                    => ['bg-blue-500', 'text-blue-700'],
             'cancelled'                     => ['bg-red-500', 'text-red-700'],
-            default                         => ['bg-gray-400', 'text-gray-700'],
+            // Matches the Payment Status "Pending" colour below.
+            'pending'                       => ['bg-amber-500', 'text-amber-700'],
+            default                        => ['bg-gray-400', 'text-gray-700'],
         };
 
         $paymentMethodLabel = match ($order->payment_method) {

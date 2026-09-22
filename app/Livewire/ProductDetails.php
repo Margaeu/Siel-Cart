@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Report;
 use App\Models\Review;
 use App\Services\CartService;
+use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -16,7 +17,6 @@ class ProductDetails extends Component
 
     public Product $product;
     public $selectedVariant = null;
-    public $quantity = 1;
     public $selectedImage = null;
     public int $reviewRating = 5;
     public string $reviewTitle = '';
@@ -121,20 +121,25 @@ class ProductDetails extends Component
         $this->selectedImage = $imagePath;
     }
 
-    public function incrementQuantity()
+    /**
+     * Quantity is owned by Alpine in the view and handed over only here.
+     * The +/- buttons used to be wire:click calls, so every tap was a full
+     * round trip that re-hydrated the product with its reviews and
+     * re-rendered the related product cards -- about a second per tap.
+     *
+     * Renderless because nothing on the page changes when an item is added:
+     * the toast and the cart icon react to the dispatched events. Rendering
+     * here repeated that same whole-page work before the toast could show.
+     */
+    #[Renderless]
+    public function addToCart($quantity = 1)
     {
-        $this->quantity++;
-    }
+        $cartService = app(CartService::class);
 
-    public function decrementQuantity()
-    {
-        if ($this->quantity > 1) {
-            $this->quantity--;
-        }
-    }
+        // Client input: never trust it to be a positive integer.
+        // CartService still rejects anything over the available stock.
+        $quantity = max(1, (int) $quantity);
 
-    public function addToCart(CartService $cartService)
-    {
         if (! auth('customer')->check()) {
             session()->put('url.intended', route('products.show', $this->product->slug));
             session()->flash('status', 'Please log in to add products to your cart.');
@@ -151,7 +156,7 @@ class ProductDetails extends Component
         $result = $cartService->addItem(
             $this->product->id,
             $this->selectedVariant,
-            (int) $this->quantity
+            $quantity
         );
 
         if (! $result['success']) {
@@ -350,9 +355,16 @@ class ProductDetails extends Component
             ->limit(4)
             ->get();
 
+        // Upper bound for the client-side quantity stepper. Only a UX cap --
+        // CartService re-checks stock (including what is already in the cart).
+        $maxQuantity = (int) ($this->product->has_variants
+            ? $this->product->variants->firstWhere('id', $this->selectedVariant)?->stock_quantity
+            : $this->product->stock_quantity);
+
         return view('livewire.product-details', [
             'relatedProducts' => $relatedProducts,
             'galleryImages' => $this->galleryImages(),
+            'maxQuantity' => max(1, $maxQuantity),
             'selectionInStock' => $this->product->is_active && ($this->product->has_variants
                 ? (bool) $this->product->variants->contains(fn ($variant) =>
                     $variant->id == $this->selectedVariant && $variant->is_active && $variant->stock_quantity > 0)

@@ -58,17 +58,15 @@
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <div class="flex items-center justify-between mb-4 sm:mb-6">
                         <h2 class="text-base font-bold text-gray-900">My Orders</h2>
-                        <a href="{{ route('customer.orders') }}" class="text-xs font-medium text-gray-500 hover:text-[var(--color-primary)] transition">
-                            View all orders &rarr;
-                        </a>
                     </div>
 
                     {{-- Horizontal scrollable carousel on mobile, 5-col grid on sm+ --}}
                     <div class="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto sm:overflow-visible pb-3 sm:pb-0 snap-x snap-mandatory scroll-smooth sm:divide-x sm:divide-gray-100 -mx-2 px-2 sm:mx-0 sm:px-0">
                         {{-- Pending --}}
-                        <div class="flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center">
+                        <a href="{{ route('customer.orders', ['status' => 'pending']) }}" wire:navigate
+                           class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -79,13 +77,14 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap">Pending</span>
-                        </div>
+                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap transition group-hover:text-gray-900">Pending</span>
+                        </a>
 
                         {{-- Processing --}}
-                        <div class="flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center">
+                        <a href="{{ route('customer.orders', ['status' => 'processing']) }}" wire:navigate
+                           class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                                     </svg>
@@ -96,13 +95,14 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap">Processing</span>
-                        </div>
+                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap transition group-hover:text-gray-900">Processing</span>
+                        </a>
 
                         {{-- Ready for Pickup --}}
-                        <div class="flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[7rem] sm:min-w-0 snap-center">
+                        <a href="{{ route('customer.orders', ['status' => 'ready_for_pickup']) }}" wire:navigate
+                           class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[7rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                     </svg>
@@ -113,13 +113,14 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap">Ready for Pickup</span>
-                        </div>
+                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap transition group-hover:text-gray-900">Ready for Pickup</span>
+                        </a>
 
                         {{-- Completed --}}
-                        <div class="flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center">
+                        <a href="{{ route('customer.orders', ['status' => 'completed']) }}" wire:navigate
+                           class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
@@ -130,13 +131,14 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap">Completed</span>
-                        </div>
+                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap transition group-hover:text-gray-900">Completed</span>
+                        </a>
 
                         {{-- Cancelled --}}
-                        <div class="flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center">
+                        <a href="{{ route('customer.orders', ['status' => 'cancelled']) }}" wire:navigate
+                           class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
@@ -147,8 +149,8 @@
                                     </span>
                                 @endif
                             </div>
-                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap">Cancelled</span>
-                        </div>
+                            <span class="text-xs font-medium text-gray-600 whitespace-nowrap transition group-hover:text-gray-900">Cancelled</span>
+                        </a>
                     </div>
                 </div>
 
@@ -212,16 +214,17 @@
                                             @php
                                                 $statusDot = match(strtolower($order->status)) {
                                                     'completed' => 'bg-emerald-500 text-emerald-700',
-                                                    'ready for pickup', 'ready' => 'bg-amber-500 text-amber-700',
+                                                    'ready_for_pickup', 'ready for pickup', 'ready' => 'bg-purple-500 text-purple-700',
                                                     'processing' => 'bg-blue-500 text-blue-700',
                                                     'cancelled' => 'bg-red-500 text-red-700',
+                                                    'pending' => 'bg-amber-500 text-amber-700',
                                                     default => 'bg-gray-400 text-gray-700',
                                                 };
                                                 $dotColor = explode(' ', $statusDot)[0];
                                                 $textColor = explode(' ', $statusDot)[1];
                                             @endphp
                                             <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
-                                            <span class="{{ $textColor }}">{{ ucfirst($order->status) }}</span>
+                                            <span class="{{ $textColor }}">{{ Str::headline($order->status) }}</span>
                                         </div>
 
                                         {{-- Price & Quantity --}}

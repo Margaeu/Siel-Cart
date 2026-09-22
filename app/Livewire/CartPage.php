@@ -52,12 +52,20 @@ class CartPage extends Component
      *
      * This is used by the minus and plus quantity controls
      * on the shopping cart page.
+     *
+     * Returns the quantity the cart really holds afterwards (the new one,
+     * or the old one if CartService refused it), or null if the row is
+     * gone. The stepper snaps to this value. It must not read it back from
+     * the re-rendered data-qty: Livewire resolves this call's promise
+     * before it morphs the new HTML in, so data-qty is still the pre-save
+     * number at that point. Snapping to it put the stepper back at 1 after
+     * a 1 -> 2 save, which left the minus button disabled.
      */
     public function updateQuantity(
         CartService $cartService,
         $cartItemId,
         $quantity
-    ) {
+    ): ?int {
         $this->quantityError = null;
 
         // Convert the input into an integer.
@@ -77,7 +85,7 @@ class CartPage extends Component
 
             $this->loadCart($cartService);
 
-            return;
+            return $this->savedQuantity($cartItemId);
         }
 
         // Reload the cart after a successful update.
@@ -85,6 +93,16 @@ class CartPage extends Component
 
         // Update the cart icon in the header.
         $this->dispatch('cart-updated');
+
+        return $this->savedQuantity($cartItemId);
+    }
+
+    /**
+     * The quantity of a cart row as just reloaded from the database.
+     */
+    protected function savedQuantity($cartItemId): ?int
+    {
+        return $this->cart?->items->firstWhere('id', (int) $cartItemId)?->quantity;
     }
 
     /**
