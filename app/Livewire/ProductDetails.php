@@ -21,13 +21,25 @@ class ProductDetails extends Component
     public int $reviewRating = 5;
     public string $reviewTitle = '';
     public string $reviewComment = '';
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
+
+    /** 
+     * Temporary holding array for newly chosen files before appending 
+     * @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] 
+     */
+    public array $newReviewPhotos = [];
+
+    /** 
+     * Persistent accumulated array of photos (up to 5 photos, max 2MB each)
+     * @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] 
+     */
     public array $reviewPhotos = [];
+
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
     public $reviewVideo = null;
     public bool $canReview = false;
     public bool $hasReview = false;
     public bool $reviewIsApproved = true;
+
     // Reporting Properties
     public bool $showReportForm = false;
     public ?int $reportingReviewId = null;
@@ -51,13 +63,13 @@ class ProductDetails extends Component
             ])
             ->firstOrFail();
 
-        // increment the views
+        // Increment views
         $this->product->incrementViews();
 
-        // set the initial image
+        // Set initial image
         $this->selectedImage = $this->defaultSharedImagePath();
 
-        // select first variant if product has variants
+        // Select first variant if product has variants
         if ($this->product->has_variants) {
             $activeVariants = $this->product->variants->where('is_active', true);
             $initialVariant = $activeVariants->first(fn ($variant) => $variant->stock_quantity > 0)
@@ -173,6 +185,42 @@ class ProductDetails extends Component
         $this->dispatch('cart-added', message: $result['message']);
     }
 
+    /**
+     * Appends freshly picked photos without wiping existing ones,
+     * validating each at a 2MB ceiling and enforcing a 5-photo maximum.
+     */
+    public function updatedNewReviewPhotos(): void
+    {
+        $this->validate([
+            'newReviewPhotos.*' => ['image', 'max:2048'],
+        ], [
+            'newReviewPhotos.*.image' => 'Each file must be a valid image format.',
+            'newReviewPhotos.*.max' => 'Each photo must not exceed 2MB.',
+        ]);
+
+        foreach ($this->newReviewPhotos as $photo) {
+            if (count($this->reviewPhotos) < 5) {
+                $this->reviewPhotos[] = $photo;
+            }
+        }
+
+        // Reset buffer so the input can accept more photos if limit is not reached
+        $this->reset('newReviewPhotos');
+    }
+
+    public function removeReviewPhoto(int $index): void
+    {
+        if (isset($this->reviewPhotos[$index])) {
+            unset($this->reviewPhotos[$index]);
+            $this->reviewPhotos = array_values($this->reviewPhotos);
+        }
+    }
+
+    public function removeReviewVideo(): void
+    {
+        $this->reviewVideo = null;
+    }
+
     public function submitReview(): void
     {
         if (! auth('customer')->check()) {
@@ -204,14 +252,15 @@ class ProductDetails extends Component
         }
 
         $validated = $this->validate([
-            'reviewRating' => ['required', 'integer', 'between:1,5'],
-            'reviewTitle' => ['nullable', 'string', 'max:255'],
-            'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
-            'reviewPhotos' => ['nullable', 'array', 'max:5'],
-            'reviewPhotos.*' => ['image', 'max:5120'],
-            'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
+            'reviewRating'   => ['required', 'integer', 'between:1,5'],
+            'reviewTitle'    => ['nullable', 'string', 'max:255'],
+            'reviewComment'  => ['required', 'string', 'min:10', 'max:2000'],
+            'reviewPhotos'   => ['nullable', 'array', 'max:5'],
+            'reviewPhotos.*' => ['image', 'max:2048'], // 2MB max per image (up to 10MB total)
+            'reviewVideo'    => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
         ], [
-            'reviewPhotos.max' => 'You can attach up to 5 photos.',
+            'reviewPhotos.max'   => 'You can attach up to 5 photos.',
+            'reviewPhotos.*.max' => 'Each photo must not exceed 2MB.',
         ]);
 
         $photoPaths = collect($this->reviewPhotos)
@@ -221,36 +270,25 @@ class ProductDetails extends Component
         $videoPath = $this->reviewVideo?->store('reviews/videos', 'r2');
 
         Review::create([
-            'product_id' => $this->product->id,
-            'customer_id' => $customerId,
-            'order_id' => $orderId,
-            'rating' => $validated['reviewRating'],
-            'title' => $validated['reviewTitle'] ?: null,
-            'comment' => $validated['reviewComment'],
-            'photos' => $photoPaths ?: null,
-            'video' => $videoPath,
+            'product_id'           => $this->product->id,
+            'customer_id'          => $customerId,
+            'order_id'             => $orderId,
+            'rating'               => $validated['reviewRating'],
+            'title'                => $validated['reviewTitle'] ?: null,
+            'comment'              => $validated['reviewComment'],
+            'photos'               => $photoPaths ?: null,
+            'video'                => $videoPath,
             'is_verified_purchase' => true,
-            'is_approved' => true,
+            'is_approved'          => true,
         ]);
 
-        $this->reset('reviewTitle', 'reviewComment', 'reviewPhotos', 'reviewVideo');
+        $this->reset('reviewTitle', 'reviewComment', 'reviewPhotos', 'newReviewPhotos', 'reviewVideo');
         $this->reviewRating = 5;
 
-        // Force reload the reviews relationship so the new review is visible instantly
+        // Force reload relationship so the new review appears immediately
         $this->product->load('approvedReviews.customer');
 
         $this->loadReviewState();
-    }
-
-    public function removeReviewPhoto(int $index): void
-    {
-        unset($this->reviewPhotos[$index]);
-        $this->reviewPhotos = array_values($this->reviewPhotos);
-    }
-
-    public function removeReviewVideo(): void
-    {
-        $this->reviewVideo = null;
     }
 
     public function startReport(int $reviewId): void
@@ -272,7 +310,7 @@ class ProductDetails extends Component
     public function submitReport(): void
     {
         $this->validate([
-            'reportReason' => ['required', 'string'],
+            'reportReason'  => ['required', 'string'],
             'reportDetails' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -286,7 +324,6 @@ class ProductDetails extends Component
             return;
         }
 
-        // 1. Fetch the review being reported to obtain the target customer's ID
         $review = Review::find($this->reportingReviewId);
 
         if (! $review) {
@@ -294,7 +331,6 @@ class ProductDetails extends Component
             return;
         }
 
-        // 2. Insert record into database using foreign key constraints from your migration
         Report::create([
             'reporter_customer_id' => auth('customer')->id(),
             'reported_customer_id' => $review->customer_id,
@@ -304,7 +340,6 @@ class ProductDetails extends Component
             'status'               => 'pending',
         ]);
 
-        // 3. Mark in state array so the UI renders "Reported to admin" immediately
         $this->reportedReviewIds[] = $this->reportingReviewId;
 
         session()->flash('report-status', 'Report submitted successfully. Thank you for helping keep our community safe.');
@@ -331,7 +366,6 @@ class ProductDetails extends Component
 
         $customerId = (int) auth('customer')->id();
 
-        // Hydrate previously reported review IDs for this session user
         $this->reportedReviewIds = Report::where('reporter_customer_id', $customerId)
             ->pluck('review_id')
             ->toArray();

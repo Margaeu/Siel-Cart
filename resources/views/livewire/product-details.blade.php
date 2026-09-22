@@ -3,28 +3,44 @@
         
         <!-- Breadcrumb -->
         <nav class="mb-8" aria-label="Breadcrumb">
-            <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                <li>
-                    <a href="{{ route('home') }}" class="hover:text-[var(--color-primary)] transition-colors">Home</a>
+            <ol class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500">
+                <li class="inline-flex items-center">
+                    <a href="{{ route('home') }}" class="font-medium hover:text-[var(--color-primary)] transition-colors">
+                        Home
+                    </a>
                 </li>
-                <li>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+
+                <li class="inline-flex items-center" aria-hidden="true">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </li>
-                <li>
-                    <a href="{{ route('products.index') }}" class="hover:text-[var(--color-primary)] transition-colors">Products</a>
+
+                <li class="inline-flex items-center">
+                    <a href="{{ route('products.index') }}" class="font-medium hover:text-[var(--color-primary)] transition-colors">
+                        Shop
+                    </a>
                 </li>
-                <li>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+
+                <li class="inline-flex items-center" aria-hidden="true">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </li>
-                <li>
-                    <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" class="hover:text-[var(--color-primary)] transition-colors">
+
+                <li class="inline-flex items-center">
+                    <a href="{{ route('products.index', ['category' => $product->category->slug]) }}" class="font-medium hover:text-[var(--color-primary)] transition-colors">
                         {{ $product->category->name }}
                     </a>
                 </li>
-                <li>
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+
+                <li class="inline-flex items-center" aria-hidden="true">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </li>
-                <li class="text-gray-900 font-semibold truncate max-w-xs" aria-current="page">
+
+                <li class="inline-flex items-center text-gray-900 font-semibold truncate max-w-[180px] sm:max-w-xs" aria-current="page">
                     {{ $product->name }}
                 </li>
             </ol>
@@ -406,17 +422,34 @@
                                                 </div>
                                             @endif
 
-                                            <!-- Report User Option -->
-                                            <div class="mt-3">
+                                            <!-- Redesigned Report User Section -->
+                                            <div class="mt-4 pt-3 border-t border-gray-50">
                                                 @auth('customer')
                                                     @if($review->customer_id !== auth('customer')->id())
                                                         @if(in_array($review->id, $reportedReviewIds ?? []))
-                                                            <span class="text-xs text-gray-400 font-medium">Reported to admin</span>
+                                                            <span class="inline-flex items-center gap-1.5 text-xs text-gray-500 font-medium bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-full">
+                                                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                                Reported to admin
+                                                            </span>
                                                         @elseif(($showReportForm ?? false) && ($reportingReviewId ?? null) === $review->id)
-                                                            <div class="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
-                                                                <p class="text-xs font-bold uppercase tracking-wider text-gray-700">Report this user</p>
+                                                            <!-- Expanded Report Box -->
+                                                            <div class="mt-2 rounded-2xl border border-rose-100 bg-rose-50/30 p-5 space-y-4 shadow-sm">
+                                                                <div class="flex items-center justify-between">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+                                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                                        </span>
+                                                                        <div>
+                                                                            <h5 class="text-xs font-bold uppercase tracking-wider text-gray-900">Report Review</h5>
+                                                                            <p class="text-[0.7rem] text-gray-500">Help us keep the marketplace safe and accurate.</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="button" wire:click="cancelReport" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                                                                </div>
+
                                                                 <div>
-                                                                    <select wire:model="reportReason" class="w-full rounded-xl border border-gray-200 text-xs focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
+                                                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Reason for reporting</label>
+                                                                    <select wire:model="reportReason" class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs text-gray-800 shadow-sm focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                                                                         <option value="">Select a reason…</option>
                                                                         <option value="Spam or advertising">Spam or advertising</option>
                                                                         <option value="Abusive or offensive language">Abusive or offensive language</option>
@@ -426,27 +459,34 @@
                                                                     </select>
                                                                     @error('reportReason') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                                                 </div>
+
                                                                 <div>
-                                                                    <textarea wire:model="reportDetails" rows="2" maxlength="1000" placeholder="Additional details (optional)" class="w-full rounded-xl border border-gray-200 text-xs focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
+                                                                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Additional context <span class="text-gray-400 font-normal">(optional)</span></label>
+                                                                    <textarea wire:model="reportDetails" rows="2" maxlength="1000" placeholder="Please provide any details that could assist our moderators..." class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-xs text-gray-800 placeholder:text-gray-400 shadow-sm focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"></textarea>
                                                                     @error('reportDetails') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
                                                                 </div>
-                                                                <div class="flex gap-2">
-                                                                    <button wire:click="submitReport" type="button" wire:loading.attr="disabled" class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-colors">Submit Report</button>
-                                                                    <button wire:click="cancelReport" type="button" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancel</button>
+
+                                                                <div class="flex items-center gap-2 pt-1">
+                                                                    <button wire:click="submitReport" type="button" wire:loading.attr="disabled" class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 active:scale-95 transition-all">
+                                                                        <span wire:loading.remove wire:target="submitReport">Submit Report</span>
+                                                                        <span wire:loading wire:target="submitReport">Submitting...</span>
+                                                                    </button>
+                                                                    <button wire:click="cancelReport" type="button" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 active:scale-95 transition-all">
+                                                                        Cancel
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         @else
-                                                            <button wire:click="startReport({{ $review->id }})" type="button" class="text-xs text-gray-400 hover:text-rose-600 transition-colors underline">
-                                                                Report user
+                                                            <!-- Clean Trigger Button -->
+                                                            <button wire:click="startReport({{ $review->id }})" type="button" class="inline-flex items-center gap-1 text-[0.75rem] font-medium text-gray-400 hover:text-rose-600 transition-colors">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                                                                Report review
                                                             </button>
                                                         @endif
                                                     @endif
                                                 @else
-                                                    {{-- Fortify names the customer login route 'login'; there is no
-                                                         'customer.login'. Naming it that threw RouteNotFoundException and
-                                                         500'd the whole product page for every guest as soon as the product
-                                                         had one approved review to render this block for. --}}
-                                                    <a href="{{ route('login') }}" class="text-xs text-gray-400 hover:text-gray-600 transition-colors underline">
+                                                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1 text-[0.75rem] font-medium text-gray-400 hover:text-gray-700 transition-colors">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
                                                         Log in to report
                                                     </a>
                                                 @endauth
@@ -503,32 +543,50 @@
                                         @error('reviewRating') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
 
+                                    <!-- Headline / Title Field with inner padding -->
                                     <div>
-                                        <label for="review-title" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Title <span class="text-gray-400 font-normal">(optional)</span></label>
-                                        <input id="review-title" type="text" wire:model="reviewTitle" maxlength="255"
-                                               class="w-full rounded-xl border border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] text-sm">
+                                        <label for="review-title" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+                                            Products <span class="text-gray-400 font-normal lowercase">(optional)</span>
+                                        </label>
+                                        <input id="review-title" 
+                                               type="text" 
+                                               wire:model="reviewTitle" 
+                                               maxlength="255"
+                                               placeholder="What's most important to know?"
+                                               class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] transition-colors shadow-sm">
                                         @error('reviewTitle') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
 
+                                    <!-- Review Comment Field with inner padding -->
                                     <div>
-                                        <label for="review-comment" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Review</label>
-                                        <textarea id="review-comment" wire:model="reviewComment" rows="4" maxlength="2000"
-                                                  class="w-full rounded-xl border border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] text-sm"></textarea>
+                                        <label for="review-comment" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
+                                            Review
+                                        </label>
+                                        <textarea id="review-comment" 
+                                                  wire:model="reviewComment" 
+                                                  rows="4" 
+                                                  maxlength="2000"
+                                                  placeholder="What did you like or dislike? How was the fit and quality?"
+                                                  class="w-full p-4 rounded-xl border border-gray-200 text-sm leading-relaxed text-gray-900 placeholder:text-gray-400 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] transition-colors shadow-sm"></textarea>
                                         @error('reviewComment') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                         @error('review') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
 
+                                    <!-- Photos Upload Section -->
                                     <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-                                            Photos <span class="text-gray-400 font-normal uppercase">(optional, up to 5)</span>
-                                        </label>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                                Photos <span class="text-gray-400 font-normal lowercase">(optional, up to 5 images, max 2MB each)</span>
+                                            </label>
+                                            <span class="text-xs text-gray-400 font-medium">{{ count($reviewPhotos) }}/5</span>
+                                        </div>
 
                                         <div class="flex flex-wrap gap-3">
                                             @foreach($reviewPhotos as $index => $photo)
-                                                <div class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                                                <div class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm group">
                                                     <img src="{{ $photo->temporaryUrl() }}" alt="Selected photo" class="w-full h-full object-cover">
                                                     <button type="button" wire:click="removeReviewPhoto({{ $index }})"
-                                                            class="absolute top-1 right-1 bg-black/60 hover:bg-black text-white rounded-full w-5 h-5 flex items-center justify-center text-xs transition-colors">
+                                                            class="absolute top-1 right-1 bg-black/70 hover:bg-black text-white rounded-full w-5 h-5 flex items-center justify-center text-xs transition-colors shadow">
                                                         &times;
                                                     </button>
                                                 </div>
@@ -537,15 +595,18 @@
                                             @if(count($reviewPhotos) < 5)
                                                 <label class="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
                                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                                    <input type="file" wire:model="reviewPhotos" multiple accept="image/*" class="hidden">
+                                                    <input type="file" wire:model="newReviewPhotos" multiple accept="image/*" class="hidden">
                                                 </label>
                                             @endif
                                         </div>
-                                        <p class="mt-1.5 text-xs text-gray-400" wire:loading wire:target="reviewPhotos">Uploading photos...</p>
+                                        
+                                        <p class="mt-1.5 text-xs text-gray-400" wire:loading wire:target="newReviewPhotos">Uploading photos...</p>
                                         @error('reviewPhotos') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                         @error('reviewPhotos.*') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
+                                        @error('newReviewPhotos.*') <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p> @enderror
                                     </div>
 
+                                    <!-- Video Upload Section -->
                                     <div>
                                         <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
                                             Video <span class="text-gray-400 font-normal uppercase">(optional, ~1 minute)</span>
@@ -584,15 +645,21 @@
             </div>
         </div>
 
-        <!-- Related Products Grid -->
+        <!-- Related Products Section (Mobile Carousel / Desktop Grid) -->
         @if($relatedProducts->count() > 0)
             <section class="mt-12">
-                <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center justify-between mb-6 sm:mb-8">
                     <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">Products You May Also Like</h2>
+                    
+                    <!-- Mobile swipe indicator -->
+                    <span class="text-xs font-medium text-gray-400 sm:hidden">Swipe &rarr;</span>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <div class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 sm:overflow-visible no-scrollbar">
                     @foreach($relatedProducts as $relatedProduct)
-                        <livewire:product-card :product="$relatedProduct" :key="'related-' . $relatedProduct->id" />
+                        <div class="w-[72vw] max-w-[280px] flex-shrink-0 snap-start sm:w-auto sm:max-w-none sm:flex-shrink">
+                            <livewire:product-card :product="$relatedProduct" :key="'related-' . $relatedProduct->id" />
+                        </div>
                     @endforeach
                 </div>
             </section>
