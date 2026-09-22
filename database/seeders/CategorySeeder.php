@@ -14,23 +14,22 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Electronics', 'description' => 'Latest gadgets and electronic devices'],
-            ['name' => 'Fashion & Apparel', 'description' => 'Trendy clothing and accessories'],
-            ['name' => 'Home & Garden', 'description' => 'Everything for your home and garden'],
-            ['name' => 'Sports & Outdoors', 'description' => 'Gear for sports and outdoor activities'],
-            ['name' => 'Books & Media', 'description' => 'Books, movies, music and more'],
-            ['name' => 'Beauty & Personal Care', 'description' => 'Beauty products and personal care items'],
-            ['name' => 'Toys & Games', 'description' => 'Fun toys and games for all ages'],
-            ['name' => 'Automotive', 'description' => 'Car parts and automotive accessories'],
-            ['name' => 'Health & Wellness', 'description' => 'Products for health and wellness'],
-            ['name' => 'Pet Supplies', 'description' => 'Everything your pet needs'],
+            ['name' => 'Electronics'],
+            ['name' => 'Fashion & Apparel'],
+            ['name' => 'Home & Garden'],
+            ['name' => 'Sports & Outdoors'],
+            ['name' => 'Books & Media'],
+            ['name' => 'Beauty & Personal Care'],
+            ['name' => 'Toys & Games'],
+            ['name' => 'Automotive'],
+            ['name' => 'Health & Wellness'],
+            ['name' => 'Pet Supplies'],
         ];
 
         foreach ($categories as $index => $category) {
             Category::create([
                 'name' => $category['name'],
                 'slug' => \Illuminate\Support\Str::slug($category['name']),
-                'description' => $category['description'],
                 'is_active' => true,
                 'sort_order' => $index,
             ]);

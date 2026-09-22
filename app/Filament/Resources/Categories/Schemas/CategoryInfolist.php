@@ -19,7 +19,7 @@ class CategoryInfolist
     {
         return $schema->components([
             Section::make('Category information')
-                ->description('Name and description of this storefront collection.')
+                ->description('Name and slug of this storefront collection.')
                 ->columnSpanFull()
                 ->columns([
                     'default' => 1,

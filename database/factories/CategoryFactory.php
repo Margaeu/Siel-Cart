@@ -35,7 +35,6 @@ class CategoryFactory extends Factory
         return [
             'name' => $name,
             'slug' => Str::slug($name),
-            'description' => fake()->paragraph(),
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 100),
         ];

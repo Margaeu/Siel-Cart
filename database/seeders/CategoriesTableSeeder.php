@@ -24,7 +24,6 @@ class CategoriesTableSeeder extends Seeder
             [
                 'name' => 'Athletics',
                 'slug' => 'Athletics',
-                'description' => null,
                 'image' => 'categories/51701eba-e694-4118-9e31-473997fd2436-v1.jpg',
                 'is_active' => true,
                 'sort_order' => 0,
@@ -32,7 +31,6 @@ class CategoriesTableSeeder extends Seeder
             [
                 'name' => 'Merch',
                 'slug' => 'Merch',
-                'description' => null,
                 'image' => null,
                 'is_active' => true,
                 'sort_order' => 0,
@@ -40,7 +38,6 @@ class CategoriesTableSeeder extends Seeder
             [
                 'name' => 'Gift Set',
                 'slug' => 'gift-set',
-                'description' => null,
                 'image' => null,
                 'is_active' => true,
                 'sort_order' => 0,
