@@ -494,7 +494,7 @@
                                     <!-- Headline / Title Field with inner padding -->
                                     <div>
                                         <label for="review-title" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-                                            Headline / Title <span class="text-gray-400 font-normal lowercase">(optional)</span>
+                                            Products <span class="text-gray-400 font-normal lowercase">(optional)</span>
                                         </label>
                                         <input id="review-title" 
                                                type="text" 
