@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Customers\Tables;
 
-use App\Filament\Resources\Customers\Actions\DeleteCustomerAccountAction;
 use App\Models\Customer;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -17,9 +16,9 @@ class CustomersTable
     public static function configure(Table $table): Table
     {
         // Erased details of a deleted customer are NULL or internal
-        // placeholders; show the label instead of those values.
+        // placeholders; show "Removed" instead of those values.
         $erased = fn (string $column) => fn (Customer $record) => $record->trashed()
-            ? Customer::DELETED_LABEL
+            ? Customer::REMOVED_LABEL
             : $record->{$column};
 
         return $table
@@ -87,7 +86,8 @@ class CustomersTable
                 // not CustomerResource::canEdit(), which refuses deleted records.
                 EditAction::make()
                     ->hidden(fn (Customer $record): bool => $record->trashed()),
-                DeleteCustomerAccountAction::make(),
+                // No delete action: only the customer can delete their own
+                // account, from the storefront (Customer::deleteAccount()).
             ]);
             // No bulk actions: DeleteBulkAction, ForceDeleteBulkAction and
             // RestoreBulkAction would all bypass Customer::deleteAccount(), and

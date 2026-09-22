@@ -105,13 +105,13 @@ class OrderInfolist
                             TextEntry::make('customer.email')
                                 ->label('Email')
                                 ->state(fn ($record) => $record->customer?->trashed()
-                                    ? Customer::DELETED_LABEL
+                                    ? Customer::REMOVED_LABEL
                                     : $record->customer?->email),
 
                             TextEntry::make('customer.phone')
                                 ->label('Phone')
                                 ->state(fn ($record) => $record->customer?->trashed()
-                                    ? Customer::DELETED_LABEL
+                                    ? Customer::REMOVED_LABEL
                                     : $record->customer?->phone)
                                 ->placeholder('Not provided'),
                         ]),

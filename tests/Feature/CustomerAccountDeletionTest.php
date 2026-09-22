@@ -11,6 +11,9 @@ use App\Filament\Resources\Customers\RelationManagers\ReportsFiledRelationManage
 use App\Filament\Resources\Customers\RelationManagers\ReportsReceivedRelationManager;
 use App\Filament\Resources\Customers\RelationManagers\ReviewsRelationManager;
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Reports\Pages\ListReports;
+use App\Filament\Resources\Reviews\Pages\ListReviews;
+use App\Filament\Resources\Reviews\ReviewResource;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Customer;
@@ -29,6 +32,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Role;
@@ -37,7 +41,7 @@ use Tests\TestCase;
 /**
  * Account deletion is permanent: identity and credentials are erased, the row
  * is soft-deleted (never force-deleted, since orders/reviews/reports cascade on
- * it), and the retained history is attributed to "[Deleted User]".
+ * it), and the retained history is attributed to "Deleted customer".
  */
 class CustomerAccountDeletionTest extends TestCase
 {
@@ -131,6 +135,7 @@ class CustomerAccountDeletionTest extends TestCase
     {
         $customer = $this->customer();
         $oldHash = $customer->password;
+        $createdAt = $customer->created_at->toDateTimeString();
 
         $this->deleteViaProfile($customer)
             ->assertRedirect(route('login'))
@@ -145,7 +150,11 @@ class CustomerAccountDeletionTest extends TestCase
         $this->assertNotSame('Santos', $row->last_name);
         $this->assertNotSame(self::EMAIL, $row->email);
         $this->assertStringNotContainsString('maria', strtolower($row->email));
-        $this->assertStringEndsWith('.invalid', $row->email);
+        $this->assertMatchesRegularExpression(
+            '/^deleted-'.$customer->id.'-[a-z0-9]{32}@deleted\.invalid$/',
+            $row->email,
+        );
+        $this->assertSame($createdAt, $row->created_at->toDateTimeString());
         $this->assertNull($row->phone);
         $this->assertNull($row->date_of_birth);
         $this->assertNull($row->remember_token);
@@ -208,6 +217,56 @@ class CustomerAccountDeletionTest extends TestCase
         $customer->deleteAccount();
 
         $this->assertDatabaseHas('customers', ['id' => $customer->id]);
+    }
+
+    public function test_repeating_the_deletion_changes_nothing(): void
+    {
+        $customer = $this->customer();
+        // A second request (double submit, admin and customer at once) holds
+        // an instance loaded before the first deletion committed.
+        $stale = Customer::findOrFail($customer->id);
+
+        $customer->deleteAccount();
+        $afterFirst = Customer::withTrashed()->findOrFail($customer->id)->getAttributes();
+
+        $stale->deleteAccount();
+        $customer->deleteAccount();
+
+        $this->assertSame($afterFirst, Customer::withTrashed()->findOrFail($customer->id)->getAttributes());
+        // The stale caller now sees the erased values, not the originals.
+        $this->assertTrue($stale->trashed());
+        $this->assertNotSame(self::EMAIL, $stale->email);
+    }
+
+    public function test_an_existing_login_session_stops_working_after_deletion(): void
+    {
+        $customer = $this->customer();
+        $customer->markEmailAsVerified();
+
+        $this->post(route('login.store'), ['email' => self::EMAIL, 'password' => self::PASSWORD]);
+        $this->assertAuthenticatedAs($customer, 'customer');
+
+        // Deleted from another device while this session is still open.
+        Customer::findOrFail($customer->id)->deleteAccount();
+        Auth::forgetGuards();
+
+        $this->get(route('customer.dashboard'))->assertRedirect(route('login'));
+        $this->assertGuest('customer');
+    }
+
+    public function test_an_old_verification_link_cannot_verify_the_deleted_account(): void
+    {
+        $customer = $this->customer();
+        $customer->forceFill(['email_verified_at' => null])->save();
+        $url = URL::temporarySignedRoute('verification.verify', now()->addHour(), [
+            'id' => $customer->id,
+            'hash' => sha1(self::EMAIL),
+        ]);
+
+        $customer->deleteAccount();
+
+        $this->get($url)->assertRedirect(route('login'));
+        $this->assertNull(Customer::withTrashed()->findOrFail($customer->id)->email_verified_at);
     }
 
     // --- Retained history ----------------------------------------------------
@@ -450,14 +509,21 @@ class CustomerAccountDeletionTest extends TestCase
 
         $this->get(CustomerResource::getUrl('view', ['record' => $customer]))
             ->assertOk()
+            ->assertSee('Deleted customer details')
             ->assertSee('Permanently deleted')
             ->assertSee(Customer::DELETED_LABEL)
+            ->assertSee(Customer::REMOVED_LABEL)
+            ->assertSee('Customer ID')
+            ->assertSee('Account deleted')
             ->assertDontSee(self::EMAIL)
-            ->assertDontSee('09171234567');
+            ->assertDontSee('09171234567')
+            ->assertDontSee('deleted.invalid')
+            ->assertDontSee('Deleted User')
+            ->assertDontSee('[Deleted');
 
         Livewire::test(ViewCustomer::class, ['record' => $customer->id])
             ->assertSuccessful()
-            ->assertActionHidden('deleteAccount')
+            ->assertActionDoesNotExist('deleteAccount')
             ->assertActionHidden('edit');
 
         Livewire::test(OrdersRelationManager::class, [
@@ -514,29 +580,22 @@ class CustomerAccountDeletionTest extends TestCase
             ->assertActionDoesNotExist('restore');
     }
 
-    public function test_admin_deletion_uses_the_same_anonymizing_process(): void
+    /** Only the customer deletes their own account; the panel cannot. */
+    public function test_admins_are_offered_no_way_to_delete_a_customer(): void
     {
         $customer = $this->customer();
         $this->actingAsAdmin();
 
         Livewire::test(ViewCustomer::class, ['record' => $customer->id])
-            ->callAction('deleteAccount');
+            ->assertActionDoesNotExist('deleteAccount')
+            ->assertActionDoesNotExist('delete');
 
-        $row = Customer::withTrashed()->findOrFail($customer->id);
-        $this->assertNotNull($row->deleted_at);
-        $this->assertNotSame(self::EMAIL, $row->email);
-        $this->assertNull($row->phone);
-    }
+        Livewire::test(EditCustomer::class, ['record' => $customer->id])
+            ->assertActionDoesNotExist('deleteAccount');
 
-    public function test_admin_deletion_is_refused_while_an_order_is_active(): void
-    {
-        $customer = $this->customer();
-        $this->order($customer, 'processing');
-        $this->actingAsAdmin();
-
-        Livewire::test(ViewCustomer::class, ['record' => $customer->id])
-            ->callAction('deleteAccount')
-            ->assertNotified('Account not deleted');
+        Livewire::test(ListCustomers::class)
+            ->assertTableActionDoesNotExist('deleteAccount')
+            ->assertTableActionDoesNotExist('delete');
 
         $this->assertFalse($customer->fresh()->trashed());
     }
@@ -551,6 +610,63 @@ class CustomerAccountDeletionTest extends TestCase
         $this->get(OrderResource::getUrl('view', ['record' => $order]))
             ->assertOk()
             ->assertSee(Customer::DELETED_LABEL)
-            ->assertDontSee(self::EMAIL);
+            ->assertDontSee(self::EMAIL)
+            ->assertDontSee('deleted.invalid');
+    }
+
+    public function test_admin_review_and_report_pages_show_deleted_customer(): void
+    {
+        $customer = $this->customer();
+        $other = Customer::factory()->create();
+        $product = Product::factory()->create();
+        // Pending, because the reviews list opens on its "Pending only" filter.
+        $review = $this->review($customer, $product, ['is_approved' => false]);
+        Report::create([
+            'reporter_customer_id' => $other->id,
+            'reported_customer_id' => $customer->id,
+            'review_id' => $review->id,
+            'reason' => 'Offensive',
+            'status' => 'pending',
+        ]);
+        $customer->deleteAccount();
+        $this->actingAsAdmin();
+
+        $this->get(ReviewResource::getUrl('view', ['record' => $review]))
+            ->assertOk()
+            ->assertSee(Customer::DELETED_LABEL)
+            ->assertDontSee('Maria Santos')
+            ->assertDontSee('deleted.invalid')
+            ->assertDontSee('Deleted User');
+
+        // Table rows are rendered by the Livewire component, not the page shell.
+        foreach ([ListReviews::class, ListReports::class] as $page) {
+            Livewire::test($page)
+                ->assertSee(Customer::DELETED_LABEL)
+                ->assertDontSee('Maria Santos')
+                ->assertDontSee('deleted.invalid')
+                ->assertDontSee('Deleted User');
+        }
+    }
+
+    // --- Active customers are unaffected -------------------------------------
+
+    public function test_an_active_customer_is_shown_and_logs_in_as_before(): void
+    {
+        $customer = $this->customer();
+        $this->actingAsAdmin();
+
+        $this->get(CustomerResource::getUrl('view', ['record' => $customer]))
+            ->assertOk()
+            ->assertSee('Maria Santos')
+            ->assertSee(self::EMAIL)
+            ->assertSee('09171234567')
+            ->assertDontSee('Deleted customer details')
+            ->assertDontSee(Customer::REMOVED_LABEL);
+
+        $this->assertSame('Maria Santos', $customer->name);
+
+        $this->post(route('login.store'), ['email' => self::EMAIL, 'password' => self::PASSWORD])
+            ->assertSessionHasNoErrors();
+        $this->assertAuthenticatedAs($customer, 'customer');
     }
 }

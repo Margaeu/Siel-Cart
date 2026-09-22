@@ -169,7 +169,7 @@
                             <ul class="mt-4 space-y-2 text-sm text-gray-600 sm:pl-12">
                                 <li class="flex gap-2">
                                     <span class="mt-2 size-1 shrink-0 rounded-full bg-red-400"></span>
-                                    Past orders, reviews, and reports stay on file as anonymized records shown as "[Deleted User]".
+                                    Past orders, reviews, and reports stay on file as anonymized records shown as "Deleted customer".
                                 </li>
                                 <li class="flex gap-2">
                                     <span class="mt-2 size-1 shrink-0 rounded-full bg-red-400"></span>

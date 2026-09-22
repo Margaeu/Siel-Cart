@@ -44,7 +44,7 @@ class CustomerInfolist
                     ->columns(2),
 
                 // Every detail below is erased on deletion. The stored values are
-                // NULL or internal placeholders, so each entry shows the label
+                // NULL or internal placeholders, so each entry shows "Removed"
                 // instead of whatever is left in the column.
                 Section::make('Customer details')
                     ->schema([
@@ -62,9 +62,13 @@ class CustomerInfolist
                                 ? Carbon::parse($record->date_of_birth)->format('M j, Y')
                                 : null))
                             ->placeholder('Not provided'),
+                        // A date field: a deleted account shows a dash, never a
+                        // label pretending to be a verification date.
                         TextEntry::make('email_verified_at')
                             ->label('Email verified at')
-                            ->state(self::erased(fn (Customer $record) => $record->email_verified_at?->format('M j, Y g:i A')))
+                            ->state(fn (Customer $record) => $record->trashed()
+                                ? '—'
+                                : $record->email_verified_at?->format('M j, Y g:i A'))
                             ->placeholder('Not verified'),
                     ])
                     ->columns(2),
@@ -73,6 +77,6 @@ class CustomerInfolist
 
     private static function erased(Closure $value): Closure
     {
-        return fn (Customer $record) => $record->trashed() ? Customer::DELETED_LABEL : $value($record);
+        return fn (Customer $record) => $record->trashed() ? Customer::REMOVED_LABEL : $value($record);
     }
 }

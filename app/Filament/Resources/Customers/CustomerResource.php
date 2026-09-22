@@ -55,8 +55,8 @@ class CustomerResource extends Resource
     // Filament's generic delete / force-delete / restore are all unsafe for
     // customers: a plain soft delete leaves identity and credentials in place,
     // restore hands a deleted account back, and a force delete cascades through
-    // orders, reviews and reports. Deletion goes only through
-    // DeleteCustomerAccountAction (Customer::deleteAccount()).
+    // orders, reviews and reports. Admins cannot delete customer accounts at
+    // all: the customer deletes their own, through Customer::deleteAccount().
     public static function canDelete(Model $record): bool
     {
         return false;

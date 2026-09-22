@@ -72,7 +72,7 @@ class ReviewInfolist
                             ->placeholder('Product removed'),
 
                         // customer() is withTrashed, so a deleted account reads
-                        // "[Deleted User]" through the name accessor.
+                        // "Deleted customer" through the name accessor.
                         TextEntry::make('customer.name')
                             ->label('Customer')
                             ->placeholder('—'),

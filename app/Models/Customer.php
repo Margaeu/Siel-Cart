@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -19,11 +20,18 @@ class Customer extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable, SoftDeletes;
 
     /**
-     * What every interface shows in place of an erased account detail. It is a
-     * display label only: the stored values are NULL or an internal
-     * placeholder, never this string (it is not a valid date or email).
+     * What every interface shows in place of a deleted customer's identity
+     * (name, author, reporter, order customer). It is a display label only:
+     * the stored name is an internal placeholder, never this string.
      */
-    public const DELETED_LABEL = '[Deleted User]';
+    public const DELETED_LABEL = 'Deleted customer';
+
+    /**
+     * What admin views show in place of an erased personal detail (email,
+     * phone, birthdate) of a deleted customer, so neither the NULL nor the
+     * internal .invalid placeholder email is ever presented as real data.
+     */
+    public const REMOVED_LABEL = 'Removed';
 
     protected $fillable = [
         'first_name',
@@ -105,7 +113,8 @@ class Customer extends Authenticatable implements MustVerifyEmail
     /**
      * Permanently delete this account: erase identity and credentials, drop
      * the cart, and soft-delete the row. This is the ONLY way a customer
-     * account is deleted, from the storefront or the admin panel.
+     * account is deleted, and only the customer can trigger it (the storefront
+     * profile page); the admin panel offers no delete or restore.
      *
      * The row itself is kept, soft-deleted, because orders, reviews and reports
      * reference it and their foreign keys cascade on delete — a force delete
@@ -117,6 +126,10 @@ class Customer extends Authenticatable implements MustVerifyEmail
      * No original value is logged or kept anywhere, including inside the
      * replacement email, so the address is immediately free to register again.
      *
+     * Safe to call twice (a double-submitted form, an admin and the customer
+     * at once): the row is re-read under lock with trashed rows included, and
+     * an already-deleted account is left exactly as it is.
+     *
      * @throws ValidationException (key "account") while an order is active
      */
     public function deleteAccount(): void
@@ -127,7 +140,15 @@ class Customer extends Authenticatable implements MustVerifyEmail
             // and seen here, or it waits and then finds the cart gone.
             $cart = Cart::where('customer_id', $this->id)->lockForUpdate()->first();
 
-            $customer = static::whereKey($this->id)->lockForUpdate()->firstOrFail();
+            // withTrashed() so a repeat request finds the deleted row and
+            // stops, instead of 404ing or anonymizing it a second time.
+            $customer = static::withTrashed()->whereKey($this->id)->lockForUpdate()->firstOrFail();
+
+            if ($customer->trashed()) {
+                $this->setRawAttributes($customer->getAttributes(), true);
+
+                return;
+            }
 
             if ($customer->hasActiveOrders()) {
                 throw ValidationException::withMessages([
@@ -145,15 +166,19 @@ class Customer extends Authenticatable implements MustVerifyEmail
 
             // first_name/last_name are NOT NULL, so they get a neutral
             // placeholder; the name accessor shows DELETED_LABEL regardless.
-            // The password is random and never revealed (the "hashed" cast
-            // hashes it), so no credential can ever match this row again.
+            // The email keeps the id only so it is traceable to this row and
+            // unique; the random part stops it being guessable, and .invalid
+            // (RFC 2606) guarantees nothing is ever delivered to it.
+            // The password is the hash of a random value that is discarded
+            // here, so the old hash is gone and no credential can ever match
+            // this row again.
             $customer->forceFill([
                 'first_name' => 'Deleted',
                 'last_name' => 'User',
-                'email' => 'deleted-'.Str::uuid().'@anonymized.invalid',
+                'email' => 'deleted-'.$customer->id.'-'.Str::lower(Str::random(32)).'@deleted.invalid',
                 'phone' => null,
                 'date_of_birth' => null,
-                'password' => Str::random(64),
+                'password' => Hash::make(Str::random(64)),
                 'remember_token' => null,
                 'email_verified_at' => null,
                 'is_active' => false,

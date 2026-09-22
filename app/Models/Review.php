@@ -49,7 +49,7 @@ class Review extends Model
     }
 
     // withTrashed(): reviews outlive a deleted account and are attributed to
-    // "[Deleted User]" (see Customer::getNameAttribute) rather than vanishing
+    // "Deleted customer" (see Customer::getNameAttribute) rather than vanishing
     // or crashing the product page on a null author.
     public function customer()
     {
