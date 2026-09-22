@@ -37,7 +37,11 @@ class ProductDetails extends Component
     
     public function mount($slug)
     {
+        // active(): an inactive product is unpublished and must 404 like a
+        // soft-deleted one (which the default scope already hides). Admins
+        // inspect both from the panel, not through this page.
         $this->product = Product::where('slug', $slug)
+            ->active()
             ->with([
                 'category',
                 'generalImages',

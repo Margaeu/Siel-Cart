@@ -33,18 +33,15 @@
         <section class="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24" aria-labelledby="about-story-title">
             <div class="mx-auto max-w-4xl">
                 <h2 id="about-story-title" class="text-3xl font-bold leading-tight tracking-[-0.03em] text-[var(--color-primary)] sm:text-4xl">
-                    Bringing the university closer to you, wherever you are.
+                    Ano kaya magandang title
                 </h2>
 
                 <div class="mt-8 space-y-6 text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
                     <p>
-                        The <strong class="font-semibold text-slate-900">University Pasalubong Center</strong> is a place where the university’s products, identity, and memories come together. From university merchandis and other items worth bringing home, we aim to make it easier for students, alumni, faculty, staff, visitors, and friends of the university to find something that represents the university and the community behind it.
+                        The <strong class="font-semibold text-slate-900">University Pasalubong Center</strong> is a place where the university’s products, identity, and memories come together. From university merchandise and other items worth bringing home, we aim to make it easier for students, alumni, faculty, staff, visitors, and friends of the university to find something that represents the university and the community behind it.
                     </p>
                     <p>
-                        More than just a store, the University Pasalubong Center celebrates the creativity, craftsmanship, and products that make our university community special. Every purchase is an opportunity to bring a piece of the university with you—whether as a personal keepsake, a gift for someone special, or a simple reminder of your time here.
-                    </p>
-                    <p>
-                        Our online store brings this experience beyond the physical store, making selected products more accessible and convenient to customers wherever they may be.
+                        More than just a store, the University Pasalubong Center celebrates the creativity, craat make our university community special. Every purchase is an opportunity to bring a piece of the university with you—whether as a personal souvenir, a gift for someone special, or a simple reminder of your timftsmanship, and products the here.
                     </p>
                 </div>
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Sku;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -121,10 +122,26 @@ class ProductVariant extends Model
     protected static function boot(){
         parent::boot();
 
+        // Stored trimmed but in the case the admin typed; comparisons ignore
+        // case separately (see App\Support\Sku). Runs before creating, so a
+        // whitespace-only SKU is blank by the time the fallback below checks.
+        static::saving(function (ProductVariant $variant) {
+            $variant->sku = Sku::sanitizeForStorage($variant->sku);
+        });
+
         static::creating(function($variant){
             if (empty($variant->sku)) {
                 $variant->sku = 'VAR-'. strtoupper(Str::random(8));
             }
+        });
+
+        // The product_images foreign key cascades, but a database cascade
+        // fires no Eloquent events: removing a variant in the product form
+        // would leave its image rows unlogged and their R2 objects orphaned.
+        // Deleting them per model runs ProductImage's cleanup, which waits for
+        // the surrounding save to commit.
+        static::deleting(function (ProductVariant $variant) {
+            $variant->images()->get()->each->delete();
         });
     }
 }

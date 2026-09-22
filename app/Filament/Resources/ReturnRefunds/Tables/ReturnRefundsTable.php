@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ReturnRefunds\Tables;
 
 use App\Enums\OrderItemResolutionReason;
-use App\Enums\OrderItemResolutionType;
 use App\Filament\Resources\ReturnRefunds\ReturnRefundResource;
 use App\Models\ReturnRefundResolution;
 use Filament\Actions\ViewAction;
@@ -98,10 +97,9 @@ class ReturnRefundsTable
                     ->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('type')
-                    ->label('Outcome')
-                    ->options(OrderItemResolutionType::class),
-
+                // Outcome (refund vs exchange) is filtered by the tabs on
+                // ListReturnRefunds; a second outcome filter here could be set
+                // against the active tab and silently empty the table.
                 SelectFilter::make('reason')
                     ->label('Reason')
                     ->options(OrderItemResolutionReason::class),

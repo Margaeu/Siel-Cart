@@ -26,9 +26,13 @@ class ProductsTable
             // on ListProducts apply the deleted_at condition themselves.
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withoutGlobalScopes([SoftDeletingScope::class])
-                ->with('variants'))
+                ->with(['variants', 'cardImage']))
             ->columns([
-                ImageColumn::make('primaryImage.image_path')
+                // cardImage, not primaryImage: a variant product often has no
+                // shared primary photo, only per-variant ones, and primaryImage
+                // left its thumbnail blank. cardImage falls back to the first
+                // active variant's image, the same one the storefront card shows.
+                ImageColumn::make('cardImage.image_path')
                     ->label('')
                     ->disk('r2')
                     ->square(),
