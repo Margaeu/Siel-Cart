@@ -27,7 +27,9 @@ class Product extends Model
     }
     use HasFactory, LogsActivity;
 
-    public const TYPE_LOCKED_MESSAGE = 'A product cannot be switched between simple and variant after it is created. Create a new product instead.';
+    public const INACTIVE_CATEGORY_MESSAGE = 'This category is inactive. Choose an active category, or make the product inactive.';
+
+    public const TYPE_LOCKED_MESSAGE ='A product cannot be switched between simple and variant after it is created. Create a new product instead.';
 
     protected $fillable = [
         'category_id',
@@ -541,6 +543,39 @@ class Product extends Model
                     'has_variants' => self::TYPE_LOCKED_MESSAGE,
                 ]);
             }
+        });
+
+        // Trashing keeps is_active, so a product that was live when it went to
+        // the trash would go straight back onto the storefront the moment it
+        // was restored -- possibly with a stale price or stock count nobody
+        // re-checked. Restoring always lands it inactive; the admin publishes
+        // it again deliberately. A hook rather than an action callback so the
+        // edit-page RestoreAction, the RestoreBulkAction, and any tinker or
+        // seeder restore() all behave the same. restore() saves the model
+        // after this fires, so the change is written in the same update.
+        // The product half of Category::deactivationBlockedReason(): an
+        // inactive category holds no active products, so a product cannot be
+        // created active in one, moved into one while active, or activated
+        // inside one. Only checked when one of those columns changes, so an
+        // unrelated edit to a product never trips over its category.
+        static::saving(function (Product $product) {
+            if (! $product->is_active) {
+                return;
+            }
+
+            if ($product->exists && ! $product->isDirty(['is_active', 'category_id'])) {
+                return;
+            }
+
+            if (Category::query()->whereKey($product->category_id)->where('is_active', false)->exists()) {
+                throw ValidationException::withMessages([
+                    'category_id' => self::INACTIVE_CATEGORY_MESSAGE,
+                ]);
+            }
+        });
+
+        static::restoring(function (Product $product) {
+            $product->is_active = false;
         });
     }
 }

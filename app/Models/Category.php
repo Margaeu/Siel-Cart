@@ -69,6 +69,41 @@ class Category extends Model
         return $this->products()->withTrashed()->exists();
     }
 
+    /**
+     * Why this category cannot be deactivated right now, or null if it can.
+     *
+     * An inactive category is dropped from the storefront menus, but product
+     * queries only check the product's own is_active, so an active product
+     * left inside it would stay on sale under a category nobody can browse
+     * to. The rule is therefore that an inactive category holds no active
+     * products: the admin moves them to another category (or deactivates
+     * them) first. Trashed and inactive products are already off the
+     * storefront, so they do not block. Product::boot() enforces the other
+     * half, so the rule cannot be broken from the product side either.
+     */
+    public function deactivationBlockedReason(): ?string
+    {
+        if (! $this->exists) {
+            return null;
+        }
+
+        $names = $this->products()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name');
+
+        if ($names->isEmpty()) {
+            return null;
+        }
+
+        $listed = $names->take(3)->map(fn (string $name) => "\"{$name}\"")->join(', ', ' and ');
+        $more = $names->count() > 3 ? ' and '.($names->count() - 3).' more' : '';
+
+        return "This category still has {$names->count()} active "
+            .str('product')->plural($names->count())
+            ." ({$listed}{$more}). Move them to another category before deactivating it.";
+    }
+
     public function getImageUrlAttribute(): ?string
     {
         if (!$this->image) {
@@ -103,6 +138,19 @@ class Category extends Model
             }
 
             $category->slug = $slug;
+        });
+
+        // Backstop for deactivationBlockedReason(). The admin form checks the
+        // same thing first so the message lands under the Active toggle; this
+        // stops a bulk action, seeder, or tinker from deactivating anyway.
+        static::updating(function (Category $category) {
+            if (! $category->isDirty('is_active') || $category->is_active) {
+                return;
+            }
+
+            if ($reason = $category->deactivationBlockedReason()) {
+                throw ValidationException::withMessages(['is_active' => $reason]);
+            }
         });
 
         // Remove the image only once the delete has actually committed, so a

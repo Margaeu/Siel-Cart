@@ -5,6 +5,7 @@ namespace Tests\Feature\Filament;
 use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
+use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Livewire\ProductDetails;
 use App\Livewire\ProductListing;
 use App\Models\Category;
@@ -712,6 +713,127 @@ class ProductCrudTest extends TestCase
         $this->assertNotSoftDeleted($product);
         $this->assertSame(2, ProductImage::where('product_id', $product->id)->count());
         Storage::disk('r2')->assertExists(['products/shared.jpg', 'products/variants/green.jpg']);
+    }
+
+    public function test_an_active_product_cannot_be_created_in_an_inactive_category(): void
+    {
+        $inactive = Category::factory()->create(['is_active' => false]);
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->simpleFormData(['category_id' => $inactive->id, 'is_active' => true]))
+            ->call('create')
+            ->assertHasFormErrors(['category_id']);
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_an_inactive_product_can_be_filed_under_an_inactive_category(): void
+    {
+        $inactive = Category::factory()->create(['is_active' => false]);
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->simpleFormData(['category_id' => $inactive->id, 'is_active' => false]))
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(1, Product::where('category_id', $inactive->id)->count());
+    }
+
+    public function test_the_model_refuses_active_products_in_inactive_categories(): void
+    {
+        $inactive = Category::factory()->create(['is_active' => false]);
+        $moved = $this->simpleProduct();
+        $activated = $this->simpleProduct(['category_id' => $inactive->id, 'is_active' => false]);
+
+        foreach ([
+            fn () => $moved->update(['category_id' => $inactive->id]),
+            fn () => $activated->update(['is_active' => true]),
+        ] as $attempt) {
+            try {
+                $attempt();
+                $this->fail('An active product in an inactive category should have been refused.');
+            } catch (ValidationException $exception) {
+                $this->assertSame([Product::INACTIVE_CATEGORY_MESSAGE], $exception->errors()['category_id']);
+            }
+        }
+
+        $this->assertNotSame($inactive->id, $moved->fresh()->category_id);
+        $this->assertFalse($activated->fresh()->is_active);
+    }
+
+    public function test_unrelated_edits_do_not_trip_over_an_existing_inactive_category(): void
+    {
+        // Data from before the rule existed can already hold an active
+        // product in an inactive category; editing its price must still work.
+        $inactive = Category::factory()->create(['is_active' => false]);
+        $product = $this->simpleProduct();
+        Product::query()->whereKey($product->id)->update(['category_id' => $inactive->id]);
+
+        $product->fresh()->update(['price' => 300]);
+
+        $this->assertEquals(300, $product->fresh()->price);
+    }
+
+    public function test_a_restored_product_comes_back_inactive(): void
+    {
+        $product = $this->simpleProduct(['is_active' => true]);
+
+        $product->delete();
+        // Trashing leaves is_active alone; only restoring changes it.
+        $this->assertTrue($product->fresh()->is_active);
+
+        $product->restore();
+        $this->assertNotSoftDeleted($product);
+        $this->assertFalse($product->fresh()->is_active);
+    }
+
+    public function test_bulk_restore_brings_products_back_inactive(): void
+    {
+        $products = collect([
+            $this->simpleProduct(['is_active' => true]),
+            $this->simpleProduct(['is_active' => true]),
+        ]);
+        $products->each->delete();
+        $this->actingAsAdmin();
+
+        Livewire::test(ListProducts::class)
+            ->set('activeTab', 'deleted')
+            ->callTableBulkAction('restore', $products);
+
+        $products->each(function (Product $product) {
+            $this->assertNotSoftDeleted($product);
+            $this->assertFalse($product->fresh()->is_active);
+        });
+    }
+
+    public function test_restoring_from_the_edit_page_refreshes_the_active_toggle(): void
+    {
+        $product = $this->simpleProduct(['is_active' => true]);
+        $product->delete();
+        $this->actingAsAdmin();
+
+        // Saving right after the restore must not republish the product from
+        // the toggle state the form was filled with before it.
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->callAction('restore')
+            ->assertSchemaStateSet(['is_active' => false])
+            ->call('save');
+
+        $this->assertFalse($product->fresh()->is_active);
+    }
+
+    public function test_the_soft_delete_action_is_labelled_move_to_trash(): void
+    {
+        $product = $this->simpleProduct();
+        $this->actingAsAdmin();
+
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->assertActionHasLabel('delete', 'Move to trash')
+            ->callAction('delete');
+
+        $this->assertSoftDeleted($product);
     }
 
     // --- Audit ------------------------------------------------------------------

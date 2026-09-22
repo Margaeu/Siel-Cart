@@ -1,8 +1,9 @@
 @php
     // Site theme, managed in Admin → Design → Color Themes.
-    // Falls back to the legacy Setting-based values (Admin → Design → Site
-    // Branding & Theme) if no Theme has been created/activated yet, and
-    // finally to the site's original hardcoded defaults.
+    // Falls back to the site's original hardcoded defaults if no Theme has
+    // been created/activated yet. (There used to be a second fallback to a
+    // `settings` table, but nothing ever wrote to it, so every lookup only
+    // ever returned the default below; the table, model and seeder are gone.)
     //
     // Colors are all a theme carries. Typography is deliberately NOT themeable:
     // the client fixed the site on Acumin Pro, so the themes table lost its
@@ -15,11 +16,9 @@
     // just this file.
     $activeTheme = \App\Models\Theme::active()->first();
 
-    $themePrimaryColor = $activeTheme?->primary_color
-        ?? \App\Models\Setting::get('primary_color', '#1E6031');
+    $themePrimaryColor = $activeTheme?->primary_color ?? '#1E6031';
 
-    $themeSecondaryColor = $activeTheme?->secondary_color
-        ?? \App\Models\Setting::get('secondary_color', '#E0A70D');
+    $themeSecondaryColor = $activeTheme?->secondary_color ?? '#E0A70D';
 @endphp
 
 <style>

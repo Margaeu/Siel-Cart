@@ -4,6 +4,7 @@ namespace Tests\Feature\Filament;
 
 use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,5 +54,24 @@ class CategoryListTabsTest extends TestCase
             ->set('activeTab', 'inactive')
             ->assertCanSeeTableRecords([$inactive])
             ->assertCanNotSeeTableRecords([$active]);
+    }
+
+    public function test_the_products_column_shows_trashed_products_separately(): void
+    {
+        $withTrash = Category::factory()->create();
+        Product::factory()->for($withTrash)->create();
+        Product::factory()->for($withTrash)->create()->delete();
+        $onlyTrash = Category::factory()->create();
+        Product::factory()->for($onlyTrash)->create()->delete();
+        $clean = Category::factory()->create();
+        Product::factory()->for($clean)->create();
+        $this->actingAsAdmin();
+
+        // A category holding only trashed products used to read "0" and then
+        // refuse to delete.
+        Livewire::test(ListCategories::class)
+            ->assertTableColumnFormattedStateSet('products_count', '1 (+1 in trash)', $withTrash)
+            ->assertTableColumnFormattedStateSet('products_count', '0 (+1 in trash)', $onlyTrash)
+            ->assertTableColumnFormattedStateSet('products_count', '1', $clean);
     }
 }

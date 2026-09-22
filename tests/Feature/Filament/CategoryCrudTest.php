@@ -306,4 +306,88 @@ class CategoryCrudTest extends TestCase
         $this->assertDatabaseHas('categories', ['id' => $category->id]);
         $this->assertSoftDeleted('products', ['id' => $product->id]);
     }
+
+    // --- Deactivation ------------------------------------------------------
+
+    public function test_a_category_with_active_products_cannot_be_deactivated(): void
+    {
+        $category = Category::factory()->create(['is_active' => true]);
+        $this->productIn($category, ['name' => 'Tumbler', 'is_active' => true]);
+        $this->actingAsAdmin();
+
+        Livewire::test(EditCategory::class, ['record' => $category->getRouteKey()])
+            ->fillForm(['is_active' => false])
+            ->call('save')
+            ->assertHasFormErrors(['is_active']);
+
+        $this->assertTrue((bool) $category->fresh()->is_active);
+        $this->assertSame(
+            'This category still has 1 active product ("Tumbler"). Move them to another category before deactivating it.',
+            $category->deactivationBlockedReason(),
+        );
+    }
+
+    public function test_the_blocked_message_lists_at_most_three_products(): void
+    {
+        $category = Category::factory()->create();
+        foreach (['A', 'B', 'C', 'D', 'E'] as $name) {
+            $this->productIn($category, ['name' => $name, 'is_active' => true]);
+        }
+
+        $this->assertStringContainsString(
+            '5 active products ("A", "B" and "C" and 2 more)',
+            $category->deactivationBlockedReason(),
+        );
+    }
+
+    public function test_inactive_and_trashed_products_do_not_block_deactivation(): void
+    {
+        $category = Category::factory()->create(['is_active' => true]);
+        $this->productIn($category, ['is_active' => false]);
+        $this->productIn($category, ['is_active' => true])->delete();
+        $this->actingAsAdmin();
+
+        Livewire::test(EditCategory::class, ['record' => $category->getRouteKey()])
+            ->fillForm(['is_active' => false])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse((bool) $category->fresh()->is_active);
+    }
+
+    public function test_a_category_can_be_deactivated_once_its_products_are_moved(): void
+    {
+        $category = Category::factory()->create(['is_active' => true]);
+        $product = $this->productIn($category, ['is_active' => true]);
+        $product->update(['category_id' => Category::factory()->create()->id]);
+
+        $category->update(['is_active' => false]);
+
+        $this->assertFalse((bool) $category->fresh()->is_active);
+    }
+
+    public function test_the_model_refuses_to_deactivate_a_category_with_active_products(): void
+    {
+        $category = Category::factory()->create(['is_active' => true]);
+        $this->productIn($category, ['is_active' => true]);
+
+        try {
+            $category->update(['is_active' => false]);
+            $this->fail('Deactivating should have been refused.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('is_active', $exception->errors());
+        }
+
+        $this->assertTrue((bool) $category->fresh()->is_active);
+    }
+
+    public function test_other_edits_to_a_category_with_active_products_still_save(): void
+    {
+        $category = Category::factory()->create(['is_active' => true]);
+        $this->productIn($category, ['is_active' => true]);
+
+        $category->update(['sort_order' => 9]);
+
+        $this->assertSame(9, (int) $category->fresh()->sort_order);
+    }
 }

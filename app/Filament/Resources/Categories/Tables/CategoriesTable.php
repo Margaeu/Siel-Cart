@@ -21,6 +21,13 @@ class CategoriesTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Trashed products still block deletion (see hasAssignedProducts()),
+            // so the Products column has to show them or a category reads
+            // "0" and then refuses to delete. Counted separately rather than
+            // folded into one total, which would overstate what is live.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->withCount([
+                'products as trashed_products_count' => fn (Builder $products) => $products->onlyTrashed(),
+            ]))
             ->columns([
                 ImageColumn::make('image')
                     ->label('')
@@ -35,6 +42,9 @@ class CategoriesTable
                 TextColumn::make('products_count')
                     ->label('Products')
                     ->counts('products')
+                    ->formatStateUsing(fn (int $state, Category $record): string => $record->trashed_products_count > 0
+                        ? "{$state} (+{$record->trashed_products_count} in trash)"
+                        : (string) $state)
                     ->sortable(),
                 TextColumn::make('sort_order')
                     ->label('Sort Order')

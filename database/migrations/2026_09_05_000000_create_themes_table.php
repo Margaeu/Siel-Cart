@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('themes', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('primary_color')->default('#1E6031');
-            $table->string('secondary_color')->default('#E0A70D');
+            $table->string('primary_color')->default('#557F13');
+            $table->string('secondary_color')->default('#FFD801');
             // Exactly one theme is active at a time; enforced in the Theme model.
             $table->boolean('is_active')->default(false);
             $table->timestamps();

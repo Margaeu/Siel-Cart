@@ -3,7 +3,7 @@
     // (components/layouts/front-end-layout.blade.php) and the customer auth brand,
     // so the admin panel carries the same name the shop does. The tagline is the
     // one thing that differs: this is the back office, not the store.
-    $siteName = \App\Models\Setting::get('site_name') ?: config('app.name', 'Siel Cart');
+    $siteName = config('app.name', 'Siel Cart');
 @endphp
 
 {{--

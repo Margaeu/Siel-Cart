@@ -65,7 +65,14 @@ class CategoryInfolist
 
                     TextEntry::make('products_count')
                         ->label('Products')
-                        ->state(fn (Category $record): int => $record->products()->count()),
+                        // Same format as the table's Products column: trashed
+                        // products still block deletion, so they are shown.
+                        ->state(function (Category $record): string {
+                            $live = $record->products()->count();
+                            $trashed = $record->products()->onlyTrashed()->count();
+
+                            return $trashed > 0 ? "{$live} (+{$trashed} in trash)" : (string) $live;
+                        }),
 
                     TextEntry::make('created_at')
                         ->label('Created at')

@@ -3,8 +3,6 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -16,6 +14,8 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductsTable
 {
@@ -93,9 +93,16 @@ class ProductsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // Same wording as the edit page: see EditProduct.
+                    DeleteBulkAction::make()
+                        ->label('Move to trash')
+                        ->modalHeading('Move selected products to trash')
+                        ->modalDescription('The products are hidden from the storefront and moved to the Deleted tab. You can restore them later.')
+                        ->modalSubmitActionLabel('Move to trash')
+                        ->successNotificationTitle('Moved to trash'),
                     ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    RestoreBulkAction::make()
+                        ->modalDescription('The products will be restored as inactive. Activate each one when it is ready to go back on the storefront.'),
                 ]),
             ]);
     }

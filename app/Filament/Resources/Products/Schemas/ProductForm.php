@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Rules\UniqueSku;
@@ -44,11 +45,20 @@ class ProductForm
                                     ->schema([
                                         TextInput::make('name')
                                             ->required(),
+                                        // Inactive categories stay selectable so an inactive
+                                        // product can be filed under one, but an active product
+                                        // cannot (see Product::boot()). Checked here too so the
+                                        // message lands under this field.
                                         Select::make('category_id')
                                             ->relationship('category', 'name')
                                             ->preload()
                                             ->searchable()
                                             ->required()
+                                            ->rule(static fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                                if ($get('is_active') && Category::query()->whereKey($value)->where('is_active', false)->exists()) {
+                                                    $fail(Product::INACTIVE_CATEGORY_MESSAGE);
+                                                }
+                                            })
                                             ->createOptionForm([
                                                 TextInput::make('name')
                                                     ->required(),

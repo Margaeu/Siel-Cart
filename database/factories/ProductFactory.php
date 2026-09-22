@@ -24,7 +24,10 @@ class ProductFactory extends Factory
         $price = fake()->randomFloat(2, 10, 500);
 
         return [
-            'category_id' => Category::inRandomOrder()->first()?->id ?? Category::factory(),
+            // Active categories only: an inactive category may not hold an
+            // active product (see Product::boot()), so borrowing one here
+            // made random tests fail depending on which row came back.
+            'category_id' => Category::query()->where('is_active', true)->inRandomOrder()->first()?->id ?? Category::factory(),
             'name' => $name,
             'slug' => Str::slug($name) . '-' . fake()->unique()->numberBetween(1000, 9999),
             'sku' => 'SKU-' . strtoupper(Str::random(8)),

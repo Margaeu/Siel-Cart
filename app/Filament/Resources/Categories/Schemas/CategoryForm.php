@@ -54,8 +54,16 @@ class CategoryForm
                                 'default' => 1,
                                 'sm' => 2,
                             ])->schema([
+                                // Same rule as Category's updating hook, checked here
+                                // so the message shows under the toggle instead of
+                                // surfacing as an error the form cannot place.
                                 Toggle::make('is_active')
-                                    ->required(),
+                                    ->required()
+                                    ->rule(static fn (?Category $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                        if ($record && ! $value && ($reason = $record->deactivationBlockedReason())) {
+                                            $fail($reason);
+                                        }
+                                    }),
                                 TextInput::make('sort_order')
                                     ->helperText('Categories with lower sort-order numbers appear first.')
                                     ->required()
