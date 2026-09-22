@@ -1,68 +1,140 @@
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4; padding:20px 0;">
-<tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; font-family:Arial, Helvetica, sans-serif;">
-
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.5; color:#000000; padding:20px 0;">
 <tr>
-<td style="background-color:#547F12; padding:24px 30px;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr>
-<td style="color:#FEDD04; font-size:22px; font-weight:bold;">Siel Cart</td>
-<td style="color:#ffffff; font-size:13px; text-align:right;">UBAP Office</td>
-</tr></table>
+<td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; text-align:left;">
+
+  <tr>
+    <td style="padding:0 0 16px 0;">
+      <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
+      <p style="margin:0;">
+        Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been successfully collected.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">ORDER DETAILS</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; vertical-align:top; color:#000000;">Order ID:</td>
+          <td style="vertical-align:top; color:#547F12; font-weight:bold;">#{{ $order->order_number }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Order Status:</td>
+          <td style="vertical-align:top;">Collected</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      @foreach ($order->items as $index => $item)
+        <div style="margin-bottom:12px;">
+          <p style="margin:0 0 4px 0; font-weight:normal;">
+            {{ $index + 1 }}. {{ $item->product_name }}@if($item->variant_name) - {{ $item->variant_name }}@endif
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.5;">
+            <tr>
+              <td style="width:35%; color:#000000;">Quantity:</td>
+              <td>{{ $item->quantity }}</td>
+            </tr>
+            <tr>
+              <td style="color:#000000;">Price:</td>
+              <td>₱{{ number_format((float) $item->price, 2) }}</td>
+            </tr>
+          </table>
+        </div>
+      @endforeach
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; color:#000000;">Subtotal:</td>
+          <td>₱{{ number_format((float) $order->total, 2) }}</td>
+        </tr>
+        <tr>
+          <td style="color:#000000; font-weight:normal;">Total Amount:</td>
+          <td style="font-weight:bold; color:#000000;">₱{{ number_format((float) $order->total, 2) }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">COLLECTION DETAILS</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; vertical-align:top; color:#000000;">Claimed By:</td>
+          <td style="vertical-align:top;">{{ $order->claimant_name }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Contact Number:</td>
+          <td style="vertical-align:top;">{{ $order->claimant_phone }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Date Collected:</td>
+          <td style="vertical-align:top;">{{ $order->completed_at ? $order->completed_at->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A') }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">RETURNS, REFUNDS, AND EXCHANGES</p>
+      <p style="margin:0 0 14px 0;">
+        For return, refund, or exchange concerns, you may contact UBAP via email or visit the UBAP Office directly. Any refund or exchange processed by UBAP will be reflected in your order details.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:24px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
+      <p style="margin:0 0 10px 0;">Thank you for choosing Siel Cart! We hope you enjoy your CLSU merchandise.</p>
+      <p style="margin:0 0 20px 0;">If you have any concerns about your order, please contact the UBAP Office for assistance.</p>
+      <p style="margin:0 0 4px 0;">Cheers,</p>
+      <p style="margin:0;">UBAP Team</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding-top:12px; font-size:13px; color:#000000;">
+      Need help? Contact us <a href="mailto:ubap@clsu.edu.ph" style="color:#547F12; text-decoration:none;">here</a>.
+    </td>
+  </tr>
+
+</table>
 </td>
 </tr>
-
-<tr>
-<td style="padding:30px; color:#333333; font-size:15px; line-height:1.6;">
-
-<h1 style="color:#547F12; font-size:20px; margin:0 0 16px;">Ready for Pickup!</h1>
-
-<p>Hello {{ $order->customer->name }},</p>
-
-<p>Your order <strong>#{{ $order->order_number }}</strong> is ready for collection at the UBAP Office.</p>
-
-<p style="color:#547F12; font-size:16px; font-weight:bold; margin:24px 0 8px; border-bottom:2px solid #FEDD04; padding-bottom:6px;">Pickup Details</p>
-
-<table width="100%" cellpadding="8" cellspacing="0" style="background-color:#f7f9f2; border-radius:6px;">
-<tr>
-<td style="font-weight:bold; color:#547F12; width:45%;">Claim Number</td>
-<td>{{ $order->claim_number }}</td>
-</tr>
-<tr>
-<td style="font-weight:bold; color:#547F12;">Pickup Date</td>
-<td>{{ \Carbon\Carbon::parse($order->pickup_date)->format('M d, Y') }}</td>
-</tr>
-<tr>
-<td style="font-weight:bold; color:#547F12;">Pickup Time</td>
-<td>{{ $order->pickup_slot }}</td>
-</tr>
-</table>
-
-<div style="background-color:#fff9d6; border-left:4px solid #FEDD04; padding:14px 16px; margin:20px 0; font-size:14px;">
-<strong style="color:#547F12;">Note:</strong><br>
-Please have your Claim number ready when collecting your order.<br>
-If someone else will collect the order on your behalf, please make sure they have the required authorization and order information.<br>
-Please claim your items within your designated time slot. Unclaimed orders will be cancelled immediately.
-</div>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
-<tr><td align="center">
-<a href="{{ route('customer.orders') }}" style="display:inline-block; background-color:#FEDD04; color:#547F12; font-weight:bold; text-decoration:none; padding:12px 28px; border-radius:6px; font-size:14px;">View Order Details</a>
-</td></tr>
-</table>
-
-<p style="margin-top:24px;">Thanks,<br>UBAP team</p>
-
-</td>
-</tr>
-
-<tr>
-<td style="background-color:#f4f4f4; padding:20px 30px; text-align:center; font-size:12px; color:#777777;">
-<strong style="color:#547F12;">UBAP Office</strong><br>
-Email: ubap@clsu.edu.ph<br><br>
-This is an automated email. Please do not reply directly to this message.
-</td>
-</tr>
-
-</table>
-</td></tr>
 </table>

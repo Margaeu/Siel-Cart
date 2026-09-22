@@ -351,44 +351,4 @@
             </div>
         </div>
     </section>
-
-    <!-- Trust / Benefits Section -->
-    <section class="border-t border-emerald-100 bg-[var(--color-primary)]/5 py-16">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-                <!-- Quality Guarantee -->
-                <div class="rounded-xl border border-emerald-100 bg-white p-6 text-center shadow-sm transition hover:shadow-md">
-                    <div class="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-emerald-50 text-[var(--color-primary)]">
-                        <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <h3 class="mb-2 text-xl font-semibold text-gray-900">Quality Guarantee</h3>
-                    <p class="text-gray-600">Every item is carefully checked before it reaches you.</p>
-                </div>
-
-                <!-- Fast Shipping -->
-                <div class="rounded-xl border border-[#FEF8EA] bg-white p-6 text-center shadow-sm transition hover:shadow-md">
-                    <div class="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-[#FEF8EA] text-[var(--color-secondary)]">
-                        <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                    <h3 class="mb-2 text-xl font-semibold text-gray-900">Fast Campus Delivery</h3>
-                    <p class="text-gray-600">Quick pickup and delivery right on campus.</p>
-                </div>
-
-                <!-- Secure Payment -->
-                <div class="rounded-xl border border-emerald-100 bg-white p-6 text-center shadow-sm transition hover:shadow-md">
-                    <div class="mb-4 inline-flex size-16 items-center justify-center rounded-full bg-emerald-50 text-[var(--color-primary)]">
-                        <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                    </div>
-                    <h3 class="mb-2 text-xl font-semibold text-gray-900">Secure Payment</h3>
-                    <p class="text-gray-600">Your payment information is always protected.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 </div>

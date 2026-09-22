@@ -1,80 +1,156 @@
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4; padding:20px 0;">
-<tr><td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; font-family:Arial, Helvetica, sans-serif;">
-
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.5; color:#000000; padding:20px 0;">
 <tr>
-<td style="background-color:#547F12; padding:24px 30px;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr>
-<td style="color:#FEDD04; font-size:22px; font-weight:bold;">Siel Cart</td>
-<td style="color:#ffffff; font-size:13px; text-align:right;">UBAP Office</td>
-</tr></table>
+<td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; text-align:left;">
+
+  <!-- Salutation & Summary -->
+  <tr>
+    <td style="padding:0 0 16px 0;">
+      <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
+      <p style="margin:0;">
+        Your Siel Cart order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been cancelled because it was not collected during the scheduled pickup period.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">ORDER DETAILS</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; vertical-align:top; color:#000000;">Order ID:</td>
+          <td style="vertical-align:top; color:#547F12; font-weight:bold;">#{{ $order->order_number }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Pickup Date:</td>
+          <td style="vertical-align:top;">{{ $order->pickup_date->format('d/m/Y') }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Pickup Slot:</td>
+          <td style="vertical-align:top;">{{ $order->pickup_slot }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Location:</td>
+          <td style="vertical-align:top;">{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      @foreach ($order->items as $index => $item)
+        <div style="margin-bottom:12px;">
+          <p style="margin:0 0 4px 0; font-weight:normal;">
+            {{ $index + 1 }}. {{ $item->product_name }}@if($item->variant_name) - {{ $item->variant_name }}@endif
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.5;">
+            <tr>
+              <td style="width:35%; color:#000000;">Quantity:</td>
+              <td>{{ $item->quantity }}</td>
+            </tr>
+            <tr>
+              <td style="color:#000000;">Price:</td>
+              <td>₱{{ number_format((float) $item->price, 2) }}</td>
+            </tr>
+          </table>
+        </div>
+      @endforeach
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; color:#000000;">Subtotal:</td>
+          <td>₱{{ number_format((float) $order->total, 2) }}</td>
+        </tr>
+        <tr>
+          <td style="color:#000000; font-weight:normal;">Total Amount:</td>
+          <td style="font-weight:bold; color:#000000;">₱{{ number_format((float) $order->total, 2) }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">CUSTOMER DETAILS</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; vertical-align:top; color:#000000;">Recipient Name:</td>
+          <td style="vertical-align:top;">{{ $order->customer->name }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Pickup Counter:</td>
+          <td style="vertical-align:top;">{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">PAYMENT DETAILS</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+        <tr>
+          <td style="width:35%; color:#000000;">Payment Status:</td>
+          <td>{{ str($order->payment_status)->headline() }}</td>
+        </tr>
+        <tr>
+          <td style="color:#000000;">Order Status:</td>
+          <td>Cancelled</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:24px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
+      <p style="margin:0 0 14px 0;">
+        Your order has been marked as <strong>Cancelled</strong>, and the reserved merchandise has been released back into stock.
+      </p>
+      <p style="margin:0 0 20px 0;">
+        If you still wish to purchase these items, you may place a new order on Siel Cart, subject to product availability.
+      </p>
+      <p style="margin:0 0 4px 0;">Cheers,</p>
+      <p style="margin:0;">UBAP Team</p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding-top:12px; font-size:13px; color:#000000;">
+      Need help? Contact us <a href="mailto:ubap@clsu.edu.ph" style="color:#547F12; text-decoration:none;">here</a>.
+    </td>
+  </tr>
+
+</table>
 </td>
 </tr>
-
-<tr>
-<td style="padding:30px; color:#333333; font-size:15px; line-height:1.6;">
-
-<h1 style="color:#547F12; font-size:20px; margin:0 0 16px;">Order Cancelled</h1>
-
-<p>Hello {{ $order->customer->name }},</p>
-
-<p>Your Siel Cart order <strong>#{{ $order->order_number }}</strong> has been cancelled because it was not collected during the scheduled pickup period.</p>
-
-<p style="color:#547F12; font-size:16px; font-weight:bold; margin:24px 0 8px; border-bottom:2px solid #FEDD04; padding-bottom:6px;">Order Details</p>
-
-<table width="100%" cellpadding="8" cellspacing="0" style="background-color:#f7f9f2; border-radius:6px;">
-<tr><td style="font-weight:bold; color:#547F12; width:45%;">Order Number</td><td>#{{ $order->order_number }}</td></tr>
-<tr><td style="font-weight:bold; color:#547F12;">Pickup Date</td><td>{{ $order->pickup_date->format('M d, Y') }}</td></tr>
-<tr><td style="font-weight:bold; color:#547F12;">Pickup Time</td><td>{{ $order->pickup_slot }}</td></tr>
-<tr><td style="font-weight:bold; color:#547F12;">Pickup Location</td><td>{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td></tr>
-</table>
-
-<p style="color:#547F12; font-size:16px; font-weight:bold; margin:24px 0 8px; border-bottom:2px solid #FEDD04; padding-bottom:6px;">Order Summary</p>
-
-<table width="100%" cellpadding="0" cellspacing="0">
-@foreach ($order->items as $item)
-<tr>
-<td style="padding:10px 0; border-bottom:1px solid #eeeeee;">
-<strong>{{ $item->product_name }}</strong>@if($item->variant_name) — {{ $item->variant_name }}@endif<br>
-<span style="color:#666666; font-size:13px;">{{ $item->quantity }} × ₱{{ number_format((float) $item->price, 2) }} = ₱{{ number_format((float) $item->subtotal, 2) }}</span>
-</td>
-</tr>
-@endforeach
-<tr>
-<td style="padding:12px 0 0; text-align:right; font-weight:bold; color:#547F12;">Order Total: ₱{{ number_format((float) $order->total, 2) }}</td>
-</tr>
-</table>
-
-<p style="color:#547F12; font-size:16px; font-weight:bold; margin:24px 0 8px; border-bottom:2px solid #FEDD04; padding-bottom:6px;">Payment / Refund</p>
-
-<p><strong>Payment Status:</strong> {{ str($order->payment_status)->headline() }}</p>
-
-<p style="color:#547F12; font-size:16px; font-weight:bold; margin:24px 0 8px; border-bottom:2px solid #FEDD04; padding-bottom:6px;">What happens next?</p>
-
-<p>Your order has been marked as <strong>Cancelled</strong>, and the items have been released from your order.</p>
-<p>If you still wish to purchase these items, you may place a new order through Siel Cart, subject to product availability.</p>
-
-<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
-<tr><td align="center">
-<a href="{{ route('customer.orders.show', $order) }}" style="display:inline-block; background-color:#FEDD04; color:#547F12; font-weight:bold; text-decoration:none; padding:12px 28px; border-radius:6px; font-size:14px;">View Order Details</a>
-</td></tr>
-</table>
-
-<p>If you believe this cancellation was made in error or you have concerns regarding your pickup, please contact the UBAP Office for assistance.</p>
-
-<p style="margin-top:24px;">Thanks,<br>UBAP team</p>
-
-</td>
-</tr>
-
-<tr>
-<td style="background-color:#f4f4f4; padding:20px 30px; text-align:center; font-size:12px; color:#777777;">
-<strong style="color:#547F12;">UBAP Office</strong><br>
-Email: ubap@clsu.edu.ph<br><br>
-This is an automated email. Please do not reply directly to this message.
-</td>
-</tr>
-
-</table>
-</td></tr>
 </table>
