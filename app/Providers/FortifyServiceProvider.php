@@ -91,23 +91,20 @@ class FortifyServiceProvider extends ServiceProvider
 
             RateLimiter::clear($throttleKey);
 
-            // 1. Reject permanently deleted accounts
-            if (str_starts_with($customer->email, 'deleted_')) {
+            // Permanently deleted accounts never reach this point: they are
+            // soft-deleted, so the Customer::where() lookup above does not find
+            // them and they fall into the shared "unknown email" branch. Logging
+            // in never restores or reactivates an account.
+
+            // 1. Deactivated account. Only reached after the password is proven,
+            //    so it cannot be used to probe which emails are registered.
+            if (! $customer->is_active) {
                 throw ValidationException::withMessages([
-                    Fortify::username() => __('This account has been permanently deleted. Please register as a new user.'),
+                    Fortify::username() => __('This account has been deactivated. Please contact the UBAP Office.'),
                 ]);
             }
 
-            // 2. Automatic Reactivation: Restore access if deactivated
-            if (! $customer->is_active) {
-                $customer->is_active = true;
-                $customer->deactivated_at = null;
-                $customer->save();
-
-                session()->flash('message', 'Welcome back! Your account has been automatically reactivated.');
-            }
-
-            // 3. Explicitly log the customer into the customer guard & regenerate session
+            // 2. Explicitly log the customer into the customer guard & regenerate session
             Auth::guard('customer')->login($customer, $request->boolean('remember'));
             $request->session()->regenerate();
 

@@ -2,22 +2,22 @@
 
 namespace App\Filament\Resources\Customers\Pages;
 
+use App\Filament\Resources\Customers\Actions\DeleteCustomerAccountAction;
 use App\Filament\Resources\Customers\CustomerResource;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\RestoreAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;
 
+    // No DeleteAction / ForceDeleteAction / RestoreAction: see
+    // CustomerResource::canDelete() and DeleteCustomerAccountAction.
     protected function getHeaderActions(): array
     {
         return [
-            RestoreAction::make(),
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
+            ViewAction::make(),
+            DeleteCustomerAccountAction::make(),
         ];
     }
 }

@@ -48,9 +48,12 @@ class Review extends Model
         return Storage::disk('r2')->url($this->video_path);
     }
 
+    // withTrashed(): reviews outlive a deleted account and are attributed to
+    // "[Deleted User]" (see Customer::getNameAttribute) rather than vanishing
+    // or crashing the product page on a null author.
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     public function product()

@@ -206,7 +206,7 @@
                                                     @elseif($item->product)
                                                         <a href="{{ route('products.show', $item->product->slug) }}?tab=reviews"
                                                            class="mt-2 inline-flex min-h-9 items-center rounded-full bg-[var(--color-secondary)] px-3.5 text-xs font-semibold text-gray-900 transition hover:opacity-90 {{ $focusRing }}">
-                                                            Review Required
+                                                            Review Product
                                                         </a>
                                                     @endif
                                                 @endif

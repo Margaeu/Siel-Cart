@@ -27,6 +27,12 @@ class Order extends Model
      * refunded or exchanged something from them.
      */
     public const RESOLVABLE_STATUSES = ['completed'];
+    /**
+     * Statuses of an order still in progress: not yet collected, not
+     * cancelled. A customer with one of these cannot delete their account,
+     * because UBAP would be left holding goods for nobody.
+     */
+    public const ACTIVE_STATUSES = ['pending', 'processing', 'ready_for_pickup'];
 
     protected $fillable = [
         'order_number',
@@ -156,9 +162,12 @@ class Order extends Model
     }
 
     // relationships
+    // withTrashed(): a deleted customer is kept as an anonymized soft-deleted
+    // row so their order history survives. Without it the relation is null and
+    // every admin page reading customer.* breaks on those orders.
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     public function items()

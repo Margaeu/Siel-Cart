@@ -274,7 +274,7 @@
                                         <div class="flex-shrink-0">
                                             <div style="background-color: var(--color-primary);" 
                                                  class="w-10 h-10 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-sm">
-                                                {{ substr($review->customer->name, 0, 1) }}
+                                                {{ $review->customer->trashed() ? '?' : substr($review->customer->name, 0, 1) }}
                                             </div>
                                         </div>
 

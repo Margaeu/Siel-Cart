@@ -27,14 +27,17 @@ class Report extends Model
     }
 
     // Relationships
+    //
+    // Both customer sides use withTrashed(): a report stays on file after
+    // either party deletes their account, and admins still need to open it.
     public function reporter()
     {
-        return $this->belongsTo(Customer::class, 'reporter_customer_id');
+        return $this->belongsTo(Customer::class, 'reporter_customer_id')->withTrashed();
     }
 
     public function reportedCustomer()
     {
-        return $this->belongsTo(Customer::class, 'reported_customer_id');
+        return $this->belongsTo(Customer::class, 'reported_customer_id')->withTrashed();
     }
 
     public function review()
