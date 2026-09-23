@@ -54,6 +54,6 @@ class AppServiceProvider extends ServiceProvider
         // LogFailedAdminLogin) are NOT registered here on purpose: Laravel's event
         // discovery already picks up everything in app/Listeners. Registering them
         // with Event::listen() as well made every login/logout/failed attempt
-        // write two identical activity-log rows.
+        // write two identical activity-log rows..
     }
 }
