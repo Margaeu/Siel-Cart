@@ -318,7 +318,7 @@ class ProductDetails extends Component
             'title'                => $validated['reviewTitle'] ?: null,
             'comment'              => $validated['reviewComment'],
             'photos'               => $photoPaths ?: null,
-            'video'                => $videoPath,
+            'video_path'                => $videoPath,
             'is_verified_purchase' => true,
             'is_approved'          => true,
         ]);

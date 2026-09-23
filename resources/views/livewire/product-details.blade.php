@@ -470,10 +470,10 @@
 
                                                 // Resolve Video URL directly from string column
                                                 $videoUrl = null;
-                                                if (!empty($review->video)) {
-                                                    $videoUrl = Str::startsWith($review->video, ['http://', 'https://']) 
-                                                        ? $review->video 
-                                                        : \Illuminate\Support\Facades\Storage::disk('r2')->url($review->video);
+                                                if (!empty($review->video_path)) {
+                                                    $videoUrl = Str::startsWith($review->video_path, ['http://', 'https://']) 
+                                                        ? $review->video_path 
+                                                        : \Illuminate\Support\Facades\Storage::disk('r2')->url($review->video_path);
                                                 }
                                             @endphp
 
