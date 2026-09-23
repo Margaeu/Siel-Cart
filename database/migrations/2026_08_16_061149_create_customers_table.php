@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->timestamp('deactivated_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
