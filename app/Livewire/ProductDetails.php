@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Services\CartService;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class ProductDetails extends Component
@@ -16,37 +17,51 @@ class ProductDetails extends Component
     use WithFileUploads;
 
     public Product $product;
+
     public $selectedVariant = null;
+
     public $selectedImage = null;
+
     public int $reviewRating = 5;
+
     public string $reviewTitle = '';
+
     public string $reviewComment = '';
 
-    /** 
-     * Temporary holding array for newly chosen files before appending 
-     * @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] 
+    /**
+     * Temporary holding array for newly chosen files before appending
+     *
+     * @var TemporaryUploadedFile[]
      */
     public array $newReviewPhotos = [];
 
-    /** 
+    /**
      * Persistent accumulated array of photos (up to 5 photos, max 2MB each)
-     * @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] 
+     *
+     * @var TemporaryUploadedFile[]
      */
     public array $reviewPhotos = [];
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $reviewVideo = null;
+
     public bool $canReview = false;
+
     public bool $hasReview = false;
+
     public bool $reviewIsApproved = true;
 
     // Reporting Properties
     public bool $showReportForm = false;
+
     public ?int $reportingReviewId = null;
+
     public string $reportReason = '';
+
     public string $reportDetails = '';
+
     public array $reportedReviewIds = [];
-    
+
     public function mount($slug)
     {
         // active(): an inactive product is unpublished and must 404 like a
@@ -273,34 +288,28 @@ class ProductDetails extends Component
         }
 
         $customerId = (int) auth('customer')->id();
-        $existingReview = Review::where('product_id', $this->product->id)
-            ->where('customer_id', $customerId)
-            ->first();
 
-        if ($existingReview) {
-            $this->loadReviewState();
-            $this->addError('review', 'You have already reviewed this product.');
-
-            return;
-        }
-
+        // completedOrderId() already excludes orders already reviewed for this
+        // product, so null here means either no completed order contains it,
+        // or every such order has already been reviewed.
         $orderId = $this->completedOrderId($customerId);
 
         if (! $orderId) {
+            $this->loadReviewState();
             $this->addError('review', 'Only customers with a completed order can review this product.');
 
             return;
         }
 
         $validated = $this->validate([
-            'reviewRating'   => ['required', 'integer', 'between:1,5'],
-            'reviewTitle'    => ['nullable', 'string', 'max:255'],
-            'reviewComment'  => ['required', 'string', 'min:10', 'max:2000'],
-            'reviewPhotos'   => ['nullable', 'array', 'max:5'],
+            'reviewRating' => ['required', 'integer', 'between:1,5'],
+            'reviewTitle' => ['nullable', 'string', 'max:255'],
+            'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
+            'reviewPhotos' => ['nullable', 'array', 'max:5'],
             'reviewPhotos.*' => ['image', 'max:2048'], // 2MB max per image (up to 10MB total)
-            'reviewVideo'    => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
+            'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
         ], [
-            'reviewPhotos.max'   => 'You can attach up to 5 photos.',
+            'reviewPhotos.max' => 'You can attach up to 5 photos.',
             'reviewPhotos.*.max' => 'Each photo must not exceed 2MB.',
         ]);
 
@@ -311,16 +320,16 @@ class ProductDetails extends Component
         $videoPath = $this->reviewVideo?->store('reviews/videos', 'r2');
 
         Review::create([
-            'product_id'           => $this->product->id,
-            'customer_id'          => $customerId,
-            'order_id'             => $orderId,
-            'rating'               => $validated['reviewRating'],
-            'title'                => $validated['reviewTitle'] ?: null,
-            'comment'              => $validated['reviewComment'],
-            'photos'               => $photoPaths ?: null,
-            'video'                => $videoPath,
+            'product_id' => $this->product->id,
+            'customer_id' => $customerId,
+            'order_id' => $orderId,
+            'rating' => $validated['reviewRating'],
+            'title' => $validated['reviewTitle'] ?: null,
+            'comment' => $validated['reviewComment'],
+            'photos' => $photoPaths ?: null,
+            'video_path' => $videoPath,
             'is_verified_purchase' => true,
-            'is_approved'          => true,
+            'is_approved' => true,
         ]);
 
         $this->reset('reviewTitle', 'reviewComment', 'reviewPhotos', 'newReviewPhotos', 'reviewVideo');
@@ -351,17 +360,19 @@ class ProductDetails extends Component
     public function submitReport(): void
     {
         $this->validate([
-            'reportReason'  => ['required', 'string'],
+            'reportReason' => ['required', 'string'],
             'reportDetails' => ['nullable', 'string', 'max:1000'],
         ]);
 
         if (! auth('customer')->check()) {
             session()->flash('status', 'Please log in to report a review.');
+
             return;
         }
 
         if (! $this->reportingReviewId) {
             $this->cancelReport();
+
             return;
         }
 
@@ -369,16 +380,17 @@ class ProductDetails extends Component
 
         if (! $review) {
             $this->addError('reportReason', 'The review you are trying to report no longer exists.');
+
             return;
         }
 
         Report::create([
             'reporter_customer_id' => auth('customer')->id(),
             'reported_customer_id' => $review->customer_id,
-            'review_id'            => $review->id,
-            'reason'               => $this->reportReason,
-            'details'              => $this->reportDetails ?: null,
-            'status'               => 'pending',
+            'review_id' => $review->id,
+            'reason' => $this->reportReason,
+            'details' => $this->reportDetails ?: null,
+            'status' => 'pending',
         ]);
 
         $this->reportedReviewIds[] = $this->reportingReviewId;
@@ -387,11 +399,28 @@ class ProductDetails extends Component
         $this->cancelReport();
     }
 
+    /**
+     * The customer's oldest completed order that contains this product and
+     * does not already have a review from them for it -- i.e. the order a
+     * new review submission should be attached to. Ordering by a repeat
+     * purchase creates a second completed order for the same product, and
+     * that order is reviewable on its own even though an earlier order for
+     * the same product was already reviewed.
+     */
     private function completedOrderId(int $customerId): ?int
     {
+        // NOT IN with a NULL in the list matches no rows in SQL, so nulls
+        // (a review with no surviving order) must be filtered out first.
+        $reviewedOrderIds = Review::where('product_id', $this->product->id)
+            ->where('customer_id', $customerId)
+            ->pluck('order_id')
+            ->filter()
+            ->all();
+
         return Order::where('customer_id', $customerId)
             ->where('status', 'completed')
             ->whereHas('items', fn ($query) => $query->where('product_id', $this->product->id))
+            ->whereNotIn('id', $reviewedOrderIds)
             ->value('id');
     }
 
@@ -411,17 +440,19 @@ class ProductDetails extends Component
             ->pluck('review_id')
             ->toArray();
 
-        $review = Review::where('product_id', $this->product->id)
-            ->where('customer_id', $customerId)
-            ->first();
-
-        if ($review) {
-            $this->hasReview = true;
+        if ($this->completedOrderId($customerId) !== null) {
+            $this->canReview = true;
 
             return;
         }
 
-        $this->canReview = $this->completedOrderId($customerId) !== null;
+        // No order left to attach a new review to. Only say "already
+        // reviewed" if that's actually why -- a customer with no completed
+        // order at all for this product should see the generic prompt
+        // instead of a message implying they've reviewed it before.
+        $this->hasReview = Review::where('product_id', $this->product->id)
+            ->where('customer_id', $customerId)
+            ->exists();
     }
 
     /**
@@ -494,8 +525,7 @@ class ProductDetails extends Component
             'defaultImagePath' => $this->defaultSharedImagePath(),
             'maxQuantity' => max(1, $maxQuantity),
             'selectionInStock' => $this->product->is_active && ($this->product->has_variants
-                ? (bool) $this->product->variants->contains(fn ($variant) =>
-                    $variant->id == $this->selectedVariant && $variant->is_active && $variant->stock_quantity > 0)
+                ? (bool) $this->product->variants->contains(fn ($variant) => $variant->id == $this->selectedVariant && $variant->is_active && $variant->stock_quantity > 0)
                 : $this->product->stock_status === 'in_stock'),
         ])->layout('components.layouts.front-end-layout', ['title' => $this->product->name.' - '.config('app.name')]);
     }

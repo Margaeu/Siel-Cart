@@ -4,9 +4,9 @@ namespace App\Livewire\Customer;
 
 use App\Models\Order;
 use App\Models\Review;
-use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.front-end-layout')]
 #[Title('Order Details')]
@@ -15,8 +15,9 @@ class OrderDetails extends Component
     public Order $order;
 
     /**
-     * Product IDs (from this order) the customer has already reviewed, so
-     * the "Review Required" prompt only shows for items still pending one.
+     * Product IDs reviewed against *this* order specifically, so the "Write
+     * a Review" prompt still shows for a product that was reviewed under a
+     * different (e.g. earlier) order for the same product.
      */
     public array $reviewedProductIds = [];
 
@@ -30,6 +31,7 @@ class OrderDetails extends Component
         $productIds = $this->order->items->pluck('product_id')->filter()->unique()->values();
 
         $this->reviewedProductIds = Review::where('customer_id', auth('customer')->id())
+            ->where('order_id', $this->order->id)
             ->whereIn('product_id', $productIds)
             ->pluck('product_id')
             ->all();
