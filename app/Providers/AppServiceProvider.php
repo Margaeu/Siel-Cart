@@ -32,17 +32,21 @@ class AppServiceProvider extends ServiceProvider
         ) {
             $chatbotPath = base_path('chatbot-server');
 
-            $chatbot = new Process(
-                ['npm.cmd', 'start'],
-                $chatbotPath
-            );
+            if (file_exists($chatbotPath)) {
+                $npmBinary = PHP_OS_FAMILY === 'Windows' ? 'npm.cmd' : 'npm';
 
-            $chatbot->setTimeout(null);
-            $chatbot->start();
+                $chatbot = new Process(
+                    [$npmBinary, 'start'],
+                    $chatbotPath
+                );
 
-            echo PHP_EOL; 
-            echo " Chatbot server starting on port 3000" . PHP_EOL;
-            echo PHP_EOL;
+                $chatbot->setTimeout(null);
+                $chatbot->start();
+
+                echo PHP_EOL; 
+                echo " Chatbot server starting on port 3000" . PHP_EOL;
+                echo PHP_EOL;
+            }
         }
 
         // The auth activity-log listeners (LogSuccessfulAdminLogin, LogAdminLogout,

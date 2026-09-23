@@ -27,6 +27,10 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    
+    'chatbot' => [
+    'url' => env('CHATBOT_URL', 'http://127.0.0.1:3000/api/chat'),
+],
 
     'slack' => [
         'notifications' => [
