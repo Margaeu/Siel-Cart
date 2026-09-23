@@ -68,6 +68,7 @@ class CategoryForm
                                     ->helperText('Categories with lower sort-order numbers appear first.')
                                     ->required()
                                     ->numeric()
+                                    ->type('text')
                                     ->default(0),
                             ]),
                         ]),
