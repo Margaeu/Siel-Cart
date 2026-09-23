@@ -3,334 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Reset Password | CobraCart</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        /* Same fluid root as resources/css/app.css, which this page doesn't load: 16px on phones, growing to 18px by a 1280px viewport. */
-        html {
-            font-size: clamp(1rem, 0.875rem + 0.3125vw, 1.125rem);
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7f0;
-            color: #09213d;
-        }
-
-        .page {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 105px;
-        }
-
-        .brand {
-            font-size: 2.125rem;
-            font-weight: 700;
-            color: #4d8508;
-            margin-bottom: 28px;
-        }
-
-        .heading {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-
-        .heading h1 {
-            margin: 0 0 12px;
-            font-size: 2.125rem;
-            color: #061d39;
-        }
-
-        .heading p {
-            margin: 0;
-            font-size: 1rem;
-            color: #173d65;
-        }
-
-        .card {
-            width: 30.625rem;
-            max-width: 100%;
-            background: #ffffff;
-            border-radius: 9px;
-            border-top: 5px solid #f4b400;
-            padding: 38px 27px 34px;
-            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
-        }
-
-        .form-group {
-            margin-bottom: 21px;
-        }
-
-        label {
-            display: block;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #09213d;
-        }
-
-        input {
-            width: 100%;
-            height: 3.125rem;
-            border: 1px solid #c9d2df;
-            border-radius: 10px;
-            background: #edf3fc;
-            padding: 0 15px;
-            font-size: 0.9375rem;
-            color: #09213d;
-            outline: none;
-        }
-
-        input:focus {
-            border: 2px solid #f0b400;
-            background: #f1f5fb;
-        }
-
-        .password-wrapper {
-            position: relative;
-        }
-
-        .password-wrapper input {
-            padding-right: 50px;
-        }
-
-        .eye-button {
-            position: absolute;
-            right: 13px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            padding: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .eye-button svg {
-            width: 1.3125rem;
-            height: 1.3125rem;
-            stroke: #52657d;
-        }
-
-        .eye-button:hover svg {
-            stroke: #4d8508;
-        }
-
-        .error {
-            color: #d93025;
-            font-size: 0.875rem;
-            margin-top: 6px;
-        }
-
-        .reset-button {
-            width: 100%;
-            height: 3.25rem;
-            border: none;
-            border-radius: 8px;
-            background: #4d850d;
-            color: white;
-            font-size: 1.0625rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .reset-button:hover {
-            background: #416f0b;
-        }
-
-        .back-login {
-            display: block;
-            text-align: center;
-            margin-top: 25px;
-            color: #176b08;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .back-login:hover {
-            text-decoration: underline;
-        }
-
-        .status-message {
-            background: #e8f5e9;
-            color: #28752b;
-            padding: 12px;
-            border-radius: 7px;
-            margin-bottom: 20px;
-            font-size: 0.875rem;
-        }
-
-        @media (max-width: 600px) {
-            .page {
-                padding: 50px 20px;
-            }
-
-            .card {
-                width: 100%;
-            }
-
-            .brand {
-                font-size: 1.875rem;
-            }
-
-            .heading h1 {
-                font-size: 1.75rem;
-            }
-        }
-    </style>
+    <title>Reset Password - {{ config('app.name') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+<body class="bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] min-h-screen">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md">
+            <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-xl shadow-black/5 sm:p-8">
+                <!-- Brand -->
+                <x-customer-auth-brand />
 
-<body>
-
-<div class="page">
-
-    <x-customer-auth-brand />
-
-    <div class="heading">
-        <h1>Reset Password</h1>
-        <p>Create a new password for your CobraCart account.</p>
-    </div>
-
-    <div class="card">
-
-        @if (session('status'))
-            <div class="status-message">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('password.update') }}">
-            @csrf
-
-            <!-- Token -->
-            <input type="hidden" name="token" value="{{ $token }}">
-
-            <!-- Email -->
-            <div class="form-group">
-                <label for="email">Email Address</label>
-
-                <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value="{{ $email ?? old('email') }}"
-                    required
-                    autocomplete="email"
-                    placeholder="Enter your email address"
-                >
-
-                @error('email')
-                    <div class="error">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- New Password -->
-            <div class="form-group">
-                <label for="password">New Password</label>
-
-                <div class="password-wrapper">
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        required
-                        autocomplete="new-password"
-                        placeholder="Enter your new password"
-                    >
-
-                    <button
-                        type="button"
-                        class="eye-button"
-                        onclick="togglePassword('password', this)"
-                        aria-label="Show password"
-                    >
-                        <!-- Eye icon -->
-                        <svg viewBox="0 0 24 24" fill="none"
-                             stroke-width="2"
-                             stroke-linecap="round"
-                             stroke-linejoin="round">
-                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
+                <!-- Heading -->
+                <div class="mt-7">
+                    <h1 class="text-2xl font-bold text-gray-900">Reset Password</h1>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Create a new password for your account.
+                    </p>
                 </div>
 
-                @error('password')
-                    <div class="error">{{ $message }}</div>
-                @enderror
-            </div>
+                @if (session('status'))
+                    <div class="mt-6 rounded-lg border border-[#557F13]/30 bg-[#557F13]/5 px-4 py-3 text-sm text-[#3E5D0E]">
+                        {{ session('status') }}
+                    </div>
+                @endif
 
-            <!-- Confirm Password -->
-            <div class="form-group">
-                <label for="password_confirmation">Confirm Password</label>
+                <form method="POST" action="{{ route('password.update') }}" class="mt-6 space-y-5">
+                    @csrf
 
-                <div class="password-wrapper">
-                    <input
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        required
-                        autocomplete="new-password"
-                        placeholder="Confirm your new password"
-                    >
+                    <!-- Token -->
+                    <input type="hidden" name="token" value="{{ $token }}">
 
-                    <button
-                        type="button"
-                        class="eye-button"
-                        onclick="togglePassword('password_confirmation', this)"
-                        aria-label="Show password"
-                    >
-                        <!-- Eye icon -->
-                        <svg viewBox="0 0 24 24" fill="none"
-                             stroke-width="2"
-                             stroke-linecap="round"
-                             stroke-linejoin="round">
-                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
-                            <circle cx="12" cy="12" r="3"/>
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Email
+                        </label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.007 1.872l-7.5 5a2.25 2.25 0 0 1-2.486 0l-7.5-5A2.25 2.25 0 0 1 2.25 6.993V6.75" />
+                                </svg>
+                            </span>
+                            <input id="email"
+                                   type="email"
+                                   name="email"
+                                   value="{{ $email ?? old('email') }}"
+                                   required
+                                   autofocus
+                                   autocomplete="email"
+                                   placeholder="you@clsu.edu.ph"
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                        </div>
+                        @error('email')
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <label for="password" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            New Password
+                        </label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                </svg>
+                            </span>
+                            <input id="password"
+                                   type="password"
+                                   name="password"
+                                   required
+                                   autocomplete="new-password"
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                            <button type="button"
+                                    data-password-toggle="password"
+                                    aria-controls="password"
+                                    aria-pressed="false"
+                                    aria-label="Show password"
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                                <svg data-icon-hide class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243" />
+                                </svg>
+                            </button>
+                        </div>
+                        @error('password')
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label for="password_confirmation" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Confirm Password
+                        </label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                </svg>
+                            </span>
+                            <input id="password_confirmation"
+                                   type="password"
+                                   name="password_confirmation"
+                                   required
+                                   autocomplete="new-password"
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                            <button type="button"
+                                    data-password-toggle="password_confirmation"
+                                    aria-controls="password_confirmation"
+                                    aria-pressed="false"
+                                    aria-label="Show password"
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                                <svg data-icon-hide class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243" />
+                                </svg>
+                            </button>
+                        </div>
+                        @error('password_confirmation')
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit"
+                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#557F13] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2">
+                        Reset Password
+                        <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                         </svg>
                     </button>
-                </div>
+                </form>
+
+                <p class="mt-6 text-center text-sm">
+                    <a href="{{ route('login') }}" class="font-semibold text-[#557F13] hover:text-[#3E5D0E] hover:underline transition">
+                        ← Back to Login
+                    </a>
+                </p>
             </div>
-
-            <button type="submit" class="reset-button">
-                Reset Password
-            </button>
-
-        </form>
-
-        <a href="{{ route('login') }}" class="back-login">
-            ← Back to Login
-        </a>
-
+        </div>
     </div>
 
-</div>
-
-<script>
-    function togglePassword(inputId, button) {
-        const input = document.getElementById(inputId);
-
-        if (input.type === "password") {
-            input.type = "text";
-            button.setAttribute("aria-label", "Hide password");
-        } else {
-            input.type = "password";
-            button.setAttribute("aria-label", "Show password");
-        }
-    }
-</script>
-
+    <x-password-toggle-script />
 </body>
 </html>

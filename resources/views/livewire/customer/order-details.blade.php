@@ -239,7 +239,7 @@
                                     <div class="min-w-0">
                                         <p class="{{ $fieldLabel }}">Claim Number</p>
                                         @if($order->claim_number)
-                                            <p class="font-mono font-bold text-lg text-gray-900">{{ $order->claim_number }}</p>
+                                            <p class="font-bold text-lg text-gray-900">{{ $order->claim_number }}</p>
                                             <p class="text-xs text-gray-500 mt-0.5">
                                                 Present this at the {{ \App\Livewire\CheckoutPage::PICKUP_LOCATION_LABEL }} to collect your order.
                                             </p>

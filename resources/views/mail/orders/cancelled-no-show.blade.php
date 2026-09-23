@@ -7,9 +7,16 @@
   <tr>
     <td style="padding:0 0 16px 0;">
       <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
-      <p style="margin:0;">
+      <p style="margin:0 0 16px 0;">
         Your Siel Cart order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been cancelled because it was not collected during the scheduled pickup period.
       </p>
+      <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="border-radius:4px; background-color:#547F12;">
+            <a href="{{ route('customer.orders.show', $order->id) }}" style="display:inline-block; padding:10px 24px; font-size:13px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:4px;">View Order Details</a>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 

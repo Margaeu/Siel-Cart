@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Notifications\CustomerResetPassword;
+use App\Notifications\CustomerVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -228,5 +230,26 @@ class Customer extends Authenticatable implements MustVerifyEmail
         }
 
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    /**
+     * Send the branded verification email instead of Laravel's default
+     * VerifyEmail. Fortify's registration flow and its resend endpoint
+     * (verification.send) both call this same method, so overriding it
+     * here is the one place that covers both.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new CustomerVerifyEmail);
+    }
+
+    /**
+     * Send the branded password reset email instead of Laravel's default
+     * ResetPassword. Password::broker('customers')->sendResetLink() is the
+     * one path that calls this (ForgotPasswordController).
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new CustomerResetPassword($token));
     }
 }

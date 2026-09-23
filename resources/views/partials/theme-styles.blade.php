@@ -9,11 +9,11 @@
     // the client fixed the site on Acumin Pro, so the themes table lost its
     // font_family / custom_font_* columns and this partial lost the preset
     // picker, the R2 custom-font upload and the Bunny Fonts <link> that served
-    // them. The one typeface is self-hosted in resources/css/app.css (which
-    // every storefront surface loads) and pinned for the Filament panel in
-    // AdminPanelProvider, so admin and storefront read as one product. Putting
-    // a font back under admin control means restoring all three layers, not
-    // just this file.
+    // them. The one typeface is self-hosted in resources/css/app.css, which
+    // sets --font-sans and so covers every storefront surface through
+    // Preflight's html rule with no font-family declaration needed here; it's
+    // pinned separately for the Filament panel in AdminPanelProvider, so admin
+    // and storefront read as one product.
     $activeTheme = \App\Models\Theme::active()->first();
 
     $themePrimaryColor = $activeTheme?->primary_color ?? '#1E6031';
@@ -31,10 +31,5 @@
         --color-primary: {{ $themePrimaryColor }};
         --color-primary-hover: color-mix(in srgb, {{ $themePrimaryColor }} 82%, black);
         --color-secondary: {{ $themeSecondaryColor }};
-        --font-family: 'Acumin Pro', sans-serif;
-    }
-
-    body {
-        font-family: var(--font-family);
     }
 </style>

@@ -49,6 +49,7 @@ class OrdersTable
 
                 Tables\Columns\TextColumn::make('or_number')
                     ->label('OR Number')
+                    ->placeholder('Not yet issued')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('status')

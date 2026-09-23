@@ -3,8 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Customer;
+use App\Notifications\CustomerVerifyEmail;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
@@ -95,7 +95,7 @@ class EmailVerificationTest extends TestCase
         $response = $this->actingAs($customer, 'customer')->post(route('verification.send'));
 
         $response->assertSessionHas('status', 'verification-link-sent');
-        Notification::assertSentTo($customer, VerifyEmail::class);
+        Notification::assertSentTo($customer, CustomerVerifyEmail::class);
     }
 
     /**
@@ -141,7 +141,7 @@ class EmailVerificationTest extends TestCase
             ->post(route('verification.send'))
             ->assertTooManyRequests();
 
-        Notification::assertSentToTimes($customer, VerifyEmail::class, 6);
+        Notification::assertSentToTimes($customer, CustomerVerifyEmail::class, 6);
     }
 
     public function test_email_can_be_verified(): void

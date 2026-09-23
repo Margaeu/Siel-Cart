@@ -424,7 +424,12 @@ class ProductDetails extends Component
         $this->canReview = $this->completedOrderId($customerId) !== null;
     }
 
-    public function render()
+    /**
+     * "Products You May Also Like" -- same category first, topped up from
+     * other categories so a product that is the only one in its category
+     * still gets a full row instead of an empty section.
+     */
+    private function relatedProducts()
     {
         $relatedProducts = Product::where('is_active', true)
             ->where('category_id', $this->product->category_id)
@@ -433,6 +438,28 @@ class ProductDetails extends Component
             ->withReviewAggregates()
             ->limit(4)
             ->get();
+
+        $remaining = 4 - $relatedProducts->count();
+
+        if ($remaining > 0) {
+            $otherCategoryProducts = Product::where('is_active', true)
+                ->where('category_id', '!=', $this->product->category_id)
+                ->whereNotIn('id', $relatedProducts->pluck('id'))
+                ->with(['category', 'cardImage', 'variants'])
+                ->withReviewAggregates()
+                ->inRandomOrder()
+                ->limit($remaining)
+                ->get();
+
+            $relatedProducts = $relatedProducts->concat($otherCategoryProducts);
+        }
+
+        return $relatedProducts;
+    }
+
+    public function render()
+    {
+        $relatedProducts = $this->relatedProducts();
 
         // Upper bound for the client-side quantity stepper. Only a UX cap --
         // CartService re-checks stock (including what is already in the cart).
