@@ -12,9 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind('path.public', function () {
-            return realpath(base_path() . '/../public_html/ecommerce');
-        });
+        // path.public is deliberately left at Laravel's default (public/). It used
+        // to be rebound to ../public_html/ecommerce for the old shared-hosting
+        // layout; on any host without that folder realpath() returned false, so
+        // the Vite manifest, asset() fonts, and public_path() lookups all broke.
     }
 
     /**

@@ -44,11 +44,10 @@ Route::view('/privacy-policy', 'pages.privacy-policy')
 Route::view('/terms-and-conditions', 'pages.terms-and-conditions')
     ->name('terms-and-conditions');
 
-Route::view('/return-refund-policy', 'pages.return-refund-policy')
-    ->name('return-refund-policy');
-
-Route::view('/faqs', 'pages.faqs')
-    ->name('faqs');
+// There is no /return-refund-policy or /faqs page. The return/refund policy was
+// folded into terms-and-conditions, and a FAQs view was never written; both
+// routes used to point at missing views and returned a 500 to anyone who
+// typed the URL.
 
 // verification.send is deliberately NOT redefined here. Fortify registers it as
 // POST-only behind auth:customer and throttle:6,1. A GET|POST override used to
