@@ -8,7 +8,7 @@ on:
 env:
   PHP_VERSION: '8.2'
   NODE_VERSION: '20'
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || secrets.AZURE_WEBAPP_NAME }}
 
 jobs:
   build-and-deploy:
@@ -50,11 +50,25 @@ jobs:
       - name: Package artifact
         run: zip -r ../release.zip . -x '.git/*' -x 'node_modules/*' -x '.github/*' -x 'tests/*'
 
-      - name: Deploy to Azure App Service
+      - name: Azure login (fallback when publish profile is unavailable)
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service (publish profile)
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ../release.zip
+
+      - name: Deploy to Azure App Service (Azure login)
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: ../release.zip
 
       # Runs once per deploy (not on every container boot like startup.sh) so
@@ -64,6 +78,7 @@ jobs:
       # the same publish profile already used to deploy, so no extra secret
       # is needed.
       - name: Run database migrations
+        if: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
         env:
           PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         run: |
