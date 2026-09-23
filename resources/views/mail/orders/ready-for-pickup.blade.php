@@ -6,9 +6,16 @@
   <tr>
     <td style="padding:0 0 16px 0;">
       <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
-      <p style="margin:0;">
+      <p style="margin:0 0 16px 0;">
         Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> is ready for collection at the UBAP Office.
       </p>
+      <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="border-radius:4px; background-color:#547F12;">
+            <a href="{{ route('customer.orders.show', $order->id) }}" style="display:inline-block; padding:10px 24px; font-size:13px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:4px;">View Order Details</a>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 
@@ -112,9 +119,9 @@
   <tr>
     <td style="padding-bottom:24px;">
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
-      <p style="margin:0 0 10px 0;">Visit the designated pickup location during your scheduled pickup time and present your claim number to the CLSU Merchandise Office.</p>
+      <p style="margin:0 0 10px 0;">Visit the designated pickup location during your scheduled pickup time and present your claim number to the UBAP Office.</p>
       <p style="margin:0 0 20px 0;">After your order has been successfully collected, you’ll receive a pickup confirmation email.</p>
-      <p style="margin:0 0 20px 0;">If you are unable to collect your order during the scheduled pickup period, please contact the CLSU Merchandise Office as soon as possible. Orders that are not collected within the designated pickup period may be cancelled according to our pickup policy.</p>
+      <p style="margin:0 0 20px 0;">If you are unable to collect your order during the scheduled pickup period, please contact the UBAP Office as soon as possible. Orders that are not collected within the designated pickup period may be cancelled according to our pickup policy.</p>
       <p style="margin:0 0 4px 0;">Cheers,</p>
       <p style="margin:0;">UBAP Team</p>
     </td>

@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Customer;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\CustomerVerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -27,6 +27,7 @@ class RegistrationTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'test@example.com',
+            'date_of_birth' => now()->subYears(20)->format('Y-m-d'),
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
@@ -38,6 +39,6 @@ class RegistrationTest extends TestCase
 
         $this->assertAuthenticatedAs($customer, 'customer');
         $this->assertNull($customer->email_verified_at);
-        Notification::assertSentTo($customer, VerifyEmail::class);
+        Notification::assertSentTo($customer, CustomerVerifyEmail::class);
     }
 }

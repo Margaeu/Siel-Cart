@@ -12,7 +12,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-[#edf3ec] text-gray-800 font-sans antialiased flex items-center justify-center p-4">
+<body class="min-h-screen bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] text-gray-800 font-sans antialiased flex items-center justify-center p-4">
 
     {{-- Main Auth Card --}}
     <div class="w-full max-w-[26.25rem] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.06)] border border-gray-100">

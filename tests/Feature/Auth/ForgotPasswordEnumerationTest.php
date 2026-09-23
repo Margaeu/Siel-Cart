@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\Customer;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\CustomerResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
@@ -49,7 +49,7 @@ class ForgotPasswordEnumerationTest extends TestCase
             ->assertRedirect(route('password.request'))
             ->assertSessionHasNoErrors();
 
-        Notification::assertSentTo($customer, ResetPassword::class, function (ResetPassword $notification) use ($customer) {
+        Notification::assertSentTo($customer, CustomerResetPassword::class, function (CustomerResetPassword $notification) use ($customer) {
             return app('auth.password')->broker('customers')->tokenExists($customer, $notification->token);
         });
     }
@@ -89,7 +89,7 @@ class ForgotPasswordEnumerationTest extends TestCase
         $second = $this->observable($this->requestLink($customer->email));
 
         $this->assertSame($first, $second);
-        Notification::assertSentToTimes($customer, ResetPassword::class, 1);
+        Notification::assertSentToTimes($customer, CustomerResetPassword::class, 1);
     }
 
     public function test_reset_link_requests_are_throttled(): void
