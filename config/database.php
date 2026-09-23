@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Str;
 
+// Aiven requires TLS for MySQL connections. The CA cert lives in the repo
+// (it isn't a secret) so this resolves on any OS/host without a per-machine
+// env var; MYSQL_ATTR_SSL_CA still overrides it if a machine needs a
+// different cert path.
+$aivenCaCertPath = storage_path('certs/aiven-ca.pem');
+
 return [
 
     /*
@@ -59,7 +65,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-              (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+              (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA', is_file($aivenCaCertPath) ? $aivenCaCertPath : null),
             ]) : [],
         ],
 
@@ -79,7 +85,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-               (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+               (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA', is_file($aivenCaCertPath) ? $aivenCaCertPath : null),
             ]) : [],
         ],
 

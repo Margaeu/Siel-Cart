@@ -1,0 +1,76 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PHP_VERSION: '8.2'
+  NODE_VERSION: '20'
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, bcmath, exif, pcntl, gd, zip, intl, pdo_mysql, fileinfo
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # --no-dev: this artifact runs on Azure, not in this runner, so dev
+      # tooling (Pint, PHPUnit, Sail, Faker) would just be dead weight.
+      - name: Install PHP dependencies
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      # Vite build doesn't touch APP_* env vars (see vite.config.js), so no
+      # .env is needed here — production env vars live in Azure App Settings
+      # and are only read at runtime by startup.sh / the app itself.
+      - name: Build frontend assets
+        run: npm run build
+
+      # node_modules isn't needed at runtime (assets are already compiled
+      # into public/build); dropping it keeps the deploy package small.
+      # Zipped one directory up so release.zip doesn't end up zipping itself.
+      - name: Package artifact
+        run: zip -r ../release.zip . -x '.git/*' -x 'node_modules/*' -x '.github/*' -x 'tests/*'
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ../release.zip
+
+      # Runs once per deploy (not on every container boot like startup.sh) so
+      # migrations aren't re-run — or raced — across scaled-out instances.
+      # Uses the Kudu SCM command API since App Service doesn't expose a
+      # plain SSH step for GitHub Actions; credentials come straight out of
+      # the same publish profile already used to deploy, so no extra secret
+      # is needed.
+      - name: Run database migrations
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        run: |
+          PROFILE_LINE=$(echo "$PUBLISH_PROFILE" | grep -m1 -oP '(?<=publishMethod="MSDeploy").*?(?=/>)')
+          KUDU_USER=$(echo "$PROFILE_LINE" | grep -oP '(?<=userName=")[^"]+')
+          KUDU_PASS=$(echo "$PROFILE_LINE" | grep -oP '(?<=userPWD=")[^"]+')
+          curl -fsSL -X POST "https://${AZURE_WEBAPP_NAME}.scm.azurewebsites.net/api/command" \
+            -u "${KUDU_USER}:${KUDU_PASS}" \
+            -H "Content-Type: application/json" \
+            -d '{"command":"php artisan migrate --force","dir":"site\\wwwroot"}'
