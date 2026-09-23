@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
@@ -26,15 +29,15 @@ class UsersTable
                     ->searchable(),
                 TextColumn::make('role')
                     ->label('Role')
-                    ->getStateUsing(fn($record) => $record->getRoleNames()->first() ?? 'User')
+                    ->getStateUsing(fn ($record) => $record->getRoleNames()->first() ?? 'User')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         'super_admin' => 'success',
                         'ubap' => 'warning',
                         'stratcom' => 'info',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn($state) => str($state)->replace('_',' ')->title())
+                    ->formatStateUsing(fn ($state) => str($state)->replace('_', ' ')->title())
                     ->toggleable(isToggledHiddenByDefault: false),
                 ToggleColumn::make('is_active')
                     ->label('Active')
@@ -60,6 +63,37 @@ class UsersTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                // Issues a new users-broker token, which deletes the old one, so an
+                // earlier invitation link stops working. Authorized exactly like
+                // creating an administrator. Offered only to accounts that could
+                // actually use it: the reset page refuses anyone failing
+                // canAccessPanel() (inactive, or no panel role).
+                Action::make('resendInvitation')
+                    ->label('Resend invitation')
+                    ->icon('heroicon-o-envelope')
+                    ->authorize(fn (): bool => UserResource::canCreate())
+                    ->visible(fn (User $record): bool => $record->canAccessPanel(Filament::getPanel('admin')))
+                    ->requiresConfirmation()
+                    ->modalHeading('Resend invitation')
+                    ->modalDescription(fn (User $record): string => "Email {$record->email} a new link to set their password? Any earlier invitation or reset link for this account will stop working. Their current password stays in place until they use the new link.")
+                    ->modalSubmitActionLabel('Send invitation')
+                    ->action(function (User $record): void {
+                        if (! UserResource::sendInvitation($record)) {
+                            Notification::make()
+                                ->title('Invitation email not sent')
+                                ->body('The invitation could not be emailed. Please try again later.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->title('Invitation sent')
+                            ->body("A new link to set a password has been emailed to {$record->email}.")
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

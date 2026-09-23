@@ -20,11 +20,12 @@ class CustomerResetPassword extends ResetPassword
 
         $theme = Theme::active()->first();
 
-        // Matches Illuminate\Auth\Notifications\ResetPassword::buildMailMessage():
-        // the expiry quoted here comes from the DEFAULT broker (auth.defaults.passwords),
-        // not necessarily the "customers" broker the token was actually issued under.
-        // config/auth.php keeps both brokers' "expire" equal for exactly this reason.
-        $expireMinutes = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
+        // Laravel's stock ResetPassword::buildMailMessage() quotes the DEFAULT
+        // broker's expiry (auth.defaults.passwords = users). Customer tokens are
+        // only ever issued by the "customers" broker (Customer::sendPasswordResetNotification),
+        // and the two brokers' lifetimes differ — users is 60 minutes for admin
+        // invitations — so read the broker the token actually came from.
+        $expireMinutes = config('auth.passwords.customers.expire');
 
         return (new MailMessage)
             ->subject('Reset Your Password - '.config('app.name'))

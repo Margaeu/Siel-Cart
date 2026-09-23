@@ -23,6 +23,21 @@ class CustomerResetPasswordTest extends TestCase
         $this->assertStringContainsString('email='.urlencode($customer->email), $resetUrl);
     }
 
+    /**
+     * The users broker lasts longer than the customers one (admin invitations),
+     * so quoting the default broker would promise customers a window their
+     * token doesn't actually get.
+     */
+    public function test_mail_message_quotes_the_customers_broker_expiry(): void
+    {
+        $customer = Customer::factory()->create();
+
+        $mailMessage = (new CustomerResetPassword('test-token'))->toMail($customer);
+
+        $this->assertSame(config('auth.passwords.customers.expire'), $mailMessage->viewData['expireMinutes']);
+        $this->assertNotSame(config('auth.passwords.users.expire'), $mailMessage->viewData['expireMinutes']);
+    }
+
     public function test_mail_message_renders_branded_content(): void
     {
         $customer = Customer::factory()->create(['first_name' => 'Juana']);
