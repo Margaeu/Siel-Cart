@@ -6,7 +6,6 @@ use App\Models\Customer;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -55,11 +54,12 @@ class CustomersTable
                     ->state($erased('date_of_birth'))
                     ->label('Birthdate'),
 
-                // A deleted account stays inactive; flipping this would not
-                // bring it back, but it must not look like it could.
-                ToggleColumn::make('is_active')
-                    ->label('Active')
-                    ->disabled(fn (Customer $record): bool => $record->trashed()),
+                // No is_active column: deactivating a customer is not an admin
+                // action. The only path that clears the flag is the customer
+                // deleting their own account (Customer::deleteAccount()), and
+                // an editable toggle implied the panel could undo that. The
+                // state is still reported read-only, under the Name column and
+                // on the Account section of the view page.
 
                 TextColumn::make('created_at')
                     ->dateTime()

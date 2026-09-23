@@ -564,6 +564,23 @@ class CustomerAccountDeletionTest extends TestCase
             ->assertCanNotSeeTableRecords([$active, $inactive]);
     }
 
+    /**
+     * Deactivating a customer is not an admin action. The is_active toggle
+     * column was removed from CustomersTable: the only path that clears the
+     * flag is the customer deleting their own account, which the panel cannot
+     * undo, so an editable toggle promised something it could not deliver.
+     */
+    public function test_admins_cannot_deactivate_a_customer_from_the_table(): void
+    {
+        $customer = Customer::factory()->create(['is_active' => true]);
+        $this->actingAsAdmin();
+
+        Livewire::test(ListCustomers::class)
+            ->assertTableColumnDoesNotExist('is_active');
+
+        $this->assertTrue($customer->fresh()->is_active);
+    }
+
     public function test_no_generic_delete_force_delete_or_restore_is_offered(): void
     {
         $customer = $this->customer();

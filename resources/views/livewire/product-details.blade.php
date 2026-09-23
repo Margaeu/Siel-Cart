@@ -138,9 +138,8 @@
                             @endif
 
                             @if($selectionInStock)
-                                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    In Stock
+                                <span class="shrink-0 whitespace-nowrap text-sm sm:text-base font-semibold text-gray-900">
+                                    {{ $maxQuantity }} in Stock
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200/60 text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -201,7 +200,7 @@
                                                 <p class="font-semibold text-xs text-gray-900">{{ $variant->name }}</p>
                                             </div>
                                             <span class="text-[0.625rem] font-medium tracking-wider uppercase {{ $variant->stock_status === 'in_stock' ? 'text-emerald-600' : 'text-rose-500' }}">
-                                                {{ $variant->stock_status === 'in_stock' ? 'In Stock' : 'Out of Stock' }}
+                                                {{ $variant->stock_status === 'in_stock' ? $variant->stock_quantity.' In Stock' : 'Out of Stock' }}
                                             </span>
                                         </button>
                                     @endforeach
@@ -266,7 +265,7 @@
                         <div class="mt-8 pt-6 border-t border-gray-100 text-xs space-y-2.5 text-gray-500">
                             <div class="flex justify-between items-center">
                                 <span>SKU</span>
-                                <span class="font-mono font-medium text-gray-800">{{ $selectedVariant ? $product->variants->find($selectedVariant)?->sku : $product->sku }}</span>
+                                <span class="font-medium text-gray-800">{{ $selectedVariant ? $product->variants->find($selectedVariant)?->sku : $product->sku }}</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span>Category</span>
