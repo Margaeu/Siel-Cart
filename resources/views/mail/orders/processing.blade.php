@@ -7,7 +7,7 @@
     <td style="padding:0 0 16px 0;">
       <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
       <p style="margin:0;">
-        Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been successfully collected.
+        Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been confirmed and is now being processed.
       </p>
     </td>
   </tr>
@@ -26,7 +26,7 @@
         </tr>
         <tr>
           <td style="vertical-align:top; color:#000000;">Order Status:</td>
-          <td style="vertical-align:top;">Collected</td>
+          <td style="vertical-align:top;">Processing</td>
         </tr>
       </table>
     </td>
@@ -82,47 +82,9 @@
   </tr>
 
   <tr>
-    <td style="padding-bottom:16px;">
-      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">COLLECTION DETAILS</p>
-      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
-        <tr>
-          <td style="width:35%; vertical-align:top; color:#000000;">Claimed By:</td>
-          <td style="vertical-align:top;">{{ $order->claimant_name }}</td>
-        </tr>
-        <tr>
-          <td style="vertical-align:top; color:#000000;">Contact Number:</td>
-          <td style="vertical-align:top;">{{ $order->claimant_phone }}</td>
-        </tr>
-        <tr>
-          <td style="vertical-align:top; color:#000000;">Date Collected:</td>
-          <td style="vertical-align:top;">{{ $order->completed_at ? $order->completed_at->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A') }}</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
-  <tr>
-    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
-  </tr>
-
-  <tr>
-    <td style="padding-bottom:16px;">
-      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">RETURNS, REFUNDS, AND EXCHANGES</p>
-      <p style="margin:0 0 14px 0;">
-        For return, refund, or exchange concerns, you may contact UBAP via email or visit the UBAP Office directly. Any refund or exchange processed by UBAP will be reflected in your order details.
-      </p>
-    </td>
-  </tr>
-
-  <tr>
-    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
-  </tr>
-
-  <tr>
     <td style="padding-bottom:24px;">
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
-      <p style="margin:0 0 10px 0;">Thank you for choosing Siel Cart! We hope you enjoy your CLSU merchandise.</p>
-      <p style="margin:0 0 20px 0;">If you have any concerns about your order, please contact the UBAP Office for assistance.</p>
+      <p style="margin:0 0 10px 0;">We will notify you once your order is ready for pickup. Please wait for the pickup-ready notification before visiting the pickup location.</p>
       <p style="margin:0 0 4px 0;">Cheers,</p>
       <p style="margin:0;">UBAP Team</p>
     </td>

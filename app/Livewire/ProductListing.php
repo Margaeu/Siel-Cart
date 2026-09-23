@@ -98,12 +98,17 @@ class ProductListing extends Component
             ->with(['category', 'cardImage', 'variants'])
             ->withReviewAggregates();
 
-        // Search
+        // Search. A variable product has no SKU of its own -- its SKUs live on
+        // the variants -- so match an active variant's SKU too. Inactive
+        // variants are hidden from the storefront and must not be findable.
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('description', 'like', '%' . $this->search . '%')
-                    ->orWhere('sku', 'like', '%' . $this->search . '%');
+                    ->orWhere('sku', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('variants', fn (Builder $variants) => $variants
+                        ->active()
+                        ->where('sku', 'like', '%' . $this->search . '%'));
             });
         }
 

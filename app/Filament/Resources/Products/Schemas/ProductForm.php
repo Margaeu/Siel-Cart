@@ -14,11 +14,15 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Rules\UniqueSku;
+use App\Support\Sku;
+use Closure;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
 
 class ProductForm
 {
@@ -41,11 +45,20 @@ class ProductForm
                                     ->schema([
                                         TextInput::make('name')
                                             ->required(),
+                                        // Inactive categories stay selectable so an inactive
+                                        // product can be filed under one, but an active product
+                                        // cannot (see Product::boot()). Checked here too so the
+                                        // message lands under this field.
                                         Select::make('category_id')
                                             ->relationship('category', 'name')
                                             ->preload()
                                             ->searchable()
                                             ->required()
+                                            ->rule(static fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                                if ($get('is_active') && Category::query()->whereKey($value)->where('is_active', false)->exists()) {
+                                                    $fail(Product::INACTIVE_CATEGORY_MESSAGE);
+                                                }
+                                            })
                                             ->createOptionForm([
                                                 TextInput::make('name')
                                                     ->required(),
@@ -54,10 +67,18 @@ class ProductForm
                                                     ->readOnly()
                                                     ->visibleOn('edit'),
                                             ]),
+                                        // Set once from the name at creation and never regenerated
+                                        // on rename (see Product::boot()), so editing it here is
+                                        // the only way a product's URL changes. unique() checks
+                                        // the raw table, so a soft-deleted product's slug counts.
                                         TextInput::make('slug')
                                             ->unique(ignoreRecord: true)
+                                            ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')
+                                            ->validationMessages([
+                                                'regex' => 'Use lowercase letters, numbers, and single hyphens only.',
+                                            ])
                                             ->visible(fn(string $operation) => $operation === 'edit')
-                                            ->helperText('Used in the product page address.')
+                                            ->helperText('Used in the product page address. Changing it changes the product\'s URL, and old links will stop working.')
                                             ->required(),
                                     ])->columns(2),
                                 Section::make('Product description')
@@ -76,14 +97,18 @@ class ProductForm
                                     // A toggle always holds true or false, so the required
                                     // asterisk is noise; the rule itself is kept.
                                     ->schema([
+                                        // Explicit defaults: a toggle with none starts off, so
+                                        // every new product used to be saved inactive.
                                         Toggle::make('is_active')
                                             ->label('Active')
                                             ->helperText('Inactive products are hidden from the storefront.')
+                                            ->default(true)
                                             ->required()
                                             ->markAsRequired(false),
                                         Toggle::make('is_featured')
                                             ->label('Featured')
                                             ->helperText('Featured products are shown on the home page.')
+                                            ->default(false)
                                             ->required()
                                             ->markAsRequired(false),
                                     ])
@@ -96,9 +121,13 @@ class ProductForm
                                 Section::make('Pricing')
                                     ->description('Set the identifier and selling price for this product.')
                                     ->schema([
+                                        // Unique across products *and* variants, ignoring case
+                                        // and surrounding spaces. This tab is hidden for variant
+                                        // products, and hidden fields are neither validated nor
+                                        // saved, so these rules bind simple products only.
                                         TextInput::make('sku')
                                             ->label('SKU')
-                                            ->unique(ignoreRecord: true)
+                                            ->rule(fn (?Product $record) => new UniqueSku(ignoreProductId: $record?->id))
                                             ->helperText('Stock keeping unit - unique identifier')
                                             ->required(),
                                         TextInput::make('price')
@@ -196,12 +225,14 @@ class ProductForm
                                                 // Remove only what left the field, so images that survived the
                                                 // edit keep their existing R2 object and row. Scoped to
                                                 // `generalImages` so variant photos are never touched here.
+                                                // Only the row is deleted here: ProductImage's deleted hook
+                                                // removes the R2 object after the save commits, so a failed
+                                                // save cannot leave a row pointing at a deleted file.
                                                 foreach ($record->generalImages()->get() as $existingImage) {
                                                     if (in_array($existingImage->image_path, $paths, true)) {
                                                         continue;
                                                     }
 
-                                                    Storage::disk('r2')->delete($existingImage->image_path);
                                                     $existingImage->delete();
                                                 }
 
@@ -228,12 +259,20 @@ class ProductForm
                                 Section::make('Variant setup')
                                     ->description('Choose whether sizes, colors, or other options have their own price and stock.')
                                     ->schema([
+                                        // Fixed after creation: converting would leave the parent's
+                                        // price, stock, and SKU (or the variants) behind with no
+                                        // defined meaning. Disabled fields are not saved, and
+                                        // Product::boot() refuses the change from anywhere else.
                                         Toggle::make('has_variants')
                                             ->label('Has variants')
                                             ->live()
+                                            ->default(false)
+                                            ->disabledOn('edit')
                                             ->required()
                                             ->markAsRequired(false)
-                                            ->helperText('When on, this product is priced and stocked per variant, and the Pricing & Inventory tab is hidden.'),
+                                            ->helperText(fn (string $operation): string => $operation === 'edit'
+                                                ? 'Product type is fixed after creation. Create a new product to change it.'
+                                                : 'When on, this product is priced and stocked per variant, and the Pricing & Inventory tab is hidden. This cannot be changed after the product is created.'),
                                     ]),
                                 Section::make('Product Variants')
                                     ->description('Enter stock for each size or color. The product is in stock when at least one active variant has stock.')
@@ -250,9 +289,37 @@ class ProductForm
                                                     ->label('Variant Name')
                                                     ->placeholder('e.g., Red - Large')
                                                     ->columnSpan(2),
+                                                // Two checks: against every saved product and variant
+                                                // (UniqueSku), and against the other rows in this same
+                                                // submission, which aren't in the database yet. distinct()
+                                                // would only catch exact matches, so the rows are compared
+                                                // by Sku::comparisonKey() -- "ABC-001", "abc-001" and
+                                                // " ABC-001 " are one SKU. A row always matches itself
+                                                // once; only a second occurrence is a duplicate.
                                                 TextInput::make('sku')
                                                     ->label('SKU')
-                                                    ->unique(ignoreRecord: true)
+                                                    ->rule(fn (?ProductVariant $record) => new UniqueSku(ignoreVariantId: $record?->id))
+                                                    ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                                        $key = Sku::comparisonKey(is_scalar($value) ? (string) $value : null);
+
+                                                        if ($key === null) {
+                                                            return;
+                                                        }
+
+                                                        // Relative to this row: up out of the row, then
+                                                        // the repeater. An absolute '/variants' would
+                                                        // miss the form's `data.` prefix and read null.
+                                                        $rows = $get('../../variants');
+
+                                                        $occurrences = collect(is_array($rows) ? $rows : [])
+                                                            ->filter(fn ($row): bool => is_array($row)
+                                                                && Sku::comparisonKey(is_scalar($row['sku'] ?? null) ? (string) $row['sku'] : null) === $key)
+                                                            ->count();
+
+                                                        if ($occurrences > 1) {
+                                                            $fail('This SKU is repeated in another variant row.');
+                                                        }
+                                                    })
                                                     ->helperText('Stock keeping unit - unique identifier')
                                                     ->required(),
                                                 TextInput::make('price')
@@ -329,12 +396,12 @@ class ProductForm
                                                             ->values()
                                                             ->all();
 
+                                                        // Row only; the R2 object goes after commit (see above).
                                                         foreach ($record->images()->get() as $existingImage) {
                                                             if (in_array($existingImage->image_path, $paths, true)) {
                                                                 continue;
                                                             }
 
-                                                            Storage::disk('r2')->delete($existingImage->image_path);
                                                             $existingImage->delete();
                                                         }
 
@@ -358,6 +425,16 @@ class ProductForm
                                             ])
                                             ->columns(3)
                                             ->defaultItems(0)
+                                            // A variant product is priced and stocked only through its
+                                            // variants, so saving one with none leaves nothing to sell.
+                                            // The section is hidden for simple products, and hidden
+                                            // fields are not validated, so this never blocks them.
+                                            ->required()
+                                            ->minItems(1)
+                                            ->validationMessages([
+                                                'required' => 'Add at least one variant, or turn off "Has variants".',
+                                                'min' => 'Add at least one variant, or turn off "Has variants".',
+                                            ])
                                             ->collapsible()
                                             // Without this the drag handle reorders the rows on screen
                                             // and the arrangement is lost on reload, because nothing

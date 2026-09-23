@@ -9,9 +9,6 @@ use App\Filament\Resources\Products\Pages\ViewProduct;
 use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\Schemas\ProductInfolist;
 use App\Filament\Resources\Products\Tables\ProductsTable;
-use App\Filament\Resources\Products\Widgets\ActiveProductsStat;
-use App\Filament\Resources\Products\Widgets\InactiveProductsStat;
-use App\Filament\Resources\Products\Widgets\ProductStatsOverview;
 use App\Models\Product;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -51,15 +48,6 @@ class ProductResource extends Resource
     {
         return [
             //
-        ];
-    }
-
-    public static function getWidgets(): array
-    {
-        return [
-            ProductStatsOverview::class,
-            ActiveProductsStat::class,
-            InactiveProductsStat::class,
         ];
     }
 

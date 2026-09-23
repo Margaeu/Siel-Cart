@@ -61,12 +61,22 @@ class ProductInfolist
                         ->columnSpanFull(),
                 ]),
 
+            // A variant product often has no shared photos, only per-variant
+            // ones. Rather than report "No images uploaded" for a product the
+            // storefront does show a picture for, fall back to cardImage — the
+            // first active variant's image, the same one the product card and
+            // the admin list thumbnail use — and say where it came from.
             Section::make('Product images')
-                ->description('Shared images shown for every variant. The first image is the primary image.')
+                ->description(fn (Product $record): string => $record->generalImages->isEmpty() && $record->cardImage
+                    ? 'No shared images uploaded. Showing the first variant image, which the storefront uses as this product\'s picture.'
+                    : 'Shared images shown for every variant. The first image is the primary image.')
                 ->columnSpanFull()
                 ->schema([
                     ImageEntry::make('generalImages.image_path')
                         ->hiddenLabel()
+                        ->state(fn (Product $record): array => $record->generalImages->isNotEmpty()
+                            ? $record->generalImages->pluck('image_path')->all()
+                            : array_filter([$record->cardImage?->image_path]))
                         ->disk('r2')
                         ->imageHeight(180)
                         ->placeholder('No images uploaded'),

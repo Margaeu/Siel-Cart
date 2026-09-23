@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
@@ -88,4 +89,49 @@ class ProductImage extends Model
     {
         return Storage::disk('r2')->url($this->image_path);
 }
+
+    /**
+     * Remove image objects from R2 once the surrounding transaction commits.
+     *
+     * The single place product-image files are deleted: the form's gallery
+     * and variant savers, variant removal, and Product::forceDelete() all end
+     * here. Deleting only after commit means a rolled-back save never leaves
+     * a row pointing at a missing file -- Laravel discards the callback on
+     * rollback. Uploads keep their original filenames, so two rows can share
+     * a path; an object is left alone while any row still references it.
+     *
+     * Outside a transaction the callback runs immediately.
+     *
+     * @param  iterable<string|null>  $paths
+     */
+    public static function deleteFilesAfterCommit(iterable $paths): void
+    {
+        $paths = collect($paths)->filter(fn ($path) => filled($path))->unique()->values();
+
+        if ($paths->isEmpty()) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($paths) {
+            $stillReferenced = static::query()
+                ->whereIn('image_path', $paths)
+                ->pluck('image_path')
+                ->all();
+
+            $orphaned = $paths->diff($stillReferenced)->values()->all();
+
+            if ($orphaned !== []) {
+                Storage::disk('r2')->delete($orphaned);
+            }
+        });
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleted(function (ProductImage $image) {
+            static::deleteFilesAfterCommit([$image->image_path]);
+        });
+    }
 }

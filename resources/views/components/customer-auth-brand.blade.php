@@ -2,8 +2,8 @@
     // Same source of truth as the storefront header
     // (components/layouts/front-end-layout.blade.php) - keeps the login and
     // register pages showing the same name/tagline as the rest of the site.
-    $siteName = \App\Models\Setting::get('site_name') ?: config('app.name', 'Siel Cart');
-    $siteTagline = \App\Models\Setting::get('tagline') ?: 'The CLSU Campus Store';
+    $siteName = config('app.name', 'Siel Cart');
+    $siteTagline = 'The CLSU Campus Store';
 @endphp
 
 <a

@@ -29,6 +29,13 @@ class UserForm
                             ->label('Email address')
                             ->email()
                             ->required()
+                            // `users.email` has a unique index, but without a form rule a
+                            // duplicate only surfaced as a raw SQL integrity error on save.
+                            // ignoreRecord lets an edit keep the account's own address.
+                            ->unique(ignoreRecord: true)
+                            ->validationMessages([
+                                'unique' => 'An administrator account with this email address already exists.',
+                            ])
                             ->columnSpanFull(),
                     ]),
 

@@ -114,10 +114,9 @@ Route::post('/api/chat', [
 */
 
 Route::middleware('auth:customer')->group(function () {
-    
-Route::post('/account/deactivate', [ProfileController::class, 'deactivateAccount'])
-        ->name('account.deactivate');
 
+    // Permanent deletion only. The old /account/deactivate route (30-day
+    // self-reactivation) is gone; see Customer::deleteAccount().
     Route::post('/account/delete', [ProfileController::class, 'deleteAccount'])
         ->name('account.delete');
 

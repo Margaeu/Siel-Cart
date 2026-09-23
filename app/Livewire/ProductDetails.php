@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Report;
 use App\Models\Review;
 use App\Services\CartService;
+use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -16,7 +17,6 @@ class ProductDetails extends Component
 
     public Product $product;
     public $selectedVariant = null;
-    public $quantity = 1;
     public $selectedImage = null;
     public int $reviewRating = 5;
     public string $reviewTitle = '';
@@ -49,7 +49,11 @@ class ProductDetails extends Component
     
     public function mount($slug)
     {
+        // active(): an inactive product is unpublished and must 404 like a
+        // soft-deleted one (which the default scope already hides). Admins
+        // inspect both from the panel, not through this page.
         $this->product = Product::where('slug', $slug)
+            ->active()
             ->with([
                 'category',
                 'generalImages',
@@ -71,7 +75,7 @@ class ProductDetails extends Component
             $initialVariant = $activeVariants->first(fn ($variant) => $variant->stock_quantity > 0)
                 ?? $activeVariants->first();
             if ($initialVariant) {
-                $this->selectVariant($initialVariant->id);
+                $this->selectInitialVariant($initialVariant->id);
             }
         }
 
@@ -89,7 +93,18 @@ class ProductDetails extends Component
         ]);
     }
 
-    public function selectVariant($variantId)
+    /**
+     * Pick the variant the page opens on.
+     *
+     * Private on purpose: switching variant is no longer a server action.
+     * It used to be a wire:click, and every tap paid for a full round trip
+     * that re-fetched the product, reloaded its reviews and images, re-ran
+     * the related-products query and re-rendered four nested product cards
+     * -- about a second to move one highlight. The picker is Alpine now
+     * (see product-details.blade.php); this only seeds the first render, and
+     * the client's choice is re-validated in addToCart().
+     */
+    private function selectInitialVariant($variantId): void
     {
         $variant = $this->product->variants->where('is_active', true)->find($variantId);
         if (! $this->product->has_variants || ! $variant) {
@@ -98,7 +113,7 @@ class ProductDetails extends Component
 
         $this->selectedVariant = $variant->id;
 
-        $variantImages = $this->product->variants->find($variantId)?->images ?? collect();
+        $variantImages = $variant->images;
 
         if ($variantImages->isNotEmpty()) {
             $this->selectedImage = $variantImages->first()->image_path;
@@ -109,6 +124,33 @@ class ProductDetails extends Component
         if (! $this->product->generalImages->contains('image_path', $this->selectedImage)) {
             $this->selectedImage = $this->defaultSharedImagePath();
         }
+    }
+
+    /**
+     * Resolve the variant id the browser reports as selected.
+     *
+     * Selection lives in Alpine, so the id is client input and arrives on the
+     * one request that needs it. It is matched against this product's own
+     * active variants before it goes any further: a stale or forged id must
+     * never reach CartService, which would price the line from a variant of
+     * some other product and check it against that variant's stock.
+     */
+    private function resolveVariantId($variantId): ?int
+    {
+        // A simple product is never sold by variant -- CartService prices it
+        // from the product itself, so discard whatever the browser sent.
+        if (! $this->product->has_variants) {
+            return null;
+        }
+
+        // Fall back to the server's own seeded choice when the browser sends
+        // nothing, so a customer with JS disabled still adds the variant the
+        // page rendered as selected.
+        $variantId = filter_var($variantId, FILTER_VALIDATE_INT) ?: $this->selectedVariant;
+
+        return $this->product->variants
+            ->first(fn ($variant) => $variant->id === (int) $variantId && $variant->is_active)
+            ?->id;
     }
 
     private function defaultSharedImagePath(): ?string
@@ -128,25 +170,29 @@ class ProductDetails extends Component
             ->values();
     }
 
-    public function selectImage($imagePath)
+    /**
+     * Quantity is owned by Alpine in the view and handed over only here.
+     * The +/- buttons used to be wire:click calls, so every tap was a full
+     * round trip that re-hydrated the product with its reviews and
+     * re-rendered the related product cards -- about a second per tap.
+     *
+     * Renderless because nothing on the page changes when an item is added:
+     * the toast and the cart icon react to the dispatched events. Rendering
+     * here repeated that same whole-page work before the toast could show.
+     */
+    #[Renderless]
+    public function addToCart($quantity = 1, $variantId = null)
     {
-        $this->selectedImage = $imagePath;
-    }
+        $cartService = app(CartService::class);
 
-    public function incrementQuantity()
-    {
-        $this->quantity++;
-    }
+        // Client input: never trust it to be a positive integer.
+        // CartService still rejects anything over the available stock.
+        $quantity = max(1, (int) $quantity);
 
-    public function decrementQuantity()
-    {
-        if ($this->quantity > 1) {
-            $this->quantity--;
-        }
-    }
+        // Same for the variant: the picker is client-side, so this is the one
+        // request that carries the choice and the only place it is checked.
+        $variantId = $this->resolveVariantId($variantId);
 
-    public function addToCart(CartService $cartService)
-    {
         if (! auth('customer')->check()) {
             session()->put('url.intended', route('products.show', $this->product->slug));
             session()->flash('status', 'Please log in to add products to your cart.');
@@ -154,16 +200,20 @@ class ProductDetails extends Component
             return $this->redirect(route('login'));
         }
 
-        if ($this->product->has_variants && ! $this->selectedVariant) {
+        if ($this->product->has_variants && ! $variantId) {
             $this->dispatch('cart-error', message: 'Please select a variant.');
 
             return;
         }
 
+        // Keep the server's copy in step, so a later full render (a review
+        // submission, say) reopens on the variant the customer is looking at.
+        $this->selectedVariant = $variantId;
+
         $result = $cartService->addItem(
             $this->product->id,
-            $this->selectedVariant,
-            (int) $this->quantity
+            $variantId,
+            $quantity
         );
 
         if (! $result['success']) {
@@ -384,9 +434,38 @@ class ProductDetails extends Component
             ->limit(4)
             ->get();
 
+        // Upper bound for the client-side quantity stepper. Only a UX cap --
+        // CartService re-checks stock (including what is already in the cart).
+        $maxQuantity = (int) ($this->product->has_variants
+            ? $this->product->variants->firstWhere('id', $this->selectedVariant)?->stock_quantity
+            : $this->product->stock_quantity);
+
+        // Everything the variant/image picker can change, emitted once with the
+        // page so Alpine can drive it without asking the server again. Variant
+        // keys are cast to string so json_encode always yields an object,
+        // never a positional array.
+        $galleryImages = $this->galleryImages();
+
+        $variantOptions = $this->product->variants
+            ->where('is_active', true)
+            ->mapWithKeys(fn ($variant) => [(string) $variant->id => [
+                'price' => '₱'.number_format((float) $variant->price, 2),
+                'stock' => (int) $variant->stock_quantity,
+                'sku' => $variant->sku,
+                'image' => $variant->images->first()?->image_path,
+            ]])
+            ->all();
+
         return view('livewire.product-details', [
             'relatedProducts' => $relatedProducts,
-            'galleryImages' => $this->galleryImages(),
+            'galleryImages' => $galleryImages,
+            'variantOptions' => $variantOptions,
+            'imageUrls' => $galleryImages->mapWithKeys(fn ($image) => [$image->image_path => $image->url])->all(),
+            // The shared (non-variant) photos, so the picker can tell whether
+            // the photo on screen still applies after a switch.
+            'sharedImagePaths' => $this->product->generalImages->pluck('image_path')->values()->all(),
+            'defaultImagePath' => $this->defaultSharedImagePath(),
+            'maxQuantity' => max(1, $maxQuantity),
             'selectionInStock' => $this->product->is_active && ($this->product->has_variants
                 ? (bool) $this->product->variants->contains(fn ($variant) =>
                     $variant->id == $this->selectedVariant && $variant->is_active && $variant->stock_quantity > 0)

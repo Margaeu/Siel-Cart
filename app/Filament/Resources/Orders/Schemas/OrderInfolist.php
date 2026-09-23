@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\Schemas;
 
+use App\Models\Customer;
 use App\Models\ReturnRefundResolution;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
@@ -38,6 +39,9 @@ class OrderInfolist
                         ->schema([
                             TextEntry::make('order_number')
                                 ->label('Order number'),
+
+                            TextEntry::make('or_number')
+                                ->label('OR Number'),
 
                             TextEntry::make('status')
                                 ->label('Order status')
@@ -96,11 +100,19 @@ class OrderInfolist
                             TextEntry::make('customer.name')
                                 ->label('Name'),
 
+                            // A deleted customer's stored email is an internal
+                            // placeholder and the phone is NULL; show neither.
                             TextEntry::make('customer.email')
-                                ->label('Email'),
+                                ->label('Email')
+                                ->state(fn ($record) => $record->customer?->trashed()
+                                    ? Customer::REMOVED_LABEL
+                                    : $record->customer?->email),
 
                             TextEntry::make('customer.phone')
                                 ->label('Phone')
+                                ->state(fn ($record) => $record->customer?->trashed()
+                                    ? Customer::REMOVED_LABEL
+                                    : $record->customer?->phone)
                                 ->placeholder('Not provided'),
                         ]),
 

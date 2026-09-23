@@ -18,6 +18,7 @@ class ReportsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->poll('10s')
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['reporter', 'reportedCustomer', 'review.product']))
             ->defaultSort('created_at', 'desc')
             ->columns([

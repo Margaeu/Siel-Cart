@@ -7,7 +7,7 @@
     <td style="padding:0 0 16px 0;">
       <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
       <p style="margin:0;">
-        Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been successfully collected.
+        Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> is ready for collection at the UBAP Office.
       </p>
     </td>
   </tr>
@@ -26,7 +26,7 @@
         </tr>
         <tr>
           <td style="vertical-align:top; color:#000000;">Order Status:</td>
-          <td style="vertical-align:top;">Collected</td>
+          <td style="vertical-align:top;">Ready for Pickup</td>
         </tr>
       </table>
     </td>
@@ -83,19 +83,23 @@
 
   <tr>
     <td style="padding-bottom:16px;">
-      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">COLLECTION DETAILS</p>
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">PICKUP DETAILS</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
         <tr>
-          <td style="width:35%; vertical-align:top; color:#000000;">Claimed By:</td>
-          <td style="vertical-align:top;">{{ $order->claimant_name }}</td>
+          <td style="width:35%; vertical-align:top; color:#000000;">Claim Number:</td>
+          <td style="vertical-align:top; color:#547F12; font-weight:bold;">{{ $order->claim_number }}</td>
         </tr>
         <tr>
-          <td style="vertical-align:top; color:#000000;">Contact Number:</td>
-          <td style="vertical-align:top;">{{ $order->claimant_phone }}</td>
+          <td style="vertical-align:top; color:#000000;">Pickup Date:</td>
+          <td style="vertical-align:top;">{{ $order->pickup_date->format('d/m/Y') }}</td>
         </tr>
         <tr>
-          <td style="vertical-align:top; color:#000000;">Date Collected:</td>
-          <td style="vertical-align:top;">{{ $order->completed_at ? $order->completed_at->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A') }}</td>
+          <td style="vertical-align:top; color:#000000;">Pickup Time:</td>
+          <td style="vertical-align:top;">{{ $order->pickup_slot }}</td>
+        </tr>
+        <tr>
+          <td style="vertical-align:top; color:#000000;">Location:</td>
+          <td style="vertical-align:top;">{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td>
         </tr>
       </table>
     </td>
@@ -106,23 +110,11 @@
   </tr>
 
   <tr>
-    <td style="padding-bottom:16px;">
-      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">RETURNS, REFUNDS, AND EXCHANGES</p>
-      <p style="margin:0 0 14px 0;">
-        For return, refund, or exchange concerns, you may contact UBAP via email or visit the UBAP Office directly. Any refund or exchange processed by UBAP will be reflected in your order details.
-      </p>
-    </td>
-  </tr>
-
-  <tr>
-    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
-  </tr>
-
-  <tr>
     <td style="padding-bottom:24px;">
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
-      <p style="margin:0 0 10px 0;">Thank you for choosing Siel Cart! We hope you enjoy your CLSU merchandise.</p>
-      <p style="margin:0 0 20px 0;">If you have any concerns about your order, please contact the UBAP Office for assistance.</p>
+      <p style="margin:0 0 10px 0;">Visit the designated pickup location during your scheduled pickup time and present your claim number to the CLSU Merchandise Office.</p>
+      <p style="margin:0 0 20px 0;">After your order has been successfully collected, you’ll receive a pickup confirmation email.</p>
+      <p style="margin:0 0 20px 0;">If you are unable to collect your order during the scheduled pickup period, please contact the CLSU Merchandise Office as soon as possible. Orders that are not collected within the designated pickup period may be cancelled according to our pickup policy.</p>
       <p style="margin:0 0 4px 0;">Cheers,</p>
       <p style="margin:0;">UBAP Team</p>
     </td>

@@ -49,9 +49,10 @@
                             @php
                                 [$dotColor, $textColor] = match ($order->status) {
                                     'completed' => ['bg-emerald-500', 'text-emerald-700'],
-                                    'ready_for_pickup' => ['bg-amber-500', 'text-amber-700'],
+                                    'ready_for_pickup' => ['bg-purple-500', 'text-purple-700'],
                                     'processing' => ['bg-blue-500', 'text-blue-700'],
                                     'cancelled' => ['bg-red-500', 'text-red-700'],
+                                    'pending' => ['bg-amber-500', 'text-amber-700'],
                                     default => ['bg-gray-400', 'text-gray-700'],
                                 };
                             @endphp

@@ -4,6 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Filament\AvatarProviders\SielAvatarProvider;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Reports\ReportResource;
+use App\Filament\Resources\Reviews\ReviewResource;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -15,6 +18,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsIconAlias;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -22,6 +26,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -122,6 +127,17 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            // Refreshes the Orders/Reviews/Reports sidebar badges when a new
+            // order, review, or report comes in. Only mounted for a signed-in
+            // admin who can see at least one of them — BODY_END also renders
+            // on the login page, where there is nothing to poll.
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => auth('web')->check()
+                    && (OrderResource::canViewAny() || ReviewResource::canViewAny() || ReportResource::canViewAny())
+                    ? Blade::render('@livewire(\App\Livewire\Admin\NavigationBadgePoller::class)')
+                    : '',
+            )
             ->plugins([
                 FilamentShieldPlugin::make()
                     ->navigationGroup('System Administration')

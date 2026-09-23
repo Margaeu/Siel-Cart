@@ -19,7 +19,7 @@ class CategoryInfolist
     {
         return $schema->components([
             Section::make('Category information')
-                ->description('Name and description of this storefront collection.')
+                ->description('Name and slug of this storefront collection.')
                 ->columnSpanFull()
                 ->columns([
                     'default' => 1,
@@ -33,11 +33,6 @@ class CategoryInfolist
                     TextEntry::make('slug')
                         ->label('Slug')
                         ->copyable(),
-
-                    TextEntry::make('description')
-                        ->label('Description')
-                        ->placeholder('No description')
-                        ->columnSpanFull(),
                 ]),
 
             Section::make('Category image')
@@ -70,7 +65,14 @@ class CategoryInfolist
 
                     TextEntry::make('products_count')
                         ->label('Products')
-                        ->state(fn (Category $record): int => $record->products()->count()),
+                        // Same format as the table's Products column: trashed
+                        // products still block deletion, so they are shown.
+                        ->state(function (Category $record): string {
+                            $live = $record->products()->count();
+                            $trashed = $record->products()->onlyTrashed()->count();
+
+                            return $trashed > 0 ? "{$live} (+{$trashed} in trash)" : (string) $live;
+                        }),
 
                     TextEntry::make('created_at')
                         ->label('Created at')

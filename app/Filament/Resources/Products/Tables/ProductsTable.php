@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -14,18 +13,26 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('variants'))
+            // Deleted products are listed too, under the Deleted tab; the tabs
+            // on ListProducts apply the deleted_at condition themselves.
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->withoutGlobalScopes([SoftDeletingScope::class])
+                ->with(['variants', 'cardImage']))
             ->columns([
-                ImageColumn::make('primaryImage.image_path')
+                // cardImage, not primaryImage: a variant product often has no
+                // shared primary photo, only per-variant ones, and primaryImage
+                // left its thumbnail blank. cardImage falls back to the first
+                // active variant's image, the same one the storefront card shows.
+                ImageColumn::make('cardImage.image_path')
                     ->label('')
                     ->disk('r2')
                     ->square(),
@@ -76,9 +83,9 @@ class ProductsTable
                 SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship('category', 'name'),
-                TernaryFilter::make('is_active')
-                    ->label('Active'),
-                TrashedFilter::make(),
+                // No is_active or Trashed filter: the All/Active/Inactive/Deleted
+                // tabs on ListProducts cover both, and a TrashedFilter's default
+                // "without deleted" would leave the Deleted tab empty.
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -86,9 +93,16 @@ class ProductsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // Same wording as the edit page: see EditProduct.
+                    DeleteBulkAction::make()
+                        ->label('Move to trash')
+                        ->modalHeading('Move selected products to trash')
+                        ->modalDescription('The products are hidden from the storefront and moved to the Deleted tab. You can restore them later.')
+                        ->modalSubmitActionLabel('Move to trash')
+                        ->successNotificationTitle('Moved to trash'),
                     ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    RestoreBulkAction::make()
+                        ->modalDescription('The products will be restored as inactive. Activate each one when it is ready to go back on the storefront.'),
                 ]),
             ]);
     }

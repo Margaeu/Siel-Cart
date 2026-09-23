@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Banners;
 use App\Filament\Resources\Banners\Pages\CreateBanner;
 use App\Filament\Resources\Banners\Pages\EditBanner;
 use App\Filament\Resources\Banners\Pages\ListBanners;
+use App\Filament\Resources\Banners\Pages\ViewBanner;
 use App\Filament\Resources\Banners\Schemas\BannerForm;
+use App\Filament\Resources\Banners\Schemas\BannerInfolist;
 use App\Filament\Resources\Banners\Tables\BannersTable;
 use App\Models\Banner;
 use BackedEnum;
@@ -20,6 +22,7 @@ class BannerResource extends Resource
     protected static ?string $model = Banner::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
+
     protected static string|UnitEnum|null $navigationGroup = 'Content Management';
 
     protected static ?int $navigationSort = 20;
@@ -31,6 +34,11 @@ class BannerResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return BannerForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return BannerInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -50,6 +58,7 @@ class BannerResource extends Resource
         return [
             'index' => ListBanners::route('/'),
             'create' => CreateBanner::route('/create'),
+            'view' => ViewBanner::route('/{record}'),
             'edit' => EditBanner::route('/{record}/edit'),
         ];
     }

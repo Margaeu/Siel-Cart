@@ -2,20 +2,34 @@
 
 namespace App\Models;
 
+use App\Support\Sku;
 use Closure;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 
 class Product extends Model
 {
-    use SoftDeletes, HasFactory, LogsActivity; 
+    // The trait's forceDelete() is aliased rather than reached via parent::.
+    // A method declared here overrides the trait's, so parent::forceDelete()
+    // would resolve to Model::forceDelete() -- which only calls delete() and
+    // would *soft*-delete instead. See forceDelete() below.
+    use SoftDeletes {
+        forceDelete as protected softDeletesForceDelete;
+    }
+    use HasFactory, LogsActivity;
+
+    public const INACTIVE_CATEGORY_MESSAGE = 'This category is inactive. Choose an active category, or make the product inactive.';
+
+    public const TYPE_LOCKED_MESSAGE ='A product cannot be switched between simple and variant after it is created. Create a new product instead.';
 
     protected $fillable = [
         'category_id',
@@ -299,25 +313,54 @@ class Product extends Model
 
     public function getDisplayPriceAttribute(): ?float
     {
-    $price = $this->has_variants
-        ? ($this->relationLoaded('variants')
-            ? $this->variants->where('is_active', true)->min('price')
-            : $this->variants()->active()->min('price'))
-        : $this->price;
+        $price = $this->has_variants
+            ? ($this->relationLoaded('variants')
+                ? $this->variants->where('is_active', true)->min('price')
+                : $this->variants()->active()->min('price'))
+            : $this->price;
 
-    return $price === null ? null : (float) $price;
+        return $price === null ? null : (float) $price;
     }
 
     public function getDisplayPriceLabelAttribute(): string
     {
-        $price = $this->display_price;
+        if (! $this->has_variants) {
+            return $this->price === null
+                ? 'Unavailable'
+                : '₱'.number_format((float) $this->price, 2);
+        }
 
-        if ($price === null) {
+        if ($this->relationLoaded('variants')) {
+            $activePrices = $this->variants
+                ->where('is_active', true)
+                ->pluck('price');
+
+            $minimumPrice = $activePrices->min();
+            $maximumPrice = $activePrices->max();
+        } else {
+            $priceRange = $this->variants()
+                ->active()
+                ->reorder()
+                ->selectRaw('MIN(price) as minimum_price, MAX(price) as maximum_price')
+                ->first();
+
+            $minimumPrice = $priceRange?->minimum_price;
+            $maximumPrice = $priceRange?->maximum_price;
+        }
+
+        if ($minimumPrice === null || $maximumPrice === null) {
             return 'Unavailable';
         }
 
-        return ($this->has_variants ? 'From ' : '')
-            . '₱' . number_format($price, 2);
+        $minimumPrice = (float) $minimumPrice;
+        $maximumPrice = (float) $maximumPrice;
+
+        if ($minimumPrice === $maximumPrice) {
+            return '₱'.number_format($minimumPrice, 2);
+        }
+
+        return '₱'.number_format($minimumPrice, 2)
+            .'–₱'.number_format($maximumPrice, 2);
     }
 
     /**
@@ -390,9 +433,81 @@ class Product extends Model
         ]);
     }
 
+    /**
+     * A storefront page view is not a modification of the product. A plain
+     * increment() also writes updated_at, which made the admin "Last
+     * updated" track visitors instead of edits. Quiet as well: views_count is
+     * not in the activity-log allowlist, so there is nothing to record.
+     */
     public function incrementViews()
     {
-        $this->increment('views_count');
+        static::withoutTimestamps(fn () => $this->incrementQuietly('views_count'));
+    }
+
+    /**
+     * Permanently delete the product together with its variants and images,
+     * and remove the image objects from R2 once the delete has committed.
+     *
+     * The work lives here rather than in a forceDeleting hook because
+     * forceDeleteQuietly() runs this same method inside withoutEvents(), where
+     * no hook would fire. On that path model and activity events are
+     * suppressed on purpose, but the media still gets cleaned up: the paths
+     * are captured up front and scheduled explicitly, not through events.
+     *
+     * The database would cascade the child rows by itself, but a cascade
+     * fires no Eloquent events, so the variant and image deletes would leave
+     * no activity-log rows and their R2 objects would be orphaned. Order
+     * items are left to their nullOnDelete foreign keys: the lines survive
+     * with their snapshots and lose only the link to the live product.
+     */
+    public function forceDelete()
+    {
+        return DB::transaction(function () {
+            $imagePaths = ProductImage::query()
+                ->where('product_id', $this->getKey())
+                ->pluck('image_path');
+
+            ProductImage::query()
+                ->where('product_id', $this->getKey())
+                ->get()
+                ->each
+                ->delete();
+
+            $this->variants()->get()->each->delete();
+
+            $deleted = $this->softDeletesForceDelete();
+
+            ProductImage::deleteFilesAfterCommit($imagePaths);
+
+            return $deleted;
+        });
+    }
+
+    /**
+     * The first free slug among "base", "base-2", "base-3", ... Trashed rows
+     * count: the unique index covers them, and a restored product must get
+     * its own URL back.
+     */
+    protected static function uniqueSlug(string $base): string
+    {
+        $taken = static::withTrashed()
+            ->where(fn (Builder $query) => $query
+                ->where('slug', $base)
+                ->orWhere('slug', 'like', $base.'-%'))
+            ->pluck('slug')
+            ->flip();
+
+        if (! $taken->has($base)) {
+            return $base;
+        }
+
+        $suffix = 2;
+
+        while ($taken->has("{$base}-{$suffix}")) {
+            $suffix++;
+        }
+
+        return "{$base}-{$suffix}";
     }
 
     // Events
@@ -400,21 +515,67 @@ class Product extends Model
     {
         parent::boot();
 
-        static::creating(function ($product) {
-            if (empty($product->slug)) {
-                $product->slug = Str::slug($product->name);
+        // The slug is set once, at creation, and never follows later renames:
+        // it is the product's public URL, and regenerating it on every name
+        // change broke links that customers and pages had already shared. An
+        // admin can still change it deliberately from the edit form.
+        static::creating(function (Product $product) {
+            if (blank($product->slug)) {
+                $product->slug = static::uniqueSlug(Str::slug((string) $product->name) ?: 'product');
             }
-            /*
-            if (empty($product->sku)) {
-                $product->sku = 'SKU-' . strtoupper(Str::random(8));
-            }
-            */
         });
 
-        static::updating(function ($product) {
-            if ($product->isDirty('name') && !$product->isDirty('slug')) {
-                $product->slug = Str::slug($product->name);
+        // Stored trimmed but in the case the admin typed; comparisons ignore
+        // case separately (see App\Support\Sku). A variable product has no
+        // SKU of its own, so a blank one is stored as NULL, not ''.
+        static::saving(function (Product $product) {
+            $product->sku = Sku::sanitizeForStorage($product->sku, blankToNull: true);
+        });
+
+        // Converting a product between simple and variant would need
+        // decisions nobody has made -- what happens to the parent price, stock,
+        // and SKU, and to existing variants -- so the type is fixed at
+        // creation. The form disables the toggle on edit; this stops seeders,
+        // tinker, or a tampered request from switching it anyway.
+        static::updating(function (Product $product) {
+            if ($product->isDirty('has_variants')) {
+                throw ValidationException::withMessages([
+                    'has_variants' => self::TYPE_LOCKED_MESSAGE,
+                ]);
             }
+        });
+
+        // Trashing keeps is_active, so a product that was live when it went to
+        // the trash would go straight back onto the storefront the moment it
+        // was restored -- possibly with a stale price or stock count nobody
+        // re-checked. Restoring always lands it inactive; the admin publishes
+        // it again deliberately. A hook rather than an action callback so the
+        // edit-page RestoreAction, the RestoreBulkAction, and any tinker or
+        // seeder restore() all behave the same. restore() saves the model
+        // after this fires, so the change is written in the same update.
+        // The product half of Category::deactivationBlockedReason(): an
+        // inactive category holds no active products, so a product cannot be
+        // created active in one, moved into one while active, or activated
+        // inside one. Only checked when one of those columns changes, so an
+        // unrelated edit to a product never trips over its category.
+        static::saving(function (Product $product) {
+            if (! $product->is_active) {
+                return;
+            }
+
+            if ($product->exists && ! $product->isDirty(['is_active', 'category_id'])) {
+                return;
+            }
+
+            if (Category::query()->whereKey($product->category_id)->where('is_active', false)->exists()) {
+                throw ValidationException::withMessages([
+                    'category_id' => self::INACTIVE_CATEGORY_MESSAGE,
+                ]);
+            }
+        });
+
+        static::restoring(function (Product $product) {
+            $product->is_active = false;
         });
     }
 }

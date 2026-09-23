@@ -8,7 +8,12 @@
     $itemCount = $cart ? $cart->items->sum('quantity') : 0;
 @endphp
 
-<div class="bg-gray-50 min-h-screen">
+{{--
+    pendingSaves counts rows whose quantity changed on screen but is not saved
+    yet (see the stepper below). Checkout waits for it to reach zero, so
+    leaving the page cannot drop a quantity change that is still debouncing.
+--}}
+<div class="bg-gray-50 min-h-screen" x-data="{ pendingSaves: 0 }">
     <div class="mx-auto max-w-7xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 lg:px-8">
 
         {{-- Breadcrumb --}}
@@ -26,11 +31,6 @@
                 <h1 class="text-2xl font-extrabold tracking-[-0.02em] text-gray-900 sm:text-3xl">
                     Shopping Cart
                 </h1>
-                @if($itemCount > 0)
-                    <span class="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-gray-500">
-                        {{ $itemCount }} {{ Str::plural('item', $itemCount) }}
-                    </span>
-                @endif
             </div>
 
             {{-- Same gold-into-hairline rule as the catalog header. --}}
@@ -242,40 +242,117 @@
                                             @endif
                                         </div>
 
-                                        <div class="flex items-center justify-between sm:flex-col sm:items-end sm:justify-between gap-3 shrink-0">
+                                        {{--
+                                            The stepper is driven by Alpine, not wire:click. Each
+                                            tap used to be a full round trip that re-rendered the
+                                            cart before the number moved, so it lagged about a
+                                            second per tap. Now the number and the row total
+                                            change on the spot and the save follows: taps are
+                                            debounced into one updateQuantity() call, and typing
+                                            is saved on blur/Enter.
+
+                                            The server stays the authority. updateQuantity()
+                                            returns the quantity the cart really holds, and once
+                                            a save settles the stepper snaps to it -- so a
+                                            quantity CartService rejects reverts to what is
+                                            really in the cart, with $quantityError explaining.
+                                            It snaps to that return value, not to a re-rendered
+                                            data-qty: Livewire resolves the call before it morphs
+                                            the new HTML in, so data-qty would still be the old
+                                            number and a 1 -> 2 save would snap back to 1.
+                                        --}}
+                                        <div class="flex items-center justify-between sm:flex-col sm:items-end sm:justify-between gap-3 shrink-0"
+                                             data-max="{{ $availableStock }}"
+                                             x-data="{
+                                                 qty: {{ $item->quantity }},
+                                                 saved: {{ $item->quantity }},
+                                                 price: @js($item->price !== null ? (float) $item->price : null),
+                                                 locked: @js($isUnavailable && ! $isOverStock),
+                                                 timer: null,
+                                                 saving: false,
+                                                 again: false,
+                                                 queued: false,
+                                                 get max() { return Math.max(1, parseInt(this.$root.dataset.max, 10) || 0); },
+                                                 get current() { return parseInt(this.qty, 10) || 1; },
+                                                 clamp(n) { return Math.min(Math.max(1, n), this.max); },
+                                                 step(by) {
+                                                     if (this.locked) return;
+                                                     // For an over-stock row, one press drops straight to
+                                                     // what is actually left rather than stepping down one
+                                                     // at a time into repeated 'only N available' errors.
+                                                     this.qty = by < 0 && this.current > this.max
+                                                         ? this.max
+                                                         : this.clamp(this.current + by);
+                                                     this.queue(350);
+                                                 },
+                                                 typed(el) {
+                                                     const digits = el.value.replace(/\D/g, '');
+                                                     el.value = digits;
+                                                     this.qty = digits;
+                                                 },
+                                                 commit() {
+                                                     this.qty = this.clamp(this.current);
+                                                     this.queue(0);
+                                                 },
+                                                 queue(delay) {
+                                                     clearTimeout(this.timer);
+                                                     if (! this.queued) { this.queued = true; this.pendingSaves++; }
+                                                     this.timer = setTimeout(() => this.save(), delay);
+                                                 },
+                                                 async save() {
+                                                     // One request at a time per row; a change made while
+                                                     // one is in flight is sent when it returns.
+                                                     if (this.saving) { this.again = true; return; }
+                                                     if (this.current !== this.saved) {
+                                                         this.saving = true;
+                                                         // A failed request falls through to the snap-back
+                                                         // below instead of leaving checkout held forever.
+                                                         try {
+                                                             const saved = await $wire.updateQuantity({{ $item->id }}, this.current);
+                                                             if (Number.isInteger(saved)) this.saved = saved;
+                                                         } catch (e) {}
+                                                         this.saving = false;
+                                                         if (this.again) { this.again = false; return this.save(); }
+                                                     }
+                                                     this.qty = this.saved;
+                                                     this.queued = false;
+                                                     this.pendingSaves--;
+                                                 },
+                                             }">
 
                                             {{-- Quantity Stepper --}}
                                             <div class="flex items-center overflow-hidden rounded-full border border-gray-300 bg-white">
-                                                {{--
-                                                    For an over-stock row, one press drops
-                                                    straight to what is actually left rather
-                                                    than stepping down one at a time into
-                                                    repeated "only N available" errors.
-                                                --}}
                                                 <button
                                                     type="button"
-                                                    wire:click="updateQuantity({{ $item->id }}, {{ min($item->quantity - 1, $availableStock) }})"
-                                                    wire:loading.attr="disabled"
-                                                    wire:target="updateQuantity"
+                                                    @click="step(-1)"
+                                                    :disabled="locked || current <= 1"
                                                     @disabled($item->quantity <= 1 || ($isUnavailable && !$isOverStock))
                                                     class="flex size-11 items-center justify-center text-lg font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
                                                     aria-label="Decrease quantity of {{ $item->product->name }}">
                                                     &minus;
                                                 </button>
 
-                                                <span
-                                                    wire:key="cart-item-qty-{{ $item->id }}-{{ $item->quantity }}"
-                                                    class="flex h-11 min-w-10 items-center justify-center px-2 text-center text-sm font-semibold text-gray-900"
-                                                    aria-live="polite"
-                                                    aria-label="Quantity">
-                                                    {{ $item->quantity }}
-                                                </span>
+                                                {{-- type="text", not "number": a number input changes
+                                                     value on mouse-wheel scroll and shows spinner arrows. --}}
+                                                <input
+                                                    type="text"
+                                                    inputmode="numeric"
+                                                    pattern="[0-9]*"
+                                                    autocomplete="off"
+                                                    value="{{ $item->quantity }}"
+                                                    :value="qty"
+                                                    @input="typed($event.target)"
+                                                    @blur="commit()"
+                                                    @keydown.enter.prevent="$event.target.blur()"
+                                                    :readonly="locked"
+                                                    @readonly($isUnavailable && !$isOverStock)
+                                                    class="h-11 w-12 border-none bg-transparent p-0 text-center text-sm font-semibold text-gray-900 focus:ring-0 read-only:text-gray-400"
+                                                    aria-label="Quantity of {{ $item->product->name }}">
 
                                                 <button
                                                     type="button"
-                                                    wire:click="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
-                                                    wire:loading.attr="disabled"
-                                                    wire:target="updateQuantity"
+                                                    @click="step(1)"
+                                                    :disabled="locked || current >= max"
                                                     @disabled($item->quantity >= $availableStock || $isUnavailable)
                                                     class="flex size-11 items-center justify-center text-lg font-semibold text-[var(--color-primary)] transition hover:bg-[color-mix(in_srgb,var(--color-primary)_9%,white)] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
                                                     aria-label="Increase quantity of {{ $item->product->name }}">
@@ -284,10 +361,12 @@
                                             </div>
 
                                             <div class="flex items-center gap-2">
-                                                {{-- Item Subtotal --}}
+                                                {{-- Item Subtotal. Previewed from the unit price the
+                                                     server rendered (CartItem::price) so it moves with the
+                                                     stepper; the re-render after the save replaces it. --}}
                                                 <p class="font-bold text-gray-900">
                                                     @if($item->price !== null)
-                                                        ₱{{ number_format($item->subtotal, 2) }}
+                                                        <span x-text="'₱' + (price * current).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">₱{{ number_format($item->subtotal, 2) }}</span>
                                                     @else
                                                         &mdash;
                                                     @endif
@@ -340,7 +419,7 @@
                             Order Summary
                         </h2>
 
-                        <div class="space-y-3 text-sm">
+                        <div class="space-y-3 text-sm transition-opacity" :class="pendingSaves > 0 && 'opacity-50'">
 
                             <div class="flex justify-between">
 
@@ -373,7 +452,7 @@
                         </div>
 
                         {{-- Total --}}
-                        <div class="border-t border-gray-100 mt-5 pt-5 mb-5">
+                        <div class="border-t border-gray-100 mt-5 pt-5 mb-5 transition-opacity" :class="pendingSaves > 0 && 'opacity-50'">
 
                             <div class="flex justify-between items-baseline">
 
@@ -410,8 +489,11 @@
 
                                 {{-- Checkout Enabled --}}
                                 <a href="{{ route('checkout') }}"
+                                   @click="pendingSaves > 0 && $event.preventDefault()"
+                                   :aria-disabled="pendingSaves > 0"
+                                   :class="pendingSaves > 0 && 'opacity-60 cursor-wait'"
                                    class="flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--color-primary)] px-6 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)] {{ $focusRing }}">
-                                    Proceed to Checkout
+                                    <span x-text="pendingSaves > 0 ? 'Updating cart…' : 'Proceed to Checkout'">Proceed to Checkout</span>
                                 </a>
 
                             @endif
