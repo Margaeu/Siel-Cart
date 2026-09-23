@@ -48,14 +48,101 @@
 
         <!-- Product Detail Card -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-12">
-            <div class="lg:grid lg:grid-cols-12 lg:gap-12 p-6 sm:p-8 lg:p-10">
+            {{--
+                Variant and photo selection are client-side. They used to be
+                wire:click actions, and every tap cost a full round trip: the
+                component re-fetched the product, reloaded its reviews and
+                images, re-ran the related-products query and re-rendered four
+                nested product cards -- about a second to move one highlight.
+
+                Nothing in this block needs the server. Everything the choice
+                can change is emitted once, below, and Alpine does the rest;
+                the server only hears the choice at addToCart(), which
+                re-validates it against the product's own active variants.
+
+                The server's own $selectedVariant stays on whatever the page
+                opened with, which is fine: Alpine re-applies its bindings after
+                a Livewire morph, so a render triggered from elsewhere (a review
+                submission, a photo upload) redraws this block from the server's
+                stale selection and Alpine immediately puts the customer's back.
+                Everything below is bound rather than interpolated for that
+                reason -- a value written straight into the HTML would not be.
+            --}}
+            <div class="lg:grid lg:grid-cols-12 lg:gap-12 p-6 sm:p-8 lg:p-10"
+                 x-data="{
+                     variants: @js($variantOptions),
+                     imageUrls: @js($imageUrls),
+                     sharedImages: @js($sharedImagePaths),
+                     defaultImage: @js($defaultImagePath),
+                     hasVariants: @js((bool) $product->has_variants),
+                     productStock: @js((int) $product->stock_quantity),
+                     fallbackPrice: @js($product->display_price_label),
+                     fallbackSku: @js($product->sku),
+
+                     selected: @js($selectedVariant),
+                     image: @js($selectedImage),
+                     qty: 1,
+                     adding: false,
+
+                     get variant() { return this.variants[this.selected] ?? null },
+                     get stock() { return this.hasVariants ? (this.variant?.stock ?? 0) : this.productStock },
+                     get inStock() { return this.stock > 0 },
+                     get max() { return Math.max(1, this.stock) },
+                     get price() { return this.variant ? this.variant.price : this.fallbackPrice },
+                     get sku() { return this.variant ? this.variant.sku : this.fallbackSku },
+                     get imageUrl() { return this.imageUrls[this.image] ?? null },
+
+                     pick(id) {
+                         const variant = this.variants[id];
+                         if (! variant) return;
+
+                         this.selected = id;
+                         // The new variant caps the quantity differently and
+                         // the standing count may not fit under it.
+                         this.qty = 1;
+
+                         // Mirrors what selectInitialVariant() does on the
+                         // server: a variant with photos of its own shows the
+                         // first of them, otherwise whatever shared photo is
+                         // already up stays, falling back to the default.
+                         if (variant.image) {
+                             this.image = variant.image;
+                         } else if (! this.sharedImages.includes(this.image)) {
+                             this.image = this.defaultImage;
+                         }
+                     },
+                     clamp(value) {
+                         const n = parseInt(value, 10);
+                         if (Number.isNaN(n) || n < 1) return 1;
+                         return Math.min(n, this.max);
+                     },
+                     step(by) { this.qty = this.clamp(this.clamp(this.qty) + by); },
+                     typed(el) {
+                         // Digits only; an empty box is allowed while typing
+                         // and becomes 1 again on blur.
+                         const digits = el.value.replace(/\D/g, '');
+                         el.value = digits;
+                         this.qty = digits;
+                     },
+                     add() {
+                         if (this.adding) return;
+                         this.qty = this.clamp(this.qty);
+                         this.adding = true;
+                         $wire.addToCart(this.qty, this.selected).finally(() => this.adding = false);
+                     },
+                 }">
                 
                 <!-- Left Column: Gallery -->
                 <div class="lg:col-span-6 flex flex-col gap-4 mb-8 lg:mb-0">
                     <!-- Main Image Frame -->
                     <div class="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group">
                         @if($selectedImage)
+                            {{-- :src, not a Blade expression: the photo follows
+                                 the variant and the thumbnails without a round
+                                 trip. The server still renders the opening one
+                                 so there is no blank frame before Alpine boots. --}}
                             <img src="{{ \Illuminate\Support\Facades\Storage::disk('r2')->url($selectedImage) }}"
+                                 :src="imageUrl"
                                  alt="{{ $product->name }}"
                                  class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out">
                         @else
@@ -79,8 +166,10 @@
                     @if($galleryImages->count() > 1)
                         <div class="grid grid-cols-5 gap-3">
                             @foreach($galleryImages as $image)
-                                <button wire:click="selectImage('{{ $image->image_path }}')"
-                                        class="relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)] {{ $selectedImage === $image->image_path ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 scale-95' : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100' }}">
+                                <button type="button"
+                                        @click="image = @js($image->image_path)"
+                                        class="relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)]"
+                                        :class="image === @js($image->image_path) ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 scale-95' : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'">
                                     <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                                 </button>
                             @endforeach
@@ -89,69 +178,38 @@
                 </div>
 
                 <!-- Right Column: Info & Actions -->
-                {{--
-                    Quantity lives in Alpine, not on the Livewire component: the
-                    stepper used to be wire:click calls, and each tap re-rendered
-                    the whole page on the server (about a second per tap). The
-                    value only goes to the server with addToCart().
-
-                    wire:key on the selection resets the stepper to 1 and picks up
-                    the new stock cap when the customer switches variant, since
-                    Livewire's morph would otherwise keep the old Alpine state.
-                --}}
-                <div class="lg:col-span-6 flex flex-col justify-between"
-                     wire:key="purchase-{{ $selectedVariant ?? 'simple' }}"
-                     x-data="{
-                         qty: 1,
-                         max: {{ $maxQuantity }},
-                         adding: false,
-                         clamp(value) {
-                             const n = parseInt(value, 10);
-                             if (Number.isNaN(n) || n < 1) return 1;
-                             return Math.min(n, this.max);
-                         },
-                         step(by) { this.qty = this.clamp(this.clamp(this.qty) + by); },
-                         typed(el) {
-                             // Digits only; an empty box is allowed while typing
-                             // and becomes 1 again on blur.
-                             const digits = el.value.replace(/\D/g, '');
-                             el.value = digits;
-                             this.qty = digits;
-                         },
-                         add() {
-                             if (this.adding) return;
-                             this.qty = this.clamp(this.qty);
-                             this.adding = true;
-                             $wire.addToCart(this.qty).finally(() => this.adding = false);
-                         },
-                     }">
+                <div class="lg:col-span-6 flex flex-col justify-between">
                     <div>
-                        <!-- Header & Badges -->
+                        @if($product->brand)
+                            <a href="{{ route('products.index', ['brand' => $product->brand->slug]) }}"
+                               class="inline-block mb-3 text-xs font-bold tracking-wider uppercase text-[var(--color-primary)] hover:underline">
+                                {{ $product->brand->name }}
+                            </a>
+                        @endif
+
+                        <!-- Product heading and availability -->
                         <div class="flex items-center justify-between gap-4 mb-3">
-                            @if($product->brand)
-                                <a href="{{ route('products.index', ['brand' => $product->brand->slug]) }}" 
-                                   class="text-xs font-bold tracking-wider uppercase text-[var(--color-primary)] hover:underline">
-                                    {{ $product->brand->name }}
-                                </a>
-                            @else
-                                <span></span>
-                            @endif
+                            <h1 class="min-w-0 flex-1 text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                                {{ $product->name }}
+                            </h1>
 
-                            @if($selectionInStock)
-                                <span class="shrink-0 whitespace-nowrap text-sm sm:text-base font-semibold text-gray-900">
-                                    {{ $maxQuantity }} in Stock
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200/60 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                    Out of Stock
-                                </span>
-                            @endif
+                            {{-- One element for both states so the count can
+                                 follow the variant without a round trip. The
+                                 server renders the opening state into the same
+                                 markup, so nothing flickers before Alpine boots. --}}
+                            <span @class([
+                                      'shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap',
+                                      'text-sm sm:text-base font-semibold text-gray-900' => $selectionInStock,
+                                      'bg-rose-50 text-rose-700 border border-rose-200/60 text-xs font-semibold px-2.5 py-1 rounded-full' => ! $selectionInStock,
+                                  ])
+                                  :class="{
+                                      'text-sm sm:text-base font-semibold text-gray-900': inStock,
+                                      'bg-rose-50 text-rose-700 border border-rose-200/60 text-xs font-semibold px-2.5 py-1 rounded-full': ! inStock,
+                                  }">
+                                <span x-cloak x-show="! inStock" class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <span x-text="inStock ? max + ' in Stock' : 'Out of Stock'">{{ $selectionInStock ? $maxQuantity.' in Stock' : 'Out of Stock' }}</span>
+                            </span>
                         </div>
-
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mb-3">
-                            {{ $product->name }}
-                        </h1>
 
                         <!-- Ratings Summary -->
                         @if($product->reviews_count > 0)
@@ -173,12 +231,12 @@
 
                         <!-- Price -->
                         <div class="mb-6 flex items-baseline gap-2">
-                            @if($selectedVariant)
-                                @php $variant = $product->variants->find($selectedVariant); @endphp
-                                <span class="text-3xl font-black text-gray-900">₱{{ number_format($variant->price, 2) }}</span>
-                            @else
-                                <span class="text-3xl font-black text-gray-900">{{ $product->display_price_label }}</span>
-                            @endif
+                            {{-- Already formatted server-side, per variant, in
+                                 render() -- so no Intl work and no round trip. --}}
+                            <span class="text-3xl font-black text-gray-900"
+                                  x-text="price">{{ $selectedVariant
+                                      ? '₱'.number_format($product->variants->find($selectedVariant)->price, 2)
+                                      : $product->display_price_label }}</span>
                         </div>
 
                         <!-- Short Description -->
@@ -194,8 +252,17 @@
                                 <label class="block text-sm font-semibold text-gray-900">Option / Variant</label>
                                 <div class="grid grid-cols-2 gap-2.5">
                                     @foreach($product->variants->where('is_active', true) as $variant)
-                                        <button wire:click="selectVariant({{ $variant->id }})"
-                                                class="relative p-3 rounded-xl border text-left transition-all duration-200 focus:outline-none flex flex-col justify-between gap-1 {{ $selectedVariant === $variant->id ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-1 ring-[var(--color-primary)]' : 'border-gray-200 hover:border-gray-300 bg-white' }}">
+                                        <button type="button"
+                                                @click="pick({{ $variant->id }})"
+                                                @class([
+                                                    'relative p-3 rounded-xl border text-left transition-all duration-200 focus:outline-none flex flex-col justify-between gap-1',
+                                                    'border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-1 ring-[var(--color-primary)]' => $selectedVariant === $variant->id,
+                                                    'border-gray-200 hover:border-gray-300 bg-white' => $selectedVariant !== $variant->id,
+                                                ])
+                                                :class="{
+                                                    'border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-1 ring-[var(--color-primary)]': selected === {{ $variant->id }},
+                                                    'border-gray-200 hover:border-gray-300 bg-white': selected !== {{ $variant->id }},
+                                                }">
                                             <div>
                                                 <p class="font-semibold text-xs text-gray-900">{{ $variant->name }}</p>
                                             </div>
@@ -208,6 +275,16 @@
                             </div>
                         @endif
 
+                        {{--
+                            Quantity is owned by Alpine too, for the same reason
+                            the variant picker is: the +/- buttons used to be
+                            wire:click calls, so every tap re-rendered the whole
+                            page on the server. The value only reaches the server
+                            with addToCart(), alongside the variant id.
+
+                            pick() resets it to 1, since the cap moves with the
+                            variant and the standing count may not fit under it.
+                        --}}
                         <!-- Quantity Selector -->
                         <div class="mb-8">
                             <label class="block text-sm font-semibold text-gray-900 mb-3">Quantity</label>
@@ -244,28 +321,33 @@
 
                     <!-- CTA Actions -->
                     <div>
-                        @if($selectionInStock)
-                            <button type="button"
-                                    @click="add()"
-                                    :disabled="adding"
-                                    style="background-color: var(--color-primary);"
-                                    class="w-full text-white py-4 px-6 rounded-xl hover:brightness-110 active:scale-[0.99] transition-all duration-150 font-bold text-base shadow-lg shadow-[var(--color-primary)]/20 flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-wait">
-                                <svg x-show="!adding" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                <svg x-show="adding" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
-                                <span x-text="adding ? 'Adding…' : 'Add to Cart'">Add to Cart</span>
-                            </button>
-                        @else
-                            <button disabled
-                                    class="w-full bg-gray-100 text-gray-400 py-4 px-6 rounded-xl cursor-not-allowed font-semibold text-base border border-gray-200">
-                                Out of Stock
-                            </button>
-                        @endif
+                        {{-- One button for both states, so switching to a sold
+                             out variant disables it on the spot. The inline
+                             brand colour has to go through :style as well --
+                             an out of stock button must not stay green. --}}
+                        <button type="button"
+                                @click="add()"
+                                :disabled="adding || ! inStock"
+                                @disabled(! $selectionInStock)
+                                @class([
+                                    'w-full py-4 px-6 rounded-xl transition-all duration-150 text-base flex items-center justify-center gap-2',
+                                    'bg-[var(--color-primary)] text-white font-bold hover:brightness-110 active:scale-[0.99] shadow-lg shadow-[var(--color-primary)]/20 disabled:opacity-80 disabled:cursor-wait' => $selectionInStock,
+                                    'bg-gray-100 text-gray-400 font-semibold border border-gray-200 cursor-not-allowed' => ! $selectionInStock,
+                                ])
+                                :class="{
+                                    'bg-[var(--color-primary)] text-white font-bold hover:brightness-110 active:scale-[0.99] shadow-lg shadow-[var(--color-primary)]/20 disabled:opacity-80 disabled:cursor-wait': inStock,
+                                    'bg-gray-100 text-gray-400 font-semibold border border-gray-200 cursor-not-allowed': ! inStock,
+                                }">
+                            <svg x-show="inStock && ! adding" @if(! $selectionInStock) x-cloak @endif class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                            <svg x-show="adding" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                            <span x-text="! inStock ? 'Out of Stock' : (adding ? 'Adding…' : 'Add to Cart')">{{ $selectionInStock ? 'Add to Cart' : 'Out of Stock' }}</span>
+                        </button>
 
                         <!-- Product Meta Info -->
                         <div class="mt-8 pt-6 border-t border-gray-100 text-xs space-y-2.5 text-gray-500">
                             <div class="flex justify-between items-center">
                                 <span>SKU</span>
-                                <span class="font-medium text-gray-800">{{ $selectedVariant ? $product->variants->find($selectedVariant)?->sku : $product->sku }}</span>
+                                <span class="font-medium text-gray-800" x-text="sku">{{ $selectedVariant ? $product->variants->find($selectedVariant)?->sku : $product->sku }}</span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span>Category</span>
