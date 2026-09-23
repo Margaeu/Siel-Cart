@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Chatbot Service URL
+    |--------------------------------------------------------------------------
+    |
+    | ChatController proxies to the Node chatbot-server (see chatbot-server/
+    | server.js). Locally it's the auto-started process on port 3000; in
+    | production the Node service is hosted separately, so this must point
+    | at its real URL via the CHATBOT_URL app setting.
+    |
+    */
+
+    'chatbot_url' => env('CHATBOT_URL', 'http://127.0.0.1:3000/api/chat'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

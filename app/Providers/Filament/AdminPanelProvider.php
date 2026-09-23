@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\AvatarProviders\SielAvatarProvider;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Filament\Resources\Reviews\ReviewResource;
@@ -38,6 +39,14 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            // Needed for administrator invitations: a new admin's "Set your password"
+            // link opens the reset page registered here. The request page is the
+            // enumeration-safe subclass. Registration stays off — admins are only
+            // ever created by a super admin from the Users resource.
+            ->passwordReset(RequestPasswordReset::class)
+            // Named rather than left to auth.defaults.passwords so an env override
+            // of the default broker cannot point the panel at `customers`.
+            ->authPasswordBroker('users')
             ->brandName('Siel Cart')
             ->brandLogo(fn () => view('filament.admin.brand'))
             // The brand view is sized off this: Filament wraps it in a div with

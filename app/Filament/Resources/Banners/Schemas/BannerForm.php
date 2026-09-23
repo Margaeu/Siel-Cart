@@ -45,6 +45,7 @@ class BannerForm
                             ->helperText('Lower numbers appear first in the carousel.')
                             ->required()
                             ->numeric()
+                            ->type('text')
                             ->default(0),
                     ])->columns(2),
             ]);

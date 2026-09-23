@@ -12,6 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Azure App Service terminates HTTPS at its front end and forwards the
+        // request as plain HTTP with X-Forwarded-* headers. Without trusting
+        // them, Laravel builds http:// URLs: pages load assets as mixed content,
+        // and signed email-verification links fail with "Invalid signature"
+        // because the signature was made for a different scheme. '*' is safe
+        // here because the app is only reachable through Azure's front end.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'verified.customer' => \App\Http\Middleware\EnsureCustomerEmailIsVerified::class,
         ]);

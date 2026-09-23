@@ -89,8 +89,7 @@ class ReviewsTable
                     ->label('Approval status')
                     ->placeholder('All reviews')
                     ->trueLabel('Approved only')
-                    ->falseLabel('Pending only')
-                    ->default(false),
+                    ->falseLabel('Pending only'),
 
                 SelectFilter::make('rating')
                     ->label('Rating')

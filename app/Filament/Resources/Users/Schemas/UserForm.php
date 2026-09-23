@@ -40,25 +40,31 @@ class UserForm
                     ]),
 
                 Section::make('Access and security')
-                    ->description('Set the sign-in password and choose what this administrator can manage.')
+                    ->description(fn (string $operation): string => $operation === 'create'
+                        ? 'Choose what this administrator can manage. They will be emailed a link to set their own password.'
+                        : 'Set the sign-in password and choose what this administrator can manage.')
                     ->columns(2)
                     ->schema([
                         TextInput::make('password')
                             ->password()
                             ->revealable()
-                            // A password is only mandatory when creating an account.
-                            // On edit, a blank field keeps the current password, so
-                            // it is left out of the save instead of wiping it.
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            // Never shown on create: a new administrator chooses their
+                            // own password from the AdminInvitation link, and CreateUser
+                            // stores an unknown random placeholder until then. On edit,
+                            // a blank field keeps the current password, so it is left
+                            // out of the save instead of wiping it.
+                            ->hiddenOn('create')
                             ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->helperText(fn (string $operation): ?string => $operation === 'edit'
-                                ? 'Leave blank to keep the current password.'
-                                : null),
+                            ->helperText('Leave blank to keep the current password.'),
                         Select::make('roles')
                             ->relationship('roles', 'name')
                             ->multiple()
                             ->preload()
                             ->searchable()
+                            // An account with no role fails canAccessPanel(), and the
+                            // reset page refuses such accounts, so an invitation to a
+                            // role-less admin would be a dead link.
+                            ->required(fn (string $operation): bool => $operation === 'create')
                             // The default relationship save is a raw pivot sync that
                             // leaves no trace in the activity log; role changes are
                             // privilege changes and must be audited.

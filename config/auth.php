@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Customer;
+use App\Models\User;
+
 return [
 
     /*
@@ -42,8 +45,8 @@ return [
         ],
         'customer' => [
             'driver' => 'session',
-            'provider' => 'customers'
-        ]
+            'provider' => 'customers',
+        ],
     ],
 
     /*
@@ -66,13 +69,13 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', User::class),
         ],
 
         'customers' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Customer::class,
-        ]
+            'model' => Customer::class,
+        ],
 
         // 'users' => [
         //     'driver' => 'database',
@@ -99,28 +102,36 @@ return [
     |
     */
 
-    // 'expire' is in MINUTES, not seconds, and the one-minute window is deliberate:
-    // the link is meant to be dead almost immediately if it is forwarded, left in an
-    // open inbox, or read off a shared machine. The countdown starts when the token
-    // is created, not when the mail is opened, so a customer who does not act at
-    // once gets "This password reset token is invalid" and has to request a new
-    // link. Keep both brokers on the same number — the notification's
-    // "expire in :count minutes" line is rendered from the DEFAULT broker
-    // (auth.defaults.passwords = users), so a mismatch would quote customers a
-    // window that does not match the one their own token actually gets.
+    // 'expire' is in MINUTES, not seconds, and counts from when the token is
+    // created, not when the mail is opened.
+    //
+    // customers: deliberately short, so a reset link is dead almost immediately
+    // if it is forwarded, left in an open inbox, or read off a shared machine. A
+    // customer who does not act at once gets "This password reset token is
+    // invalid" and has to request a new link.
+    //
+    // users: 60 minutes, because this broker also issues administrator
+    // invitations (App\Notifications\AdminInvitation), and a new admin rarely
+    // opens the mail within a few minutes of a super admin creating the account.
+    //
+    // The two numbers are allowed to differ: each notification quotes its OWN
+    // broker's expiry (CustomerResetPassword reads `customers`, AdminInvitation
+    // reads `users`). Anything that quotes auth.defaults.passwords instead —
+    // Laravel's stock ResetPassword mail does — would give customers the admin
+    // window, so customer mail must keep going through CustomerResetPassword.
     'passwords' => [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 1,
+            'expire' => 60,
             'throttle' => 60,
         ],
         'customers' => [
             'provider' => 'customers',
             'table' => 'password_reset_tokens',
-            'expire' => 1,
-            'throttle' => 60
-        ]
+            'expire' => 3,
+            'throttle' => 60,
+        ],
     ],
 
     /*

@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
@@ -78,6 +79,7 @@ class ReportsTable
                     })
                     ->visible(fn (Report $record): bool => $record->status === 'pending'),
 
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([
