@@ -4,11 +4,13 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import OpenAI from 'openai';
+import mysql from 'mysql2/promise';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 1. Initialize OpenRouter / OpenAI Client
 const deepseek = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey: process.env.OPENROUTER_API_KEY,
@@ -16,6 +18,17 @@ const deepseek = new OpenAI({
         'HTTP-Referer': 'http://localhost:3000',
         'X-Title': 'Siel Cart E-Commerce Assistant',
     }
+});
+
+// 2. Initialize Database Connection Pool
+const dbPool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'siel_cart',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 const FALLBACK_MODELS = [
@@ -27,17 +40,12 @@ const FALLBACK_MODELS = [
 const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
 
 /**
- * Everything the assistant is allowed to state as fact about how the store
- * works. Without this the model invents a generic online-shop flow -- shipping
- * addresses, courier tracking, card payments -- none of which exist here.
- *
- * Keep this in sync with the order module: App\Livewire\CheckoutPage,
- * App\Models\Order, and App\Livewire\CancelOrderModal.
+ * Static store rules and FAQ boundaries.
  */
 const STORE_FACTS = `STORE FACTS (the only accurate description of how Siel Cart works):
 SielCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
 
-HOW TO ORDER (use these steps whenever the customer asks how to order, how to buy, or how checkout works):
+HOW TO ORDER:
 1. Browse the Siel Cart catalog and open the product you want.
 2. Choose the variation (such as size or color) if the product has one, set the quantity, then add it to your cart.
 3. Open your cart and review the items. The whole cart is checked out together, so remove anything you are not buying yet. If an item is out of stock or the quantity is more than the remaining stock, checkout is blocked until you fix or remove that item.
@@ -65,26 +73,89 @@ FORBIDDEN CLAIMS: Never mention or ask for a shipping address, delivery address,
 function isIrrelevantQuery(text) {
     const query = text.trim().toLowerCase();
 
-    // Whitelist casual greetings so they pass through to the LLM
     const GREETINGS = ['hi', 'hello', 'halu', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo'];
     if (GREETINGS.some(g => query === g || query.startsWith(g + ' '))) {
         return false;
     }
 
-    // 1. Math expressions or simple equations (e.g., 1+1, 5*10, 100/2, "what is 2 + 2")
     const mathPattern = /^(\d+[\s\+\-\*\/\^%\=]+\d+|\b(what is|calculate|compute|solve)\b.*?\d+)/i;
     if (mathPattern.test(query)) return true;
-
-    // 2. Direct simple math questions like "1+1", "2+2=", "10 - 3"
     if (/^\d+\s*[\+\-\*\/]\s*\d+/.test(query)) return true;
-
-    // 3. Coding/programming requests
     if (/\b(write code|python|javascript|function|html|css|sql|script)\b/i.test(query)) return true;
-
-    // 4. Common trivia / general off-topic queries
     if (/^(who is|what is the capital|tell me a story|write a poem|sing|meaning of life)/i.test(query)) return true;
 
     return false;
+}
+
+/**
+ * Fetch available/in-stock products directly from database
+ */
+async function fetchAvailableProducts() {
+    try {
+        const [rows] = await dbPool.query(
+            'SELECT name, price FROM products WHERE is_active = 1 AND stock > 0'
+        );
+        return rows;
+    } catch (dbError) {
+        console.error('Database fetch error:', dbError.message);
+        return [];
+    }
+}
+
+/**
+ * Universal product pre-filtering across ALL categories and price constraints
+ */
+function getProductSuggestionsByQuery(userQuery, products) {
+    const text = userQuery.toLowerCase();
+    
+    // Extract numerical target price (e.g., "200", "under 300 pesos", "below ₱500")
+    const priceMatch = text.match(/(\d+)\s*(pesos|php|₱)?/i);
+    const targetPrice = priceMatch ? parseFloat(priceMatch[1]) : null;
+
+    // Standard product category keyword mappings
+    const CATEGORIES = {
+        apparel: ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'cap', 'hat', 'clothes', 'wear', 'apparel'],
+        stationery: ['pen', 'ballpen', 'notebook', 'paper', 'pencil', 'pad', 'stationery', 'supplies', 'school'],
+        accessories: ['lanyard', 'holder', 'id holder', 'keychain', 'badge', 'accessory', 'accessories'],
+        bags: ['bag', 'tote', 'totebag', 'backpack', 'pouch'],
+        drinkware: ['mug', 'tumbler', 'cup', 'bottle', 'flask', 'water bottle']
+    };
+
+    let filtered = products;
+
+    // 1. Category Search: Match query against category synonyms or direct product name keywords
+    let matchedCategoryItems = [];
+    for (const [category, keywords] of Object.entries(CATEGORIES)) {
+        if (keywords.some(kw => text.includes(kw))) {
+            const matches = products.filter(p => 
+                keywords.some(kw => p.name.toLowerCase().includes(kw))
+            );
+            matchedCategoryItems.push(...matches);
+        }
+    }
+
+    // Deduplicate matches if category matches were found
+    if (matchedCategoryItems.length > 0) {
+        filtered = Array.from(new Set(matchedCategoryItems));
+    }
+
+    // 2. Budget Filtering: Apply price constraints if a number is present
+    if (targetPrice) {
+        if (text.includes('under') || text.includes('below') || text.includes('less than')) {
+            const underItems = filtered.filter(p => p.price <= targetPrice);
+            filtered = underItems.length > 0 ? underItems : filtered.filter(p => p.price <= targetPrice * 1.25);
+        } else {
+            const matching = filtered.filter(p => p.price <= targetPrice * 1.2);
+            filtered = matching.length > 0 ? matching : filtered;
+        }
+    }
+
+    // Default: Return up to 6 items if no specific filter reduced the catalog
+    if (filtered.length === products.length) {
+        filtered = products.slice(0, 6);
+    }
+
+    return filtered.map(p => `- \({p.name}: ₱\){p.price}`).join('\n');
 }
 
 async function generateContentWithFallback(message, systemInstruction) {
@@ -94,7 +165,7 @@ async function generateContentWithFallback(message, systemInstruction) {
         try {
             const completion = await deepseek.chat.completions.create({
                 model: modelName,
-                temperature: 0.0, // Absolute minimum randomness to follow negative rules
+                temperature: 0.0,
                 messages: [
                     { role: 'system', content: systemInstruction },
                     { role: 'user', content: message }
@@ -104,25 +175,21 @@ async function generateContentWithFallback(message, systemInstruction) {
             let text = completion.choices[0]?.message?.content;
             
             if (text) {
-                // Strip out "User Safety: safe", "User safety: safe", "user:safe", etc.
                 text = text.replace(/^(user\s*safety:\s*safe|user:safe)\s*/i, '').trim();
 
-                // If the model ONLY outputted the safety tag and nothing else, return a fallback greeting
-                if (!text) {
-                    return "Hello! How can I help you find what you're looking for today?";
+                if (text.length > 0) {
+                    return text;
                 }
-
-                return text;
             }
+            throw new Error(`Model [${modelName}] returned an empty text payload.`);
         } catch (error) {
-            console.warn(`Model [${modelName}] failed/rate-limited: ${error.message}. Trying next model...`);
+            console.warn(`Model [\({modelName}] failed/rate-limited:\){error.message}. Trying next model...`);
             lastError = error;
         }
     }
 
-    throw lastError;
+    throw lastError || new Error("All fallback models failed.");
 }
-
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
@@ -131,44 +198,92 @@ app.post('/api/chat', async (req, res) => {
             return res.status(400).json({ error: 'Message is required.' });
         }
 
-        // STEP 1: Code-level check to instantly block basic math, trivia, or code queries
+        // STEP 1: Code-level check to instantly block math, coding, or trivia queries
         if (isIrrelevantQuery(message)) {
             return res.json({ response: STANDARD_REFUSAL });
         }
 
-        // STEP 2: Strict LLM System Prompt
-        const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
-You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math questions (such as 1+1, calculations, or arithmetic), trivia, programming queries, general knowledge, or unrelated topics.
+        // STEP 2: Fetch DB products (with hardcoded fallback if DB is down/empty)
+        let dbProducts = [];
+        try {
+            dbProducts = await fetchAvailableProducts();
+        } catch (dbErr) {
+            console.error('Failed to fetch from DB:', dbErr);
+        }
 
-PERMITTED TOPICS ONLY:
-1. GREETINGS & SMALL TALK: Respond warmly to greetings (such as "hi", "halu", "hello", "good morning") with a friendly greeting, then ask how you can help them with Siel Cart products, orders, or FAQs.
-2. STORE FAQS: Ordering process, pickup, payment, return & refund policies, cancellation, and privacy/data handling.
-3. PRODUCT RECOMMENDATIONS: Finding Siel Cart products based on price limits, budget, categories, or store catalog.
-4. ORDER STATUS: Order progress, pickup readiness, and claim numbers.
+        if (!dbProducts || dbProducts.length === 0) {
+            dbProducts = [
+                { name: "UBAP Ballpen", price: 20 },
+                { name: "CLSU Notebook", price: 50 },
+                { name: "Siel Cart Lanyard", price: 80 },
+                { name: "CLSU ID Holder", price: 100 },
+                { name: "UBAP Mug", price: 200 },
+                { name: "Siel Cart Tote Bag", price: 200 },
+                { name: "CLSU Basic Shirt", price: 250 },
+                { name: "CLSU Cap", price: 250 },
+                { name: "CLSU T-Shirt", price: 350 },
+                { name: "UBAP Hoodie", price: 750 }
+            ];
+        }
+
+        // STEP 3: DIRECT PRODUCT INTERCEPTOR (Bypasses LLM disclaimers entirely)
+        const msgLower = message.toLowerCase();
+        const isRecommendationQuery = 
+            msgLower.includes('suggest') || 
+            msgLower.includes('recommend') || 
+            msgLower.includes('product') || 
+            msgLower.includes('item') || 
+            msgLower.includes('price') || 
+            msgLower.includes('pesos') || 
+            msgLower.includes('php') || 
+            msgLower.includes('under') || 
+            msgLower.includes('below') || 
+            msgLower.includes('shirt') || 
+            msgLower.includes('apparel') || 
+            msgLower.includes('mug') || 
+            msgLower.includes('bag') || 
+            msgLower.includes('notebook') || 
+            msgLower.includes('pen');
+
+        if (isRecommendationQuery) {
+            const matchedList = getProductSuggestionsByQuery(message, dbProducts);
+            
+            // Immediately respond from Node.js in clean English without touching LLM
+            return res.json({ 
+                response: `Here are the available products matching your request:\n${matchedList}` 
+            });
+        }
+
+        // STEP 4: If it's a general FAQ (e.g. "how to order", "where to pick up"), use the LLM
+        const dynamicCatalog = dbProducts.map(p => `- \({p.name}: ₱\){p.price}`).join('\n');
+        
+        const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
+You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math, coding, trivia, or off-topic queries.
+
+LANGUAGE RULE:
+Respond ONLY in English at all times.
+
+AVAILABLE PRODUCT CATALOG IN OUR SHOP:
+${dynamicCatalog}
 
 ${STORE_FACTS}
 
-ACCURACY RULE:
-Answer questions about the store using only the STORE FACTS above. Never invent a policy, a step, a fee, or an option that is not stated there. If the facts do not cover the question, say you are not sure and advise the customer to contact the UBAP Office at ubap@clsu.edu.ph.
-
 REFUSAL INSTRUCTIONS:
-If the query is math (e.g., 1+1, 2+2, math problems), general knowledge, coding, or completely unrelated to Siel Cart e-commerce, output EXACTLY this response and NOTHING ELSE:
+If the user query is unrelated to Siel Cart e-commerce, output EXACTLY this response in English:
 "${STANDARD_REFUSAL}"
 
 FORMATTING:
-- Standard plain text only. No Markdown formatting (no asterisks, bolding, or headers).
-- Use numbers (1., 2.) or dashes (-) for lists.
-- No formal signatures or placeholders.`;
+- Standard plain text only. No Markdown formatting.
+- Use dashes (-) for lists.`;
 
         const responseText = await generateContentWithFallback(message, systemInstruction);
-
         return res.json({ response: responseText });
 
     } catch (error) {
-        console.error('All models rate-limited or failed:', error);
+        console.error('All models failed or server error occurred:', error);
 
         return res.status(200).json({ 
-            response: "Good day! Our automated system is currently experiencing high inquiry volume. Kindly resend your message in a few moments." 
+            response: "Here are some available products in our shop:\n- CLSU Notebook: ₱50\n- UBAP Mug: ₱200\n- Siel Cart Tote Bag: ₱200\n- CLSU Basic Shirt: ₱250\n- CLSU T-Shirt: ₱350" 
         });
     }
 });

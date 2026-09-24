@@ -50,7 +50,7 @@ class ChatController extends Controller
 
         // 3. Query Express/Node AI Server
         try {
-            $nodeApiUrl = config('app.chatbot_url', 'http://127.0.0.1:3000/api/chat');
+           $nodeApiUrl = config('services.chatbot.url', 'http://127.0.0.1:3000/api/chat');
             
             // Timeout increased from 15s to 60s to handle peak AI queue latency
             $response = Http::timeout(60)->post($nodeApiUrl, [
