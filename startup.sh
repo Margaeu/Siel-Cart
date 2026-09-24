@@ -10,7 +10,7 @@ sed -i 's|root /home/site/wwwroot;|root /home/site/wwwroot/public;|g' /etc/nginx
 # Storage and cache permissions
 chmod -R 777 "\({APP_ROOT}/storage" "\){APP_ROOT}/bootstrap/cache"
 
-# Framework & Filament runtime optimizations
+# Framework & Filament runtime optimizations.
 php "${APP_ROOT}/artisan" config:cache
 php "${APP_ROOT}/artisan" route:cache
 php "${APP_ROOT}/artisan" view:cache
