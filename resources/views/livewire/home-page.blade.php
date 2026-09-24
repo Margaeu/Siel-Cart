@@ -209,7 +209,7 @@
                     Welcome to {{ config('app.name') }}
                 </h1>
                 <p class="mx-auto mt-4 max-w-2xl text-xl text-white/85 md:text-2xl">
-                    Discover the official merchandise of UPC — made for students, by students.
+                    Discover the official merchandise of UPC.
                 </p>
 
                 <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
