@@ -22,7 +22,7 @@ APP_ROOT=/home/site/wwwroot
 
 cd "$APP_ROOT"
 
-# Runtime directories Laravel expects. The package excludes their contents
+## Runtime directories Laravel expects. The package excludes their contents
 # (logs, compiled views, file sessions), so a fresh deploy may lack them.
 mkdir -p \
     storage/app/private \
