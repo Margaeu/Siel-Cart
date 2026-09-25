@@ -45,7 +45,7 @@ fix_permissions() {
     find storage bootstrap/cache -type d -exec chmod 775 {} +
     find storage bootstrap/cache -type f -exec chmod 664 {} +
 
-    # The Aiven CA must stay readable by PHP but not writable by it, so a
+    ## The Aiven CA must stay readable by PHP but not writable by it, so a
     # compromised worker cannot swap in a certificate it controls.
     if [ -f storage/certs/aiven-ca.pem ]; then
         if id www-data >/dev/null 2>&1; then
