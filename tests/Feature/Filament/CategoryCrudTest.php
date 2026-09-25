@@ -119,8 +119,12 @@ class CategoryCrudTest extends TestCase
         $this->assertSame(7, (int) $category->sort_order);
     }
 
-    public function test_renaming_a_category_regenerates_its_slug(): void
+    public function test_renaming_a_category_does_not_change_its_slug(): void
     {
+        // Slugs are set once, at creation, and never follow later renames
+        // (same rule as Product::boot()): the slug is the category's
+        // storefront filter URL, and regenerating it on every name change
+        // would break links that were already shared.
         $category = Category::factory()->create(['name' => 'Old Name', 'slug' => 'old-name']);
         $this->actingAsAdmin();
 
@@ -129,7 +133,8 @@ class CategoryCrudTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame('brand-new-name', $category->refresh()->slug);
+        $this->assertSame('old-name', $category->refresh()->slug);
+        $this->assertSame('Brand New Name', $category->name);
     }
 
     public function test_a_duplicate_generated_slug_is_rejected(): void
@@ -184,18 +189,18 @@ class CategoryCrudTest extends TestCase
         $this->assertSame(0, Category::count());
     }
 
-    public function test_the_model_refuses_to_rename_a_category_to_an_empty_slug(): void
+    public function test_the_model_allows_renaming_an_existing_category_to_an_empty_slugifying_name(): void
     {
+        // The empty-slug guard only matters while a slug is being generated,
+        // which now happens once, at creation. A rename never touches the
+        // slug, so it can't leave one blank -- the Filament form's own rule
+        // is what actually keeps "!!!" out of the UI (see
+        // test_renaming_to_a_name_with_no_letters_or_numbers_is_rejected_by_the_form).
         $category = Category::factory()->create(['name' => 'Merch', 'slug' => 'merch']);
 
-        try {
-            $category->update(['name' => '!!!']);
-            $this->fail('Expected a ValidationException for an empty slug.');
-        } catch (ValidationException $exception) {
-            $this->assertArrayHasKey('name', $exception->errors());
-        }
+        $category->update(['name' => '!!!']);
 
-        $this->assertDatabaseHas('categories', ['id' => $category->id, 'name' => 'Merch', 'slug' => 'merch']);
+        $this->assertDatabaseHas('categories', ['id' => $category->id, 'name' => '!!!', 'slug' => 'merch']);
     }
 
     // --- Edit-page delete ----------------------------------------------------

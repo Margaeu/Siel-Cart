@@ -10,9 +10,18 @@ class ProductCard extends Component
 {
     public Product $product;
 
-    public function mount(Product $product): void
+    /**
+     * Which homepage ranking section this card is rendered for, or null for
+     * every other listing. 'best_seller' | 'top_pick'. Drives the badge
+     * only -- eligibility and ranking are decided before the card is ever
+     * mounted, by HomepageProductRankingService.
+     */
+    public ?string $badge = null;
+
+    public function mount(Product $product, ?string $badge = null): void
     {
         $this->product = $product;
+        $this->badge = $badge;
         $this->restoreProductData();
     }
 
@@ -68,7 +77,7 @@ class ProductCard extends Component
         // A cart belongs to a customer account, so guests are sent
         // to the login page first. After logging in they are returned
         // to this product's page to continue.
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             session()->put('url.intended', route('products.show', $this->product->slug));
             session()->flash('status', 'Please log in to add products to your cart.');
 
@@ -86,7 +95,7 @@ class ProductCard extends Component
         // If the product cannot be added because of stock
         // or another validation problem, show the error in the
         // popup instead of a flash message the page never renders.
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->dispatch(
                 'cart-error',
                 message: $result['message']
@@ -102,7 +111,7 @@ class ProductCard extends Component
         // This does not redirect the customer to the cart.
         $this->dispatch(
             'cart-added',
-            message: $this->product->name . ' has been added to your cart.'
+            message: $this->product->name.' has been added to your cart.'
         );
     }
 

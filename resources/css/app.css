@@ -123,26 +123,29 @@
 @layer base {
 
     /*
-     * Fluid root size: the whole storefront scales with the viewport.
+     * Root size: fixed at 1.0625rem (~17px off a 16px browser default)
+     * across every viewport, storefront-wide.
      *
-     * Phones were already right at the browser default (16px) while laptops
-     * and monitors read small, because every size was a fixed rem step that
-     * never grew past it. Every Tailwind text-*, spacing, size-* and icon
-     * utility is rem-based, so growing the root carries type, padding and
-     * media up together and keeps their proportions: 16px up to a 640px
-     * viewport (Tailwind's sm), rising linearly to 18px at 1280px (xl), and
-     * held there so a wide monitor doesn't blow the page up.
+     * This used to grow fluidly up to 18px on desktop (1.125rem at 1280px+),
+     * which carried every rem-based Tailwind text-*, spacing, size-* and icon
+     * utility up with it -- the storefront read as zoomed-in next to
+     * comparable marketplaces (Shopee runs a 16px root desktop and up). It was
+     * first brought down to a flat 1rem (16px) to match that density, then
+     * eased back up slightly here: 16px alone read a little cramped, so this
+     * is a uniform ~6% bump that keeps header, hero, headings, section
+     * padding and product cards all in proportion without hand-tuning any of
+     * them individually -- they're all rem-based, so they scale with this one
+     * number. The hero banner height is the one exception (sized in vw, not
+     * rem) and is bumped by hand to match, in home-page.blade.php.
      *
-     * The bounds are rem, not px, so a reader who raised their browser's
-     * default font size still gets that larger base. Breakpoints are
-     * unaffected: rem inside a media query always means the browser's
-     * initial size, never this rule.
+     * A rem multiplier, not a literal 17px, so a reader who raised their
+     * browser's default font size still gets that larger base.
      *
      * Anything written as an arbitrary px value (text-[11px], w-[240px])
-     * opts out of this scaling -- write new sizes in rem.
+     * was never affected by this rule either way.
      */
     html {
-        font-size: clamp(1rem, 0.875rem + 0.3125vw, 1.125rem);
+        font-size: 1.0625rem;
     }
 
     *,

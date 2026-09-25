@@ -10,29 +10,44 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     /**
      * Statuses that mean the order is no longer a sale, so its units belong
      * back on the shelf. Only a cancellation qualifies: the goods never left.
      */
     public const RESTOCKING_STATUSES = ['cancelled'];
+
     /**
      * Statuses whose goods were collected and paid for, so UBAP may since have
      * refunded or exchanged something from them.
      */
     public const RESOLVABLE_STATUSES = ['completed'];
+
     /**
      * Statuses of an order still in progress: not yet collected, not
      * cancelled. A customer with one of these cannot delete their account,
      * because UBAP would be left holding goods for nobody.
      */
     public const ACTIVE_STATUSES = ['pending', 'processing', 'ready_for_pickup'];
+
+    /**
+     * Statuses whose pickup schedule UBAP can move. A schedule only exists
+     * once the order is ready to collect; before that there is nothing to move.
+     */
+    public const RESCHEDULABLE_STATUSES = ['ready_for_pickup'];
+
+    /**
+     * Every status history note written by reschedulePickup() starts with
+     * this, which is how rescheduleHistories() tells those rows apart.
+     */
+    public const RESCHEDULE_NOTE_PREFIX = 'Pickup rescheduled';
 
     protected $fillable = [
         'order_number',
@@ -57,6 +72,10 @@ class Order extends Model
         'cancellation_reason',
         'cancelled_at',
         'completed_at',
+        'original_pickup_date',
+        'original_pickup_slot',
+        'rescheduled_at',
+        'reschedule_count',
     ];
 
     protected function casts(): array
@@ -65,6 +84,9 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
             'pickup_date' => 'date',
+            'original_pickup_date' => 'date',
+            'rescheduled_at' => 'datetime',
+            'reschedule_count' => 'integer',
             'cancelled_at' => 'datetime',
             'completed_at' => 'datetime',
             'stock_restored_at' => 'datetime',
@@ -93,6 +115,10 @@ class Order extends Model
                 'cancellation_reason',
                 'cancelled_at',
                 'completed_at',
+                'original_pickup_date',
+                'original_pickup_slot',
+                'rescheduled_at',
+                'reschedule_count',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
@@ -158,7 +184,7 @@ class Order extends Model
     #[Scope]
     protected function withReturnActivity(Builder $query): void
     {
-       $query->whereHas('items.resolutions');
+        $query->whereHas('items.resolutions');
     }
 
     // relationships
@@ -178,6 +204,14 @@ class Order extends Model
     public function statusHistories()
     {
         return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');
+    }
+
+    public function rescheduleHistories()
+    {
+        return $this->hasMany(OrderStatusHistory::class)
+            ->where('notes', 'like', self::RESCHEDULE_NOTE_PREFIX.'%')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
     }
 
     // helper methods
@@ -253,6 +287,114 @@ class Order extends Model
         $at ??= now();
 
         return $at->greaterThanOrEqualTo($pickupDeadline);
+    }
+
+    /**
+     * Build the stored pickup_slot string from two clock times.
+     *
+     * pickupDeadline() parses the last time back out of this value, so every
+     * path that writes a schedule must go through here to keep the format.
+     */
+    public static function pickupSlotFrom(string $startTime, string $endTime): string
+    {
+        return CarbonImmutable::parse($startTime)->format('g:i A')
+            .' - '
+            .CarbonImmutable::parse($endTime)->format('g:i A');
+    }
+
+    /**
+     * Build the stored pickup_slot string from a single reschedule time.
+     *
+     * A reschedule gives the customer one specific time UBAP arranged with
+     * them over the phone, not the original pickup-period interval.
+     * pickupDeadline()'s regex matches a lone time just as well as a range,
+     * so no other code needs to know pickup_slot can hold either shape.
+     */
+    public static function pickupTimeFrom(string $time): string
+    {
+        return CarbonImmutable::parse($time)->format('g:i A');
+    }
+
+    /**
+     * Whether UBAP can move this order's pickup to another day, e.g. because
+     * the customer asked to collect later. Unlike no-show cancellation this
+     * does not wait for the pickup period to end: a customer who calls ahead
+     * is exactly who it is for, and a missed pickup can still be moved too.
+     */
+    public function canBeRescheduled(): bool
+    {
+        return in_array($this->status, self::RESCHEDULABLE_STATUSES, true)
+            && $this->pickup_date !== null
+            && ! $this->trashed();
+    }
+
+    /**
+     * Move the pickup to a new date and a specific time UBAP arranged with
+     * the customer (see pickupTimeFrom()) — not the original pickup-period
+     * interval from Ready for Pickup.
+     *
+     * The very first schedule is copied into original_pickup_* the first time
+     * this runs and never overwritten, so "originally scheduled for" stays
+     * true however many times the order is moved. Each move, with the old and
+     * new schedule, is written to the status history as well.
+     *
+     * The row is re-read under a lock so a reschedule cannot interleave with
+     * a completion or cancellation of the same order. Returns the fresh order,
+     * or null if it is no longer in a state that can be rescheduled. Throws a
+     * ValidationException keyed on pickup_date for a date in the past or a
+     * schedule identical to the current one.
+     */
+    public function reschedulePickup(
+        CarbonInterface|string $date,
+        string $slot,
+        ?string $reason = null,
+        ?int $userId = null,
+    ): ?self {
+        $newDate = CarbonImmutable::parse($date, config('app.timezone'))->startOfDay();
+
+        if ($newDate->lt(today())) {
+            throw ValidationException::withMessages([
+                'pickup_date' => 'The new pickup date cannot be in the past.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($newDate, $slot, $reason, $userId): ?self {
+            $order = static::query()
+                ->whereKey($this->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if (! $order?->canBeRescheduled()) {
+                return null;
+            }
+
+            if ($order->pickup_date->isSameDay($newDate) && $order->pickup_slot === $slot) {
+                throw ValidationException::withMessages([
+                    'pickup_date' => 'The new schedule is the same as the current one.',
+                ]);
+            }
+
+            // OrderStatusHistory::rescheduleDetails() parses this sentence
+            // back apart for the admin view; change the two together.
+            $from = $order->pickup_date->format('M d, Y').' ('.$order->pickup_slot.')';
+            $to = $newDate->format('M d, Y').' ('.$slot.')';
+            $note = self::RESCHEDULE_NOTE_PREFIX." from {$from} to {$to}.";
+
+            if (filled($reason)) {
+                $note .= ' Reason: '.trim($reason);
+            }
+
+            $order->updateStatus($order->status, $note, $userId, [
+                'original_pickup_date' => $order->original_pickup_date ?? $order->pickup_date,
+                'original_pickup_slot' => $order->original_pickup_slot ?? $order->pickup_slot,
+                'pickup_date' => $newDate->toDateString(),
+                'pickup_slot' => $slot,
+                'rescheduled_at' => now(),
+                'reschedule_count' => $order->reschedule_count + 1,
+            ]);
+
+            return $order->fresh(['customer', 'items']);
+        });
     }
 
     /**

@@ -30,7 +30,7 @@ class BannerForm
                             ->orientImagesFromExif(false)
                             ->imagePreviewHeight('250')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
-                            ->helperText('Recommended: wide landscape image (e.g. 1920×720). Max 10MB.')
+                            ->helperText('Recommended: wide landscape image (e.g. 1920×720). Maximum file size: 10 MB.')
                             ->columnSpanFull(),
                     ]),
                 Section::make('Display')

@@ -175,6 +175,13 @@
                                                 @endif
                                                 <p class="text-sm text-gray-500 mt-1.5">Quantity: {{ $item->quantity }} × ₱{{ number_format($item->price, 2) }}</p>
 
+                                                @if($item->is_unavailable)
+                                                    <p class="inline-flex items-center gap-1.5 text-xs font-medium text-red-700 mt-2">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" aria-hidden="true"></span>
+                                                        This product is no longer available.
+                                                    </p>
+                                                @endif
+
                                                 {{-- Outcomes UBAP recorded for this line. Admin notes stay internal. --}}
                                                 @foreach($item->resolutions as $resolution)
                                                     @php($isRefund = $resolution->type === \App\Enums\OrderItemResolutionType::Refund)
@@ -205,7 +212,7 @@
                                                             </svg>
                                                             Reviewed
                                                         </p>
-                                                    @elseif($item->product)
+                                                    @elseif($item->product && ! $item->is_unavailable)
                                                         <a href="{{ route('products.show', $item->product->slug) }}?tab=reviews#review-tab"
                                                            class="mt-2 inline-flex min-h-9 items-center rounded-full bg-[var(--color-secondary)] px-3.5 text-xs font-semibold text-gray-900 transition hover:opacity-90 {{ $focusRing }}">
                                                             Write a Review
@@ -250,6 +257,31 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                {{-- Shown once UBAP has moved the pickup, so the customer
+                                     can tell the dates below replaced the ones first emailed. --}}
+                                @if($order->reschedule_count > 0 && $order->original_pickup_date)
+                                    <div class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 mb-3" role="status">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-amber-700">Pickup Rescheduled</p>
+                                            <p class="text-sm font-semibold text-gray-900 mt-0.5">
+                                                New schedule: {{ $order->pickup_date->format('M d, Y') }} · {{ $order->pickup_slot }}
+                                            </p>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Originally scheduled for
+                                                <span>{{ $order->original_pickup_date->format('M d, Y') }} · {{ $order->original_pickup_slot }}</span>.
+                                                @if($order->rescheduled_at)
+                                                    Updated by UBAP on {{ $order->rescheduled_at->format('M d, Y h:i A') }}.
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endif
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div class="{{ $field }} sm:col-span-2">

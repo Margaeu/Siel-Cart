@@ -121,7 +121,7 @@ class CheckoutPage extends Component
                 'variant_name' => $item->variant?->name,
                 'sku'          => $item->variant?->sku ?? $item->product->sku,
                 'price'        => $item->price,
-                'image'        => ($item->variant?->images->first() ?? $item->product->primaryImage)?->url,
+                'image'        => $item->display_image_url,
                 'quantity'     => $item->quantity,
             ];
         })->all();

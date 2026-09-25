@@ -40,13 +40,15 @@ class Category extends Model
     }
 
     #[Scope()]
-    protected function active(Builder $builder){
+    protected function active(Builder $builder)
+    {
         $builder->where('is_active', true);
     }
 
     #[Scope()]
-    protected function sorted(Builder $builder){
-        $builder->orderBy('sort_order','asc');
+    protected function sorted(Builder $builder)
+    {
+        $builder->orderBy('sort_order', 'asc');
     }
 
     public const EMPTY_SLUG_MESSAGE = 'The name must contain at least one letter or number.';
@@ -54,7 +56,8 @@ class Category extends Model
     public const ASSIGNED_PRODUCTS_MESSAGE = 'Products are still assigned to it, including any that are inactive or deleted. Reassign those products to another category or permanently delete them first.';
 
     // relationship between the products and category
-    public function products(){
+    public function products()
+    {
         return $this->hasMany(Product::class);
     }
 
@@ -106,14 +109,15 @@ class Category extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        if (!$this->image) {
+        if (! $this->image) {
             return null;
         }
 
         return Storage::disk('r2')->url($this->image);
     }
 
-    protected static function boot(){
+    protected static function boot()
+    {
         parent::boot();
 
         // Slug generation and its empty check live in one saving hook. They
@@ -122,12 +126,16 @@ class Category extends Model
         // slug before it existed. A name like "!!!" slugifies to "", which
         // would store an unreachable storefront filter; the admin form rejects
         // it first, and this stops seeders and tinker from slipping one in.
+        //
+        // The slug is set once, at creation, and never follows later renames
+        // (same rule as Product::boot()): it is the category's storefront
+        // filter URL, and regenerating it on every name change broke links
+        // that were already shared. The admin form shows it read-only, so
+        // nothing besides this hook ever sets it.
         static::saving(function (Category $category) {
             $slug = $category->slug;
 
             if (! $category->exists && blank($slug)) {
-                $slug = Str::slug((string) $category->name);
-            } elseif ($category->exists && $category->isDirty('name') && ! $category->isDirty('slug')) {
                 $slug = Str::slug((string) $category->name);
             }
 
@@ -169,7 +177,15 @@ class Category extends Model
                     return;
                 }
 
-                Storage::disk('r2')->delete($image);
+                // The r2 disk throws on failure. The category row is already
+                // gone by now, so an R2 outage must not surface as "delete
+                // failed" for a delete that committed -- report the orphaned
+                // file and let the request finish.
+                try {
+                    Storage::disk('r2')->delete($image);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             });
         });
     }

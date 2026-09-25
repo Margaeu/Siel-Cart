@@ -24,12 +24,16 @@ class CustomerResetPasswordTest extends TestCase
     }
 
     /**
-     * The users broker lasts longer than the customers one (admin invitations),
-     * so quoting the default broker would promise customers a window their
-     * token doesn't actually get.
+     * The two brokers' lifetimes are allowed to differ, so quoting the default
+     * (users) broker would promise customers a window their token doesn't
+     * actually get. The shipped config gives both 3 minutes, so the users
+     * broker is pushed apart here — otherwise the mail could read the wrong one
+     * and still pass.
      */
     public function test_mail_message_quotes_the_customers_broker_expiry(): void
     {
+        config(['auth.passwords.users.expire' => 60]);
+
         $customer = Customer::factory()->create();
 
         $mailMessage = (new CustomerResetPassword('test-token'))->toMail($customer);

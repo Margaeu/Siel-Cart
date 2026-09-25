@@ -15,6 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class ProductImage extends Model
 {
     use HasFactory, LogsActivity;
+
     protected $fillable = [
         'product_id',
         'product_variant_id',
@@ -88,7 +89,7 @@ class ProductImage extends Model
     public function getUrlAttribute()
     {
         return Storage::disk('r2')->url($this->image_path);
-}
+    }
 
     /**
      * Remove image objects from R2 once the surrounding transaction commits.
@@ -100,11 +101,27 @@ class ProductImage extends Model
      * rollback. Uploads keep their original filenames, so two rows can share
      * a path; an object is left alone while any row still references it.
      *
+     * order_items.product_image and cart_items.product_image also hold this
+     * exact URL, snapshotted so an order or a cart row keeps showing its
+     * picture after the live image, variant, or product is gone -- a general
+     * product image or a variant-specific one alike. Deleting the file out
+     * from under either snapshot would turn that into a broken <img> tag, so
+     * by default a path still named by either one is left alone too, the
+     * same way a path another ProductImage row still uses is.
+     *
+     * $protectHistoricalReferences is turned off only by Product::forceDelete(),
+     * whose whole point is a complete, permanent purge: order lines keep
+     * their text snapshot (name, SKU, price) but are documented and tested
+     * to lose the picture along with everything else. Every other caller --
+     * the product form's gallery and variant image savers, and single
+     * variant removal -- keeps the default, since those are routine catalog
+     * edits that a cart or an unrelated order should not go blank over.
+     *
      * Outside a transaction the callback runs immediately.
      *
      * @param  iterable<string|null>  $paths
      */
-    public static function deleteFilesAfterCommit(iterable $paths): void
+    public static function deleteFilesAfterCommit(iterable $paths, bool $protectHistoricalReferences = true): void
     {
         $paths = collect($paths)->filter(fn ($path) => filled($path))->unique()->values();
 
@@ -112,16 +129,37 @@ class ProductImage extends Model
             return;
         }
 
-        DB::afterCommit(function () use ($paths) {
+        DB::afterCommit(function () use ($paths, $protectHistoricalReferences) {
             $stillReferenced = static::query()
                 ->whereIn('image_path', $paths)
                 ->pluck('image_path')
                 ->all();
 
-            $orphaned = $paths->diff($stillReferenced)->values()->all();
+            $stillSnapshotted = [];
 
+            if ($protectHistoricalReferences) {
+                $urlsByPath = $paths->mapWithKeys(fn ($path) => [Storage::disk('r2')->url($path) => $path]);
+
+                $stillSnapshotted = collect()
+                    ->merge(OrderItem::query()->whereIn('product_image', $urlsByPath->keys())->pluck('product_image'))
+                    ->merge(CartItem::query()->whereIn('product_image', $urlsByPath->keys())->pluck('product_image'))
+                    ->map(fn ($url) => $urlsByPath[$url] ?? null)
+                    ->filter()
+                    ->values()
+                    ->all();
+            }
+
+            $orphaned = $paths->diff($stillReferenced)->diff($stillSnapshotted)->values()->all();
+
+            // The r2 disk throws on failure. The rows are already committed,
+            // so an R2 outage must not surface as a failed save or delete --
+            // report the orphaned files and let the request finish.
             if ($orphaned !== []) {
-                Storage::disk('r2')->delete($orphaned);
+                try {
+                    Storage::disk('r2')->delete($orphaned);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         });
     }

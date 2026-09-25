@@ -1,7 +1,7 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.5; color:#000000; padding:20px 0;">
 <tr>
 <td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; text-align:left;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; text-align:left;">
 
   <tr>
     <td style="padding:0 0 16px 0;">
@@ -12,7 +12,7 @@
       <table role="presentation" cellpadding="0" cellspacing="0">
         <tr>
           <td style="border-radius:4px; background-color:#547F12;">
-            <a href="{{ route('customer.orders.show', $order->id) }}" style="display:inline-block; padding:10px 24px; font-size:13px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:4px;">View Order Details</a>
+            <a href="{{ route('customer.orders.show', $order->id) }}" style="display:inline-block; padding:14px 28px; font-size:14px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:4px;">View Order Details</a>
           </td>
         </tr>
       </table>
@@ -28,12 +28,12 @@
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">ORDER DETAILS</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
         <tr>
-          <td style="width:35%; vertical-align:top; color:#000000;">Order ID:</td>
-          <td style="vertical-align:top; color:#547F12; font-weight:bold;">#{{ $order->order_number }}</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Order ID:</td>
+          <td style="width:100%; vertical-align:top; color:#547F12; font-weight:bold;">#{{ $order->order_number }}</td>
         </tr>
         <tr>
-          <td style="vertical-align:top; color:#000000;">Order Status:</td>
-          <td style="vertical-align:top;">Ready for Pickup</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Order Status:</td>
+          <td style="width:100%; vertical-align:top;">Ready for Pickup</td>
         </tr>
       </table>
     </td>
@@ -52,12 +52,12 @@
           </p>
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.5;">
             <tr>
-              <td style="width:35%; color:#000000;">Quantity:</td>
-              <td>{{ $item->quantity }}</td>
+              <td style="white-space:nowrap; padding-right:12px; color:#000000;">Quantity:</td>
+              <td style="width:100%;">{{ $item->quantity }}</td>
             </tr>
             <tr>
-              <td style="color:#000000;">Price:</td>
-              <td>₱{{ number_format((float) $item->price, 2) }}</td>
+              <td style="white-space:nowrap; padding-right:12px; color:#000000;">Price:</td>
+              <td style="width:100%;">₱{{ number_format((float) $item->price, 2) }}</td>
             </tr>
           </table>
         </div>
@@ -73,12 +73,12 @@
     <td style="padding-bottom:16px;">
       <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
         <tr>
-          <td style="width:35%; color:#000000;">Subtotal:</td>
-          <td>₱{{ number_format((float) $order->total, 2) }}</td>
+          <td style="white-space:nowrap; padding-right:12px; color:#000000;">Subtotal:</td>
+          <td style="width:100%;">₱{{ number_format((float) $order->total, 2) }}</td>
         </tr>
         <tr>
-          <td style="color:#000000; font-weight:normal;">Total Amount:</td>
-          <td style="font-weight:bold; color:#000000;">₱{{ number_format((float) $order->total, 2) }}</td>
+          <td style="white-space:nowrap; padding-right:12px; color:#000000; font-weight:normal;">Total Amount:</td>
+          <td style="width:100%; font-weight:bold; color:#000000;">₱{{ number_format((float) $order->total, 2) }}</td>
         </tr>
       </table>
     </td>
@@ -93,20 +93,20 @@
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">PICKUP DETAILS</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
         <tr>
-          <td style="width:35%; vertical-align:top; color:#000000;">Claim Number:</td>
-          <td style="vertical-align:top; color:#547F12; font-weight:bold;">{{ $order->claim_number }}</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Claim Number:</td>
+          <td style="width:100%; vertical-align:top; color:#547F12; font-weight:bold;">{{ $order->claim_number }}</td>
         </tr>
         <tr>
-          <td style="vertical-align:top; color:#000000;">Pickup Date:</td>
-          <td style="vertical-align:top;">{{ $order->pickup_date->format('d/m/Y') }}</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Pickup Date:</td>
+          <td style="width:100%; vertical-align:top;">{{ $order->pickup_date->format('d/m/Y') }}</td>
         </tr>
         <tr>
-          <td style="vertical-align:top; color:#000000;">Pickup Time:</td>
-          <td style="vertical-align:top;">{{ $order->pickup_slot }}</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Pickup Time:</td>
+          <td style="width:100%; vertical-align:top;">{{ $order->pickup_slot }}</td>
         </tr>
         <tr>
-          <td style="vertical-align:top; color:#000000;">Location:</td>
-          <td style="vertical-align:top;">{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Location:</td>
+          <td style="width:100%; vertical-align:top;">{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td>
         </tr>
       </table>
     </td>

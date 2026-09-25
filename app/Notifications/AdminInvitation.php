@@ -68,8 +68,9 @@ class AdminInvitation extends Notification implements ShouldQueue
     {
         // The panel is named, not taken from Filament's "current" panel: a queue
         // worker has none, and the link must land on the admin reset page, never
-        // the storefront's password.reset route.
-        return Filament::getPanel('admin')->getResetPasswordUrl($this->token, $notifiable);
+        // the storefront's password.reset route. `invitation` makes the page say
+        // "Set your password" rather than "Reset" (App\Filament\Pages\Auth\ResetPassword).
+        return Filament::getPanel('admin')->getResetPasswordUrl($this->token, $notifiable, ['invitation' => 1]);
     }
 
     public function toMail(User $notifiable): MailMessage

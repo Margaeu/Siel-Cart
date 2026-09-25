@@ -62,23 +62,28 @@ class OrderForm
                             ->label('Claimant contact number')
                             ->placeholder('Phone number of person receiving order')
                             ->default(null),
-                        
+
                         TextInput::make('or_number')
                             ->label('Official Receipt Number')
                             ->placeholder('e.g. or-2345'),
 
+                        // Read-only here. The schedule is set by "Ready for
+                        // Pickup" and moved by "Reschedule Pickup", which keep
+                        // the original schedule and email the customer. Editing
+                        // it in this form silently did neither.
                         DatePicker::make('pickup_date')
                             ->label('Scheduled pickup date')
-                            ->nullable(),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText(fn ($record): ?string => $record?->canBeRescheduled()
+                                ? 'Use "Reschedule Pickup" above to change the schedule.'
+                                : null),
 
                         TextInput::make('pickup_slot')
                             ->label('Scheduled pickup time')
-                            ->placeholder('e.g. 8:00 AM - 5:00 PM')
-                            ->regex('/^(?:0?[1-9]|1[0-2]):[0-5][0-9] ?(?:AM|PM)\s*-\s*(?:0?[1-9]|1[0-2]):[0-5][0-9] ?(?:AM|PM)$/i')
-                            ->validationMessages([
-                                'regex' => 'Enter a time interval such as 8:00 AM - 5:00 PM.',
-                            ])
-                            ->nullable(),
+                            ->placeholder('Not yet scheduled')
+                            ->disabled()
+                            ->dehydrated(false),
 
                     ]),
 

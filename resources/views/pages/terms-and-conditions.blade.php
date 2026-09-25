@@ -38,8 +38,7 @@
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
                             <li>An account is required to place an order. You are responsible for maintaining the confidentiality of your password and for all activity that occurs under your account.</li>
                             <li>You agree to notify us promptly of any unauthorized use of your account.</li>
-                            <li>You may update your account details (including phone number, date of birth, address, and profile photo) at any time through Profile Management.</li>
-                            <li>Siel Cart reserves the right to suspend or terminate accounts that provide false information, violate these Terms, or are used for fraudulent or abusive activity.</li>
+                            <li>You may update your account details (only email, phone number, and date of birth) at any time through Profile Management.</li>
                         </ul>
                     </section>
 
@@ -63,11 +62,11 @@
                         </ul>
                     </section>
 
-                    {{-- 6. Order Modification and Cancellation --}}
+                    {{-- 6. Order Cancellation --}}
                     <section>
-                        <h2 class="text-xl font-bold text-slate-900">6. Order Modification and Cancellation</h2>
+                        <h2 class="text-xl font-bold text-slate-900">6. Order Cancellation</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>You may modify or cancel an order through Track Order Status, provided it has not yet been marked “Ready for Pick-up.” Once an order reaches this status, changes are no longer possible through the System.</li>
+                            <li>You may cancel an order through Track Order Status, provided it has not yet been marked “Processing.” Once an order reaches this status, changes are no longer possible through the System.</li>
                             <li>Cancelling an order releases the reserved item(s) back into available stock.</li>
                         </ul>
                     </section>
@@ -79,7 +78,7 @@
                             <li>All orders are for pick-up only at the UBAP Office. Siel Cart does not offer delivery or shipping, and no delivery address is collected at any point.</li>
                             <li>Once an order is marked “Ready for Pick-up,” you will receive a unique Claim Number. Present this Claim Number at the UBAP Office to collect your order.</li>
                             <li>Someone other than the account holder may claim an order on your behalf, provided they present the correct Claim Number.</li>
-                            <li>Orders must be claimed within the applicable hold period after being marked ready. Orders not claimed within this period will be automatically cancelled, and the reserved item(s) will be returned to inventory.</li>
+                            <li>Orders must be claimed within the applicable hold period after being marked ready. Orders not claimed within this period will be cancelled, and the reserved item(s) will be returned to inventory.</li>
                         </ul>
                     </section>
 
@@ -110,7 +109,6 @@
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
                             <li>Siel Cart provides an AI-powered chatbot for quick, automated answers to common questions. Responses are generated automatically and are provided for convenience only — they do not constitute an official commitment or guarantee by the University.</li>
                             <li>For matters requiring official confirmation (e.g., order-specific concerns, disputes), please submit an inquiry to reach UBAP staff directly.</li>
-                            <li>Chat conversations are logged for quality assurance and are accessible to Super Admin, consistent with the Data Privacy Notice.</li>
                         </ul>
                     </section>
 
@@ -121,14 +119,10 @@
                         <ul class="mt-2 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
                             <li>Create multiple or fraudulent accounts, or provide false registration information;</li>
                             <li>Attempt to access others’ accounts, administrative functions, or data that are not authorized for your role;</li>
-                            <li>Submit fraudulent or abusive return/refund requests, including falsified photo and video evidence;</li>
                             <li>Post false, misleading, or abusive product reviews or inquiries;</li>
                             <li>Use the System for any unlawful purpose or in a manner that could damage, disable, or impair its operation;</li>
                             <li>Attempt to reverse-engineer, scrape, or gain unauthorized access to the System's source code, data, or infrastructure.</li>
                         </ul>
-                        <p class="mt-3 text-base leading-8 text-slate-600">
-                            Violation of this section may result in suspension or termination of your account, without prejudice to any other remedies available to the University under applicable law.
-                        </p>
                     </section>
 
                     {{-- 12. Intellectual Property --}}
@@ -158,12 +152,11 @@
                         </ul>
                     </section>
 
-                    {{-- 15. Termination and Account Suspension --}}
+                    {{-- 15. Termination--}}
                     <section>
-                        <h2 class="text-xl font-bold text-slate-900">15. Termination and Account Suspension</h2>
+                        <h2 class="text-xl font-bold text-slate-900">15. Termination</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>You may stop using Siel Cart and request account deletion at any time, subject to the data retention terms described in the Data Privacy Notice.</li>
-                            <li>Siel Cart reserves the right to suspend or terminate any account that violates these Terms, with or without prior notice, particularly in cases involving fraud, abuse, or unauthorized access attempts.</li>
+                            <li>You may stop using Siel Cart and delete you account at any time, subject to the data retention terms described in the Data Privacy Notice.</li>
                         </ul>
                     </section>
 

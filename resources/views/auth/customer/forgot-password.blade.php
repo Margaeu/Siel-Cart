@@ -9,18 +9,18 @@
     {{-- Tailwind & Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    @include('partials.theme-styles')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] text-gray-800 font-sans antialiased flex items-center justify-center p-4">
+<body class="min-h-screen bg-gray-50 text-gray-800 font-sans antialiased flex flex-col">
+
+    <x-customer-auth-header />
+
+    <div class="flex flex-1 items-center justify-center p-4">
 
     {{-- Main Auth Card --}}
     <div class="w-full max-w-[26.25rem] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.06)] border border-gray-100">
-
-        {{-- Brand / Header --}}
-        <div class="mb-8 flex items-center">
-            <x-customer-auth-brand />
-        </div>
 
         {{-- Card Title & Instructions --}}
         <div class="mb-6">
@@ -29,7 +29,7 @@
             </h1>
             <p class="text-xs text-gray-500 mt-1">
                 Remember your password? 
-                <a href="{{ route('login') }}" class="text-[#4d7318] hover:underline font-semibold">Sign in here</a>
+                <a href="{{ route('login') }}" class="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] hover:underline font-semibold">Sign in here</a>
             </p>
         </div>
 
@@ -67,7 +67,7 @@
                         placeholder="you@clsu.edu.ph"
                         required
                         autofocus
-                        class="w-full text-xs sm:text-sm pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#a37b12] focus:ring-2 focus:ring-[#f6e6aa] transition duration-150"
+                        class="w-full text-xs sm:text-sm pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-secondary)] transition duration-150"
                     >
                 </div>
 
@@ -84,7 +84,7 @@
             {{-- Submit Button --}}
             <button 
                 type="submit" 
-                class="w-full mt-2 py-2.5 px-4 bg-[#557e1b] hover:bg-[#466a15] active:bg-[#385611] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+                class="w-full mt-2 py-2.5 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:brightness-90 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
             >
                 <span>Send Reset Link</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,6 +92,8 @@
                 </svg>
             </button>
         </form>
+
+    </div>
 
     </div>
 

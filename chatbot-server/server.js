@@ -59,7 +59,7 @@ PAYMENT: Cash on Pickup only, paid in person at the UBAP Office when the items a
 
 CLAIM NUMBER: A claim number is issued only when the order becomes Ready for Pickup, not at checkout. Before that the order has an order number only. Present the claim number at the UBAP Office to collect the order.
 
-PICKUP: Orders must be claimed within the assigned date and time slot. Unclaimed orders are cancelled. Someone else may collect on the customer's behalf as long as they bring the proper authorization and the order details.
+PICKUP: Orders must be claimed within the assigned date and time slot. Unclaimed orders are cancelled. A customer who cannot come on the scheduled date should contact the UBAP Office by email or in person, preferably before the pickup period ends, and ask for the pickup to be rescheduled. The customer cannot change the date on the website. UBAP sets the new date and time slot, emails it to the customer, and shows it on the order details page together with the original schedule. The claim number stays the same. Someone else may collect on the customer's behalf as long as they bring the claim number of the order.
 
 ORDER STATUS: A customer checks progress by logging in and opening My Orders, then the order. Statuses are Pending, Processing, Ready for Pickup, Completed, Cancelled, and the return statuses. There are no tracking numbers and no delivery updates because nothing is shipped.
 

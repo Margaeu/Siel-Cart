@@ -9,18 +9,18 @@
     {{-- Tailwind & Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    @include('partials.theme-styles')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-[#edf3ec] text-gray-800 font-sans antialiased flex items-center justify-center p-4">
+<body class="min-h-screen bg-gray-50 text-gray-800 font-sans antialiased flex flex-col">
+
+    <x-customer-auth-header />
+
+    <div class="flex flex-1 items-center justify-center p-4">
 
     {{-- Main Auth Card --}}
     <div class="w-full max-w-[26.25rem] bg-white rounded-3xl p-8 sm:p-10 shadow-[0_10px_35px_-5px_rgba(0,0,0,0.06)] border border-gray-100">
-
-        {{-- Brand / Header --}}
-        <div class="mb-8 flex items-center">
-            <x-customer-auth-brand />
-        </div>
 
         {{-- Card Title & Subtitle --}}
         <div class="mb-6">
@@ -53,7 +53,7 @@
 
         {{-- Envelope Icon Container --}}
         <div class="flex justify-center mb-5">
-            <div class="w-14 h-14 rounded-2xl bg-[#edf3ec] text-[#4d7318] flex items-center justify-center">
+            <div class="w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
@@ -77,7 +77,7 @@
                 @csrf
                 <button 
                     type="submit" 
-                    class="w-full py-2.5 px-4 bg-[#557e1b] hover:bg-[#466a15] active:bg-[#385611] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
+                    class="w-full py-2.5 px-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:brightness-90 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer"
                 >
                     <span>Resend Verification Email</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,6 +96,8 @@
                 </button>
             </form>
         </div>
+    </div>
+
     </div>
 </body>
 </html>

@@ -3,13 +3,14 @@
 namespace Tests\Feature\Filament\Users;
 
 use App\Filament\Pages\Auth\RequestPasswordReset;
+use App\Filament\Pages\Auth\ResetPassword;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\Customer;
 use App\Models\User;
 use App\Notifications\AdminInvitation;
+use App\Notifications\AdminResetPassword;
 use Filament\Actions\Testing\TestAction;
-use Filament\Auth\Pages\PasswordReset\ResetPassword;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -167,6 +168,7 @@ class AdminInvitationTest extends TestCase
         parse_str(parse_url($url, PHP_URL_QUERY), $query);
         $this->assertSame($admin->email, $query['email']);
         $this->assertSame($invitation->token, $query['token']);
+        $this->assertSame('1', $query['invitation']);
     }
 
     public function test_the_invitation_mail_is_branded_and_carries_no_password(): void
@@ -183,7 +185,7 @@ class AdminInvitationTest extends TestCase
         foreach ([$html, $text] as $rendered) {
             $this->assertStringContainsString('Nina Reyes', $rendered);
             $this->assertStringContainsString($admin->email, $rendered);
-            $this->assertStringContainsString('60 minutes', $rendered);
+            $this->assertStringContainsString('3 minutes', $rendered);
             $this->assertStringContainsString(Filament::getPanel('admin')->getLoginUrl(), $rendered);
         }
 
@@ -201,10 +203,10 @@ class AdminInvitationTest extends TestCase
         }
     }
 
-    public function test_admin_invitations_last_60_minutes_while_the_customer_broker_is_unchanged(): void
+    public function test_admin_invitations_last_3_minutes_while_the_customer_broker_is_unchanged(): void
     {
-        $this->assertSame(60, config('auth.passwords.users.expire'));
-        $this->assertSame(60, AdminInvitation::expireMinutes());
+        $this->assertSame(3, config('auth.passwords.users.expire'));
+        $this->assertSame(3, AdminInvitation::expireMinutes());
         $this->assertSame(3, config('auth.passwords.customers.expire'));
         $this->assertSame('users', Filament::getPanel('admin')->getAuthPasswordBroker());
     }
@@ -229,31 +231,100 @@ class AdminInvitationTest extends TestCase
         Auth::guard('web')->logout();
         session()->flush();
 
-        Livewire::test(ResetPassword::class, ['email' => $admin->email, 'token' => $token])
+        Livewire::test(ResetPassword::class, ['email' => $admin->email, 'token' => $token, 'invitation' => true])
+            ->assertSee('Set your password')
+            ->assertSee('Set password')
+            ->assertDontSee('Reset your password')
             ->fillForm([
                 'password' => 'Chosen-by-Nina-2026',
                 'passwordConfirmation' => 'Chosen-by-Nina-2026',
             ])
             ->call('resetPassword')
             ->assertHasNoFormErrors()
-            ->assertNotified(__(Password::PASSWORD_RESET));
+            ->assertNotified('Your password has been set.');
 
         $this->assertTrue(Hash::check('Chosen-by-Nina-2026', $admin->fresh()->password));
         $this->assertFalse(Password::broker('users')->tokenExists($admin->fresh(), $token));
         $this->assertTrue(Auth::guard('web')->validate(['email' => $admin->email, 'password' => 'Chosen-by-Nina-2026']));
 
-        // The same link does not work a second time.
+        // The same link does not work a second time. The token is now consumed,
+        // so mount() itself catches it and the branded "link expired" page
+        // renders before the form ever would - no Livewire round trip needed.
         session()->flush();
 
-        Livewire::test(ResetPassword::class, ['email' => $admin->email, 'token' => $token])
-            ->fillForm([
-                'password' => 'Someone-else-2026',
-                'passwordConfirmation' => 'Someone-else-2026',
-            ])
-            ->call('resetPassword')
-            ->assertNotified(__(Password::INVALID_TOKEN));
+        $reusedUrl = Filament::getPanel('admin')->getResetPasswordUrl($token, $admin->fresh());
+
+        $this->get($reusedUrl)
+            ->assertStatus(419)
+            ->assertViewIs('errors.link-expired')
+            ->assertSee('This reset link has expired');
 
         $this->assertTrue(Hash::check('Chosen-by-Nina-2026', $admin->fresh()->password));
+    }
+
+    public function test_an_expired_or_consumed_invitation_shows_the_branded_expired_page_instead_of_the_form(): void
+    {
+        Notification::fake();
+
+        $admin = $this->createAdminThroughThePanel();
+        $token = $this->sentInvitation($admin)->token;
+
+        Password::broker('users')->deleteToken($admin);
+
+        Auth::guard('web')->logout();
+        session()->flush();
+
+        $expiredUrl = Filament::getPanel('admin')->getResetPasswordUrl($token, $admin, ['invitation' => 1]);
+
+        $this->get($expiredUrl)
+            ->assertStatus(419)
+            ->assertViewIs('errors.link-expired')
+            ->assertSee('This invitation has expired')
+            ->assertSee('Ask a super admin to resend your invitation');
+    }
+
+    public function test_an_expired_admin_reset_link_shows_the_branded_expired_page(): void
+    {
+        Notification::fake();
+
+        $admin = ActivityLogResourceTest::makeAdmin('Known', 'Admin');
+        $admin->assignRole('ubap');
+        $token = Password::broker('users')->createToken($admin);
+
+        Password::broker('users')->deleteToken($admin);
+
+        $expiredUrl = Filament::getPanel('admin')->getResetPasswordUrl($token, $admin);
+
+        $this->get($expiredUrl)
+            ->assertStatus(419)
+            ->assertViewIs('errors.link-expired')
+            ->assertSee('This reset link has expired')
+            ->assertSee('Request a new reset link')
+            ->assertSee(Filament::getPanel('admin')->getRequestPasswordResetUrl(), false)
+            ->assertDontSee('This invitation has expired');
+    }
+
+    public function test_a_forgot_password_link_keeps_the_reset_wording(): void
+    {
+        Notification::fake();
+
+        $admin = $this->createAdminThroughThePanel();
+        $token = Password::broker('users')->createToken($admin);
+
+        Auth::guard('web')->logout();
+        session()->flush();
+
+        // No `invitation` flag: this is the link RequestPasswordReset mails.
+        Livewire::test(ResetPassword::class, ['email' => $admin->email, 'token' => $token])
+            ->assertSee('Reset your password')
+            ->assertDontSee('Set your password')
+            ->fillForm([
+                'password' => 'Forgotten-and-reset-2026',
+                'passwordConfirmation' => 'Forgotten-and-reset-2026',
+            ])
+            ->call('resetPassword')
+            ->assertHasNoFormErrors()
+            ->assertNotified(__(Password::PASSWORD_RESET));
     }
 
     public function test_non_super_admins_cannot_create_admins_even_with_the_create_permission(): void
@@ -337,6 +408,26 @@ class AdminInvitationTest extends TestCase
             ->assertActionHidden(TestAction::make('resendInvitation')->table($inactive));
     }
 
+    public function test_a_super_admin_cannot_resend_an_invitation_to_their_own_account(): void
+    {
+        Notification::fake();
+
+        $other = ActivityLogResourceTest::makeAdmin('Other', 'Admin');
+        $other->assignRole('ubap');
+
+        $this->actingAs($this->superAdmin);
+
+        $list = Livewire::test(ListUsers::class)
+            ->assertActionHidden(TestAction::make('resendInvitation')->table($this->superAdmin))
+            ->assertActionVisible(TestAction::make('resendInvitation')->table($other));
+
+        // Refused, not merely hidden.
+        $this->assertFalse($list->instance()->getAction([['name' => 'resendInvitation', 'context' => ['table' => true, 'recordKey' => $this->superAdmin->getKey()]]])->isAuthorized());
+
+        Notification::assertNothingSent();
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $this->superAdmin->email]);
+    }
+
     public function test_a_mail_failure_keeps_the_account_and_tells_the_super_admin(): void
     {
         Exceptions::fake();
@@ -381,5 +472,44 @@ class AdminInvitationTest extends TestCase
                 ->assertNotified(__(Password::RESET_LINK_SENT))
                 ->assertSet('data.email', null);
         }
+    }
+
+    public function test_the_admin_forgot_password_mail_is_branded_like_the_others(): void
+    {
+        Notification::fake();
+
+        $admin = ActivityLogResourceTest::makeAdmin('Known', 'Admin');
+        $admin->assignRole('ubap');
+
+        Livewire::test(RequestPasswordReset::class)
+            ->fillForm(['email' => $admin->email])
+            ->call('request');
+
+        $sent = null;
+        Notification::assertSentTo($admin, AdminResetPassword::class, function (AdminResetPassword $notification) use (&$sent) {
+            $sent = $notification;
+
+            return true;
+        });
+
+        $mail = $sent->toMail($admin);
+        $html = $mail->render();
+        $text = view($mail->view['text'], $mail->viewData)->render();
+
+        // The link is the panel's signed reset URL, with no invitation flag, so
+        // the page it opens keeps the "Reset" wording.
+        $this->assertStringStartsWith(route('filament.admin.auth.password-reset.reset'), $sent->url);
+        $this->assertTrue(URL::hasValidSignature(Request::create($sent->url)));
+        $this->assertStringNotContainsString('invitation=', $sent->url);
+
+        foreach ([$html, $text] as $rendered) {
+            $this->assertStringContainsString($admin->name, $rendered);
+            $this->assertStringContainsString('RESET YOUR PASSWORD', $rendered);
+            $this->assertStringContainsString('3 minutes', $rendered);
+            $this->assertStringContainsString('UBAP Team', $rendered);
+        }
+
+        $this->assertStringContainsString(htmlspecialchars($sent->url), $html);
+        $this->assertStringContainsString($sent->url, $text);
     }
 }

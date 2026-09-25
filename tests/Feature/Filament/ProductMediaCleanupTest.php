@@ -3,6 +3,8 @@
 namespace Tests\Feature\Filament;
 
 use App\Filament\Resources\Products\Pages\EditProduct;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -183,6 +185,102 @@ class ProductMediaCleanupTest extends TestCase
             ->where('event', 'deleted')
             ->where('properties->old->image_path', 'products/variants/white.jpg')
             ->exists());
+    }
+
+    /**
+     * Removing a variant (or just replacing its image) still deletes the row,
+     * but must not take the R2 file with it while a cart or an order still
+     * points at that exact picture -- otherwise the customer's cart, or the
+     * order history, is left showing a broken <img> tag for a routine
+     * catalogue edit that never touched the whole product. This is the
+     * variant-image counterpart of test_removing_a_variant_deletes_its_images_and_objects,
+     * which covers the same removal when nothing else references the file.
+     *
+     * The product here has no shared image, only per-variant ones -- like
+     * catalogueWithHistory()'s shared photo, a shared image would let the
+     * cart quietly fall back to it and mask the bug this guards against.
+     */
+    public function test_removing_a_variant_keeps_its_image_file_while_a_cart_or_order_still_references_it(): void
+    {
+        $product = Product::factory()->create([
+            'name' => 'Glory & Honor Shirt',
+            'is_active' => true,
+            'has_variants' => true,
+            'sku' => null,
+            'price' => null,
+        ]);
+        $medium = ProductVariant::factory()->for($product)->create(['name' => 'Medium', 'sku' => 'GH-M', 'price' => 320]);
+        $large = ProductVariant::factory()->for($product)->create(['name' => 'Large', 'sku' => 'GH-L', 'price' => 320]);
+        $this->storedImage($product, 'products/variants/medium.jpg', $medium);
+        $this->storedImage($product, 'products/variants/large.jpg', $large);
+
+        $cart = Cart::create(['customer_id' => Customer::factory()->create()->id]);
+        $cartItem = CartItem::create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $medium->id,
+            'quantity' => 1,
+            'product_image' => Storage::disk('r2')->url('products/variants/medium.jpg'),
+        ]);
+
+        $order = Order::create([
+            'customer_id' => Customer::factory()->create()->id,
+            'subtotal' => 320,
+            'total' => 320,
+            'status' => 'completed',
+        ]);
+        $orderItem = OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $medium->id,
+            'product_name' => 'Glory & Honor Shirt',
+            'product_sku' => 'GH-M',
+            'variant_name' => 'Medium',
+            'product_image' => Storage::disk('r2')->url('products/variants/medium.jpg'),
+            'price' => 320,
+            'quantity' => 1,
+            'subtotal' => 320,
+        ]);
+
+        $this->actingAsAdmin();
+
+        // The admin removes the Medium variant entirely, e.g. to retire that
+        // size, leaving only Large.
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->set('data.variants', [
+                "record-{$large->id}" => [
+                    'name' => 'Large',
+                    'sku' => 'GH-L',
+                    'price' => 320,
+                    'stock_quantity' => 5,
+                    'low_stock_threshold' => 2,
+                    'is_active' => true,
+                    'images' => ['products/variants/large.jpg'],
+                ],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        // The variant and its image row are gone, same as without a cart or
+        // order in the picture -- only the file itself is spared.
+        $this->assertDatabaseMissing('product_variants', ['id' => $medium->id]);
+        $this->assertDatabaseMissing('product_images', ['image_path' => 'products/variants/medium.jpg']);
+        Storage::disk('r2')->assertExists('products/variants/medium.jpg');
+
+        // Nothing live is left for this row -- no variant, no shared image --
+        // so it falls back to the snapshot instead of rendering a broken
+        // <img> tag or the generic letter placeholder.
+        $this->assertSame(
+            Storage::disk('r2')->url('products/variants/medium.jpg'),
+            $cartItem->fresh()->display_image_url,
+        );
+
+        // The order line's own snapshot never depended on the live lookup,
+        // but this confirms the file it points at is still there to load.
+        $this->assertSame(
+            Storage::disk('r2')->url('products/variants/medium.jpg'),
+            $orderItem->fresh()->product_image,
+        );
     }
 
     public function test_a_failed_save_keeps_every_file(): void

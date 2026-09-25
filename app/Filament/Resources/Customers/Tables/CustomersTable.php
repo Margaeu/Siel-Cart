@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers\Tables;
 
+use App\Filament\Resources\Customers\CustomerResource;
 use App\Models\Customer;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -86,11 +87,14 @@ class CustomersTable
                 // not CustomerResource::canEdit(), which refuses deleted records.
                 EditAction::make()
                     ->hidden(fn (Customer $record): bool => $record->trashed()),
-                // No delete action: only the customer can delete their own
-                // account, from the storefront (Customer::deleteAccount()).
+                // Hidden for everyone but super admins (and already-deleted
+                // rows) by CustomerResource::canDelete(), which backs this
+                // action's ->authorize(). See deleteAccountAction() for why
+                // it calls Customer::deleteAccount() instead of DeleteAction.
+                CustomerResource::deleteAccountAction(),
             ]);
-            // No bulk actions: DeleteBulkAction, ForceDeleteBulkAction and
-            // RestoreBulkAction would all bypass Customer::deleteAccount(), and
-            // force delete cascades through orders, reviews and reports.
+        // No bulk actions: DeleteBulkAction, ForceDeleteBulkAction and
+        // RestoreBulkAction would all bypass Customer::deleteAccount(), and
+        // force delete cascades through orders, reviews and reports.
     }
 }

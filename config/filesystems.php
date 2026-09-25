@@ -60,14 +60,21 @@ return [
             'report' => false,
         ],
         'r2' => [
-             'driver' => 's3',
-             'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
-             'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
-             'region' => 'auto',
-             'bucket' => env('CLOUDFLARE_R2_BUCKET'),
-             'url' => env('CLOUDFLARE_R2_PUBLIC_URL'),
-             'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
-             'use_path_style_endpoint' => env('CLOUDFLARE_R2_USE_PATH_STYLE_ENDPOINT', false),
+            'driver' => 's3',
+            'key' => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
+            'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+            'url' => env('CLOUDFLARE_R2_PUBLIC_URL'),
+            'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
+            'use_path_style_endpoint' => env('CLOUDFLARE_R2_USE_PATH_STYLE_ENDPOINT', false),
+            // A failed write must throw, not return false: a silent failure
+            // let `->store()` hand back `false` and the review, product, or
+            // category saved a path to a file that was never uploaded.
+            // Deletes that run after a commit catch and report their own
+            // failures (Category, ProductImage).
+            'throw' => true,
+            'report' => true,
         ],
     ],
 

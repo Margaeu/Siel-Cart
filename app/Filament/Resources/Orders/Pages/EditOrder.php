@@ -22,6 +22,10 @@ class EditOrder extends EditRecord
     {
         return [
             RestoreAction::make(),
+            // The form shows the pickup schedule, so it is refilled after a
+            // reschedule or it would save the old dates back on the next submit.
+            OrderResource::reschedulePickupAction()
+                ->after(fn () => $this->fillForm()),
             Action::make('cancel_no_show')
                 ->label('Cancel No-show Order')
                 ->icon('heroicon-o-x-circle')

@@ -34,7 +34,10 @@ class ViewCustomer extends ViewRecord
             // deleted-record rule has to be repeated to hide the button.
             EditAction::make()
                 ->hidden(fn (Customer $record): bool => $record->trashed()),
-            // No delete action: only the customer can delete their own account.
+            // Hidden for everyone but super admins by
+            // CustomerResource::canDelete(). No redirect needed: this page
+            // stays open for a trashed record (see the class docblock).
+            CustomerResource::deleteAccountAction(),
         ];
     }
 }

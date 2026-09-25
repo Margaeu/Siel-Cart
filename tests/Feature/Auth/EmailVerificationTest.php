@@ -164,6 +164,29 @@ class EmailVerificationTest extends TestCase
         $response->assertRedirect(route('customer.dashboard', absolute: false).'?verified=1');
     }
 
+    public function test_an_expired_verification_link_shows_the_branded_expired_page(): void
+    {
+        $customer = Customer::factory()->unverified()->create();
+
+        // Already expired by the time it's requested, rather than waiting on
+        // the clock: the 'signed' middleware only cares whether `now()` is
+        // past the embedded expiry, not how it got there.
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->subMinute(),
+            ['id' => $customer->id, 'hash' => sha1($customer->email)]
+        );
+
+        $response = $this->actingAs($customer, 'customer')->get($verificationUrl);
+
+        $response->assertStatus(403);
+        $response->assertViewIs('errors.link-expired');
+        $response->assertSee('This verification link has expired');
+        $response->assertSee('Resend verification email');
+
+        $this->assertFalse($customer->fresh()->hasVerifiedEmail());
+    }
+
     public function test_email_is_not_verified_with_invalid_hash(): void
     {
         $customer = Customer::factory()->unverified()->create();

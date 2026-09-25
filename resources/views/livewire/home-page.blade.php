@@ -115,7 +115,7 @@
             aria-label="Featured promotions"
         >
             <div
-                class="relative h-[clamp(18rem,40vw,34rem)] touch-pan-y select-none overflow-hidden"
+                class="relative h-[clamp(19rem,32vw,27.5rem)] touch-pan-y select-none overflow-hidden"
                 x-on:touchstart.passive="beginSwipe($event)"
                 x-on:touchmove.passive="moveSwipe($event)"
                 x-on:touchend="endSwipe($event)"
@@ -195,7 +195,7 @@
         </section>
     @else
         <!-- Fallback hero (shown until banners are uploaded in the admin) -->
-        <section class="relative overflow-hidden bg-[var(--color-primary)] py-24 text-white">
+        <section class="relative overflow-hidden bg-[var(--color-primary)] py-16 lg:py-20 text-white">
             <!-- Soft background accents -->
             <div class="pointer-events-none absolute -right-16 -top-16 h-80 w-80 rounded-full bg-[var(--color-secondary)]/10 blur-3xl"></div>
             <div class="pointer-events-none absolute -bottom-24 -left-16 h-96 w-96 rounded-full bg-white/5 blur-3xl"></div>
@@ -205,11 +205,11 @@
                     Official campus store
                 </span>
 
-                <h1 class="text-4xl font-bold tracking-tight md:text-6xl">
+                <h1 class="text-3xl font-bold tracking-tight md:text-5xl">
                     Welcome to {{ config('app.name') }}
                 </h1>
-                <p class="mx-auto mt-4 max-w-2xl text-xl text-white/85 md:text-2xl">
-                    Discover the official merchandise of UPC — made for students, by students.
+                <p class="mx-auto mt-4 max-w-2xl text-base text-white/85 md:text-lg">
+                    Discover the official merchandise of UPC.
                 </p>
 
                 <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -223,11 +223,11 @@
     @endif
 
     <!-- Featured Products -->
-    <section class="bg-emerald-50/40 py-16">
+    <section class="bg-[#F9FAFB] py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-8 flex items-end justify-between">
                 <div>
-                    <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-3xl font-bold text-gray-900">Featured Products</h2>
+                    <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-2xl font-bold text-gray-900">Featured Products</h2>
                     <p class="mt-2 pl-3 text-sm text-gray-500">Hand-picked favorites from the store</p>
                 </div>
                 <a href="{{ route('products.index', ['featured' => 1]) }}"
@@ -278,7 +278,7 @@
                         class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
                         @foreach($featuredProducts as $product)
-                            <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[15rem] lg:w-[16.25rem]">
+                            <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[13rem] lg:w-[13.5rem]">
                                 <livewire:product-card :product="$product" :key="$product->id" />
                             </div>
                         @endforeach
@@ -306,11 +306,37 @@
         </div>
     </section>
 
+    <!-- Best Sellers -->
+    <x-storefront.product-carousel-section
+        heading="Best Sellers"
+        description="The top seller in each category over the last 7 days."
+        :products="$bestSellers"
+        badge="best_seller"
+        aria-label="Best sellers"
+        section-bg-class="bg-[#F9FAFB]"
+        accent-border-class="border-amber-200"
+        empty-heading="No Best Sellers yet."
+        empty-message="Check back once this week's completed orders bring in some sales."
+    />
+
+    <!-- Top Picks -->
+    <x-storefront.product-carousel-section
+        heading="Top Picks"
+        description="The store's top sellers across every category over the last 7 days."
+        :products="$topPicks"
+        badge="top_pick"
+        aria-label="Top picks"
+        section-bg-class="bg-[#F9FAFB]"
+        accent-border-class="border-amber-200"
+        empty-heading="No Top Picks yet."
+        empty-message="Check back once this week's completed orders bring in some sales."
+    />
+
     <!-- Categories Section -->
-    <section class="bg-white py-16">
+    <section class="bg-[#F9FAFB] py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-3xl font-bold text-gray-900">Shop by Category</h2>
+                <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-2xl font-bold text-gray-900">Shop by Category</h2>
                 <p class="mt-2 pl-3 text-sm text-gray-500">Find exactly what you're looking for</p>
             </div>
             <div class="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">

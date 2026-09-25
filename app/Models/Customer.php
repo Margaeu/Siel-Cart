@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\CustomerConfirmEmailChange;
 use App\Notifications\CustomerResetPassword;
 use App\Notifications\CustomerVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -14,6 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -39,6 +41,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'first_name',
         'last_name',
         'email',
+        'pending_email',
         'password',
         'phone',
         'date_of_birth', // Customer's date of birth entered during account registration.
@@ -233,6 +236,59 @@ class Customer extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The current email with its local part partly starred out, for display
+     * on the profile page (e.g. "ma************n@gmail.com"). The full
+     * address is never shown at rest — only revealed by typing it fresh
+     * into the "Change" form.
+     */
+    public function getMaskedEmailAttribute(): string
+    {
+        [$local, $domain] = array_pad(explode('@', $this->email ?? '', 2), 2, '');
+
+        $length = mb_strlen($local);
+
+        $masked = match (true) {
+            $length <= 1 => str_repeat('*', max($length, 1)),
+            $length <= 3 => mb_substr($local, 0, 1).str_repeat('*', $length - 1),
+            default => mb_substr($local, 0, 2).str_repeat('*', $length - 3).mb_substr($local, -1),
+        };
+
+        return $domain === '' ? $masked : "{$masked}@{$domain}";
+    }
+
+    /**
+     * The phone number with everything but the last two digits starred out,
+     * for the same "masked until you click Change" display as masked_email.
+     */
+    public function getMaskedPhoneAttribute(): ?string
+    {
+        if (! $this->phone) {
+            return null;
+        }
+
+        $length = mb_strlen($this->phone);
+
+        return $length <= 2
+            ? str_repeat('*', $length)
+            : str_repeat('*', $length - 2).mb_substr($this->phone, -2);
+    }
+
+    /**
+     * Date of birth with the month and day starred out, keeping only the
+     * year visible (e.g. asterisks/asterisks/2006). date_of_birth isn't
+     * cast (see casts() below), so it is already the raw 'Y-m-d' string the
+     * column stores.
+     */
+    public function getMaskedDateOfBirthAttribute(): ?string
+    {
+        if (! $this->date_of_birth) {
+            return null;
+        }
+
+        return '**/**/'.mb_substr($this->date_of_birth, 0, 4);
+    }
+
+    /**
      * Send the branded verification email instead of Laravel's default
      * VerifyEmail. Fortify's registration flow and its resend endpoint
      * (verification.send) both call this same method, so overriding it
@@ -251,5 +307,21 @@ class Customer extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new CustomerResetPassword($token));
+    }
+
+    /**
+     * Mail the confirmation link for a pending email change to the NEW
+     * address, never the current one — Notification::route() bypasses the
+     * Notifiable's own routeNotificationForMail(), which would otherwise
+     * send to $this->email. Used both when the change is first requested
+     * and when the customer asks to resend it.
+     */
+    public function sendPendingEmailChangeNotification(): void
+    {
+        if (! $this->pending_email) {
+            return;
+        }
+
+        Notification::route('mail', $this->pending_email)->notify(new CustomerConfirmEmailChange($this));
     }
 }

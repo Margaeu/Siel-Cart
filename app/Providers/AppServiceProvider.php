@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Notifications\AdminResetPassword;
+use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Process\Process;
@@ -13,14 +15,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // path.public is deliberately left at Laravel's default (public/). It used
+        // to be rebound to ../public_html/ecommerce for the old shared-hosting
+        // layout; on any host without that folder realpath() returned false, so
+        // the Vite manifest, asset() fonts, and public_path() lookups all broke.
+
+        // The admin panel's "forgot password" page builds its mail with
+        // app(Filament's ResetPassword::class), so binding it here is the only way
+        // to give admins the branded email instead of Laravel's stock layout.
+        $this->app->bind(FilamentResetPassword::class, AdminResetPassword::class);
     }
 
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
+        // Azure terminates HTTPS in front of the app, so without this,
+        // generated URLs default to http:// and signed verification links fail.
         URL::forceScheme('https');
-    }
-}
-    {
+
         // Automatically start the chatbot when running:
         // php artisan serve
 
@@ -31,17 +45,21 @@ class AppServiceProvider extends ServiceProvider
         ) {
             $chatbotPath = base_path('chatbot-server');
 
-            $chatbot = new Process(
-                ['npm.cmd', 'start'],
-                $chatbotPath
-            );
+            if (file_exists($chatbotPath)) {
+                $npmBinary = PHP_OS_FAMILY === 'Windows' ? 'npm.cmd' : 'npm';
 
-            $chatbot->setTimeout(null);
-            $chatbot->start();
+                $chatbot = new Process(
+                    [$npmBinary, 'start'],
+                    $chatbotPath
+                );
 
-            echo PHP_EOL; 
-            echo " Chatbot server starting on port 3000" . PHP_EOL;
-            echo PHP_EOL;
+                $chatbot->setTimeout(null);
+                $chatbot->start();
+
+                echo PHP_EOL;
+                echo ' Chatbot server starting on port 3000'.PHP_EOL;
+                echo PHP_EOL;
+            }
         }
 
         // The auth activity-log listeners (LogSuccessfulAdminLogin, LogAdminLogout,
@@ -50,3 +68,4 @@ class AppServiceProvider extends ServiceProvider
         // with Event::listen() as well made every login/logout/failed attempt
         // write two identical activity-log rows.
     }
+}

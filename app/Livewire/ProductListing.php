@@ -2,32 +2,54 @@
 
 namespace App\Livewire;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use Livewire\Component;
-use App\Models\Category;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
-use Livewire\WithPagination;
+use Livewire\Component;
 
 class ProductListing extends Component
 {
-    use WithPagination;
+    /**
+     * Products added by each "Load more".
+     */
+    public const PAGE_SIZE = 12;
+
+    /**
+     * How many of the matching products are on screen. The listing always
+     * queries the first N rather than "page N", so products already shown
+     * stay in place and in order when more are loaded -- page-based
+     * pagination replaced the grid with the next twelve, and the view's
+     * "Load more" button called a loadMore() that did not exist.
+     *
+     * Locked so a client cannot ask for the whole catalog in one request.
+     */
+    #[Locked]
+    public int $visible = self::PAGE_SIZE;
 
     #[Url]
     public $category = '';
+
     #[Url]
     public $search = '';
+
     #[Url]
     public $minPrice = '';
+
     #[Url]
     public $maxPrice = '';
+
     #[Url]
     public $sort = 'newest';
+
     #[Url]
     public $featured = '';
+
     #[Url]
     public $inStock = false;
+
     public $priceRange = [0, 10000];
 
     public function mount()
@@ -53,14 +75,28 @@ class ProductListing extends Component
         }
     }
 
+    public function loadMore(): void
+    {
+        $this->visible += self::PAGE_SIZE;
+    }
+
+    /**
+     * A new filter or sort is a new result set, so it starts from the first
+     * twelve again rather than keeping a count earned on the previous one.
+     */
+    private function resetVisible(): void
+    {
+        $this->visible = self::PAGE_SIZE;
+    }
+
     public function updatingSearch()
     {
-        $this->resetPage();
+        $this->resetVisible();
     }
 
     public function updatingCategory()
     {
-        $this->resetPage();
+        $this->resetVisible();
     }
 
     public function updatedCategory(): void
@@ -70,24 +106,29 @@ class ProductListing extends Component
 
     public function updatingSort()
     {
-        $this->resetPage();
+        $this->resetVisible();
+    }
+
+    public function updatingFeatured()
+    {
+        $this->resetVisible();
     }
 
     public function updatingInStock()
     {
-        $this->resetPage();
+        $this->resetVisible();
     }
 
     public function applyPriceFilter()
     {
-        $this->resetPage();
+        $this->resetVisible();
     }
 
     public function clearFilters()
     {
         $this->reset(['search', 'category', 'minPrice', 'maxPrice', 'featured', 'inStock']);
         $this->maxPrice = $this->priceRange[1];
-        $this->resetPage();
+        $this->resetVisible();
         $this->dispatch('category-changed', category: '');
     }
 
@@ -103,12 +144,12 @@ class ProductListing extends Component
         // variants are hidden from the storefront and must not be findable.
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('description', 'like', '%' . $this->search . '%')
-                    ->orWhere('sku', 'like', '%' . $this->search . '%')
+                $q->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%')
+                    ->orWhere('sku', 'like', '%'.$this->search.'%')
                     ->orWhereHas('variants', fn (Builder $variants) => $variants
                         ->active()
-                        ->where('sku', 'like', '%' . $this->search . '%'));
+                        ->where('sku', 'like', '%'.$this->search.'%'));
             });
         }
 
@@ -159,7 +200,10 @@ class ProductListing extends Component
             default => $query->latest()->orderBy('id', 'desc'),
         };
 
-        $products = $query->paginate(12);
+        // Always page 1 of size N: total() and hasMorePages() still drive the
+        // progress text and the button, and the first N rows are the ones
+        // already on screen plus the newly loaded ones.
+        $products = $query->paginate($this->visible, ['*'], 'page', 1);
 
         // Keep the "All Products" count independent from the filters applied
         // to the paginated listing. Using $products->total() in the sidebar

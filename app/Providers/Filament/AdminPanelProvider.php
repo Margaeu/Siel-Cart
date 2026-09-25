@@ -5,10 +5,13 @@ namespace App\Providers\Filament;
 use App\Filament\AvatarProviders\SielAvatarProvider;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
+use App\Filament\Pages\Auth\ResetPassword;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Filament\Resources\Reviews\ReviewResource;
+use App\Models\Theme;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Actions\Action;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -17,6 +20,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsIconAlias;
 use Filament\View\PanelsRenderHook;
@@ -34,6 +38,75 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // Same theme row the storefront reads in
+        // resources/views/partials/theme-styles.blade.php, so Admin -> Design ->
+        // Color Themes drives both halves of the site. Wrapped in a try/catch
+        // because this closure is resolved lazily by Filament — including
+        // during `route:cache`/`config:cache` before migrations have run,
+        // when the `themes` table may not exist yet.
+        try {
+            $activeTheme = Theme::active()->first();
+        } catch (\Throwable) {
+            $activeTheme = null;
+        }
+
+        // The hand-picked default palette below is what the panel always used
+        // before theming existed. Keeping it as the no-theme-configured
+        // fallback (instead of running it through Color::hex()) means the
+        // panel looks pixel-identical until an admin actually activates a
+        // theme with a different primary color.
+        $primaryPalette = $activeTheme
+            ? Color::hex($activeTheme->primary_color)
+            : [
+                50 => '#f4f8ec',
+                100 => '#e5efcf',
+                200 => '#cddea8',
+                300 => '#acc875',
+                400 => '#88ac46',
+                500 => '#6e941f',
+                600 => '#557f13',
+                700 => '#436611',
+                800 => '#374f14',
+                900 => '#304415',
+                950 => '#172508',
+            ];
+
+        // Color::hex() below regenerates the whole 50-950 palette from just the
+        // hue/chroma of this hex — it does not preserve the hex itself at any
+        // shade, so --color-primary-600 in theme.css is visibly *not* the same
+        // colour as the storefront's --color-primary (theme-styles.blade.php),
+        // which prints $activeTheme->primary_color verbatim. --color-primary-raw
+        // is that same verbatim value, injected below, so anything in theme.css
+        // that needs to match the storefront exactly (rather than take Filament's
+        // generated shade) reads this instead of a -600/-500/etc slot.
+        $primaryColorRaw = $activeTheme?->primary_color ?? '#557f13';
+
+        // Filament treats `primary` as the default for routine actions such as
+        // Sign in, Add, Create, Save and Edit. In Siel Cart, green is reserved
+        // for the institutional masthead while the active theme's secondary
+        // colour is the call-to-action accent. Apply that convention once so
+        // current and future routine actions stay consistent. Explicit
+        // semantic colours (danger, warning, success, info and gray) are left
+        // intact, and a page may still override this after Action::make().
+        //
+        // 'profile' and 'logout' are excluded: those are Filament's built-in
+        // user-menu items (HasUserMenu::getUserAccountMenuItem() /
+        // getUserLogoutMenuItem()), not routine CRUD actions, and recolouring
+        // them turned "System Admin" / "Sign out" gold instead of the
+        // neutral gray-700 every other dropdown item uses.
+        Action::configureUsing(
+            function (Action $action): void {
+                if (in_array($action->getName(), ['profile', 'logout'], true)) {
+                    return;
+                }
+
+                if (in_array($action->getColor(), [null, 'primary'], true)) {
+                    $action->color('secondary');
+                }
+            },
+            isImportant: true,
+        );
+
         return $panel
             ->default()
             ->id('admin')
@@ -41,9 +114,10 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             // Needed for administrator invitations: a new admin's "Set your password"
             // link opens the reset page registered here. The request page is the
-            // enumeration-safe subclass. Registration stays off — admins are only
-            // ever created by a super admin from the Users resource.
-            ->passwordReset(RequestPasswordReset::class)
+            // enumeration-safe subclass; the reset page says "Set" instead of
+            // "Reset" when opened from an invitation. Registration stays off —
+            // admins are only ever created by a super admin from the Users resource.
+            ->passwordReset(RequestPasswordReset::class, ResetPassword::class)
             // Named rather than left to auth.defaults.passwords so an env override
             // of the default broker cannot point the panel at `customers`.
             ->authPasswordBroker('users')
@@ -85,24 +159,14 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->defaultAvatarProvider(SielAvatarProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
-            // Only `primary` is overridden; every other slot (gray, info, success,
-            // warning, danger) is left at Filament's default so the panel keeps the
-            // stock Filament look with CLSU green as the accent. theme.css reads these
-            // through --color-*-* rather than repeating the hex values.
+            // `primary` and `secondary` are the only overrides; every other slot
+            // (gray, info, success, warning, danger) is left at Filament's default
+            // so the panel keeps the stock Filament look, accented with whichever
+            // theme is active — CLSU green/gold when none is. theme.css reads
+            // these through --color-*-* rather than repeating hex values.
             ->colors([
-                'primary' => [
-                    50 => '#f4f8ec',
-                    100 => '#e5efcf',
-                    200 => '#cddea8',
-                    300 => '#acc875',
-                    400 => '#88ac46',
-                    500 => '#6e941f',
-                    600 => '#557f13',
-                    700 => '#436611',
-                    800 => '#374f14',
-                    900 => '#304415',
-                    950 => '#172508',
-                ],
+                'primary' => $primaryPalette,
+                'secondary' => Color::hex($activeTheme?->secondary_color ?? '#E0A70D'),
             ])
             ->navigationGroups([
                 'System Administration',
@@ -146,6 +210,17 @@ class AdminPanelProvider extends PanelProvider
                     && (OrderResource::canViewAny() || ReviewResource::canViewAny() || ReportResource::canViewAny())
                     ? Blade::render('@livewire(\App\Livewire\Admin\NavigationBadgePoller::class)')
                     : '',
+            )
+            // Makes the theme's raw primary hex available as --color-primary-raw
+            // on every panel page, alongside Filament's generated --color-primary-*
+            // shades. See the comment on $primaryColorRaw above for why theme.css
+            // needs this instead of -600 wherever it must match the storefront exactly.
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render(
+                    '<style>:root {--color-primary-raw: {{ $color }};}</style>',
+                    ['color' => $primaryColorRaw],
+                ),
             )
             ->plugins([
                 FilamentShieldPlugin::make()
