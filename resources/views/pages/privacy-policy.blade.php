@@ -93,10 +93,6 @@
                             <strong>Note:</strong> Change of mind is not a valid reason for refund or exchange.
                         </p>
 
-                        <h3 class="mt-4 text-lg font-semibold text-slate-800">3.5 System and Usage Information</h3>
-                        <p class="mt-2 text-base leading-8 text-slate-600">
-                            The System may automatically record basic technical information, such as login timestamps and session activity, to maintain security, monitor system activity, and troubleshoot technical issues.
-                        </p>
                     </section>
 
                     {{-- 4. Why We Collect and Process Your Personal Data --}}
@@ -287,7 +283,7 @@
                             </p>
 
                             <p><strong>General Reference</strong><br>
-                                <a href="https://clsu.edu.ph/data-privacy" target="_blank" rel="noopener noreferrer" class="text-[var(--color-primary)] underline">CLSU Data Privacy Office</a>
+                                <a href="https://oad.clsu.edu.ph/data-privacy" target="_blank" rel="noopener noreferrer" class="text-[var(--color-primary)] underline">CLSU Data Privacy Office</a>
                             </p>
                         </div>
                         <p class="mt-3 text-base leading-8 text-slate-600">
