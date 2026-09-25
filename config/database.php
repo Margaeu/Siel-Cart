@@ -1,12 +1,79 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
 
 // Aiven requires TLS for MySQL connections. The CA cert lives in the repo
 // (it isn't a secret) so this resolves on any OS/host without a per-machine
 // env var; MYSQL_ATTR_SSL_CA still overrides it if a machine needs a
-// different cert path.
-$aivenCaCertPath = storage_path('certs/aiven-ca.pem');
+// different cert path. A relative override is read from the project root;
+// absolute Linux (/home/...) and Windows (C:\...) paths are used as given.
+$mysqlSslCa = trim((string) env('MYSQL_ATTR_SSL_CA', ''));
+
+if ($mysqlSslCa !== '' && ! preg_match('~^(/|\\\\|[A-Za-z]:[\\\\/])~', $mysqlSslCa)) {
+    $mysqlSslCa = base_path($mysqlSslCa);
+}
+
+if ($mysqlSslCa === '') {
+    $defaultCa = storage_path('certs/aiven-ca.pem');
+    $mysqlSslCa = is_readable($defaultCa) ? $defaultCa : null;
+}
+
+$mysqlSslCaReadable = $mysqlSslCa !== null && is_readable($mysqlSslCa);
+
+// DB_SSL_REQUIRE_VERIFIED_CA turns a missing CA from "connect without
+// verifying" into a hard failure. It is read while the config is loaded, so
+// on Azure `php artisan config:cache` in startup.sh stops the start with this
+// message instead of quietly connecting to whatever answers on DB_HOST.
+$mysqlRequireVerifiedCa = filter_var(env('DB_SSL_REQUIRE_VERIFIED_CA', false), FILTER_VALIDATE_BOOL);
+
+// Server-certificate verification defaults to on whenever a CA is present;
+// DB_SSL_VERIFY_SERVER_CERT only exists to switch it off on a machine that
+// has to, and is refused outright when a verified CA is required.
+$mysqlVerifySetting = env('DB_SSL_VERIFY_SERVER_CERT');
+$mysqlVerifyServerCert = $mysqlVerifySetting === null || $mysqlVerifySetting === ''
+    ? $mysqlSslCa !== null
+    : filter_var($mysqlVerifySetting, FILTER_VALIDATE_BOOL);
+
+if ($mysqlRequireVerifiedCa && ! $mysqlSslCaReadable) {
+    throw new RuntimeException(
+        'DB_SSL_REQUIRE_VERIFIED_CA is true but no readable CA certificate was found'
+        .($mysqlSslCa !== null ? " at [{$mysqlSslCa}]" : '')
+        .'. Commit the Aiven CA to storage/certs/aiven-ca.pem or point MYSQL_ATTR_SSL_CA at it.'
+    );
+}
+
+if ($mysqlRequireVerifiedCa && ! $mysqlVerifyServerCert) {
+    throw new RuntimeException(
+        'DB_SSL_VERIFY_SERVER_CERT cannot be false while DB_SSL_REQUIRE_VERIFIED_CA is true.'
+    );
+}
+
+// Built with plain ifs rather than array_filter(), which would drop a
+// deliberate `false` for the verify flag along with the empty values.
+// PDO::MYSQL_ATTR_* is deprecated from PHP 8.5 in favour of Pdo\Mysql::ATTR_*,
+// so the new constant is only used where the old one is gone.
+//
+// An explicitly configured CA is passed on even when this process cannot
+// read it: PDO then refuses to connect, which is louder than dropping TLS
+// verification without a word.
+$mysqlOptions = [];
+
+if (extension_loaded('pdo_mysql')) {
+    if ($mysqlSslCa !== null) {
+        $mysqlOptions[defined('PDO::MYSQL_ATTR_SSL_CA') ? PDO::MYSQL_ATTR_SSL_CA : Mysql::ATTR_SSL_CA] = $mysqlSslCa;
+    }
+
+    $verifyConstant = match (true) {
+        defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') => PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT,
+        defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') => constant('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT'),
+        default => null,
+    };
+
+    if ($verifyConstant !== null && $mysqlSslCa !== null) {
+        $mysqlOptions[$verifyConstant] = $mysqlVerifyServerCert;
+    }
+}
 
 return [
 
@@ -64,9 +131,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-              (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA', is_file($aivenCaCertPath) ? $aivenCaCertPath : null),
-            ]) : [],
+            'options' => $mysqlOptions,
         ],
 
         'mariadb' => [
@@ -84,9 +149,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-               (defined('Pdo\Mysql::ATTR_SSL_CA') ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA', is_file($aivenCaCertPath) ? $aivenCaCertPath : null),
-            ]) : [],
+            'options' => $mysqlOptions,
         ],
 
         'pgsql' => [

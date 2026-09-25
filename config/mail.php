@@ -48,13 +48,9 @@ return [
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://clsu-shop-project.test'), PHP_URL_HOST)),
-            'stream' => [
-                'ssl' => [
-                    'allow_self_signed' => true,
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                ],
-            ],
+            // No `stream.ssl` overrides: the SMTP server's certificate is
+            // verified normally. Turning verification off let anyone on the
+            // network path read or rewrite order and password-reset mail.
         ],
 
         'ses' => [

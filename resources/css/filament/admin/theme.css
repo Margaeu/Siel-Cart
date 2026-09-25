@@ -6,8 +6,11 @@
 @layer components {
     /* Panel chrome — sidebar, page header, tables, sections — is deliberately left to
        Filament's own stylesheet, so the panel keeps the stock Filament look. The topbar
-       is the one exception (see below): it is the masthead, and it carries the panel's
-       `primary` colour so the two halves of the site read as one product.
+       and the active sidebar item are the two exceptions (see below): the topbar is the
+       masthead, and it carries the panel's `primary` colour so the two halves of the
+       site read as one product; the active sidebar item's highlight is darkened because
+       Filament's stock gray-100 fill is too close to the sidebar's white background to
+       read as "you are here."
        Everything styled here pulls its accent from --color-primary-* / --color-gray-* /
        --color-danger-* instead of hardcoding hex values, so recolouring the panel means
        editing AdminPanelProvider::panel() and nothing else. Do not reintroduce brand hex
@@ -75,6 +78,20 @@
     .fi-topbar .fi-icon-btn:focus-visible,
     .fi-topbar .fi-user-menu-trigger:focus-visible {
         --tw-ring-color: #ffffff;
+    }
+
+    /* Filament's own rule (vendor sidebar.css) fills the active item with bg-gray-100,
+       which barely shows against the sidebar's white/near-white background — admins
+       couldn't tell which navigation label they were on. Darkened to gray-200. Matches
+       Filament's selector specificity (both a two-class compound selector on the same
+       element), so import order (line 1) alone decides the winner; !important is not
+       needed here for that reason. */
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background-color: var(--color-gray-200);
+    }
+
+    .dark .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        background-color: rgb(255 255 255 / 0.12);
     }
 
     .fi-resource-create-record-page .fi-section-header-description,
