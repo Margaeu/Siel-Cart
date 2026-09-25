@@ -27,13 +27,13 @@
             <div class="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12">
                 <div class="max-w-2xl text-white drop-shadow-sm">
                     @if($banner->title)
-                        <h1 class="text-3xl font-bold tracking-[-0.035em] sm:text-4xl lg:text-6xl">
+                        <h1 class="text-2xl font-bold tracking-[-0.035em] sm:text-3xl lg:text-5xl">
                             {{ $banner->title }}
                         </h1>
                     @endif
 
                     @if($banner->subtitle)
-                        <p class="mt-3 text-base font-medium text-white/90 sm:text-lg lg:text-xl">
+                        <p class="mt-3 text-sm font-medium text-white/90 sm:text-base lg:text-lg">
                             {{ $banner->subtitle }}
                         </p>
                     @endif

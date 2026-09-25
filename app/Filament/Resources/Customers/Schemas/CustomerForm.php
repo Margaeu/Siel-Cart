@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Customers\Schemas;
 
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -28,8 +29,18 @@ class CustomerForm
                             ->required(),
                         DateTimePicker::make('email_verified_at')
                             ->label('Email verified at'),
-                        DateTimePicker::make('date_of_birth')
-                            ->label('Birthdate'),
+                        DatePicker::make('date_of_birth')
+                            ->label('Birthdate')
+                            // Mirrors CreateNewCustomer's registration rule: an
+                            // admin edit can't push a customer under the
+                            // 13-year minimum age any more than the customer
+                            // could at signup. maxDate() both disables the
+                            // picker past this date and adds the matching
+                            // before_or_equal validation rule.
+                            ->maxDate(fn () => now()->subYears(13)->startOfDay())
+                            ->validationMessages([
+                                'before_or_equal' => 'The customer must be at least 13 years old.',
+                            ]),
                         TextInput::make('phone')
                             ->tel()
                             ->default(null),

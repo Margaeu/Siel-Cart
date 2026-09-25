@@ -3,13 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\Banner;
-use App\Models\Product;
-use Livewire\Component;
 use App\Models\Category;
+use App\Models\Product;
+use App\Services\HomepageProductRankingService;
+use Livewire\Component;
 
 class HomePage extends Component
 {
-    public function render()
+    public function render(HomepageProductRankingService $rankingService)
     {
         $banners = Banner::where('is_active', true)
             ->ordered()
@@ -26,19 +27,14 @@ class HomePage extends Component
             ->sorted()
             ->withCount('products')
             ->limit(6)
-            ->get(); 
-        $newArrivals = Product::where('is_active', true)
-            ->inStock()
-            ->with(['category', 'cardImage'])
-            ->latest()
-            ->limit(8)
             ->get();
 
-        return view('livewire.home-page',[
+        return view('livewire.home-page', [
             'banners' => $banners,
             'featuredProducts' => $featuredProducts,
             'categories' => $categories,
-            'newArrivals' => $newArrivals
+            'bestSellers' => $rankingService->bestSellers(),
+            'topPicks' => $rankingService->topPicks(),
         ])->layout('components.layouts.front-end-layout');
     }
 }
