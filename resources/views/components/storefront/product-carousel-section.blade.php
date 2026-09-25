@@ -25,10 +25,10 @@
     'ariaLabel' => null,
 ])
 
-<section class="{{ $sectionBgClass }} py-16">
+<section class="{{ $sectionBgClass }} py-12">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
-            <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-3xl font-bold text-gray-900">{{ $heading }}</h2>
+            <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-2xl font-bold text-gray-900">{{ $heading }}</h2>
             <p class="mt-2 pl-3 text-sm text-gray-500">{{ $description }}</p>
         </div>
 
@@ -76,7 +76,7 @@
                     class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                     @foreach($products as $product)
-                        <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[15rem] lg:w-[16.25rem]">
+                        <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[13rem] lg:w-[13.5rem]">
                             <livewire:product-card :product="$product" :badge="$badge" :key="$badge.'-'.$product->id" />
                         </div>
                     @endforeach

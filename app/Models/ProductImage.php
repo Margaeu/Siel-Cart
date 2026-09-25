@@ -15,6 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class ProductImage extends Model
 {
     use HasFactory, LogsActivity;
+
     protected $fillable = [
         'product_id',
         'product_variant_id',
@@ -88,7 +89,7 @@ class ProductImage extends Model
     public function getUrlAttribute()
     {
         return Storage::disk('r2')->url($this->image_path);
-}
+    }
 
     /**
      * Remove image objects from R2 once the surrounding transaction commits.
@@ -150,8 +151,15 @@ class ProductImage extends Model
 
             $orphaned = $paths->diff($stillReferenced)->diff($stillSnapshotted)->values()->all();
 
+            // The r2 disk throws on failure. The rows are already committed,
+            // so an R2 outage must not surface as a failed save or delete --
+            // report the orphaned files and let the request finish.
             if ($orphaned !== []) {
-                Storage::disk('r2')->delete($orphaned);
+                try {
+                    Storage::disk('r2')->delete($orphaned);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         });
     }

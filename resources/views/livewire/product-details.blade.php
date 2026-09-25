@@ -84,6 +84,19 @@
                      qty: 1,
                      adding: false,
 
+                     zoomOpen: false,
+                     zoom: 1,
+                     panX: 0,
+                     panY: 0,
+                     dragging: false,
+                     didDrag: false,
+                     pointerStartX: 0,
+                     pointerStartY: 0,
+                     panStartX: 0,
+                     panStartY: 0,
+                     returnFocus: null,
+                     previousBodyOverflow: '',
+
                      get variant() { return this.variants[this.selected] ?? null },
                      get stock() { return this.hasVariants ? (this.variant?.stock ?? 0) : this.productStock },
                      get inStock() { return this.stock > 0 },
@@ -91,6 +104,82 @@
                      get price() { return this.variant ? this.variant.price : this.fallbackPrice },
                      get sku() { return this.variant ? this.variant.sku : this.fallbackSku },
                      get imageUrl() { return this.imageUrls[this.image] ?? null },
+                     get imagePaths() { return Object.keys(this.imageUrls) },
+
+                     selectImage(path) {
+                         this.image = path;
+                         this.resetZoom();
+                     },
+                     resetZoom() {
+                         this.zoom = 1;
+                         this.panX = 0;
+                         this.panY = 0;
+                         this.dragging = false;
+                         this.didDrag = false;
+                     },
+                     setZoom(value) {
+                         this.zoom = Math.round(Math.min(4, Math.max(1, value)) * 100) / 100;
+
+                         if (this.zoom === 1) {
+                             this.panX = 0;
+                             this.panY = 0;
+                         }
+                     },
+                     openZoom(event) {
+                         if (! this.imageUrl) return;
+
+                         this.returnFocus = event?.currentTarget ?? null;
+                         this.resetZoom();
+                         this.previousBodyOverflow = document.body.style.overflow;
+                         document.body.style.overflow = 'hidden';
+                         this.zoomOpen = true;
+                         this.$nextTick(() => this.$refs.zoomClose?.focus());
+                     },
+                     closeZoom() {
+                         if (! this.zoomOpen) return;
+
+                         this.zoomOpen = false;
+                         document.body.style.overflow = this.previousBodyOverflow;
+                         this.$nextTick(() => this.returnFocus?.focus());
+                     },
+                     toggleZoom() {
+                         if (this.didDrag) {
+                             this.didDrag = false;
+                             return;
+                         }
+
+                         this.setZoom(this.zoom > 1 ? 1 : 2);
+                     },
+                     startPan(event) {
+                         if (this.zoom <= 1) return;
+
+                         this.dragging = true;
+                         this.didDrag = false;
+                         this.pointerStartX = event.clientX;
+                         this.pointerStartY = event.clientY;
+                         this.panStartX = this.panX;
+                         this.panStartY = this.panY;
+                         event.currentTarget.setPointerCapture?.(event.pointerId);
+                     },
+                     movePan(event) {
+                         if (! this.dragging) return;
+
+                         const deltaX = event.clientX - this.pointerStartX;
+                         const deltaY = event.clientY - this.pointerStartY;
+                         this.didDrag = this.didDrag || Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3;
+                         this.panX = this.panStartX + deltaX;
+                         this.panY = this.panStartY + deltaY;
+                     },
+                     endPan() {
+                         this.dragging = false;
+                     },
+                     cycleImage(direction) {
+                         if (this.imagePaths.length < 2) return;
+
+                         const current = Math.max(0, this.imagePaths.indexOf(this.image));
+                         const next = (current + direction + this.imagePaths.length) % this.imagePaths.length;
+                         this.selectImage(this.imagePaths[next]);
+                     },
 
                      pick(id) {
                          const variant = this.variants[id];
@@ -135,8 +224,12 @@
                 <!-- Left Column: Gallery -->
                 <div class="lg:col-span-6 flex flex-col gap-4 mb-8 lg:mb-0">
                     <!-- Main Image Frame -->
-                    <div class="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group">
-                        @if($selectedImage)
+                    @if($selectedImage)
+                        <button type="button"
+                                @click="openZoom($event)"
+                                aria-label="Open product image viewer"
+                                aria-haspopup="dialog"
+                                class="group relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-gray-50 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2">
                             {{-- :src, not a Blade expression: the photo follows
                                  the variant and the thumbnails without a round
                                  trip. The server still renders the opening one
@@ -144,33 +237,42 @@
                             <img src="{{ \Illuminate\Support\Facades\Storage::disk('r2')->url($selectedImage) }}"
                                  :src="imageUrl"
                                  alt="{{ $product->name }}"
-                                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                <span class="text-8xl font-black text-gray-300 select-none">{{ substr($product->name, 0, 1) }}</span>
-                            </div>
-                        @endif
+                                 draggable="false"
+                                 class="h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105 group-focus-visible:scale-105">
 
-                        <!-- Floating Badges Overlay -->
-                        <div class="absolute top-4 left-4 flex flex-col gap-2">
-                            @if($product->is_featured)
-                                <span class="inline-flex items-center gap-1.5 bg-amber-500/90 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
-                                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                    Featured
-                                </span>
-                            @endif
+                            <span class="absolute bottom-3 right-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-2 text-xs font-semibold text-gray-800 shadow-lg ring-1 ring-black/5 backdrop-blur-sm transition group-hover:bg-white">
+                                <svg class="size-4 text-[var(--color-primary)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="7"></circle>
+                                    <path stroke-linecap="round" d="m20 20-4-4m-5-8v6m-3-3h6"></path>
+                                </svg>
+                                <span class="hidden sm:inline">Click to zoom</span>
+                            </span>
+
+                            <!-- Floating Badges Overlay -->
+                            <span class="absolute left-2 top-2 z-10 flex flex-col items-start gap-1.5 sm:left-3 sm:top-3 sm:gap-2">
+                                @if($product->is_featured)
+                                    <span class="rounded-full bg-[var(--color-secondary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-gray-900 shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
+                                        Featured
+                                    </span>
+                                @endif
+                            </span>
+                        </button>
+                    @else
+                        <div class="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gradient-to-br from-gray-100 to-gray-200">
+                            <span class="select-none text-8xl font-black text-gray-300">{{ substr($product->name, 0, 1) }}</span>
                         </div>
-                    </div>
+                    @endif
 
                     <!-- Thumbnails -->
                     @if($galleryImages->count() > 1)
                         <div class="grid grid-cols-5 gap-3">
                             @foreach($galleryImages as $image)
                                 <button type="button"
-                                        @click="image = @js($image->image_path)"
+                                        @click="selectImage(@js($image->image_path))"
+                                        aria-label="View {{ $product->name }} image {{ $loop->iteration }}"
                                         class="relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)]"
                                         :class="image === @js($image->image_path) ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20 scale-95' : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'">
-                                    <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                    <img src="{{ $image->url }}" alt="" class="w-full h-full object-cover">
                                 </button>
                             @endforeach
                         </div>
@@ -368,6 +470,114 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Product Image Viewer -->
+                <template x-teleport="body">
+                    <div x-show="zoomOpen"
+                         x-cloak
+                         x-transition.opacity.duration.200ms
+                         @click.self="closeZoom()"
+                         @keydown.escape.window="closeZoom()"
+                         @keydown.window="
+                             if (! zoomOpen) return;
+                             if ($event.key === 'ArrowLeft') cycleImage(-1);
+                             if ($event.key === 'ArrowRight') cycleImage(1);
+                             if ($event.key === '+' || $event.key === '=') setZoom(zoom + 0.25);
+                             if ($event.key === '-') setZoom(zoom - 0.25);
+                         "
+                         class="fixed inset-0 z-[70] flex flex-col bg-gray-950/95 text-white backdrop-blur-sm"
+                         role="dialog"
+                         aria-modal="true"
+                         aria-label="Product image viewer">
+                        <div class="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold sm:text-base">{{ $product->name }}</p>
+                                <p class="mt-0.5 text-xs text-white/60">Click the image to zoom. Drag while zoomed.</p>
+                            </div>
+                            <button type="button"
+                                    x-ref="zoomClose"
+                                    @click="closeZoom()"
+                                    aria-label="Close product image viewer"
+                                    class="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">
+                                <svg class="size-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4 sm:p-8"
+                             @wheel.prevent="setZoom(zoom + ($event.deltaY < 0 ? 0.25 : -0.25))">
+                            <button type="button"
+                                    x-show="imagePaths.length > 1"
+                                    @click="cycleImage(-1)"
+                                    aria-label="Previous product image"
+                                    class="absolute left-3 z-10 inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] sm:left-6">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6"></path>
+                                </svg>
+                            </button>
+
+                            <img :src="imageUrl"
+                                 alt="{{ $product->name }} enlarged"
+                                 draggable="false"
+                                 @click="toggleZoom()"
+                                 @dragstart.prevent
+                                 @pointerdown.prevent="startPan($event)"
+                                 @pointermove.prevent="movePan($event)"
+                                 @pointerup="endPan()"
+                                 @pointercancel="endPan()"
+                                 :style="`transform: translate3d(${panX}px, ${panY}px, 0) scale(${zoom})`"
+                                 :class="{
+                                     'cursor-zoom-in': zoom === 1,
+                                     'cursor-grab': zoom > 1 && ! dragging,
+                                     'cursor-grabbing': dragging,
+                                     'transition-none': dragging,
+                                     'transition-transform duration-150 ease-out': ! dragging,
+                                 }"
+                                 class="max-h-full max-w-full select-none object-contain [touch-action:none]">
+
+                            <button type="button"
+                                    x-show="imagePaths.length > 1"
+                                    @click="cycleImage(1)"
+                                    aria-label="Next product image"
+                                    class="absolute right-3 z-10 inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] sm:right-6">
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="shrink-0 border-t border-white/10 bg-black/20 px-4 py-3 sm:px-6">
+                            <div class="mx-auto flex max-w-xl items-center justify-center gap-2">
+                                <button type="button"
+                                        @click="setZoom(zoom - 0.25)"
+                                        :disabled="zoom <= 1"
+                                        aria-label="Zoom out"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">
+                                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" d="M6 12h12"></path>
+                                    </svg>
+                                </button>
+                                <span class="w-16 text-center text-sm font-semibold tabular-nums" x-text="`${Math.round(zoom * 100)}%`">100%</span>
+                                <button type="button"
+                                        @click="setZoom(zoom + 0.25)"
+                                        :disabled="zoom >= 4"
+                                        aria-label="Zoom in"
+                                        class="inline-flex size-10 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">
+                                    <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" d="M12 6v12M6 12h12"></path>
+                                    </svg>
+                                </button>
+                                <button type="button"
+                                        x-show="zoom > 1"
+                                        @click="resetZoom()"
+                                        class="ml-2 rounded-full px-3 py-2 text-xs font-semibold text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
 

@@ -15,9 +15,9 @@ use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-
 class Product extends Model
 {
+    use HasFactory, LogsActivity;
     // The trait's forceDelete() is aliased rather than reached via parent::.
     // A method declared here overrides the trait's, so parent::forceDelete()
     // would resolve to Model::forceDelete() -- which only calls delete() and
@@ -25,11 +25,10 @@ class Product extends Model
     use SoftDeletes {
         forceDelete as protected softDeletesForceDelete;
     }
-    use HasFactory, LogsActivity;
 
     public const INACTIVE_CATEGORY_MESSAGE = 'This category is inactive. Choose an active category, or make the product inactive.';
 
-    public const TYPE_LOCKED_MESSAGE ='A product cannot be switched between simple and variant after it is created. Create a new product instead.';
+    public const TYPE_LOCKED_MESSAGE = 'A product cannot be switched between simple and variant after it is created. Create a new product instead.';
 
     protected $fillable = [
         'category_id',
@@ -81,7 +80,7 @@ class Product extends Model
             ->dontSubmitEmptyLogs();
     }
 
-     /**
+    /**
      * Scope to only active products
      */
     #[Scope]
@@ -180,6 +179,24 @@ class Product extends Model
     {
         $query->where('category_id', $categoryId);
     }
+
+    /**
+     * Eligible for the homepage's Best Sellers / Top Picks sections: active,
+     * filed under a category customers can still browse to, and currently in
+     * stock. Admin highlighting (is_featured) is deliberately not required --
+     * those sections are earned by completed sales, and is_featured only
+     * drives the separate Featured Products section. Stock only ever gates
+     * eligibility here -- ranking within it is HomepageProductRankingService's
+     * job, not this scope's.
+     */
+    #[Scope]
+    protected function eligibleForHomepage(Builder $query): void
+    {
+        $query->active()
+            ->whereHas('category', fn (Builder $category) => $category->where('is_active', true))
+            ->inStock();
+    }
+
     /**
      * Scope to filter by price range
      */
@@ -196,11 +213,11 @@ class Product extends Model
         );
     }
 
-     // relationships
-     public function category()
-     {
-         return $this->belongsTo(Category::class);
-     }
+    // relationships
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     /**
      * Variants in the order the admin arranged them. The id breaks ties, so
@@ -214,19 +231,19 @@ class Product extends Model
             ->orderBy('id');
     }
 
-     /**
-      * Every image belonging to this product, shared and variant-specific alike.
-      */
+    /**
+     * Every image belonging to this product, shared and variant-specific alike.
+     */
     public function images()
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
-     /**
-      * Images that belong to the product itself rather than to one variant:
-      * size charts, packaging shots, model displays. These stay visible no
-      * matter which variant the customer selects.
-      */
+    /**
+     * Images that belong to the product itself rather than to one variant:
+     * size charts, packaging shots, model displays. These stay visible no
+     * matter which variant the customer selects.
+     */
     public function generalImages()
     {
         return $this->hasMany(ProductImage::class)
@@ -234,10 +251,10 @@ class Product extends Model
             ->orderBy('sort_order');
     }
 
-     /**
-      * The card/thumbnail image. Scoped to the shared gallery so a variant
-      * image can never be picked up as the product's representative image.
-      */
+    /**
+     * The card/thumbnail image. Scoped to the shared gallery so a variant
+     * image can never be picked up as the product's representative image.
+     */
     public function primaryImage()
     {
         return $this->hasOne(ProductImage::class)
@@ -280,7 +297,7 @@ class Product extends Model
         return $this->hasMany(Review::class)->where('is_approved', true);
     }
 
-     // helper Methods 
+    // helper Methods
     protected $appends = ['stock_status'];
 
     public function getStockStatusAttribute(): string
@@ -523,8 +540,9 @@ class Product extends Model
 
         // The slug is set once, at creation, and never follows later renames:
         // it is the product's public URL, and regenerating it on every name
-        // change broke links that customers and pages had already shared. An
-        // admin can still change it deliberately from the edit form.
+        // change broke links that customers and pages had already shared. The
+        // edit form shows it read-only -- staff don't need to (or should)
+        // hand-edit it -- so nothing besides this hook ever sets it.
         static::creating(function (Product $product) {
             if (blank($product->slug)) {
                 $product->slug = static::uniqueSlug(Str::slug((string) $product->name) ?: 'product');

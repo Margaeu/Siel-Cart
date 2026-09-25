@@ -36,7 +36,7 @@ class ProductDetails extends Component
     public array $newReviewPhotos = [];
 
     /**
-     * Persistent accumulated array of photos (up to 5 photos, max 2MB each)
+     * Persistent accumulated array of photos (up to 5 photos, max 10 MB each)
      *
      * @var TemporaryUploadedFile[]
      */
@@ -243,15 +243,15 @@ class ProductDetails extends Component
 
     /**
      * Appends freshly picked photos without wiping existing ones,
-     * validating each at a 2MB ceiling and enforcing a 5-photo maximum.
+     * validating each at a 10 MB ceiling and enforcing a 5-photo maximum.
      */
     public function updatedNewReviewPhotos(): void
     {
         $this->validate([
-            'newReviewPhotos.*' => ['image', 'max:2048'],
+            'newReviewPhotos.*' => ['image', 'max:10240'],
         ], [
             'newReviewPhotos.*.image' => 'Each file must be a valid image format.',
-            'newReviewPhotos.*.max' => 'Each photo must not exceed 2MB.',
+            'newReviewPhotos.*.max' => 'Each photo must not exceed 10 MB.',
         ]);
 
         foreach ($this->newReviewPhotos as $photo) {
@@ -306,11 +306,12 @@ class ProductDetails extends Component
             'reviewTitle' => ['nullable', 'string', 'max:255'],
             'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
             'reviewPhotos' => ['nullable', 'array', 'max:5'],
-            'reviewPhotos.*' => ['image', 'max:2048'], // 2MB max per image (up to 10MB total)
-            'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:51200'],
+            'reviewPhotos.*' => ['image', 'max:10240'],
+            'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:10240'],
         ], [
             'reviewPhotos.max' => 'You can attach up to 5 photos.',
-            'reviewPhotos.*.max' => 'Each photo must not exceed 2MB.',
+            'reviewPhotos.*.max' => 'Each photo must not exceed 10 MB.',
+            'reviewVideo.max' => 'The video must not exceed 10 MB.',
         ]);
 
         $photoPaths = collect($this->reviewPhotos)

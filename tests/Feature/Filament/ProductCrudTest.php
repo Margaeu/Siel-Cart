@@ -468,6 +468,10 @@ class ProductCrudTest extends TestCase
 
     public function test_an_explicit_slug_edit_must_be_unique_and_well_formed(): void
     {
+        // The field is read-only in the browser (staff aren't meant to touch
+        // it), but Livewire's fillForm() sets component state directly and
+        // isn't stopped by that HTML attribute. These validation rules stay
+        // in place as a defense-in-depth backstop, not a supported workflow.
         $this->simpleProduct(['slug' => 'taken-slug'])->delete();
         $product = $this->simpleProduct(['slug' => 'original']);
         $this->actingAsAdmin();

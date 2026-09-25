@@ -2,6 +2,12 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Rules\UniqueSku;
+use App\Support\Sku;
+use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -9,19 +15,13 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductVariant;
-use App\Rules\UniqueSku;
-use App\Support\Sku;
-use Closure;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Arr;
 
 class ProductForm
@@ -68,17 +68,20 @@ class ProductForm
                                                     ->visibleOn('edit'),
                                             ]),
                                         // Set once from the name at creation and never regenerated
-                                        // on rename (see Product::boot()), so editing it here is
-                                        // the only way a product's URL changes. unique() checks
-                                        // the raw table, so a soft-deleted product's slug counts.
+                                        // on rename (see Product::boot()). Shown read-only rather
+                                        // than editable: it's the product's public URL, and staff
+                                        // don't need to (or should) hand-edit it here. unique()
+                                        // checks the raw table, so a soft-deleted product's slug
+                                        // still counts.
                                         TextInput::make('slug')
                                             ->unique(ignoreRecord: true)
                                             ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')
                                             ->validationMessages([
                                                 'regex' => 'Use lowercase letters, numbers, and single hyphens only.',
                                             ])
-                                            ->visible(fn(string $operation) => $operation === 'edit')
-                                            ->helperText('Used in the product page address. Changing it changes the product\'s URL, and old links will stop working.')
+                                            ->readOnly()
+                                            ->visible(fn (string $operation) => $operation === 'edit')
+                                            ->helperText('Used in the product page address. It is set from the product name and does not change automatically when you rename the product.')
                                             ->required(),
                                     ])->columns(2),
                                 Section::make('Product description')
@@ -106,13 +109,13 @@ class ProductForm
                                             ->required()
                                             ->markAsRequired(false),
                                         Toggle::make('is_featured')
-                                            ->label('Featured')
-                                            ->helperText('Featured products are shown on the home page.')
+                                            ->label('Feature')
+                                            ->helperText('Shows this product in the Featured Products section. Best Sellers and Top Picks are filled by completed sales and do not depend on this setting.')
                                             ->default(false)
                                             ->required()
                                             ->markAsRequired(false),
                                     ])
-                                    ->columns(2)
+                                    ->columns(2),
                             ]),
                         Tab::make('Pricing & Inventory')
                             ->icon(Heroicon::Banknotes)
@@ -159,7 +162,7 @@ class ProductForm
                                             ->default(10)
                                             ->helperText('Flag at or below this number. Set to 0 to disable.'),
                                     ])
-                                    ->columns(2)
+                                    ->columns(2),
                             ]),
                         Tab::make('Images')
                             ->icon(Heroicon::Photo)
@@ -250,8 +253,8 @@ class ProductForm
                                                     ->unsetRelation('generalImages')
                                                     ->unsetRelation('primaryImage');
                                             })
-                                            ->dehydrated(false)
-                                    ])
+                                            ->dehydrated(false),
+                                    ]),
                             ]),
                         Tab::make('Product Variants')
                             ->icon(Heroicon::Squares2x2)
@@ -440,13 +443,13 @@ class ProductForm
                                             // and the arrangement is lost on reload, because nothing
                                             // writes the sort_order column the storefront reads.
                                             ->orderColumn('sort_order')
-                                            ->itemLabel(fn(array $state): ?string => $state['name'] ?? null)
+                                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                                             ->addActionLabel('Add Variant'),
                                     ])
-                                    ->visible(fn(callable $get) => $get('has_variants'))
-                                    ->columnSpanFull()
-                            ]),                                                 
-                                /*
+                                    ->visible(fn (callable $get) => $get('has_variants'))
+                                    ->columnSpanFull(),
+                            ]),
+                        /*
                                 Section::make('Statistics')
                                     ->description('Read-only activity information for this product.')
                                     ->schema([

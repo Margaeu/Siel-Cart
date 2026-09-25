@@ -401,6 +401,11 @@
                         reported "You've viewed 7 of 7" above a full bar, which
                         told the customer nothing and left a tall gap before the
                         footer.
+
+                        $products holds the first N matches (N grows by twelve
+                        per Load more), so count() is exactly what is on screen.
+                        The button disables itself while its own request is in
+                        flight, so a double tap cannot load two batches at once.
                     --}}
                     @if ($products->hasMorePages())
                         @php
@@ -419,6 +424,8 @@
                             <button
                                 type="button"
                                 wire:click="loadMore"
+                                wire:loading.attr="disabled"
+                                wire:target="loadMore"
                                 class="inline-flex min-h-11 items-center justify-center rounded-full border border-gray-300 bg-white px-8 text-sm font-semibold text-gray-800 transition hover:border-gray-400 hover:bg-gray-50 {{ $focusRing }}"
                             >
                                 Load more

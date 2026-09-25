@@ -29,11 +29,12 @@ class CategoryForm
                     ->columns(2)
                     ->schema([
                         Group::make([
-                            // The slug is generated from the name on save, so
-                            // check the generated value here: a name like "!!!"
-                            // slugifies to nothing, and some characters expand
-                            // ("@" becomes "at"), so the slug column's 255 limit
-                            // is checked separately from the name's own.
+                            // The slug is generated from the name once, at
+                            // creation, so check the generated value here: a
+                            // name like "!!!" slugifies to nothing, and some
+                            // characters expand ("@" becomes "at"), so the
+                            // slug column's 255 limit is checked separately
+                            // from the name's own.
                             TextInput::make('name')
                                 ->required()
                                 ->maxLength(255)
@@ -82,9 +83,10 @@ class CategoryForm
                             ->downloadable()
                             ->openable()
                             ->image()
+                            ->maxSize(10240)
                             ->imagePreviewHeight('220')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
-                            ->helperText('Recommended size: Max 2MB.'),
+                            ->helperText('Maximum file size: 10 MB.'),
 
                     ]),
 
