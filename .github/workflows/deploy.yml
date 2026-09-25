@@ -22,7 +22,7 @@ env:
   PHP_VERSION: '8.2'
   # Vite 7 needs Node 20.19+ or 22.12+.
   NODE_VERSION: '22'
-  AZURE_WEBAPP_NAME: 'sielcart'
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'sielcart' }}
 
 jobs:
   build-and-deploy:
