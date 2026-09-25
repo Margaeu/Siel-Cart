@@ -114,10 +114,10 @@ class ActivityLogResourceTest extends TestCase
     {
         $this->assertSame(['index', 'view'], array_keys(ActivityLogResource::getPages()));
 
-        $this->assertTrue(Route::has('filament.admin.resources.activity-logs.index'));
-        $this->assertTrue(Route::has('filament.admin.resources.activity-logs.view'));
-        $this->assertFalse(Route::has('filament.admin.resources.activity-logs.create'));
-        $this->assertFalse(Route::has('filament.admin.resources.activity-logs.edit'));
+        $this->assertTrue(Route::has('filament.admin.resources.admin-activity-logs.index'));
+        $this->assertTrue(Route::has('filament.admin.resources.admin-activity-logs.view'));
+        $this->assertFalse(Route::has('filament.admin.resources.admin-activity-logs.create'));
+        $this->assertFalse(Route::has('filament.admin.resources.admin-activity-logs.edit'));
     }
 
     // --- Access -------------------------------------------------------------

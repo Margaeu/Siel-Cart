@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class SystemSetupSeeder extends Seeder
 {
@@ -16,23 +17,33 @@ class SystemSetupSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Create Default Admin Account
-        User::firstOrCreate(
+        // 1. Create Default Admin Account. is_active + super_admin are both
+        // required for User::canAccessPanel() — without either, this account
+        // can log in to Fortify's `web` guard but gets bounced from /admin.
+        $admin = User::firstOrCreate(
             ['email' => 'admin@admin.com'],
             [
                 'first_name' => 'System',
                 'last_name' => 'Admin',
                 'password' => Hash::make('password'), // Change this in production
+                'is_active' => true,
                 // 'email_verified_at' => now(),
             ]
         );
 
+        $superAdminRole = Role::firstOrCreate(
+            ['name' => 'super_admin', 'guard_name' => 'web']
+        );
+
+        if (! $admin->hasRole($superAdminRole)) {
+            $admin->assignRole($superAdminRole);
+        }
+
         // 2. Create Permanent System Categories
         $categories = [
-            'Tshirts',
-            'Mugs',
-            'Accessories',
-            'Stationary',
+            'Merchandise',
+            'Athletics',
+            'Gift Set',
         ];
 
         foreach ($categories as $categoryName) {

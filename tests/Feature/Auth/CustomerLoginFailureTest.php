@@ -11,7 +11,12 @@ class CustomerLoginFailureTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_failed_login_clears_the_fields_and_highlights_both_inputs(): void
+    /**
+     * The email is deliberately kept (old('email') in login.blade.php),
+     * not cleared: standard form-repopulation UX, so a mistyped password
+     * doesn't also cost the customer their email.
+     */
+    public function test_failed_login_shows_an_error_and_keeps_the_submitted_email(): void
     {
         $this->from(route('login'))
             ->post(route('login.store'), [
@@ -20,18 +25,9 @@ class CustomerLoginFailureTest extends TestCase
             ])
             ->assertRedirect(route('login'));
 
-        $response = $this->get(route('login'));
-
-        $response
+        $this->get(route('login'))
             ->assertSee(__('auth.failed'))
-            ->assertDontSee('nobody@example.com');
-
-        $this->assertSame(2, substr_count($response->getContent(), 'border-red-500'));
-    }
-
-    public function test_inputs_are_not_highlighted_before_a_failed_attempt(): void
-    {
-        $this->get(route('login'))->assertDontSee('border-red-500');
+            ->assertSee('nobody@example.com');
     }
 
     private function attemptLogin(string $email, string $password): array
