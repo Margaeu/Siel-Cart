@@ -41,12 +41,12 @@ jobs:
             exit 1
           fi
 
-      #- name: Check the Aiven CA certificate is present
-      #  run: |
-       #   if [ ! -r storage/certs/aiven-ca.pem ]; then
-       #     echo "::error file=storage/certs/README.md::storage/certs/aiven-ca.pem is missing or unreadable. Download the genuine CA from the Aiven console and commit it (see storage/certs/README.md)."
-       #     exit 1
-       #   fi
+      - name: Check the Aiven CA certificate is present
+        run: |
+          if [ ! -s storage/certs/aiven-ca.pem ]; then
+            echo "::error file=storage/certs/README.md::storage/certs/aiven-ca.pem is missing, unreadable, or empty. Download the genuine CA from the Aiven console and commit it (see storage/certs/README.md)."
+            exit 1
+          fi
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -70,12 +70,19 @@ jobs:
       - name: Validate composer.json and composer.lock
         run: composer validate --no-check-publish
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # Dev dependencies (phpunit) and built assets are needed for the test
+      # suite below; the production, --no-dev install happens after tests pass.
       - name: Install Dependencies & Build Assets
-  run: |
-    composer install --no-dev --optimize-autoloader
-    npm ci
-    npm run build
-    
+        run: |
+          composer install --optimize-autoloader
+          npm ci
+          npm run build
 
       # phpunit.xml pins the test database (sqlite :memory:), mail, cache,
       # queue and session drivers; the .env only has to supply an APP_KEY.
