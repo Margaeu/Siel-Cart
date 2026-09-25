@@ -1,0 +1,42 @@
+{
+  "public/fonts/filament/filament/acumin-pro/Acumin-BdItPro.otf": {
+    "file": "assets/Acumin-BdItPro-CSyjlJlK.otf",
+    "src": "public/fonts/filament/filament/acumin-pro/Acumin-BdItPro.otf"
+  },
+  "public/fonts/filament/filament/acumin-pro/Acumin-BdPro.otf": {
+    "file": "assets/Acumin-BdPro-BLu4jcM7.otf",
+    "src": "public/fonts/filament/filament/acumin-pro/Acumin-BdPro.otf"
+  },
+  "public/fonts/filament/filament/acumin-pro/Acumin-ItPro.otf": {
+    "file": "assets/Acumin-ItPro-Bu8sHhSN.otf",
+    "src": "public/fonts/filament/filament/acumin-pro/Acumin-ItPro.otf"
+  },
+  "public/fonts/filament/filament/acumin-pro/Acumin-RPro.otf": {
+    "file": "assets/Acumin-RPro-IBNzA6ml.otf",
+    "src": "public/fonts/filament/filament/acumin-pro/Acumin-RPro.otf"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CHTD6fdx.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/css/filament/admin/theme.css": {
+    "file": "assets/theme-81oZ1Vi5.css",
+    "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true,
+    "name": "theme",
+    "names": [
+      "theme.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-l0sNRNKZ.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
+}

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Notifications\AdminResetPassword;
 use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Process\Process;
 
@@ -30,6 +31,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Azure terminates HTTPS in front of the app, so without this,
+        // generated URLs default to http:// and signed verification links fail.
+        URL::forceScheme('https');
+
         // Automatically start the chatbot when running:
         // php artisan serve
 
@@ -61,6 +66,6 @@ class AppServiceProvider extends ServiceProvider
         // LogFailedAdminLogin) are NOT registered here on purpose: Laravel's event
         // discovery already picks up everything in app/Listeners. Registering them
         // with Event::listen() as well made every login/logout/failed attempt
-        // write two identical activity-log rows..
+        // write two identical activity-log rows.
     }
 }
