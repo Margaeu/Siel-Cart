@@ -20,6 +20,8 @@ class HomePage extends Component
             ->featured()
             ->inStock()
             ->with(['category', 'cardImage'])
+            ->withStockAggregates()
+            ->withReviewAggregates()
             ->limit(8)
             ->get();
 

@@ -23,45 +23,67 @@
                     </span>
                 </div>
 
-                {{-- Order Ready Banner (Optional / Conditional) --}}
-                @if(isset($readyForPickupOrder))
-                    <div class="bg-[#FFFDF4] border border-[#FDE5A3] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-[#F8A825] text-white flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-900 text-sm">
-                                    Your order {{ $readyForPickupOrder->order_number }} is ready for pickup
-                                    @if($readyForPickupOrder->reschedule_count > 0)
-                                        <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[0.6875rem] font-semibold text-amber-800">Rescheduled</span>
-                                    @endif
-                                </h4>
-                                <div class="flex flex-wrap items-center gap-x-3 text-xs text-gray-500 mt-1">
-                                    @if($readyForPickupOrder->claim_number)
-                                        <span>Claim no. <strong class="text-gray-700 font-semibold">{{ $readyForPickupOrder->claim_number }}</strong></span>
-                                        <span>•</span>
-                                    @endif
-                                    <span>
-                                        UBAP Office
-                                        @if($readyForPickupOrder->pickup_date)
-                                            · <strong class="text-gray-700 font-semibold">{{ $readyForPickupOrder->pickup_date->format('M d, Y') }}</strong>
+                {{-- Order Action Banners: one per processing / ready-for-pickup order, stacked --}}
+                @if($actionableOrders->isNotEmpty())
+                    <div class="space-y-3">
+                        @foreach($actionableOrders as $order)
+                            @php
+                                $isReady = in_array($order->status, ['ready_for_pickup', 'ready']);
+                            @endphp
+                            <div class="{{ $isReady ? 'bg-[#FFFDF4] border-[#FDE5A3]' : 'bg-[#F2F7FF] border-[#C6DDF7]' }} border rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-10 h-10 rounded-xl {{ $isReady ? 'bg-[#F8A825]' : 'bg-[#2F80C4]' }} text-white flex items-center justify-center shrink-0">
+                                        @if($isReady)
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                            </svg>
+                                        @else
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                            </svg>
                                         @endif
-                                        @if($readyForPickupOrder->pickup_slot)
-                                            · {{ $readyForPickupOrder->pickup_slot }}
-                                        @endif
-                                    </span>
-                                    <span>•</span>
-                                    <span>Pay in cash: <strong class="text-gray-800 font-semibold">₱{{ number_format($readyForPickupOrder->total, 2) }}</strong></span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 text-sm">
+                                            @if($isReady)
+                                                Your order {{ $order->order_number }} is ready for pickup
+                                            @else
+                                                Your order {{ $order->order_number }} is being processed
+                                            @endif
+                                            @if($isReady && $order->reschedule_count > 0)
+                                                <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[0.6875rem] font-semibold text-amber-800">Rescheduled</span>
+                                            @endif
+                                        </h4>
+                                        <div class="flex flex-wrap items-center gap-x-3 text-xs text-gray-500 mt-1">
+                                            @if($isReady)
+                                                @if($order->claim_number)
+                                                    <span>Claim no. <strong class="text-gray-700 font-semibold">{{ $order->claim_number }}</strong></span>
+                                                    <span>•</span>
+                                                @endif
+                                                <span>
+                                                    UBAP Office
+                                                    @if($order->pickup_date)
+                                                        · <strong class="text-gray-700 font-semibold">{{ $order->pickup_date->format('M d, Y') }}</strong>
+                                                    @endif
+                                                    @if($order->pickup_slot)
+                                                        · {{ $order->pickup_slot }}
+                                                    @endif
+                                                </span>
+                                                <span>•</span>
+                                            @else
+                                                <span>We'll email you once it's ready for pickup</span>
+                                                <span>•</span>
+                                            @endif
+                                            <span>Pay in cash: <strong class="text-gray-800 font-semibold">₱{{ number_format($order->total, 2) }}</strong></span>
+                                        </div>
+                                    </div>
                                 </div>
+                                <a href="{{ route('customer.orders.show', $order->id) }}"
+                                   class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-xs font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:w-auto sm:shrink-0">
+                                    View order
+                                </a>
                             </div>
-                        </div>
-                        <a href="{{ route('customer.orders.show', $readyForPickupOrder->id) }}"
-                           class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-xs font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:w-auto sm:shrink-0">
-                            View order
-                        </a>
+                        @endforeach
                     </div>
                 @endif
 

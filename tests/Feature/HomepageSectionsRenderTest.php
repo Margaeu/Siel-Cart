@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Livewire\HomePage;
+use App\Livewire\ProductCard;
+use App\Livewire\ProductDetails;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Order;
@@ -114,6 +116,33 @@ class HomepageSectionsRenderTest extends TestCase
 
         Livewire::test(HomePage::class)
             ->assertSeeText('Top Pick');
+    }
+
+    public function test_featured_and_new_badges_appear_with_each_ranked_card_badge(): void
+    {
+        $product = $this->eligibleProduct(['is_featured' => true]);
+
+        Livewire::test(ProductCard::class, ['product' => $product, 'badge' => 'best_seller'])
+            ->assertSeeText('Best Seller')
+            ->assertSeeText('Featured')
+            ->assertSeeText('New');
+
+        Livewire::test(ProductCard::class, ['product' => $product, 'badge' => 'top_pick'])
+            ->assertSeeText('Top Pick')
+            ->assertSeeText('Featured')
+            ->assertSeeText('New');
+    }
+
+    public function test_product_details_show_all_qualifying_badges_together(): void
+    {
+        $product = $this->eligibleProduct(['is_featured' => true]);
+        $this->sellOnce($product);
+
+        Livewire::test(ProductDetails::class, ['slug' => $product->slug])
+            ->assertSeeText('Best Seller')
+            ->assertSeeText('Top Pick')
+            ->assertSeeText('Featured')
+            ->assertSeeText('New');
     }
 
     /**

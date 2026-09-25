@@ -303,6 +303,19 @@ class Order extends Model
     }
 
     /**
+     * Build the stored pickup_slot string from a single reschedule time.
+     *
+     * A reschedule gives the customer one specific time UBAP arranged with
+     * them over the phone, not the original pickup-period interval.
+     * pickupDeadline()'s regex matches a lone time just as well as a range,
+     * so no other code needs to know pickup_slot can hold either shape.
+     */
+    public static function pickupTimeFrom(string $time): string
+    {
+        return CarbonImmutable::parse($time)->format('g:i A');
+    }
+
+    /**
      * Whether UBAP can move this order's pickup to another day, e.g. because
      * the customer asked to collect later. Unlike no-show cancellation this
      * does not wait for the pickup period to end: a customer who calls ahead
@@ -316,7 +329,9 @@ class Order extends Model
     }
 
     /**
-     * Move the pickup to a new date and time interval.
+     * Move the pickup to a new date and a specific time UBAP arranged with
+     * the customer (see pickupTimeFrom()) — not the original pickup-period
+     * interval from Ready for Pickup.
      *
      * The very first schedule is copied into original_pickup_* the first time
      * this runs and never overwritten, so "originally scheduled for" stays

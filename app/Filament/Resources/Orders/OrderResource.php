@@ -103,12 +103,15 @@ class OrderResource extends Resource
                 .'The customer keeps the same claim number and is emailed the new schedule.')
             ->modalSubmitActionLabel('Reschedule and notify customer')
             ->fillForm(function (Order $record): array {
+                // The current schedule may still be the original interval
+                // (e.g. "8:00 AM - 5:00 PM") or an earlier reschedule's single
+                // time; either way, the last time in it is the closest guess
+                // at what UBAP would arrange again.
                 preg_match_all('/(?:0?[1-9]|1[0-2]):[0-5][0-9]\s*(?:AM|PM)/i', (string) $record->pickup_slot, $matches);
                 $times = $matches[0];
 
                 return [
-                    'pickup_start_time' => filled($times) ? Carbon::parse(reset($times))->format('H:i') : '08:00',
-                    'pickup_end_time' => count($times) > 1 ? Carbon::parse(end($times))->format('H:i') : '17:00',
+                    'pickup_time' => filled($times) ? Carbon::parse(end($times))->format('H:i') : '17:00',
                 ];
             })
             ->schema([
@@ -116,17 +119,12 @@ class OrderResource extends Resource
                     ->label('New pickup date')
                     ->minDate(today())
                     ->required(),
-                TimePicker::make('pickup_start_time')
-                    ->label('Pickup Time From')
+                // A reschedule is a specific time UBAP agreed with the
+                // customer over the phone, not the original pickup-period
+                // interval — see Order::pickupTimeFrom().
+                TimePicker::make('pickup_time')
+                    ->label('Pickup Time')
                     ->seconds(false)
-                    ->required(),
-                TimePicker::make('pickup_end_time')
-                    ->label('Pickup Time Until')
-                    ->seconds(false)
-                    ->after('pickup_start_time')
-                    ->validationMessages([
-                        'after' => 'The pickup end time must be later than the start time.',
-                    ])
                     ->required(),
                 Textarea::make('reason')
                     ->label('Reason (internal)')
@@ -145,7 +143,7 @@ class OrderResource extends Resource
                 try {
                     $order = $record->reschedulePickup(
                         $data['pickup_date'],
-                        Order::pickupSlotFrom($data['pickup_start_time'], $data['pickup_end_time']),
+                        Order::pickupTimeFrom($data['pickup_time']),
                         $data['reason'] ?? null,
                         auth()->id(),
                     );

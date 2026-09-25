@@ -122,7 +122,7 @@
                     </div>
                 </form>
 
-                <div class="flex shrink-0 items-center gap-1">
+                <div class="-ml-4 flex shrink-0 items-center gap-1 lg:-ml-7">
                     @auth('customer')
                         <a
                             href="{{ route('customer.dashboard') }}"

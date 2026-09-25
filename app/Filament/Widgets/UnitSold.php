@@ -3,11 +3,13 @@
 namespace App\Filament\Widgets;
 
 use App\Models\OrderItem;
+use App\Services\HomepageProductRankingService;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
@@ -50,10 +52,23 @@ class UnitSold extends TableWidget
     {
         return $table
             ->query(fn (): Builder => OrderItem::query()
+                // Left join rather than the product()/category() relations so
+                // a force-deleted product (product_id null) still produces a
+                // row instead of dropping out. withTrashed isn't needed here
+                // either: an ordinary join already matches a soft-deleted
+                // product row, which is what we want -- the same "still shows
+                // what it sold under" reasoning as OrderItem::product().
+                ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
+                ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
                 ->select(self::ROW_COLUMNS)
                 // Filament needs a key per row. No line belongs to two rows,
                 // so the lowest line id in each is unique.
                 ->selectRaw('MIN(order_items.id) as id')
+                // category_id determines category name, but MySQL's
+                // ONLY_FULL_GROUP_BY has no way to know that from a joined
+                // table, so it's wrapped in MIN() instead of added to the
+                // GROUP BY list.
+                ->selectRaw('MIN(categories.name) as category_name')
                 ->selectRaw('SUM(order_items.quantity) as units_sold')
                 ->selectRaw('SUM(order_items.subtotal) as sales_amount')
                 // Through the relationship so soft-deleted orders drop out
@@ -90,6 +105,13 @@ class UnitSold extends TableWidget
                     ->label('SKU')
                     ->searchable()
                     ->placeholder('No SKU'),
+                TextColumn::make('category_name')
+                    ->label('Category')
+                    // Null for a force-deleted product (product_id is null)
+                    // rather than an absent category -- every live category
+                    // relation is protected by restrictOnDelete().
+                    ->placeholder('No category')
+                    ->sortable(),
                 TextColumn::make('units_sold')
                     ->label('Units Sold')
                     ->numeric()
@@ -128,6 +150,35 @@ class UnitSold extends TableWidget
                         }
 
                         return $indicators;
+                    }),
+                // Best Seller and Top Pick are not stored flags -- Product has
+                // no such column. They're computed live by
+                // HomepageProductRankingService from a rolling 7-day window of
+                // completed, paid sales (Best Sellers capped at one per
+                // category, both capped at 8 products), exactly as the
+                // homepage badges them. This filter reuses that same service
+                // rather than re-deriving the rule, so it always agrees with
+                // what customers currently see badged on the storefront.
+                SelectFilter::make('highlight')
+                    ->label('Homepage Highlight')
+                    ->options([
+                        'best_seller' => 'Best Seller',
+                        'top_pick' => 'Top Pick',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+
+                        if (! $value) {
+                            return $query;
+                        }
+
+                        $ranking = app(HomepageProductRankingService::class);
+
+                        $productIds = $value === 'best_seller'
+                            ? $ranking->bestSellers()->pluck('id')
+                            : $ranking->topPicks()->pluck('id');
+
+                        return $query->whereIn('order_items.product_id', $productIds);
                     }),
             ])
             ->emptyStateHeading('No sales to show')

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Report;
 use App\Models\Review;
 use App\Services\CartService;
+use App\Services\HomepageProductRankingService;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -489,7 +490,7 @@ class ProductDetails extends Component
         return $relatedProducts;
     }
 
-    public function render()
+    public function render(HomepageProductRankingService $rankingService)
     {
         $relatedProducts = $this->relatedProducts();
 
@@ -516,6 +517,8 @@ class ProductDetails extends Component
             ->all();
 
         return view('livewire.product-details', [
+            'isBestSeller' => $rankingService->bestSellers()->contains('id', $this->product->id),
+            'isTopPick' => $rankingService->topPicks()->contains('id', $this->product->id),
             'relatedProducts' => $relatedProducts,
             'galleryImages' => $galleryImages,
             'variantOptions' => $variantOptions,

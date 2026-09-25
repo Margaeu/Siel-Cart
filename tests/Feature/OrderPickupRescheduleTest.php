@@ -83,10 +83,10 @@ class OrderPickupRescheduleTest extends TestCase
         $order = $this->readyOrder();
         $claimNumber = $order->claim_number;
 
-        $order = $order->reschedulePickup('2026-09-30', '9:00 AM - 12:00 PM', 'Customer is out of town');
+        $order = $order->reschedulePickup('2026-09-30', '4:00 PM', 'Customer is out of town');
 
         $this->assertSame('2026-09-30', $order->pickup_date->toDateString());
-        $this->assertSame('9:00 AM - 12:00 PM', $order->pickup_slot);
+        $this->assertSame('4:00 PM', $order->pickup_slot);
         $this->assertSame('2026-09-26', $order->original_pickup_date->toDateString());
         $this->assertSame('8:00 AM - 5:00 PM', $order->original_pickup_slot);
         $this->assertTrue($order->rescheduled_at->equalTo(now()));
@@ -95,7 +95,7 @@ class OrderPickupRescheduleTest extends TestCase
         $this->assertSame($claimNumber, $order->claim_number);
 
         $this->assertSame(
-            'Pickup rescheduled from Sep 26, 2026 (8:00 AM - 5:00 PM) to Sep 30, 2026 (9:00 AM - 12:00 PM). Reason: Customer is out of town',
+            'Pickup rescheduled from Sep 26, 2026 (8:00 AM - 5:00 PM) to Sep 30, 2026 (4:00 PM). Reason: Customer is out of town',
             $order->rescheduleHistories()->sole()->notes,
         );
     }
@@ -103,8 +103,8 @@ class OrderPickupRescheduleTest extends TestCase
     public function test_a_second_reschedule_keeps_the_very_first_schedule_as_the_original(): void
     {
         $order = $this->readyOrder()
-            ->reschedulePickup('2026-09-30', '9:00 AM - 12:00 PM')
-            ->reschedulePickup('2026-10-02', '1:00 PM - 4:00 PM');
+            ->reschedulePickup('2026-09-30', '4:00 PM')
+            ->reschedulePickup('2026-10-02', '1:00 PM');
 
         $this->assertSame('2026-10-02', $order->pickup_date->toDateString());
         $this->assertSame('2026-09-26', $order->original_pickup_date->toDateString());
@@ -119,7 +119,7 @@ class OrderPickupRescheduleTest extends TestCase
         $order = $this->readyOrder();
         $this->assertTrue($order->canBeCancelledForNoShow());
 
-        $order = $order->reschedulePickup('2026-09-30', '8:00 AM - 5:00 PM');
+        $order = $order->reschedulePickup('2026-09-30', '5:00 PM');
 
         $this->assertFalse($order->canBeCancelledForNoShow());
     }
@@ -128,14 +128,16 @@ class OrderPickupRescheduleTest extends TestCase
     {
         $this->expectException(ValidationException::class);
 
-        $this->readyOrder()->reschedulePickup('2026-09-24', '8:00 AM - 5:00 PM');
+        $this->readyOrder()->reschedulePickup('2026-09-24', '4:00 PM');
     }
 
     public function test_an_unchanged_schedule_is_rejected(): void
     {
+        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '4:00 PM');
+
         $this->expectException(ValidationException::class);
 
-        $this->readyOrder()->reschedulePickup('2026-09-26', '8:00 AM - 5:00 PM');
+        $order->reschedulePickup('2026-09-30', '4:00 PM');
     }
 
     public function test_only_ready_for_pickup_orders_can_be_rescheduled(): void
@@ -144,7 +146,7 @@ class OrderPickupRescheduleTest extends TestCase
             $order = $this->readyOrder(['status' => $status]);
 
             $this->assertFalse($order->canBeRescheduled(), $status);
-            $this->assertNull($order->reschedulePickup('2026-09-30', '8:00 AM - 5:00 PM'), $status);
+            $this->assertNull($order->reschedulePickup('2026-09-30', '4:00 PM'), $status);
             $this->assertSame(0, $order->fresh()->reschedule_count, $status);
         }
     }
@@ -161,8 +163,7 @@ class OrderPickupRescheduleTest extends TestCase
             ->assertActionVisible('reschedule_pickup')
             ->callAction('reschedule_pickup', data: [
                 'pickup_date' => '2026-09-30',
-                'pickup_start_time' => '09:00',
-                'pickup_end_time' => '12:00',
+                'pickup_time' => '16:00',
                 'reason' => 'Customer called',
             ])
             ->assertHasNoFormErrors()
@@ -170,7 +171,7 @@ class OrderPickupRescheduleTest extends TestCase
 
         $order->refresh();
         $this->assertSame('2026-09-30', $order->pickup_date->toDateString());
-        $this->assertSame('9:00 AM - 12:00 PM', $order->pickup_slot);
+        $this->assertSame('4:00 PM', $order->pickup_slot);
         $this->assertSame($admin->id, $order->rescheduleHistories()->sole()->user_id);
 
         Mail::assertSent(OrderRescheduledMail::class, function (OrderRescheduledMail $mail) use ($order): bool {
@@ -189,8 +190,7 @@ class OrderPickupRescheduleTest extends TestCase
         Livewire::test(EditOrder::class, ['record' => $order->id])
             ->callAction('reschedule_pickup', data: [
                 'pickup_date' => '2026-09-30',
-                'pickup_start_time' => '08:00',
-                'pickup_end_time' => '17:00',
+                'pickup_time' => '17:00',
             ])
             ->assertNotified('Pickup rescheduled')
             ->assertSchemaStateSet(['pickup_date' => '2026-09-30']);
@@ -201,7 +201,7 @@ class OrderPickupRescheduleTest extends TestCase
     public function test_the_admin_order_page_shows_the_original_schedule_and_history(): void
     {
         $admin = $this->actingAsAdmin();
-        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '9:00 AM - 12:00 PM', 'Customer called', $admin->id);
+        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '4:00 PM', 'Customer called', $admin->id);
 
         Livewire::test(ViewOrder::class, ['record' => $order->id])
             ->assertSee('Original date')
@@ -209,7 +209,7 @@ class OrderPickupRescheduleTest extends TestCase
             ->assertSee('Last rescheduled')
             ->assertSee('Maria Santos')
             ->assertSee('Reschedule history')
-            ->assertSee('9:00 AM - 12:00 PM')
+            ->assertSee('4:00 PM')
             ->assertSee('Customer called')
             // The note is split into columns, not echoed as one sentence.
             ->assertDontSee('Reason: Customer called');
@@ -248,17 +248,16 @@ class OrderPickupRescheduleTest extends TestCase
     {
         Mail::fake();
         $this->actingAsAdmin();
-        $order = $this->readyOrder();
+        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '4:00 PM');
 
         Livewire::test(ViewOrder::class, ['record' => $order->id])
             ->callAction('reschedule_pickup', data: [
-                'pickup_date' => '2026-09-26',
-                'pickup_start_time' => '08:00',
-                'pickup_end_time' => '17:00',
+                'pickup_date' => '2026-09-30',
+                'pickup_time' => '16:00',
             ])
             ->assertNotified('Pickup not rescheduled');
 
-        $this->assertSame(0, $order->fresh()->reschedule_count);
+        $this->assertSame(1, $order->fresh()->reschedule_count);
         Mail::assertNothingSent();
     }
 
@@ -266,12 +265,12 @@ class OrderPickupRescheduleTest extends TestCase
 
     public function test_the_email_shows_the_new_and_previous_schedule(): void
     {
-        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '9:00 AM - 12:00 PM');
+        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '4:00 PM');
 
         $html = (new OrderRescheduledMail($order, Carbon::parse('2026-09-26'), '8:00 AM - 5:00 PM'))->render();
 
         $this->assertStringContainsString('Wednesday, September 30, 2026', $html);
-        $this->assertStringContainsString('9:00 AM - 12:00 PM', $html);
+        $this->assertStringContainsString('4:00 PM', $html);
         $this->assertStringContainsString('26/09/2026', $html);
         $this->assertStringContainsString('8:00 AM - 5:00 PM', $html);
         $this->assertStringContainsString($order->claim_number, $html);
@@ -279,13 +278,13 @@ class OrderPickupRescheduleTest extends TestCase
 
     public function test_the_customer_order_page_shows_the_new_and_original_schedule(): void
     {
-        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '9:00 AM - 12:00 PM');
+        $order = $this->readyOrder()->reschedulePickup('2026-09-30', '4:00 PM');
 
         $this->actingAs($order->customer, 'customer')
             ->get(route('customer.orders.show', $order->id))
             ->assertOk()
             ->assertSee('Pickup Rescheduled')
-            ->assertSee('New schedule: Sep 30, 2026 · 9:00 AM - 12:00 PM')
+            ->assertSee('New schedule: Sep 30, 2026 · 4:00 PM')
             ->assertSee('Sep 26, 2026 · 8:00 AM - 5:00 PM');
     }
 

@@ -4,10 +4,6 @@
     sitting directly on the page background (no white card box).
 --}}
 @php
-    // A product counts as new for its first month on the shelf. Featured wins
-    // over new, so a hand-picked product reads as featured rather than as one
-    // more recent arrival.
-    $isNew = $product->created_at?->gt(now()->subDays(7));
     $isOutOfStock = $product->stock_status === 'out_of_stock';
     $rating = $product->average_rating;
     $reviewsCount = $product->reviews_count;
@@ -28,36 +24,7 @@
         --}}
         <div class="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-100">
 
-            <!-- Status Badges (Top-Left) -->
-            {{--
-                Badges hold a 10px floor and solid fills rather than shrinking
-                with the card: at two columns on a 360px phone the old 9px
-                type on a translucent fill was the first thing to become
-                unreadable.
-            --}}
-            <div class="absolute left-2 top-2 z-10 flex flex-col items-start gap-1.5 sm:left-3 sm:top-3 sm:gap-2">
-                @if($isOutOfStock)
-                    <span class="rounded-full bg-gray-900 px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
-                        Sold Out
-                    </span>
-                @elseif($badge === 'best_seller')
-                    <span class="rounded-full bg-amber-600 px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
-                        Best Seller
-                    </span>
-                @elseif($badge === 'top_pick')
-                    <span class="rounded-full bg-[var(--color-primary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
-                        Top Pick
-                    </span>
-                @elseif($product->is_featured)
-                    <span class="rounded-full bg-[var(--color-secondary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-gray-900 shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
-                        Featured
-                    </span>
-                @elseif($isNew)
-                    <span class="rounded-full bg-[var(--color-primary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
-                        New
-                    </span>
-                @endif
-            </div>
+            <x-storefront.product-badges :product="$product" :badge="$badge" />
 
             @if($product->cardImage)
                 <img src="{{ $product->cardImage->url }}"

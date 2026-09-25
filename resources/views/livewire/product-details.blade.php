@@ -248,18 +248,12 @@
                                 <span class="hidden sm:inline">Click to zoom</span>
                             </span>
 
-                            <!-- Floating Badges Overlay -->
-                            <span class="absolute left-2 top-2 z-10 flex flex-col items-start gap-1.5 sm:left-3 sm:top-3 sm:gap-2">
-                                @if($product->is_featured)
-                                    <span class="rounded-full bg-[var(--color-secondary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-gray-900 shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
-                                        Featured
-                                    </span>
-                                @endif
-                            </span>
+                            <x-storefront.product-badges :product="$product" :is-best-seller="$isBestSeller" :is-top-pick="$isTopPick" />
                         </button>
                     @else
                         <div class="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-gradient-to-br from-gray-100 to-gray-200">
                             <span class="select-none text-8xl font-black text-gray-300">{{ substr($product->name, 0, 1) }}</span>
+                            <x-storefront.product-badges :product="$product" :is-best-seller="$isBestSeller" :is-top-pick="$isTopPick" />
                         </div>
                     @endif
 

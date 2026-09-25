@@ -229,7 +229,10 @@ class OrderInfolist
                                 ->color(fn ($record): ?string => $record->reschedule_count > 0 ? 'warning' : null),
 
                             TextEntry::make('pickup_slot')
-                                ->label(fn ($record): string => $record->reschedule_count > 0 ? 'New time interval' : 'Time interval')
+                                // A reschedule sets one specific time, not an
+                                // interval — only the first, un-rescheduled
+                                // schedule from Ready for Pickup is a range.
+                                ->label(fn ($record): string => $record->reschedule_count > 0 ? 'New pickup time' : 'Time interval')
                                 ->placeholder('Not yet scheduled'),
 
                             // Kept from the first schedule UBAP gave, however
