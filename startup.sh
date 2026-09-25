@@ -1,20 +1,22 @@
 #!/bin/bash
-set -e
+APP_ROOT="/home/site/wwwroot"
 
-APP_ROOT=/home/site/wwwroot
+# Writable dirs for Laravel
+mkdir -p "${APP_ROOT}/storage/framework/sessions" \
+         "${APP_ROOT}/storage/framework/views" \
+         "${APP_ROOT}/storage/framework/cache" \
+         "${APP_ROOT}/bootstrap/cache"
+chmod -R 775 "${APP_ROOT}/storage" "${APP_ROOT}/bootstrap/cache"
 
-# Point Nginx to Laravel's public directory
-cp /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-sed -i 's|root /home/site/wwwroot;|root /home/site/wwwroot/public;|g' /etc/nginx/sites-enabled/default
+# Use our own nginx config (root -> /public, Laravel routing)
+cp "${APP_ROOT}/nginx.conf" /etc/nginx/sites-available/default
+if nginx -t; then
+    service nginx reload
+else
+    echo "nginx config test FAILED - check nginx.conf"
+fi
 
-# Storage and cache permissions
-chmod -R 777 "\({APP_ROOT}/storage" "\){APP_ROOT}/bootstrap/cache"
-
-# Framework & Filament runtime optimizations.
-php "${APP_ROOT}/artisan" config:cache
-php "${APP_ROOT}/artisan" route:cache
-php "${APP_ROOT}/artisan" view:cache
-php "${APP_ROOT}/artisan" filament:upgrade --no-interaction
-
-# Reload Nginx service
-service nginx reload
+# Laravel caches (env vars must already be set in Azure)
+php "${APP_ROOT}/artisan" config:cache || true
+php "${APP_ROOT}/artisan" route:cache || true
+php "${APP_ROOT}/artisan" view:cache || true
