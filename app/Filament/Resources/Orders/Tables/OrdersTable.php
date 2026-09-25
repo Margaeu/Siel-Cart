@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Orders\Tables;
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Mail\OrderCompletedMail;
 use App\Mail\OrderProcessingMail;
 use App\Mail\OrderReadyForPickupMail;
 use App\Models\Order;
-use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -18,10 +18,10 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Notifications\Notification;
+use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -54,7 +54,7 @@ class OrdersTable
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): array | string => match ($state) {
+                    ->color(fn (string $state): array|string => match ($state) {
                         'pending' => 'warning',
                         'processing' => 'info',
                         'ready_for_pickup' => Color::Purple,
@@ -95,7 +95,7 @@ class OrdersTable
                     ->color('warning')
                     ->icon('heroicon-o-arrow-path')
                     ->action(function (Order $record) {
-                        $record->updateStatus('processing', 'Order is being processed.',auth()->id(),);
+                        $record->updateStatus('processing', 'Order is being processed.', auth()->id());
                         Mail::to($record->customer->email)->send(new OrderProcessingMail($record));
                     })
                     ->visible(fn (Order $record) => strtolower($record->status) === 'pending'),
@@ -127,13 +127,11 @@ class OrdersTable
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
-                        $record->updateStatus( 'ready_for_pickup','Order is ready for pickup.', auth()->id(),
+                        $record->updateStatus('ready_for_pickup', 'Order is ready for pickup.', auth()->id(),
                             [
                                 'claim_number' => $data['claim_number'],
-                                'pickup_date'  => $data['pickup_date'],
-                                'pickup_slot'  => Carbon::parse($data['pickup_start_time'])->format('g:i A')
-                                    . ' - '
-                                    . Carbon::parse($data['pickup_end_time'])->format('g:i A'),
+                                'pickup_date' => $data['pickup_date'],
+                                'pickup_slot' => Order::pickupSlotFrom($data['pickup_start_time'], $data['pickup_end_time']),
                             ],
                         );
                         Mail::to($record->customer->email)->send(new OrderReadyForPickupMail($record));
@@ -160,15 +158,15 @@ class OrdersTable
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
-                            $record->updateStatus('completed', 'Order was collected and completed.', auth()->id(),
-                                [
-                                    'payment_status' => 'paid',
-                                    'completed_at'   => now(),
-                                    'claimant_name'  => $data['claimant_name'],
-                                    'claimant_phone' => $data['claimant_phone'],
-                                    'or_number' => $data['or_number'],
-                                ],
-                            );
+                        $record->updateStatus('completed', 'Order was collected and completed.', auth()->id(),
+                            [
+                                'payment_status' => 'paid',
+                                'completed_at' => now(),
+                                'claimant_name' => $data['claimant_name'],
+                                'claimant_phone' => $data['claimant_phone'],
+                                'or_number' => $data['or_number'],
+                            ],
+                        );
 
                         Mail::to($record->customer->email)->send(new OrderCompletedMail($record));
 
@@ -179,6 +177,9 @@ class OrdersTable
                             ->send();
                     })
                     ->visible(fn (Order $record) => in_array(strtolower($record->status), ['ready_for_pickup', 'ready for pickup'])),
+
+                // 4. Move a ready order's pickup to another day
+                OrderResource::reschedulePickupAction(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -104,4 +104,24 @@ class OrderItem extends Model
             ?? $this->variant?->images->first()?->url
             ?? $this->product?->primaryImage?->url;
     }
+
+    /**
+     * Whether the product (or variant) this line was bought from can still
+     * be found on the storefront today.
+     *
+     * This never blocks anything -- the order is already placed and paid --
+     * it only tells the customer why a line looks different now than it did
+     * at checkout, and it gates the "Write a Review" link, which points at
+     * products.show and 404s for a trashed or inactive product the same way
+     * ProductDetails::mount() does.
+     */
+    public function getIsUnavailableAttribute(): bool
+    {
+        if ($this->product === null || $this->product->trashed() || ! $this->product->is_active) {
+            return true;
+        }
+
+        return $this->product_variant_id !== null
+            && (! $this->variant || ! $this->variant->is_active);
+    }
 }
