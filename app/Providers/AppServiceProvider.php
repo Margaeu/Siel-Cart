@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Process\Process;
 
@@ -12,15 +13,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind('path.public', function () {
-            return realpath(base_path() . '/../public_html/ecommerce');
-        });
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
+    {
+        URL::forceScheme('https');
+    }
+}
     {
         // Automatically start the chatbot when running:
         // php artisan serve
@@ -51,4 +50,3 @@ class AppServiceProvider extends ServiceProvider
         // with Event::listen() as well made every login/logout/failed attempt
         // write two identical activity-log rows.
     }
-}
