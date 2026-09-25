@@ -25,7 +25,7 @@
                             Please read this Notice carefully before creating an account, placing an order, or otherwise using the System.
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            This Notice is issued consistent with, and is intended to operate alongside, the University’s existing data privacy infrastructure — including the CLSU Data Privacy Office and the University’s designated Data Protection Officer (DPO) — as reflected in other official CLSU systems.
+                            This Notice is issued consistent with, and is intended to operate alongside, the University's existing data privacy infrastructure — including the CLSU Data Privacy Office and the University's designated Data Protection Officer (DPO) — as reflected in other official CLSU systems.
                         </p>
                     </section>
 
@@ -91,6 +91,11 @@
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
                             <strong>Note:</strong> Change of mind is not a valid reason for refund or exchange.
+                        </p>
+
+                        <h3 class="mt-4 text-lg font-semibold text-slate-800">3.5 System and Usage Information</h3>
+                        <p class="mt-2 text-base leading-8 text-slate-600">
+                            The System may automatically record basic technical information, such as login timestamps and session activity, to maintain security, monitor system activity, and troubleshoot technical issues.
                         </p>
 
                     </section>
@@ -209,9 +214,11 @@
                             <li>The customer can no longer log in;</li>
                             <li>The customer cannot reactivate the account through the normal customer interface;</li>
                             <li>The account is identified as <strong>Deleted Account</strong> where necessary for administrative or transaction records;</li>
-                            <li>Personal data will be removed or anonymized where applicable; and</li>
-                            <li>Any reviews you submitted are retained and displayed under the name &quot;Deleted User&quot; rather than being removed.</li>
+                            <li>Personal data will be removed or anonymized where applicable.</li>
                         </ul>
+                        <p class="mt-3 text-base leading-8 text-slate-600">
+                            Any reviews you submitted are retained and displayed under the name &quot;Deleted User&quot; rather than being removed.
+                        </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
                             Deletion does not require the removal of information that must be retained for legal, accounting, tax, audit, transaction, dispute-resolution, or other legitimate recordkeeping purposes.
                         </p>
@@ -230,19 +237,16 @@
                         </p>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
                             <li><strong>Right to be informed</strong> — to know that your personal data will be, is being, or has been processed;</li>
-                            <li><strong>Right to access</strong> — to obtain a copy of your personal data held by the System;</li>
+                            <li><strong>Right to access</strong> — to request access to your personal data processed and stored by the System, subject to applicable laws and verification requirements;</li>
                             <li><strong>Right to object</strong> — to object to the processing of your personal data under applicable circumstances;</li>
-                            <li><strong>Right to rectification</strong> — to dispute and have corrected inaccurate or outdated personal data;</li>
+                            <li><strong>Right to rectification</strong> — to dispute and request the correction of inaccurate or outdated personal data;</li>
                             <li><strong>Right to erasure or blocking</strong> — to request the removal or blocking of personal data under circumstances allowed by law;</li>
-                            <li><strong>Right to data portability</strong> — to obtain a copy of your data in an electronic format, where technically feasible;</li>
-                            <li><strong>Right to file a complaint</strong> — to lodge a complaint with the CLSU Data Privacy Office or the National Privacy Commission (NPC) if you believe your rights have been violated; and</li>
-                            <li><strong>Right to damages</strong> — to seek applicable remedies for damages sustained due to unlawful or unauthorized processing.</li>
+                            <li><strong>Right to data portability</strong> — to request a copy of your personal data in an electronic or structured format, where applicable and technically feasible;</li>
+                            <li><strong>Right to file a complaint</strong> — to lodge a complaint with the CLSU Data Privacy Office or the National Privacy Commission (NPC) if you believe your data privacy rights have been violated; and</li>
+                            <li><strong>Right to damages</strong> — to seek applicable remedies for damages sustained due to unlawful or unauthorized processing of personal data.</li>
                         </ul>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Requests concerning account deletion remain subject to unresolved-order restrictions and applicable legal or record-retention requirements.
-                        </p>
-                        <p class="mt-3 text-base leading-8 text-slate-600">
-                            To exercise any of these rights, please contact us using the details in <strong>Section 11</strong>.
+                            Requests for access, rectification, erasure, blocking, or data portability may be submitted through the contact details provided in <strong>Section 11</strong>. Such requests may require identity verification and will be processed by the appropriate personnel in accordance with applicable privacy laws and procedures.
                         </p>
                     </section>
 
