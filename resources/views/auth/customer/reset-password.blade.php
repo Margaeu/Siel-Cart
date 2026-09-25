@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - {{ config('app.name') }}</title>
+    @include('partials.theme-styles')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] min-h-screen">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="flex min-h-screen flex-col bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc]">
+    <x-customer-auth-header />
+
+    <div class="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="w-full max-w-md">
             <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-xl shadow-black/5 sm:p-8">
-                <!-- Brand -->
-                <x-customer-auth-brand />
-
                 <!-- Heading -->
-                <div class="mt-7">
+                <div>
                     <h1 class="text-2xl font-bold text-gray-900">Reset Password</h1>
                     <p class="mt-1 text-sm text-gray-600">
                         Create a new password for your account.
@@ -22,7 +22,7 @@
                 </div>
 
                 @if (session('status'))
-                    <div class="mt-6 rounded-lg border border-[#557F13]/30 bg-[#557F13]/5 px-4 py-3 text-sm text-[#3E5D0E]">
+                    <div class="mt-6 rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 px-4 py-3 text-sm text-[var(--color-primary-hover)]">
                         {{ session('status') }}
                     </div>
                 @endif
@@ -52,7 +52,7 @@
                                    autofocus
                                    autocomplete="email"
                                    placeholder="you@clsu.edu.ph"
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                         </div>
                         @error('email')
                             <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
@@ -75,13 +75,13 @@
                                    name="password"
                                    required
                                    autocomplete="new-password"
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
                                     data-password-toggle="password"
                                     aria-controls="password"
                                     aria-pressed="false"
                                     aria-label="Show password"
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[var(--color-primary)] focus:outline-none focus:text-[var(--color-primary)] transition">
                                 <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -112,13 +112,13 @@
                                    name="password_confirmation"
                                    required
                                    autocomplete="new-password"
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
                                     data-password-toggle="password_confirmation"
                                     aria-controls="password_confirmation"
                                     aria-pressed="false"
                                     aria-label="Show password"
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[var(--color-primary)] focus:outline-none focus:text-[var(--color-primary)] transition">
                                 <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -135,7 +135,7 @@
 
                     <!-- Submit -->
                     <button type="submit"
-                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#557F13] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2">
+                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[var(--color-primary-hover)] active:brightness-90 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:ring-offset-2">
                         Reset Password
                         <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -144,7 +144,7 @@
                 </form>
 
                 <p class="mt-6 text-center text-sm">
-                    <a href="{{ route('login') }}" class="font-semibold text-[#557F13] hover:text-[#3E5D0E] hover:underline transition">
+                    <a href="{{ route('login') }}" class="font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] hover:underline transition">
                         ← Back to Login
                     </a>
                 </p>

@@ -18,7 +18,7 @@
 
                 <li class="inline-flex items-center">
                     <a href="{{ route('products.index') }}" class="font-medium hover:text-[var(--color-primary)] transition-colors">
-                        Shop
+                        Products
                     </a>
                 </li>
 

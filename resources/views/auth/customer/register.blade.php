@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - {{ config('app.name') }}</title>
+    @include('partials.theme-styles')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] min-h-screen">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="flex min-h-screen flex-col bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc]">
+    <x-customer-auth-header />
+
+    <div class="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="w-full max-w-md">
             <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-xl shadow-black/5 sm:p-8">
-                <!-- Brand -->
-                <x-customer-auth-brand />
-
                 <!-- Heading -->
-                <div class="mt-7">
+                <div>
                     <h1 class="text-2xl font-bold text-gray-900">Create your account</h1>
                     <p class="mt-1 text-sm text-gray-600">
                         Already have an account?
-                        <a href="{{ route('login') }}" class="font-semibold text-[#557F13] hover:text-[#3E5D0E] hover:underline transition">
+                        <a href="{{ route('login') }}" class="font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] hover:underline transition">
                             Sign in
                         </a>
                     </p>
@@ -39,7 +39,7 @@
                                    value="{{ old('first_name') }}"
                                    required
                                    autofocus
-                                   class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             @error('first_name')
                                 <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -54,7 +54,7 @@
                                    name="last_name"
                                    value="{{ old('last_name') }}"
                                    required
-                                   class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             @error('last_name')
                                 <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -96,7 +96,7 @@
                                    required
                                    aria-describedby="dob_hint"
                                    data-max="{{ $dobMax->format('Y-m-d') }}"
-                                   class="w-full rounded-lg border {{ $errors->has('date_of_birth') ? 'border-red-400' : 'border-gray-300' }} py-2.5 pl-4 pr-12 tabular-nums placeholder:text-gray-400 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border {{ $errors->has('date_of_birth') ? 'border-red-400' : 'border-gray-300' }} py-2.5 pl-4 pr-12 tabular-nums placeholder:text-gray-400 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
 
                             <button type="button"
                                     id="dob_picker_button"
@@ -104,7 +104,7 @@
                                     aria-haspopup="dialog"
                                     aria-expanded="false"
                                     aria-controls="dob_calendar"
-                                    class="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-gray-400 hover:text-[#557F13] focus:outline-none focus-visible:text-[#557F13] focus-visible:ring-2 focus-visible:ring-[#E0A70D] transition">
+                                    class="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-gray-400 hover:text-[var(--color-primary)] focus:outline-none focus-visible:text-[var(--color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] transition">
                                 <svg class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                 </svg>
@@ -116,9 +116,9 @@
                                 reached in one pick instead of paging back month by month.
                             --}}
                             @php
-                                $calSelectClass = 'appearance-none rounded-md border border-gray-200 bg-white bg-[length:0.875rem] bg-[right_0.35rem_center] bg-no-repeat py-1 pl-2 pr-5 text-[0.8125rem] font-semibold text-gray-900 hover:border-[#557F13] focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition';
+                                $calSelectClass = 'appearance-none rounded-md border border-gray-200 bg-white bg-[length:0.875rem] bg-[right_0.35rem_center] bg-no-repeat py-1 pl-2 pr-5 text-[0.8125rem] font-semibold text-gray-900 hover:border-[var(--color-primary)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition';
                                 $calChevron = "background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E\")";
-                                $calNavClass = 'flex size-8 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-[#f4f7ef] hover:text-[#557F13] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A70D] disabled:pointer-events-none disabled:opacity-30 transition';
+                                $calNavClass = 'flex size-8 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] disabled:pointer-events-none disabled:opacity-30 transition';
                             @endphp
                             <div id="dob_calendar"
                                  role="dialog"
@@ -189,7 +189,7 @@
                                    value="{{ old('email') }}"
                                    required
                                    placeholder="you@clsu.edu.ph"
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                         </div>
                         @error('email')
                             <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
@@ -205,7 +205,7 @@
                                type="tel"
                                name="phone"
                                value="{{ old('phone') }}"
-                               class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                               class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                         @error('phone')
                             <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -226,13 +226,13 @@
                                    type="password"
                                    name="password"
                                    required
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
                                     data-password-toggle="password"
                                     aria-controls="password"
                                     aria-pressed="false"
                                     aria-label="Show password"
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[var(--color-primary)] focus:outline-none focus:text-[var(--color-primary)] transition">
                                 <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -262,13 +262,13 @@
                                    type="password"
                                    name="password_confirmation"
                                    required
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
                                     data-password-toggle="password_confirmation"
                                     aria-controls="password_confirmation"
                                     aria-pressed="false"
                                     aria-label="Show password"
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[var(--color-primary)] focus:outline-none focus:text-[var(--color-primary)] transition">
                                 <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -284,18 +284,18 @@
                     <label class="flex items-start gap-2 cursor-pointer select-none">
                         <input type="checkbox"
                                required
-                               class="mt-0.5 size-4 rounded border-gray-300 text-[#557F13] focus:ring-[#E0A70D]">
+                               class="mt-0.5 size-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-secondary)]">
                         <span class="text-sm text-gray-600">
                             I agree to the
-                            <a href="{{ route('privacy-policy') }}" class="font-medium text-[#557F13] hover:text-[#E0A70D] transition">Privacy Policy</a>
+                            <a href="{{ route('privacy-policy') }}" class="font-medium text-[var(--color-primary)] hover:text-[var(--color-secondary)] transition">Privacy Policy</a>
                             and
-                             <a href="{{ route('terms-and-conditions') }}" class="font-medium text-[#557F13] hover:text-[#E0A70D] transition">Terms and Conditions</a>
+                             <a href="{{ route('terms-and-conditions') }}" class="font-medium text-[var(--color-primary)] hover:text-[var(--color-secondary)] transition">Terms and Conditions</a>
                         </span>  
                     </label>
 
                     <!-- Submit -->
                     <button type="submit"
-                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#557F13] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2">
+                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[var(--color-primary-hover)] active:brightness-90 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:ring-offset-2">
                         Create Account
                         <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -385,10 +385,10 @@
             const pad = (n) => String(n).padStart(2, '0');
             const isoOf = (y, m, d) => y + '-' + pad(m + 1) + '-' + pad(d);
             const daysIn = (y, m) => new Date(y, m + 1, 0).getDate();
-            const dayClass = 'flex h-8 w-full items-center justify-center rounded-md text-[0.8125rem] tabular-nums transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A70D]';
+            const dayClass = 'flex h-8 w-full items-center justify-center rounded-md text-[0.8125rem] tabular-nums transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]';
             const dayStates = {
-                normal: 'text-gray-700 hover:bg-[#f4f7ef] hover:text-[#557F13]',
-                selected: 'bg-[#557F13] font-semibold text-white shadow-sm hover:bg-[#3E5D0E]',
+                normal: 'text-gray-700 hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)]',
+                selected: 'bg-[var(--color-primary)] font-semibold text-white shadow-sm hover:bg-[var(--color-primary-hover)]',
                 disabled: 'cursor-not-allowed text-gray-300',
             };
 

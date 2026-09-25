@@ -6,12 +6,14 @@
 @layer components {
     /* Panel chrome — sidebar, page header, tables, sections — is deliberately left to
        Filament's own stylesheet, so the panel keeps the stock Filament look. The topbar
-       is the one exception (see below): it is the masthead, and it carries the same CLSU
-       green as the storefront header so the two halves of the site read as one product.
+       is the one exception (see below): it is the masthead, and it carries the panel's
+       `primary` colour so the two halves of the site read as one product.
        Everything styled here pulls its accent from --color-primary-* / --color-gray-* /
        --color-danger-* instead of hardcoding hex values, so recolouring the panel means
        editing AdminPanelProvider::panel() and nothing else. Do not reintroduce brand hex
-       codes in this file — `primary-600` IS #557F13.
+       codes in this file — `primary` and `secondary` are driven by Admin -> Design ->
+       Color Themes (AdminPanelProvider::panel()), falling back to CLSU green/gold
+       (`primary-600` = #557F13) only when no theme is active.
 
        These rules are same-specificity overrides of Filament's own `.fi-topbar` block.
        They work because this file is imported after Filament's stylesheet and both sit
@@ -89,6 +91,42 @@
 
     .fi-simple-page form .fi-input-wrp.fi-invalid:focus-within {
         @apply ring-1;
+    }
+
+    /* Login, forgot-password, register, and reset-password pages render through
+       Filament's "simple" layout, a bare flex column with no background of its own —
+       the gray backdrop behind the white card is actually .fi-body's bg-gray-50,
+       shared with every panel page. .fi-simple-layout fills the full viewport height
+       and width, so painting the theme's primary colour there instead swaps the
+       backdrop on just these auth pages without touching the gray used everywhere
+       else. Same colour in both themes for the same reason .fi-topbar is: the brand
+       colour is not something that should flip with dark mode.
+
+       Uses --color-primary-raw (AdminPanelProvider::panel(), injected as a plain
+       <style> tag), not --color-primary-600: Color::hex() regenerates -600 from
+       only the hue/chroma of the theme's hex, on Filament's own lightness curve, so
+       it does not reproduce that hex — it would visibly disagree with the storefront,
+       which prints the theme's primary_color verbatim (theme-styles.blade.php). */
+    .fi-simple-layout {
+        background-color: var(--color-primary-raw);
+    }
+
+    /* Filament's simple layout (login, forgot-password, reset-password — the only
+       pages that render through it here) fixes the card at exactly max-w-lg (32rem)
+       past that viewport width, so it stays the same size on a 1366px laptop and a
+       4K monitor, and its padding jumps once at the sm: breakpoint instead of scaling
+       with the card. clamp() replaces both so the card keeps growing/shrinking with
+       the viewport across its whole range, the same fluid approach used for the
+       storefront's root font size. Selector specificity has to match Filament's own
+       `.fi-simple-main.fi-width-lg` rule (two classes) for the max-width override to
+       win on source order alone. */
+    .fi-simple-main.fi-width-lg {
+        max-width: clamp(20rem, 15rem + 21vw, 40rem);
+    }
+
+    .fi-simple-main {
+        padding-inline: clamp(1.25rem, 0.75rem + 2vw, 3rem);
+        padding-block: clamp(2rem, 1.5rem + 2vw, 4rem);
     }
 
     .clsu-login-error {

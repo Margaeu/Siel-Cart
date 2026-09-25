@@ -459,6 +459,12 @@ class Product extends Model
      * no activity-log rows and their R2 objects would be orphaned. Order
      * items are left to their nullOnDelete foreign keys: the lines survive
      * with their snapshots and lose only the link to the live product.
+     *
+     * The per-row ProductImage::delete() calls above each schedule their own
+     * file cleanup and, by default, would keep a file still named by an order
+     * or cart snapshot -- see ProductImage::deleteFilesAfterCommit(). Force
+     * delete means gone for good, so the explicit call below runs last with
+     * that protection turned off and purges every file regardless.
      */
     public function forceDelete()
     {
@@ -477,7 +483,7 @@ class Product extends Model
 
             $deleted = $this->softDeletesForceDelete();
 
-            ProductImage::deleteFilesAfterCommit($imagePaths);
+            ProductImage::deleteFilesAfterCommit($imagePaths, protectHistoricalReferences: false);
 
             return $deleted;
         });

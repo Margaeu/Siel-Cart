@@ -4,31 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - {{ config('app.name') }}</title>
+    @include('partials.theme-styles')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc] min-h-screen">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="flex min-h-screen flex-col bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc]">
+    <x-customer-auth-header />
+
+    <div class="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="w-full max-w-md">
             <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-xl shadow-black/5 sm:p-8">
-                <!-- Brand -->
-                <x-customer-auth-brand />
-
                 <!-- Heading -->
-                <div class="mt-7">
+                <div>
                     <h1 class="text-2xl font-bold text-gray-900">Welcome back</h1>
                     <p class="mt-1 text-sm text-gray-600">
                         Don't have an account?
-                        <a href="{{ route('register') }}" class="font-semibold text-[#557F13] hover:text-[#3E5D0E] hover:underline transition">
+                        <a href="{{ route('register') }}" class="font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] hover:underline transition">
                             Register here
                         </a>
                     </p>
                 </div>
 
                 @if (session('status'))
-                    <div class="mt-6 rounded-lg border border-[#557F13]/30 bg-[#557F13]/5 px-4 py-3 text-sm text-[#3E5D0E]">
+                    <div class="mt-6 rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 px-4 py-3 text-sm text-[var(--color-primary-hover)]">
                         {{ session('status') }}
                     </div>
                 @endif
+
+                @error('email')
+                    <div class="mt-6 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                        <svg class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                        </svg>
+                        <span>{{ $message }}</span>
+                    </div>
+                @enderror
 
                 <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-5">
                     @csrf
@@ -51,11 +60,8 @@
                                    required
                                    autofocus
                                    placeholder="you@clsu.edu.ph"
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                         </div>
-                        @error('email')
-                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <!-- Password -->
@@ -64,7 +70,7 @@
                             <label for="password" class="block text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 Password
                             </label>
-                            <a href="{{ route('password.request') }}" class="text-xs font-medium text-[#557F13] hover:text-[#E0A70D] transition">
+                            <a href="{{ route('password.request') }}" class="text-xs font-medium text-[var(--color-primary)] hover:text-[var(--color-secondary)] transition">
                                 Forgot password?
                             </a>
                         </div>
@@ -78,13 +84,13 @@
                                    type="password"
                                    name="password"
                                    required
-                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[#557F13] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] transition">
+                                   class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
                                     data-password-toggle="password"
                                     aria-controls="password"
                                     aria-pressed="false"
                                     aria-label="Show password"
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[#557F13] focus:outline-none focus:text-[#557F13] transition">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 rounded-r-lg hover:text-[var(--color-primary)] focus:outline-none focus:text-[var(--color-primary)] transition">
                                 <svg data-icon-show class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -101,7 +107,7 @@
 
                     <!-- Submit -->
                     <button type="submit"
-                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[#557F13] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[#3E5D0E] active:bg-[#0f3018] focus:outline-none focus:ring-2 focus:ring-[#E0A70D] focus:ring-offset-2">
+                            class="group flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-3 px-4 font-semibold text-white shadow-md transition hover:bg-[var(--color-primary-hover)] active:brightness-90 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:ring-offset-2">
                         Sign In
                         <svg class="size-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />

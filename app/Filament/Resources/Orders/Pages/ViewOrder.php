@@ -35,7 +35,7 @@ class ViewOrder extends ViewRecord
             Action::make('record_resolution')
                 ->label('Record refund or exchange')
                 ->icon('heroicon-o-receipt-refund')
-                ->color('warning')
+                ->color('secondary')
                 ->url(fn (): string => ReturnRefundResource::getUrl('create', ['order' => $order->getKey()]))
                 ->visible(fn (): bool => $order->canRecordItemResolutions() && ReturnRefundResource::canCreate()),
 

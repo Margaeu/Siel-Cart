@@ -110,9 +110,12 @@ return [
     // customer who does not act at once gets "This password reset token is
     // invalid" and has to request a new link.
     //
-    // users: 60 minutes, because this broker also issues administrator
-    // invitations (App\Notifications\AdminInvitation), and a new admin rarely
-    // opens the mail within a few minutes of a super admin creating the account.
+    // users: 3 minutes, matching customers. This broker also issues
+    // administrator invitations (App\Notifications\AdminInvitation) and the
+    // admin panel's own password resets, so both links die just as quickly. The
+    // invitation mail is queued and the clock starts when the token is created,
+    // so a slow queue worker eats into those 3 minutes; an admin who misses the
+    // window asks a super admin to resend the invitation.
     //
     // The two numbers are allowed to differ: each notification quotes its OWN
     // broker's expiry (CustomerResetPassword reads `customers`, AdminInvitation
@@ -123,7 +126,7 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            'expire' => 3,
             'throttle' => 60,
         ],
         'customers' => [

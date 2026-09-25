@@ -133,16 +133,23 @@ class CartService
             ];
         }
 
+        // Snapshot the current image, the same way checkout does for order
+        // lines, so the row still has something to show once this image,
+        // variant, or product is later removed from the catalogue.
+        $image = ($variant?->images->first() ?? $product->primaryImage)?->url;
+
         // Save the cart item.
         if ($cartItem) {
             $cartItem->update([
                 'quantity' => $newQuantity,
+                'product_image' => $image,
             ]);
         } else {
             $cart->items()->create([
                 'product_id' => $productId,
                 'product_variant_id' => $variantId,
                 'quantity' => $quantity,
+                'product_image' => $image,
             ]);
         }
 

@@ -48,8 +48,8 @@ class SystemSetupSeeder extends Seeder
         Theme::firstOrCreate(
             ['name' => 'Default Green'],
             [
-                'primary_color' => '#1E6031',
-                'secondary_color' => '#E0A70D',
+                'primary_color' => '#557F13',
+                'secondary_color' => '#FFD801',
                 'is_active' => true,
             ]
         );

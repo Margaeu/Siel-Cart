@@ -68,10 +68,16 @@ class UsersTable
                 // creating an administrator. Offered only to accounts that could
                 // actually use it: the reset page refuses anyone failing
                 // canAccessPanel() (inactive, or no panel role).
+                //
+                // Never on the signed-in admin's own row: they already know their
+                // password, and the new token would kill any reset link they had
+                // pending. Refused in authorize(), not just hidden, so the action
+                // cannot be mounted against one's own record either.
                 Action::make('resendInvitation')
                     ->label('Resend invitation')
                     ->icon('heroicon-o-envelope')
-                    ->authorize(fn (): bool => UserResource::canCreate())
+                    ->authorize(fn (User $record): bool => UserResource::canCreate()
+                        && ! $record->is(Filament::auth()->user()))
                     ->visible(fn (User $record): bool => $record->canAccessPanel(Filament::getPanel('admin')))
                     ->requiresConfirmation()
                     ->modalHeading('Resend invitation')

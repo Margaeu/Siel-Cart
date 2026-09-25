@@ -16,9 +16,9 @@
     // and storefront read as one product.
     $activeTheme = \App\Models\Theme::active()->first();
 
-    $themePrimaryColor = $activeTheme?->primary_color ?? '#1E6031';
+    $themePrimaryColor = $activeTheme?->primary_color ?? '#557F13';
 
-    $themeSecondaryColor = $activeTheme?->secondary_color ?? '#E0A70D';
+    $themeSecondaryColor = $activeTheme?->secondary_color ?? '#FFD801';
 @endphp
 
 <style>

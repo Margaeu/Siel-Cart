@@ -24,6 +24,7 @@ use App\Models\Product;
 use App\Models\Report;
 use App\Models\Review;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -454,21 +455,30 @@ class CustomerAccountDeletionTest extends TestCase
 
     private function actingAsAdmin(): void
     {
+        $this->actingAsAdminWithRole('super_admin');
+    }
+
+    private function actingAsAdminWithRole(string $role, string $email = 'admin@example.com'): User
+    {
         $admin = new User;
         $admin->forceFill([
             'first_name' => 'Test',
             'last_name' => 'Admin',
-            'email' => 'admin@example.com',
+            'email' => $email,
             'password' => 'password',
             'is_active' => true,
         ])->save();
         // User::canAccessPanel() needs one of the panel roles.
-        $admin->assignRole(Role::findOrCreate('super_admin', 'web'));
+        $admin->assignRole(Role::findOrCreate($role, 'web'));
 
-        // Authorization is not what these tests are about.
+        // Authorization is not what these tests are about, except for the
+        // super-admin-only delete checks below, which read the role directly
+        // off the model rather than through Shield/Gate.
         Gate::before(fn () => true);
         Filament::setCurrentPanel('admin');
         $this->actingAs($admin);
+
+        return $admin;
     }
 
     public function test_admin_can_inspect_a_deleted_customer_and_their_history(): void
@@ -523,7 +533,7 @@ class CustomerAccountDeletionTest extends TestCase
 
         Livewire::test(ViewCustomer::class, ['record' => $customer->id])
             ->assertSuccessful()
-            ->assertActionDoesNotExist('deleteAccount')
+            ->assertActionHidden('delete_account')
             ->assertActionHidden('edit');
 
         Livewire::test(OrdersRelationManager::class, [
@@ -581,12 +591,17 @@ class CustomerAccountDeletionTest extends TestCase
         $this->assertTrue($customer->fresh()->is_active);
     }
 
+    // Filament's own DeleteAction / ForceDeleteAction / RestoreAction are
+    // never offered to anyone, on any record: force delete would cascade
+    // through orders, reviews and reports, and restore would hand a deleted
+    // account back. Deletion itself goes through delete_account instead (see
+    // the tests below), which is why 'delete' stays absent even for a
+    // super admin.
     public function test_no_generic_delete_force_delete_or_restore_is_offered(): void
     {
         $customer = $this->customer();
         $this->actingAsAdmin();
 
-        $this->assertFalse(CustomerResource::canDelete($customer));
         $this->assertFalse(CustomerResource::canForceDelete($customer));
         $this->assertFalse(CustomerResource::canForceDeleteAny());
         $this->assertFalse(CustomerResource::canRestore($customer));
@@ -597,24 +612,104 @@ class CustomerAccountDeletionTest extends TestCase
             ->assertActionDoesNotExist('restore');
     }
 
-    /** Only the customer deletes their own account; the panel cannot. */
-    public function test_admins_are_offered_no_way_to_delete_a_customer(): void
+    /**
+     * A super admin can delete a customer account from the panel. It goes
+     * through Customer::deleteAccount() — the same anonymize-and-soft-delete
+     * the customer's own storefront page uses — not a plain soft delete.
+     */
+    public function test_a_super_admin_can_delete_a_customer_account_from_the_panel(): void
+    {
+        $customer = $this->customer();
+        $this->actingAsAdmin();
+
+        $this->assertTrue(CustomerResource::canDelete($customer));
+
+        Livewire::test(ListCustomers::class)
+            ->callAction(TestAction::make('delete_account')->table($customer))
+            ->assertNotified('Account deleted');
+
+        $row = Customer::withTrashed()->findOrFail($customer->id);
+        $this->assertTrue($row->trashed());
+        $this->assertNotSame(self::EMAIL, $row->email);
+        $this->assertFalse(Hash::check(self::PASSWORD, $row->password));
+    }
+
+    public function test_a_super_admin_can_delete_a_customer_account_from_the_edit_page(): void
+    {
+        $customer = $this->customer();
+        $this->actingAsAdmin();
+
+        Livewire::test(EditCustomer::class, ['record' => $customer->id])
+            ->callAction('delete_account')
+            ->assertNotified('Account deleted')
+            ->assertRedirect(CustomerResource::getUrl('index'));
+
+        $this->assertTrue(Customer::withTrashed()->findOrFail($customer->id)->trashed());
+    }
+
+    public function test_a_super_admin_can_delete_a_customer_account_from_the_view_page(): void
     {
         $customer = $this->customer();
         $this->actingAsAdmin();
 
         Livewire::test(ViewCustomer::class, ['record' => $customer->id])
-            ->assertActionDoesNotExist('deleteAccount')
-            ->assertActionDoesNotExist('delete');
+            ->callAction('delete_account')
+            ->assertNotified('Account deleted');
+
+        $this->assertTrue(Customer::withTrashed()->findOrFail($customer->id)->trashed());
+    }
+
+    /**
+     * deleteAccountAction() re-runs the same active-order check
+     * Customer::deleteAccount() enforces on the storefront, so the panel
+     * cannot be used to route around it.
+     */
+    public function test_deleting_a_customer_with_an_active_order_is_blocked_and_notifies(): void
+    {
+        $customer = $this->customer();
+        $this->order($customer, 'processing');
+        $this->actingAsAdmin();
 
         Livewire::test(EditCustomer::class, ['record' => $customer->id])
-            ->assertActionDoesNotExist('deleteAccount');
-
-        Livewire::test(ListCustomers::class)
-            ->assertTableActionDoesNotExist('deleteAccount')
-            ->assertTableActionDoesNotExist('delete');
+            ->callAction('delete_account')
+            ->assertNotified('Cannot delete this account');
 
         $this->assertFalse($customer->fresh()->trashed());
+    }
+
+    /** Only a super admin may delete a customer account; ubap/stratcom cannot. */
+    public function test_non_super_admins_cannot_delete_a_customer_account(): void
+    {
+        foreach (['ubap', 'stratcom'] as $role) {
+            $customer = Customer::factory()->create();
+            $this->actingAsAdminWithRole($role, "{$role}@example.com");
+
+            $this->assertFalse(CustomerResource::canDelete($customer));
+
+            Livewire::test(ViewCustomer::class, ['record' => $customer->id])
+                ->assertActionHidden('delete_account');
+
+            Livewire::test(EditCustomer::class, ['record' => $customer->id])
+                ->assertActionHidden('delete_account');
+
+            Livewire::test(ListCustomers::class)
+                ->assertActionHidden(TestAction::make('delete_account')->table($customer));
+
+            $this->assertFalse($customer->fresh()->trashed());
+        }
+    }
+
+    /** An already-deleted account cannot be "deleted" again from the panel. */
+    public function test_delete_account_is_not_offered_for_an_already_deleted_customer(): void
+    {
+        $customer = $this->customer();
+        $customer->deleteAccount();
+        $this->actingAsAdmin();
+
+        $this->assertFalse(CustomerResource::canDelete($customer));
+
+        Livewire::test(ViewCustomer::class, ['record' => $customer->id])
+            ->assertActionHidden('delete_account');
     }
 
     public function test_admin_order_page_shows_deleted_user_for_a_deleted_customer(): void

@@ -33,8 +33,8 @@
     <!-- Storefront masthead: logo, brand, nav links and actions all in a single row -->
     <header
         class="sticky top-0 z-50 border-b border-black/10 bg-[var(--color-primary)] text-white shadow-sm"
-        x-data="{ navigationOpen: false }"
-        x-on:keydown.escape.window="navigationOpen = false"
+        x-data="{ navigationOpen: false, mobileSearchOpen: false }"
+        x-on:keydown.escape.window="navigationOpen = false; mobileSearchOpen = false"
     >
         <div class="mx-auto flex min-h-[4.75rem] w-full max-w-[87.5rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
             <!-- Brand -->
@@ -46,7 +46,7 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-14 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-16"
+                    class="size-11 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-12"
                 >
                 <span class="hidden h-9 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
@@ -99,6 +99,29 @@
                     </ul>
                 </nav>
 
+                <form
+                    action="{{ route('products.index') }}"
+                    method="GET"
+                    class="min-w-0 max-w-[15rem] flex-1 lg:max-w-xs"
+                    role="search"
+                    aria-label="Search products"
+                >
+                    <label for="desktop-product-search" class="sr-only">Search products</label>
+                    <div class="relative">
+                        <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35M18.5 10.5a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
+                        </svg>
+                        <input
+                            id="desktop-product-search"
+                            type="search"
+                            name="search"
+                            value="{{ request('search') }}"
+                            placeholder="Search products…"
+                            class="h-10 w-full rounded-full border border-white/25 bg-white/10 pl-9 pr-3 text-sm text-white placeholder:text-white/60 transition-colors focus:border-white/50 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        >
+                    </div>
+                </form>
+
                 <div class="flex shrink-0 items-center gap-1">
                     @auth('customer')
                         <a
@@ -128,14 +151,27 @@
                 </div>
             </div>
 
-            <!-- Mobile: cart + nav toggle -->
+            <!-- Mobile: search toggle + cart + nav toggle -->
             <div class="flex shrink-0 items-center gap-1 md:hidden">
+                <button
+                    type="button"
+                    class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    x-on:click="mobileSearchOpen = !mobileSearchOpen; navigationOpen = false"
+                    x-bind:aria-expanded="mobileSearchOpen"
+                    aria-controls="mobile-product-search"
+                    aria-label="Toggle search"
+                >
+                    <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35M18.5 10.5a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
+                    </svg>
+                </button>
+
                 <livewire:cart-icon />
 
                 <button
                     type="button"
                     class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                    x-on:click="navigationOpen = !navigationOpen"
+                    x-on:click="navigationOpen = !navigationOpen; mobileSearchOpen = false"
                     x-bind:aria-expanded="navigationOpen"
                     aria-controls="mobile-store-navigation"
                     aria-label="Toggle navigation"
@@ -148,6 +184,35 @@
                     </svg>
                 </button>
             </div>
+        </div>
+
+        <!-- Mobile search bar -->
+        <div
+            id="mobile-product-search"
+            x-cloak
+            x-show="mobileSearchOpen"
+            x-transition.opacity.duration.150ms
+            x-effect="if (mobileSearchOpen) $nextTick(() => $refs.mobileSearchInput.focus())"
+            class="border-t border-white/15 px-4 py-3 md:hidden"
+        >
+            <form action="{{ route('products.index') }}" method="GET" role="search" aria-label="Search products">
+                <label for="mobile-product-search-input" class="sr-only">Search products</label>
+                <div class="relative">
+                    <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35M18.5 10.5a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
+                    </svg>
+                    <input
+                        id="mobile-product-search-input"
+                        type="search"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Search products…"
+                        x-ref="mobileSearchInput"
+                        x-on:keydown.escape.stop="mobileSearchOpen = false"
+                        class="h-11 w-full rounded-full border border-white/25 bg-white/10 pl-9 pr-3 text-sm text-white placeholder:text-white/60 transition-colors focus:border-white/50 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                </div>
+            </form>
         </div>
 
         <!-- Mobile store navigation -->

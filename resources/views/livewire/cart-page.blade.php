@@ -159,10 +159,11 @@
                                      */
                                     $isOverStock = $item->is_over_stock;
 
-                                    // Use the selected variant's first image.
-                                    // Fall back to the product's general primary image.
-                                    $cartImage = $item->variant?->images->first()
-                                        ?? $item->product->primaryImage;
+                                    // display_image_url prefers the live variant/product image
+                                    // and falls back to the snapshot CartService captured when
+                                    // this row was added, so a deleted image, variant, or product
+                                    // still shows the last known picture instead of a broken one.
+                                    $cartImageUrl = $item->display_image_url;
                                 @endphp
 
                                 {{--
@@ -179,9 +180,9 @@
 
                                     {{-- Product Image --}}
                                     <div class="size-20 sm:size-24 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-                                        @if($cartImage)
+                                        @if($cartImageUrl)
                                             <img
-                                                src="{{ $cartImage->url }}"
+                                                src="{{ $cartImageUrl }}"
                                                 alt="{{ $item->product->name }}{{ $item->variant ? ' - '.$item->variant->name : '' }}"
                                                 class="w-full h-full object-cover
                                                     {{ $isUnavailable && !$isOverStock ? 'grayscale' : '' }}">

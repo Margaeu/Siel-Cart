@@ -19,6 +19,7 @@ class CartItem extends Model
         'product_id',
         'product_variant_id',
         'quantity',
+        'product_image',
     ];
 
     /**
@@ -224,5 +225,23 @@ class CartItem extends Model
     public function getIsUnavailableAttribute(): bool
     {
         return !$this->is_purchasable || $this->is_over_stock;
+    }
+
+    /**
+     * The picture to show for this row.
+     *
+     * The live variant or product image is preferred, same as before, so the
+     * cart keeps following the catalogue while the item is still sellable.
+     * product_image is only a fallback: it is the picture CartService saw the
+     * last time this row was added to or updated, kept so the row still shows
+     * something once its image, variant, or product is removed rather than
+     * falling back to a broken <img> tag. See OrderItem::getDisplayImageUrlAttribute()
+     * for the same idea applied to a placed order.
+     */
+    public function getDisplayImageUrlAttribute(): ?string
+    {
+        $liveUrl = ($this->variant?->images->first() ?? $this->product?->primaryImage)?->url;
+
+        return $liveUrl ?? $this->product_image;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Notifications\AdminResetPassword;
+use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Process\Process;
 
@@ -16,6 +18,11 @@ class AppServiceProvider extends ServiceProvider
         // to be rebound to ../public_html/ecommerce for the old shared-hosting
         // layout; on any host without that folder realpath() returned false, so
         // the Vite manifest, asset() fonts, and public_path() lookups all broke.
+
+        // The admin panel's "forgot password" page builds its mail with
+        // app(Filament's ResetPassword::class), so binding it here is the only way
+        // to give admins the branded email instead of Laravel's stock layout.
+        $this->app->bind(FilamentResetPassword::class, AdminResetPassword::class);
     }
 
     /**
@@ -44,8 +51,8 @@ class AppServiceProvider extends ServiceProvider
                 $chatbot->setTimeout(null);
                 $chatbot->start();
 
-                echo PHP_EOL; 
-                echo " Chatbot server starting on port 3000" . PHP_EOL;
+                echo PHP_EOL;
+                echo ' Chatbot server starting on port 3000'.PHP_EOL;
                 echo PHP_EOL;
             }
         }

@@ -10,13 +10,16 @@ class EditCustomer extends EditRecord
 {
     protected static string $resource = CustomerResource::class;
 
-    // No delete, force-delete or restore action of any kind: only the
-    // customer can delete their own account (Customer::deleteAccount()), and a
-    // deleted account is never restored. See CustomerResource::canDelete().
+    // No force-delete or restore action of any kind: a deleted account is
+    // never restored, and force delete would cascade through orders, reviews
+    // and reports. Delete goes through deleteAccountAction(), not Filament's
+    // generic DeleteAction — see CustomerResource::canDelete() for who it's
+    // shown to.
     protected function getHeaderActions(): array
     {
         return [
             ViewAction::make(),
+            CustomerResource::deleteAccountAction(CustomerResource::getUrl('index')),
         ];
     }
 }
