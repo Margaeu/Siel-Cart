@@ -95,17 +95,10 @@ jobs:
       - name: Run the test suite
         run: php artisan test
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build frontend assets
-        run: npm run build
+      # Assets built in "Install Dependencies & Build Assets" above are still
+      # correct here -- nothing touches resources/ or node_modules/ between
+      # that build and packaging, so rebuilding would just repeat the same
+      # Vite output.
 
       # Replaces the dev install in place: removes dev packages and rebuilds
       # an optimized autoloader and bootstrap/cache package manifests.
