@@ -70,8 +70,11 @@ jobs:
       - name: Validate composer.json and composer.lock
         run: composer validate --no-check-publish
 
-      - name: Install PHP dependencies (with dev, for tests)
-        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Install Dependencies & Build Assets
+  run: |
+    composer install --no-dev --optimize-autoloader
+    npm ci
+    npm run build
 
       # phpunit.xml pins the test database (sqlite :memory:), mail, cache,
       # queue and session drivers; the .env only has to supply an APP_KEY.
