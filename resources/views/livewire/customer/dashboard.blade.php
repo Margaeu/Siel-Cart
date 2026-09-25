@@ -35,20 +35,31 @@
                             <div>
                                 <h4 class="font-bold text-gray-900 text-sm">
                                     Your order {{ $readyForPickupOrder->order_number }} is ready for pickup
+                                    @if($readyForPickupOrder->reschedule_count > 0)
+                                        <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[0.6875rem] font-semibold text-amber-800">Rescheduled</span>
+                                    @endif
                                 </h4>
                                 <div class="flex flex-wrap items-center gap-x-3 text-xs text-gray-500 mt-1">
-                                    @if($readyForPickupOrder->claim_code)
-                                        <span>Claim no. <strong class="text-gray-700 font-semibold">{{ $readyForPickupOrder->claim_code }}</strong></span>
+                                    @if($readyForPickupOrder->claim_number)
+                                        <span>Claim no. <strong class="text-gray-700 font-semibold">{{ $readyForPickupOrder->claim_number }}</strong></span>
                                         <span>•</span>
                                     @endif
-                                    <span>UBAP Office · 8:00 AM – 5:00 PM</span>
+                                    <span>
+                                        UBAP Office
+                                        @if($readyForPickupOrder->pickup_date)
+                                            · <strong class="text-gray-700 font-semibold">{{ $readyForPickupOrder->pickup_date->format('M d, Y') }}</strong>
+                                        @endif
+                                        @if($readyForPickupOrder->pickup_slot)
+                                            · {{ $readyForPickupOrder->pickup_slot }}
+                                        @endif
+                                    </span>
                                     <span>•</span>
                                     <span>Pay in cash: <strong class="text-gray-800 font-semibold">₱{{ number_format($readyForPickupOrder->total, 2) }}</strong></span>
                                 </div>
                             </div>
                         </div>
-                        <a href="{{ route('customer.orders.show', $readyForPickupOrder->id) }}" 
-                           class="inline-flex justify-center items-center px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-semibold rounded-lg hover:opacity-90 transition shrink-0">
+                        <a href="{{ route('customer.orders.show', $readyForPickupOrder->id) }}"
+                           class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 text-xs font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:w-auto sm:shrink-0">
                             View order
                         </a>
                     </div>
@@ -243,8 +254,8 @@
                     @else
                         <div class="text-center py-10">
                             <p class="text-sm text-gray-500 mb-3">No orders yet</p>
-                            <a href="{{ route('products.index') }}" 
-                               class="inline-block bg-[var(--color-primary)] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
+                            <a href="{{ route('products.index') }}"
+                               class="inline-flex min-h-11 items-center rounded-lg bg-[var(--color-primary)] px-4 text-xs font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2">
                                 Start shopping
                             </a>
                         </div>

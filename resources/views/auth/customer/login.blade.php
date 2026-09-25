@@ -7,7 +7,7 @@
     @include('partials.theme-styles')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-screen flex-col bg-gradient-to-br from-[#f4f7ef] via-[#f4f7ef] to-[#e7efdc]">
+<body class="flex min-h-screen flex-col bg-gray-50">
     <x-customer-auth-header />
 
     <div class="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

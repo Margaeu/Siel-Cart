@@ -13,7 +13,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-[#edf3ec] text-gray-800 font-sans antialiased flex flex-col">
+<body class="min-h-screen bg-gray-50 text-gray-800 font-sans antialiased flex flex-col">
 
     <x-customer-auth-header />
 

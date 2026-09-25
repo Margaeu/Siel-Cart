@@ -7,7 +7,8 @@
     <td style="padding:0 0 16px 0;">
       <p style="margin:0 0 12px 0;">Hello {{ $order->customer->name }},</p>
       <p style="margin:0 0 16px 0;">
-        Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been confirmed and is now being processed.
+        The pickup for your Siel Cart order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been rescheduled to
+        <strong>{{ $order->pickup_date->format('l, F j, Y') }}</strong>, {{ $order->pickup_slot }}.
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0">
         <tr>
@@ -25,15 +26,39 @@
 
   <tr>
     <td style="padding-bottom:16px;">
-      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">ORDER DETAILS</p>
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">NEW PICKUP SCHEDULE</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
         <tr>
-          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Order ID:</td>
-          <td style="width:100%; vertical-align:top; color:#547F12; font-weight:bold;">#{{ $order->order_number }}</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Claim Number:</td>
+          <td style="width:100%; vertical-align:top; color:#547F12; font-weight:bold;">{{ $order->claim_number }}</td>
         </tr>
         <tr>
-          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Order Status:</td>
-          <td style="width:100%; vertical-align:top;">Processing</td>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Pickup Date:</td>
+          <td style="width:100%; vertical-align:top; font-weight:bold;">{{ $order->pickup_date->format('d/m/Y') }}</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Pickup Time:</td>
+          <td style="width:100%; vertical-align:top; font-weight:bold;">{{ $order->pickup_slot }}</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Location:</td>
+          <td style="width:100%; vertical-align:top;">{{ ucwords(str_replace('_', ' ', $order->pickup_location)) }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">PREVIOUS SCHEDULE</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6; color:#6b6b6b;">
+        <tr>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top;">Pickup Date:</td>
+          <td style="width:100%; vertical-align:top;">{{ $previousPickupDate->format('d/m/Y') }}</td>
+        </tr>
+        <tr>
+          <td style="white-space:nowrap; padding-right:12px; vertical-align:top;">Pickup Time:</td>
+          <td style="width:100%; vertical-align:top;">{{ $previousPickupSlot }}</td>
         </tr>
       </table>
     </td>
@@ -45,6 +70,7 @@
 
   <tr>
     <td style="padding-bottom:16px;">
+      <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">ORDER DETAILS</p>
       @foreach ($order->items as $index => $item)
         <div style="margin-bottom:12px;">
           <p style="margin:0 0 4px 0; font-weight:normal;">
@@ -62,22 +88,9 @@
           </table>
         </div>
       @endforeach
-    </td>
-  </tr>
-
-  <tr>
-    <td style="border-top:1px solid #e5e5e5; padding-top:16px;"></td>
-  </tr>
-
-  <tr>
-    <td style="padding-bottom:16px;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px; line-height:1.6; margin-top:4px;">
         <tr>
-          <td style="white-space:nowrap; padding-right:12px; color:#000000;">Subtotal:</td>
-          <td style="width:100%;">₱{{ number_format((float) $order->total, 2) }}</td>
-        </tr>
-        <tr>
-          <td style="white-space:nowrap; padding-right:12px; color:#000000; font-weight:normal;">Total Amount:</td>
+          <td style="white-space:nowrap; padding-right:12px; color:#000000;">Total Amount:</td>
           <td style="width:100%; font-weight:bold; color:#000000;">₱{{ number_format((float) $order->total, 2) }}</td>
         </tr>
       </table>
@@ -91,7 +104,8 @@
   <tr>
     <td style="padding-bottom:24px;">
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
-      <p style="margin:0 0 10px 0;">We will notify you once your order is ready for pickup. Please wait for the pickup-ready notification before visiting the pickup location.</p>
+      <p style="margin:0 0 10px 0;">Your claim number stays the same. Visit the UBAP Office on the new date, within the new pickup time, and present your claim number. Payment is in cash when you receive your items.</p>
+      <p style="margin:0 0 20px 0;">If you are unable to collect your order on the new schedule, please contact the UBAP Office as soon as possible. Orders that are not collected within the scheduled pickup period may be cancelled according to our pickup policy.</p>
       <p style="margin:0 0 4px 0;">Cheers,</p>
       <p style="margin:0;">UBAP Team</p>
     </td>

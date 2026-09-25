@@ -39,7 +39,6 @@
                             <li>An account is required to place an order. You are responsible for maintaining the confidentiality of your password and for all activity that occurs under your account.</li>
                             <li>You agree to notify us promptly of any unauthorized use of your account.</li>
                             <li>You may update your account details (including phone number, date of birth, address, and profile photo) at any time through Profile Management.</li>
-                            <li>Siel Cart reserves the right to suspend or terminate accounts that provide false information, violate these Terms, or are used for fraudulent or abusive activity.</li>
                         </ul>
                     </section>
 
@@ -126,9 +125,6 @@
                             <li>Use the System for any unlawful purpose or in a manner that could damage, disable, or impair its operation;</li>
                             <li>Attempt to reverse-engineer, scrape, or gain unauthorized access to the System's source code, data, or infrastructure.</li>
                         </ul>
-                        <p class="mt-3 text-base leading-8 text-slate-600">
-                            Violation of this section may result in suspension or termination of your account, without prejudice to any other remedies available to the University under applicable law.
-                        </p>
                     </section>
 
                     {{-- 12. Intellectual Property --}}

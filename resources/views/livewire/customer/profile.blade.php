@@ -67,12 +67,12 @@
 
         <!-- Tabbed Settings -->
         <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div class="flex gap-1 border-b border-gray-100 px-4">
+            <div class="flex gap-1 overflow-x-auto border-b border-gray-100 px-4">
                 <button type="button"
                         @click="tab = 'profile'; history.replaceState(null, '', location.pathname)"
                         :class="tab === 'profile' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                        class="flex items-center gap-2 border-b-2 px-4 py-4 text-sm font-semibold transition">
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        class="flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 text-sm font-semibold transition">
+                    <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     Profile Information
@@ -80,8 +80,8 @@
                 <button type="button"
                         @click="tab = 'security'; history.replaceState(null, '', '#password')"
                         :class="tab === 'security' ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                        class="flex items-center gap-2 border-b-2 px-4 py-4 text-sm font-semibold transition">
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        class="flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 text-sm font-semibold transition">
+                    <svg class="size-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     Security
@@ -138,7 +138,7 @@
 
                         <div class="flex justify-end pt-2">
                             <button type="submit"
-                                    class="transform rounded-xl bg-[var(--color-primary)] px-6 py-2.5 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)] hover:shadow-md">
+                                    class="min-h-11 w-full transform rounded-xl bg-[var(--color-primary)] px-6 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:w-auto">
                                 Update Profile
                             </button>
                         </div>
@@ -243,7 +243,7 @@
 
                             <div class="pt-2">
                                 <button type="submit"
-                                        class="transform rounded-xl bg-[var(--color-primary)] px-6 py-2.5 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)] hover:shadow-md">
+                                        class="min-h-11 w-full transform rounded-xl bg-[var(--color-primary)] px-6 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--color-primary-hover)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:w-auto">
                                     Change Password
                                 </button>
                             </div>

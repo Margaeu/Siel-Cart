@@ -107,8 +107,8 @@
                     aria-label="Search products"
                 >
                     <label for="desktop-product-search" class="sr-only">Search products</label>
-                    <div class="relative">
-                        <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <div class="group relative">
+                        <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/60 transition-colors group-focus-within:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35M18.5 10.5a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
                         </svg>
                         <input
@@ -197,8 +197,8 @@
         >
             <form action="{{ route('products.index') }}" method="GET" role="search" aria-label="Search products">
                 <label for="mobile-product-search-input" class="sr-only">Search products</label>
-                <div class="relative">
-                    <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <div class="group relative">
+                    <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/60 transition-colors group-focus-within:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35M18.5 10.5a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
                     </svg>
                     <input

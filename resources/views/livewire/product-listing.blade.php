@@ -33,7 +33,7 @@
 @endphp
 
 <div
-    class="min-h-screen bg-white text-gray-800"
+    class="min-h-screen bg-gray-50 text-gray-800"
     x-data="{
         // The sidebar and the small-screen panel are the same markup but not
         // the same control: on desktop it is a persistent sidebar the customer

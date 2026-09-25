@@ -33,7 +33,7 @@
                         @foreach($statusTabs as $value => $label)
                             <button type="button"
                                     wire:click="$set('statusFilter', '{{ $value }}')"
-                                    class="px-4 py-2 rounded-xl text-sm whitespace-nowrap transition {{ $statusFilter === $value
+                                    class="inline-flex min-h-11 shrink-0 items-center rounded-xl px-4 text-sm whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 {{ $statusFilter === $value
                                         ? 'bg-emerald-50 text-[var(--color-primary)] font-semibold'
                                         : 'text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-900' }}">
                                 {{ $label }}
@@ -152,12 +152,12 @@
                             </p>
                             @if($statusFilter)
                                 <button type="button" wire:click="$set('statusFilter', '')"
-                                        class="inline-block bg-[var(--color-primary)] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
+                                        class="inline-flex min-h-11 items-center rounded-lg bg-[var(--color-primary)] px-4 text-xs font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2">
                                     Show all orders
                                 </button>
                             @else
                                 <a href="{{ route('products.index') }}"
-                                   class="inline-block bg-[var(--color-primary)] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
+                                   class="inline-flex min-h-11 items-center rounded-lg bg-[var(--color-primary)] px-4 text-xs font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2">
                                     Start shopping
                                 </a>
                             @endif

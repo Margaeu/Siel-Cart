@@ -7,7 +7,7 @@
     // A product counts as new for its first month on the shelf. Featured wins
     // over new, so a hand-picked product reads as featured rather than as one
     // more recent arrival.
-    $isNew = $product->created_at?->gt(now()->subDays(30));
+    $isNew = $product->created_at?->gt(now()->subDays(7));
     $isOutOfStock = $product->stock_status === 'out_of_stock';
     $rating = $product->average_rating;
     $reviewsCount = $product->reviews_count;
@@ -39,6 +39,14 @@
                 @if($isOutOfStock)
                     <span class="rounded-full bg-gray-900 px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
                         Sold Out
+                    </span>
+                @elseif($badge === 'best_seller')
+                    <span class="rounded-full bg-amber-600 px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
+                        Best Seller
+                    </span>
+                @elseif($badge === 'top_pick')
+                    <span class="rounded-full bg-[var(--color-primary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-white shadow-sm sm:px-2.5 sm:text-[0.6875rem]">
+                        Top Pick
                     </span>
                 @elseif($product->is_featured)
                     <span class="rounded-full bg-[var(--color-secondary)] px-2 py-1 text-[0.625rem] font-bold uppercase tracking-wide text-gray-900 shadow-sm sm:px-2.5 sm:text-[0.6875rem]">

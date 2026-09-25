@@ -306,6 +306,32 @@
         </div>
     </section>
 
+    <!-- Best Sellers -->
+    <x-storefront.product-carousel-section
+        heading="Best Sellers"
+        description="The top seller in each category over the last 7 days."
+        :products="$bestSellers"
+        badge="best_seller"
+        aria-label="Best sellers"
+        section-bg-class="bg-white"
+        accent-border-class="border-amber-200"
+        empty-heading="No Best Sellers yet."
+        empty-message="Check back once this week's completed orders bring in some sales."
+    />
+
+    <!-- Top Picks -->
+    <x-storefront.product-carousel-section
+        heading="Top Picks"
+        description="The store's top sellers across every category over the last 7 days."
+        :products="$topPicks"
+        badge="top_pick"
+        aria-label="Top picks"
+        section-bg-class="bg-amber-50/40"
+        accent-border-class="border-amber-200"
+        empty-heading="No Top Picks yet."
+        empty-message="Check back once this week's completed orders bring in some sales."
+    />
+
     <!-- Categories Section -->
     <section class="bg-white py-16">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

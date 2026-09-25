@@ -8,8 +8,8 @@
 <body style="margin:0; padding:0;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.5; color:#000000; padding:20px 0;">
 <tr>
-<td align="center">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; text-align:left;">
+<td align="center" style="padding:0 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; text-align:left;">
 
   <tr>
     <td style="padding:0 0 16px 0;">
@@ -31,7 +31,7 @@
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px 0;">
         <tr>
           <td align="center" style="background-color:{{ $primaryColor }}; border-radius:4px;">
-            <a href="{{ $verificationUrl }}" target="_blank" style="display:inline-block; padding:10px 24px; font-size:13px; font-weight:bold; color:#ffffff; text-decoration:none;">
+            <a href="{{ $verificationUrl }}" target="_blank" style="display:inline-block; padding:14px 28px; font-size:14px; font-weight:bold; color:#ffffff; text-decoration:none;">
               Verify Email Address
             </a>
           </td>
