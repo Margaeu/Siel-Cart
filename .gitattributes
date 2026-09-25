@@ -5,6 +5,8 @@
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
+*.sh text eol=lf
+nginx.conf text eol=lf
 
 CHANGELOG.md export-ignore
 README.md export-ignore
