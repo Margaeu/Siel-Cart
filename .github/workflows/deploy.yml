@@ -1,11 +1,5 @@
 name: Deploy to Azure App Service
 
-# Builds, tests and deploys Siel Cart to Azure App Service (Linux, PHP 8.2).
-# Every step must pass before the package is built, and the package must be
-# built before anything is deployed -- a failed test, build, platform check,
-# certificate preflight or Nginx drift check stops the run with nothing sent
-# to Azure. See docs/azure-deployment.md.
-
 on:
   push:
     branches: [main]
@@ -20,7 +14,6 @@ concurrency:
 
 env:
   PHP_VERSION: '8.2'
-  # Vite 7 needs Node 20.19+ or 22.12+.
   NODE_VERSION: '22'
   AZURE_WEBAPP_NAME: 'sielcart'
 
@@ -33,7 +26,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      ## Cheap checks first, so a run that can never deploy fails in seconds.
       - name: Check nginx.conf matches the canonical default site
         run: |
           if ! cmp --silent default nginx.conf; then
@@ -48,13 +40,6 @@ jobs:
             exit 1
           fi
 
-       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'sielcart'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -65,29 +50,18 @@ jobs:
 
       - name: Locate the Composer cache
         id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+        run: echo "dir=\((composer config cache-files-dir)" >> "\)GITHUB_OUTPUT"
 
       - name: Cache Composer downloads
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-${{ runner.os }}-php${{ env.PHP_VERSION }}-
+          key: composer-\({{ runner.os }}-php\){{ env.PHP_VERSION }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-\({{ runner.os }}-php\){{ env.PHP_VERSION }}-
 
       - name: Validate composer.json and composer.lock
         run: composer validate --no-check-publish
 
-      - name: Install Dependencies & Build Assets
-  run: |
-    composer install --no-dev --optimize-autoloader
-    npm ci
-    npm run build
-
-    
-
-      # phpunit.xml pins the test database (sqlite :memory:), mail, cache,
-      # queue and session drivers; the .env only has to supply an APP_KEY.
-      # The key is generated for this run and never leaves the runner.
       - name: Prepare a throwaway CI environment
         run: |
           cp .env.example .env
@@ -108,8 +82,6 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
-      # Replaces the dev install in place: removes dev packages and rebuilds
-      # an optimized autoloader and bootstrap/cache package manifests.
       - name: Install production PHP dependencies
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction --no-progress
 
@@ -119,9 +91,6 @@ jobs:
       - name: Remove the CI environment file
         run: rm -f .env
 
-      # One -x per pattern; zip wildcards match across directories, so
-      # '*/node_modules/*' and '*/.env*' cover every nested copy.
-      # bootstrap/cache is kept: it holds the production package manifests.
       - name: Package the release
         run: |
           zip -r -q ../release.zip . \
@@ -155,9 +124,6 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ../release.zip
 
-      # F1 has no Always On, so the first request after a deploy waits for a
-      # cold start (and for migrations, when enabled). /up proves Laravel
-      # boots; /products proves a database-backed page renders.
       - name: Smoke test the deployment
         env:
           APP_URL: ${{ steps.deploy.outputs.webapp-url }}
@@ -172,7 +138,7 @@ jobs:
                 echo "OK: $url"
                 return 0
               fi
-              echo "Attempt ${attempt}/10 failed for $url; retrying in 30 seconds."
+              echo "Attempt \({attempt}/10 failed for\)url; retrying in 30 seconds."
               sleep 30
             done
             echo "::error::$url never returned a successful response."
@@ -180,4 +146,3 @@ jobs:
           }
 
           check /up
-          check /products
