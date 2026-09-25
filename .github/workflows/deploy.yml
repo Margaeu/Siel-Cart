@@ -33,7 +33,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Cheap checks first, so a run that can never deploy fails in seconds.
+      ## Cheap checks first, so a run that can never deploy fails in seconds.
       - name: Check nginx.conf matches the canonical default site
         run: |
           if ! cmp --silent default nginx.conf; then
@@ -47,6 +47,13 @@ jobs:
             echo "::error file=storage/certs/README.md::storage/certs/aiven-ca.pem is missing or unreadable. Download the genuine CA from the Aiven console and commit it (see storage/certs/README.md)."
             exit 1
           fi
+
+       - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'sielcart'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -75,6 +82,8 @@ jobs:
     composer install --no-dev --optimize-autoloader
     npm ci
     npm run build
+
+    
 
       # phpunit.xml pins the test database (sqlite :memory:), mail, cache,
       # queue and session drivers; the .env only has to supply an APP_KEY.
