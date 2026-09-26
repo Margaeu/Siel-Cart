@@ -98,7 +98,10 @@ jobs:
       # Assets built in "Install Dependencies & Build Assets" above are still
       # correct here -- nothing touches resources/ or node_modules/ between
       # that build and packaging, so rebuilding would just repeat the same
-      # Vite output.
+      # Vite output. public/build is not in Git (.gitignore) and Azure never
+      # builds (SCM_DO_BUILD_DURING_DEPLOYMENT=false), so that build is the
+      # only one the release will carry: it is checked here on the runner,
+      # and again inside release.zip after packaging.
 
       # Replaces the dev install in place: removes dev packages and rebuilds
       # an optimized autoloader and bootstrap/cache package manifests.
@@ -110,6 +113,11 @@ jobs:
 
       - name: Remove the CI environment file
         run: rm -f .env
+
+      # Manifest, every file it references, every url() in the built CSS
+      # (including all Acumin Pro faces), and the admin panel's font files.
+      - name: Verify the Vite build is complete
+        run: node scripts/verify-vite-build.mjs
 
       # One -x per pattern; zip wildcards match across directories, so
       # '*/node_modules/*' and '*/.env*' cover every nested copy.
@@ -138,6 +146,16 @@ jobs:
             -x '.phpunit.result.cache' \
             -x '.claude/*'
           ls -lh ../release.zip
+
+      # Re-runs the same check against what was actually packaged, so an
+      # exclude pattern that ever catches public/build or the admin fonts
+      # fails here instead of shipping an unstyled site.
+      - name: Verify the package contains the complete build
+        run: |
+          pkgcheck="$RUNNER_TEMP/pkgcheck"
+          rm -rf "$pkgcheck"
+          unzip -q ../release.zip 'public/build/*' 'public/fonts/filament/filament/acumin-pro/*' -d "$pkgcheck"
+          node scripts/verify-vite-build.mjs "$pkgcheck/public"
 
       - name: Deploy to Azure App Service
         id: deploy

@@ -15,12 +15,18 @@ See "Performance notes" below before assuming F1's limits apply.
 1. A push to `main` (or **Actions → Deploy to Azure App Service → Run workflow**)
    runs `.github/workflows/deploy.yml`.
 2. The workflow checks that `nginx.conf` matches `default` and that
-   `storage/certs/aiven-ca.pem` exists, validates Composer, runs the full test
-   suite, builds the Vite assets, installs production-only Composer
-   dependencies, and checks platform requirements. **Any failure stops the run
-   before anything reaches Azure.**
+   `storage/certs/aiven-ca.pem` exists, and validates Composer. It then runs
+   `composer install` (the admin theme imports CSS from `vendor/filament`),
+   `npm ci` (exactly what `package-lock.json` pins), and `npm run build`. After
+   that it runs the full test suite, installs production-only Composer
+   dependencies, checks platform requirements, and verifies the Vite build with
+   `node scripts/verify-vite-build.mjs`. **Any failure stops the run before
+   anything reaches Azure.**
 3. It zips the app (no `.env` files, tests, `node_modules`, logs, or caches)
-   to `../release.zip` and deploys it with `azure/webapps-deploy@v3`.
+   to `../release.zip`, including the freshly built `public/build`. It re-runs
+   the build check against `public/build` and the admin Acumin fonts extracted
+   from the zip, then deploys it with `azure/webapps-deploy@v3`. See
+   "Frontend assets" below.
 4. Azure starts the container and runs `startup.sh`, which installs the Nginx
    site from `default`, optionally migrates, and rebuilds Laravel's caches.
 5. The workflow smoke-tests `https://<app>/up` and `https://<app>/products`,
@@ -45,6 +51,77 @@ repository secret **`AZURE_WEBAPP_PUBLISH_PROFILE`** (Settings → Secrets and
 variables → Actions). The workflow deploys to the app named in
 `AZURE_WEBAPP_NAME` at the top of `deploy.yml`; change it there if your app
 has a different name.
+
+## Frontend assets (`public/build`)
+
+`public/build` is Vite's generated output: `manifest.json` plus content-hashed
+CSS, JS and fonts in `assets/`. It is **never committed**. It is listed in
+`.gitignore`, and Azure never builds it (`SCM_DO_BUILD_DURING_DEPLOYMENT=false`,
+and `startup.sh` only clears and rebuilds Laravel's caches). So every
+deployment must carry a complete build made from the commit being deployed.
+A checkout of the repository alone has no `public/build`, and that is expected.
+
+The build has three inputs (`vite.config.js`): the storefront
+`resources/css/app.css`, the admin panel `resources/css/filament/admin/theme.css`,
+and `resources/js/app.js`. The admin theme imports Filament's CSS from
+`vendor/`, so `composer install` must run before `npm run build`.
+
+**Acumin Pro** is the typeface for both the storefront and the admin panel, and
+it arrives by two routes. Neither may be removed:
+
+- **Storefront:** the `@font-face` rules in `resources/css/app.css` point at
+  `resources/fonts/*.woff2` and `public/fonts/filament/filament/acumin-pro/*.otf`.
+  Vite copies both into `public/build/assets/` under hashed names.
+- **Admin panel:** `AdminPanelProvider` loads
+  `public/fonts/filament/filament/acumin-pro/index.css` and its `.otf` files
+  directly. These are committed, not built.
+
+### Standard path: GitHub Actions
+
+Nothing to do by hand. The workflow runs `composer install`, `npm ci` and
+`npm run build` on Node 22. It checks the result with
+`node scripts/verify-vite-build.mjs`, which covers:
+
+- the manifest and its three entries
+- every file the manifest references
+- every `url()` in the built CSS, including all four Acumin faces in WOFF2 and
+  OTF
+- the admin font files
+
+It then packages the complete folder and checks it again inside `release.zip`.
+
+### Manual path: build locally, upload the folder
+
+Use this when the host can't run Node, or when deploying outside the workflow.
+
+1. On a machine with PHP 8.2, Composer and Node 20.19+ or 22.12+ (Vite 7's
+   minimum), check out the exact commit being deployed and run:
+   `composer install`, then `npm ci`, then `npm run build`.
+   `npm ci` installs exactly what `package-lock.json` pins. Don't use
+   `npm install`, which can change the lockfile.
+2. Run `node scripts/verify-vite-build.mjs`. Upload nothing unless it ends with
+   "Vite build is complete".
+3. Treat `public/build` as one unit. `manifest.json` and `assets/` must come
+   from the **same** build and go live together. Never copy new files over an
+   old `public/build`, and never upload the manifest or the assets on its own:
+   the manifest names hashed files, and a mismatch means pages request CSS
+   that isn't there.
+4. Upload the whole folder to a staging path next to the live one, such as
+   `/home/site/wwwroot/public/build.new`. Then switch it into place with two
+   renames:
+   - `public/build` → `public/build.old`
+   - `public/build.new` → `public/build`
+
+   Only the moment between those two renames can serve a partial build. Delete
+   `public/build.old` once pages load correctly.
+5. If renames aren't possible on the host, replace the folder inside a
+   maintenance window instead (`php artisan down`, replace, `php artisan up`).
+   Alternatively, deploy a full package the same way the workflow does.
+6. Replacing assets and clearing caches are separate jobs.
+   `php artisan optimize:clear` (which `startup.sh` also runs on every start)
+   only refreshes Laravel's config, route and view caches. It can't restore
+   missing or mismatched asset files. If assets are wrong, upload a complete
+   build again.
 
 ## App settings
 
