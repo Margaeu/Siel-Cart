@@ -37,10 +37,17 @@
  * so there is no faux-bold, but the four-step weight ramp the storefront markup
  * assumes collapses to two. Adding Acumin's Light/Medium/Semibold cuts here is
  * all it would take to restore it.
+ *
+ * Each face also ships a WOFF2 re-encoding (resources/fonts/, generated with
+ * fontTools -- same outlines/hinting, ~49% smaller than the raw .otf) listed
+ * first so browsers prefer it; the .otf stays as the fallback source and is
+ * untouched so Filament's LocalFontProvider keeps serving the original files
+ * to the admin panel exactly as before.
  */
 @font-face {
     font-family: 'Acumin Pro';
-    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-RPro.otf') format('opentype');
+    src: url('../fonts/Acumin-RPro.woff2') format('woff2'),
+         url('../../public/fonts/filament/filament/acumin-pro/Acumin-RPro.otf') format('opentype');
     font-style: normal;
     font-weight: 400;
     font-display: swap;
@@ -48,7 +55,8 @@
 
 @font-face {
     font-family: 'Acumin Pro';
-    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-ItPro.otf') format('opentype');
+    src: url('../fonts/Acumin-ItPro.woff2') format('woff2'),
+         url('../../public/fonts/filament/filament/acumin-pro/Acumin-ItPro.otf') format('opentype');
     font-style: italic;
     font-weight: 400;
     font-display: swap;
@@ -56,7 +64,8 @@
 
 @font-face {
     font-family: 'Acumin Pro';
-    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-BdPro.otf') format('opentype');
+    src: url('../fonts/Acumin-BdPro.woff2') format('woff2'),
+         url('../../public/fonts/filament/filament/acumin-pro/Acumin-BdPro.otf') format('opentype');
     font-style: normal;
     font-weight: 700;
     font-display: swap;
@@ -64,7 +73,8 @@
 
 @font-face {
     font-family: 'Acumin Pro';
-    src: url('../../public/fonts/filament/filament/acumin-pro/Acumin-BdItPro.otf') format('opentype');
+    src: url('../fonts/Acumin-BdItPro.woff2') format('woff2'),
+         url('../../public/fonts/filament/filament/acumin-pro/Acumin-BdItPro.otf') format('opentype');
     font-style: italic;
     font-weight: 700;
     font-display: swap;

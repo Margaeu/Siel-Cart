@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Models\Category;
+use App\Support\OptimizedImageStorage;
 use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
@@ -12,6 +13,7 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CategoryForm
 {
@@ -86,7 +88,16 @@ class CategoryForm
                             ->maxSize(10240)
                             ->imagePreviewHeight('220')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
-                            ->helperText('Maximum file size: 10 MB.'),
+                            ->helperText('Maximum file size: 10 MB.')
+                            ->saveUploadedFileUsing(function (FileUpload $component, TemporaryUploadedFile $file): string {
+                                return OptimizedImageStorage::store(
+                                    $file,
+                                    $component->getDiskName(),
+                                    $component->getDirectory(),
+                                    $component->getUploadedFileNameForStorage($file),
+                                    maxWidth: 800,
+                                );
+                            }),
 
                     ]),
 

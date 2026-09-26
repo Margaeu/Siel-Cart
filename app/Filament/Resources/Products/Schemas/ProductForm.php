@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Rules\UniqueSku;
+use App\Support\OptimizedImageStorage;
 use App\Support\Sku;
 use Closure;
 use Filament\Forms\Components\FileUpload;
@@ -23,6 +24,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Arr;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductForm
 {
@@ -185,6 +187,15 @@ class ProductForm
                                             ->orientImagesFromExif(false)
                                             ->imagePreviewHeight('250')
                                             ->fetchFileInformation(false)
+                                            ->saveUploadedFileUsing(function (FileUpload $component, TemporaryUploadedFile $file): string {
+                                                return OptimizedImageStorage::store(
+                                                    $file,
+                                                    $component->getDiskName(),
+                                                    $component->getDirectory(),
+                                                    $component->getUploadedFileNameForStorage($file),
+                                                    maxWidth: 1600,
+                                                );
+                                            })
                                             ->extraAttributes([
                                                 'class' => 'clsu-image-upload',
                                                 'data-filepond-type' => 'image',
@@ -370,6 +381,15 @@ class ProductForm
                                                     ->orientImagesFromExif(false)
                                                     ->imagePreviewHeight('150')
                                                     ->fetchFileInformation(false)
+                                                    ->saveUploadedFileUsing(function (FileUpload $component, TemporaryUploadedFile $file): string {
+                                                        return OptimizedImageStorage::store(
+                                                            $file,
+                                                            $component->getDiskName(),
+                                                            $component->getDirectory(),
+                                                            $component->getUploadedFileNameForStorage($file),
+                                                            maxWidth: 1600,
+                                                        );
+                                                    })
                                                     ->extraAttributes([
                                                         'class' => 'clsu-image-upload',
                                                         'data-filepond-type' => 'image',

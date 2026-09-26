@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\Banners\Schemas;
 
+use App\Support\OptimizedImageStorage;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class BannerForm
 {
@@ -31,6 +33,15 @@ class BannerForm
                             ->imagePreviewHeight('250')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
                             ->helperText('Recommended: wide landscape image (e.g. 1920×720). Maximum file size: 10 MB.')
+                            ->saveUploadedFileUsing(function (FileUpload $component, TemporaryUploadedFile $file): string {
+                                return OptimizedImageStorage::store(
+                                    $file,
+                                    $component->getDiskName(),
+                                    $component->getDirectory(),
+                                    $component->getUploadedFileNameForStorage($file),
+                                    maxWidth: 1920,
+                                );
+                            })
                             ->columnSpanFull(),
                     ]),
                 Section::make('Display')

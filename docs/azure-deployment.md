@@ -1,9 +1,14 @@
-# Deploying Siel Cart to Azure App Service (F1 preview)
+# Deploying Siel Cart to Azure App Service
 
-A low-cost live-test deployment: Azure App Service Linux F1 (built-in PHP 8.2
+A low-cost live-test deployment: Azure App Service Linux (built-in PHP 8.2
 image, Nginx + PHP-FPM), Aiven MySQL, Cloudflare R2 for media, and GitHub
 Actions for build and deploy. Nothing here contains real credentials; every
 value below is a placeholder.
+
+The live app runs on **B1 (Basic)**, not F1 — it was upgraded at some point
+for Always On, and the App Service Plan (`ASP-SielCartgroup-9fe3`) was
+confirmed by `az appservice plan show` to be `Basic/B1` (1 vCPU, 1.75 GB RAM).
+See "Performance notes" below before assuming F1's limits apply.
 
 ## How a deployment works
 
@@ -60,7 +65,7 @@ Settings, never as an uploaded `.env` file.
 | `DB_SSL_REQUIRE_VERIFIED_CA` | `true` |
 | `MYSQL_ATTR_SSL_CA` | `/home/site/wwwroot/storage/certs/aiven-ca.pem` |
 | `QUEUE_CONNECTION` | `sync` |
-| `SESSION_DRIVER` / `CACHE_STORE` | `file` / `file` |
+| `SESSION_DRIVER` / `CACHE_STORE` | `file` / `file` (recommended below, but **not currently set** on the live app — see note) |
 | `SESSION_SECURE_COOKIE` | `true` |
 | `FILESYSTEM_DISK` | `r2` |
 | `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | R2 API token credentials |
@@ -78,6 +83,19 @@ queued mail and notifications (e.g. the admin invitation) inside the request.
 **Sessions** — file sessions live on the instance; a redeploy or restart can
 clear them and sign everyone out. That is acceptable for a single-instance
 preview, not for production.
+
+**Verified 2026-09-26**: `SESSION_DRIVER` and `CACHE_STORE` are **not actually
+set** in the live app's App Settings (`az webapp config appsettings list`
+confirms only `APP_DEBUG`, `DB_HOST`, `LOG_CHANNEL`, `QUEUE_CONNECTION` are
+present among these). No `.env` file is deployed either (the workflow deletes
+it after tests). So both fall back to `config/session.php` /
+`config/cache.php`'s own default of `database`, not `file` as this table
+recommends — sessions and cache reads/writes are hitting Aiven MySQL, not the
+instance disk. This isn't necessarily worse (Azure's `/home` is
+network-backed storage anyway, so `file` wouldn't be fast either), but it
+means the setting above was never actually applied. Decide deliberately
+between `file` and `database` and set the App Setting explicitly rather than
+relying on the framework default.
 
 ## Aiven MySQL
 
@@ -154,26 +172,111 @@ Migrations are not rolled back automatically. If the bad release ran a
 migration, reverse it deliberately (`php artisan migrate:rollback` over SSH)
 before or after redeploying, depending on the change.
 
+## Performance notes (verified 2026-09-26)
+
+The storefront was compared against an external reference site that returned
+in ~80ms TTFB versus ours at 300ms-plus warm and multiple seconds cold. What
+was checked, on the live subscription, before touching anything:
+
+- **Plan**: `ASP-SielCartgroup-9fe3` is `Basic/B1` (1 vCPU, 1.75 GB RAM),
+  Always On is `true`, `numberOfWorkers: 1` (single instance, no scale-out).
+- **The Node chatbot app (`sielcart-chatbot`) runs on the same plan** as
+  `sielcart` — confirmed via `az webapp show --query serverFarmId` on both.
+  They share one vCPU.
+- **HTTP/2 was off** (`http20Enabled: false`) and has been turned on
+  (`az webapp config set --http20-enabled true`); `httpsOnly` and
+  `minTlsVersion` (1.2) were left untouched. Confirmed via browser
+  `PerformanceNavigationTiming.nextHopProtocol === "h2"` after the change.
+- **A/B test**: `sielcart-chatbot` was stopped, `/up` (a zero-DB, zero-logic
+  route) was measured warm before/during/after, then the chatbot was
+  restarted. Warm `/up` was ~300-450ms **with the chatbot running** and
+  ~310-440ms **with it stopped** — no measurable difference. **The idle
+  chatbot is not starving the storefront of CPU**; it only costs CPU while
+  actively answering a chat request, which is intermittent, not constant
+  contention. Don't assume moving it to its own plan will fix the baseline.
+- **The real floor**: even `/up` — no database, no Livewire, nothing — sits
+  around 300-450ms warm on this plan, and any process restart (a config
+  change, a redeploy, or the app being swapped back in after going idle)
+  produces single-digit-second cold starts (observed up to ~12s on `/up`
+  right after a config-triggered restart) while PHP-FPM and OPcache warm back
+  up on a single shared vCPU. That warm-up cost is inherent to one vCPU
+  compiling and autoloading Laravel's vendor tree; more cores (B2+) would
+  shorten it, but the 300-450ms *warm* floor is the more telling number
+  because a real customer clicking around mid-session is hitting warm
+  requests, not cold ones.
+- **Not verified** (couldn't check without a shell into the container, which
+  this environment's safety sandbox blocks — retrieving the publish profile
+  or SSH credentials counts as credential materialization): whether OPcache
+  is actually enabled/tuned in the **PHP-FPM** pool serving requests, versus
+  just the CLI SAPI (the two can load different `php.ini`s on the same
+  image). Azure's built-in Linux PHP 8.2 image ships OPcache on by default,
+  but that's an assumption, not a measurement. To check it yourself: **Azure
+  Portal → sielcart → Development Tools → SSH → Go** (a real terminal inside
+  the running container, not a separate sandbox), then run `ps aux | grep
+  php-fpm` to find the FPM binary's path and run `<that path> -i | grep -i
+  opcache` — the FPM binary's own `-i` dump reflects the FPM SAPI's config,
+  which plain `php -i` does not. Confirm `opcache.enable => On => On` and
+  ideally `opcache.validate_timestamps => Off` for production (files never
+  change between deploys, so timestamp checks on every request are wasted
+  work). For live runtime stats (hit rate, memory used), drop a short-lived,
+  token-gated script into `public/` in that same SSH session that calls
+  `opcache_get_status()`, hit it once over HTTPS, then delete it immediately
+  — nginx's `location ~ \.php$` block (see `default`) forwards any existing
+  `.php` file under the docroot straight to the live FPM pool, so this is the
+  only way to see real request-time OPcache behavior rather than static config.
+- **Aiven MySQL is on the Developer plan** (confirmed directly, not the
+  legacy Free tier). Developer is a paid, dedicated-resource plan and does
+  **not** auto-suspend on inactivity — that pausing behavior is specific to
+  Aiven's old Free tier. This rules out "DB waking from suspension" as the
+  explanation for the occasional large spikes seen on DB-touching routes like
+  `/products`; those spikes are more likely just the same single-vCPU
+  App Service CPU contention described above compounding on a route that also
+  has to do DB + Livewire work, not a separate database-side cold start.
+  Aiven's region relative to Malaysia West (cross-region network hops add
+  fixed per-query latency) is still unverified — worth checking in the Aiven
+  console if `/products` keeps measurably outrunning `/up` by more than the
+  query cost alone would suggest.
+
+**Conclusion**: the gap versus a fast reference site is not missing code
+optimization (assets are already trimmed, gzip's on, N+1s are already guarded
+against per this file's architecture notes) — it's that a single shared vCPU
+is simply slower per request than whatever the comparison site runs on, and
+every cold start pays a multi-second PHP/OPcache warm-up tax on top of that.
+Fixing the floor means more CPU (B2+) or accepting B1's ceiling; fixing cold
+starts means avoiding unnecessary restarts and keeping the always-on instance
+genuinely warm.
+
 ## Free-tier limits
 
 **Azure App Service F1**: 60 CPU minutes per day, 1 GB RAM, 1 GB storage, no
 Always On (the app sleeps when idle and the next request waits for a cold
 start, often tens of seconds), no deployment slots, no SLA, and file
-sessions/cache are lost on redeploy.
+sessions/cache are lost on redeploy. **The live app is no longer on this
+tier** — see "Performance notes" above — but a fresh deployment following
+this doc from scratch would start here.
 
 **Azure for Students (GitHub Student Developer Pack)**: F1 itself is free, so
-this setup doesn't use your student credit. The subscription is tied to your
-student status and a 12-month term (renewable while you stay eligible), and
-student subscriptions can only create resources in an allowed set of regions.
-If creating the App Service fails with a policy error, choose another region.
-Upgrading to B1 (for Always On or more CPU) starts drawing on the credit, and
-resources are disabled when the credit or term runs out. Check **Cost
-Management** in the portal before changing tiers.
+starting here doesn't use your student credit. The subscription is tied to
+your student status and a 12-month term (renewable while you stay eligible),
+and student subscriptions can only create resources in an allowed set of
+regions. If creating the App Service fails with a policy error, choose
+another region. Upgrading to B1 (for Always On or more CPU) starts drawing on
+the credit, and resources are disabled when the credit or term runs out — the
+live app is already on B1 and therefore already drawing on the credit. Check
+**Cost Management + Billing** in the portal for the current credit balance
+before changing tiers again; it isn't reliably readable through the CLI for
+an Azure for Students subscription. As of 2026-09-26, retail pricing for
+Malaysia West was **B1 ≈ $0.017/hr (~$12.4/mo), B2 ≈ $0.034/hr (~$24.8/mo)**
+— a second B1 plan for the chatbot costs the same as upgrading the shared
+plan to B2, but gives the two apps dedicated CPU instead of a shared pool.
 
 **Aiven MySQL free tier**: single node, 1 GB RAM, 1 GB storage, 76 maximum
 connections, no SLA, and the service may be powered off after a period of
 inactivity (power it on again in the console). Check Aiven's current plan page;
-limits change.
+limits change. **The live database is on the Developer plan, not Free** —
+paid, dedicated resources, no auto-suspend. Sizing/connection limits differ
+from the free tier above; check the current numbers on the service's page in
+the Aiven console rather than assuming free-tier limits apply.
 
 **Cloudflare R2 free tier**: 10 GB-month storage plus a monthly allowance of
 Class A (write) and Class B (read) operations; egress is free. The `r2.dev`

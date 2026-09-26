@@ -34,7 +34,7 @@
         x-data="{ navigationOpen: false, mobileSearchOpen: false }"
         x-on:keydown.escape.window="navigationOpen = false; mobileSearchOpen = false"
     >
-        <div class="mx-auto flex min-h-[4.75rem] w-full max-w-[87.5rem] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+        <div class="mx-auto flex min-h-14 w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-16 sm:gap-4 sm:px-6 md:min-h-[4.75rem] md:px-8 lg:px-10">
             <!-- Brand -->
             <a
                 href="{{ route('home') }}"
@@ -44,11 +44,11 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-11 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-12"
+                    class="size-8 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-10 md:size-11 lg:size-12"
                 >
-                <span class="hidden h-9 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true"></span>
+                <span class="hidden h-8 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
-                    <span class="block truncate text-lg font-bold leading-tight tracking-[-0.02em] sm:text-xl">
+                    <span class="block truncate text-sm font-bold leading-tight tracking-[-0.02em] sm:text-lg md:text-xl">
                         {{ $siteName }}
                     </span>
                     <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block">
@@ -150,7 +150,7 @@
             </div>
 
             <!-- Mobile: search toggle + cart + nav toggle -->
-            <div class="flex shrink-0 items-center gap-1 md:hidden">
+            <div class="flex shrink-0 items-center gap-0.5 sm:gap-1 md:hidden">
                 <button
                     type="button"
                     class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -159,7 +159,7 @@
                     aria-controls="mobile-product-search"
                     aria-label="Toggle search"
                 >
-                    <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m21 21-4.35-4.35M18.5 10.5a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
                     </svg>
                 </button>
@@ -174,10 +174,10 @@
                     aria-controls="mobile-store-navigation"
                     aria-label="Toggle navigation"
                 >
-                    <svg x-show="!navigationOpen" class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg x-show="!navigationOpen" class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7h16M4 12h16M4 17h16" />
                     </svg>
-                    <svg x-cloak x-show="navigationOpen" class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg x-cloak x-show="navigationOpen" class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
