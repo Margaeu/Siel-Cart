@@ -23,7 +23,8 @@ class ReviewsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->poll('10s')
+            // 60s, not faster: see the note on OrdersTable's ->poll().
+            ->poll('60s')
             // customer.name is an accessor, so the relations must be loaded up front.
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['product', 'customer']))
             ->defaultSort('created_at', 'desc')

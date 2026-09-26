@@ -30,7 +30,14 @@ class OrdersTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->poll('10s')
+            // Every poll is a full Livewire request that re-runs this table's
+            // query and re-renders it. Production is a single shared vCPU
+            // (B1) with the database in another region, so at 10s an open tab
+            // queued background work in front of the admin's own clicks.
+            // New orders are still flagged within a minute by the sidebar
+            // badge poller (NavigationBadgePoller), which runs on the same
+            // interval.
+            ->poll('60s')
             ->columns([
                 Tables\Columns\TextColumn::make('order_number')
                     ->label('Order #')

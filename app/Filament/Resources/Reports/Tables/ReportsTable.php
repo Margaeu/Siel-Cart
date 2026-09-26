@@ -19,7 +19,8 @@ class ReportsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->poll('10s')
+            // 60s, not faster: see the note on OrdersTable's ->poll().
+            ->poll('60s')
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['reporter', 'reportedCustomer', 'review.product']))
             ->defaultSort('created_at', 'desc')
             ->columns([
