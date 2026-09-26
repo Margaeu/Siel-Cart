@@ -118,31 +118,67 @@ class HomepageSectionsRenderTest extends TestCase
             ->assertSeeText('Top Pick');
     }
 
-    public function test_featured_and_new_badges_appear_with_each_ranked_card_badge(): void
+    /**
+     * A Best Seller or Top Pick badge outranks the admin-set Featured tag, so
+     * a ranked card drops "Featured" (components/storefront/product-badges,
+     * $hasSalesBadge). "New" is independent of ranking and stays. These tests
+     * originally asserted that every badge stacked; the badge design was then
+     * changed on purpose to hide Featured beside a sales badge, and the tests
+     * are updated to pin that rule rather than the old one.
+     */
+    public function test_ranked_card_badge_replaces_featured_but_keeps_new(): void
     {
-        $product = $this->eligibleProduct(['is_featured' => true]);
+        $product = $this->eligibleProduct(['is_featured' => true, 'name' => 'Campus Tumbler']);
 
         Livewire::test(ProductCard::class, ['product' => $product, 'badge' => 'best_seller'])
             ->assertSeeText('Best Seller')
-            ->assertSeeText('Featured')
+            ->assertDontSeeText('Featured')
             ->assertSeeText('New');
 
         Livewire::test(ProductCard::class, ['product' => $product, 'badge' => 'top_pick'])
             ->assertSeeText('Top Pick')
-            ->assertSeeText('Featured')
+            ->assertDontSeeText('Featured')
             ->assertSeeText('New');
     }
 
-    public function test_product_details_show_all_qualifying_badges_together(): void
+    /**
+     * The other half of the rule: with no ranking badge in play, Featured is
+     * still shown, so hiding it beside a sales badge can't quietly turn into
+     * hiding it everywhere.
+     */
+    public function test_featured_badge_shows_on_a_card_without_a_ranking_badge(): void
     {
-        $product = $this->eligibleProduct(['is_featured' => true]);
+        $product = $this->eligibleProduct(['is_featured' => true, 'name' => 'Campus Tumbler']);
+
+        Livewire::test(ProductCard::class, ['product' => $product])
+            ->assertSeeText('Featured')
+            ->assertSeeText('New')
+            ->assertDontSeeText('Best Seller')
+            ->assertDontSeeText('Top Pick');
+    }
+
+    public function test_product_details_show_sales_badges_and_new_but_not_featured(): void
+    {
+        $product = $this->eligibleProduct(['is_featured' => true, 'name' => 'Campus Tumbler']);
         $this->sellOnce($product);
 
         Livewire::test(ProductDetails::class, ['slug' => $product->slug])
             ->assertSeeText('Best Seller')
             ->assertSeeText('Top Pick')
-            ->assertSeeText('Featured')
+            ->assertDontSeeText('Featured')
             ->assertSeeText('New');
+    }
+
+    public function test_product_details_show_featured_when_no_sales_badge_applies(): void
+    {
+        // Featured but never sold: ranks into neither list.
+        $product = $this->eligibleProduct(['is_featured' => true, 'name' => 'Campus Tumbler']);
+
+        Livewire::test(ProductDetails::class, ['slug' => $product->slug])
+            ->assertSeeText('Featured')
+            ->assertSeeText('New')
+            ->assertDontSeeText('Best Seller')
+            ->assertDontSeeText('Top Pick');
     }
 
     /**
