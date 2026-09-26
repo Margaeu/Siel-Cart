@@ -19,8 +19,6 @@
             }
     </style>
 
-        @filamentStyles
-
 </head>
 <body class="min-h-screen flex flex-col bg-gray-50 antialiased">
     @php
@@ -400,7 +398,6 @@
     @include('partials.chat-widget')
 
     @livewireScripts
-    @filamentScripts
 
 </body>
 </html>
