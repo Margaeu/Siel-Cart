@@ -12,10 +12,25 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class ProductDetails extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithPagination;
+
+    /**
+     * Reviews shown per page. The page used to load and render every
+     * approved review (with its customer) on mount *and* again on every
+     * Livewire request -- a photo upload, a report click -- so its cost grew
+     * with the product's review count.
+     */
+    public const REVIEWS_PER_PAGE = 10;
+
+    /**
+     * The review list's own page name, so paging reviews never collides
+     * with any other paginator or query-string state on the page.
+     */
+    public const REVIEWS_PAGE_NAME = 'reviewsPage';
 
     public Product $product;
 
@@ -75,8 +90,10 @@ class ProductDetails extends Component
                 'generalImages',
                 'primaryImage',
                 'variants.images',
-                'approvedReviews.customer',
             ])
+            // The rating summary and review count read these aggregates;
+            // the reviews themselves are paged in render().
+            ->withReviewAggregates()
             ->firstOrFail();
 
         // Increment views
@@ -98,6 +115,12 @@ class ProductDetails extends Component
         $this->loadReviewState();
     }
 
+    /**
+     * Livewire re-fetches the product with a bare query on every request.
+     * The approved reviews are no longer part of this -- render() pages them
+     * -- and the rating/count aggregates come back in one query instead of
+     * re-hydrating every review and its customer.
+     */
     public function hydrate(): void
     {
         $this->product?->loadMissing([
@@ -105,8 +128,9 @@ class ProductDetails extends Component
             'generalImages',
             'primaryImage',
             'variants.images',
-            'approvedReviews.customer',
         ]);
+
+        $this->product?->loadCardAggregates();
     }
 
     /**
@@ -337,8 +361,12 @@ class ProductDetails extends Component
         $this->reset('reviewTitle', 'reviewComment', 'reviewPhotos', 'newReviewPhotos', 'reviewVideo');
         $this->reviewRating = 5;
 
-        // Force reload relationship so the new review appears immediately
-        $this->product->load('approvedReviews.customer');
+        // Reviews are auto-approved, so the new one is already in the paged
+        // list. Refresh the rating/count aggregates the summary reads, and go
+        // back to the first page -- the list is newest first, so that is
+        // where the customer's review appears immediately.
+        $this->product->loadCardAggregates(force: true);
+        $this->resetPage(self::REVIEWS_PAGE_NAME);
 
         $this->loadReviewState();
     }
@@ -467,8 +495,7 @@ class ProductDetails extends Component
         $relatedProducts = Product::where('is_active', true)
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['category', 'cardImage', 'variants'])
-            ->withReviewAggregates()
+            ->withCardData()
             ->limit(4)
             ->get();
 
@@ -478,8 +505,7 @@ class ProductDetails extends Component
             $otherCategoryProducts = Product::where('is_active', true)
                 ->where('category_id', '!=', $this->product->category_id)
                 ->whereNotIn('id', $relatedProducts->pluck('id'))
-                ->with(['category', 'cardImage', 'variants'])
-                ->withReviewAggregates()
+                ->withCardData()
                 ->inRandomOrder()
                 ->limit($remaining)
                 ->get();
@@ -516,7 +542,19 @@ class ProductDetails extends Component
             ]])
             ->all();
 
+        // One bounded page of approved reviews. Newest first, with the id
+        // breaking ties between reviews created in the same second, so pages
+        // never overlap or skip -- the old unpaged list had no order at all.
+        // Only approved reviews are listed, so an admin un-approving one
+        // removes it here on the next render.
+        $reviews = $this->product->approvedReviews()
+            ->with('customer')
+            ->latest()
+            ->orderByDesc('id')
+            ->paginate(self::REVIEWS_PER_PAGE, pageName: self::REVIEWS_PAGE_NAME);
+
         return view('livewire.product-details', [
+            'reviews' => $reviews,
             'isBestSeller' => $rankingService->bestSellers()->contains('id', $this->product->id),
             'isTopPick' => $rankingService->topPicks()->contains('id', $this->product->id),
             'relatedProducts' => $relatedProducts,

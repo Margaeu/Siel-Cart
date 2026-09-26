@@ -134,10 +134,12 @@ class ProductListing extends Component
 
     public function render()
     {
+        // withCardData() loads the image and the stock/review/price
+        // aggregates each card reads, instead of every variant row of every
+        // variable product on the page (which grew with each "Load more").
         $query = Product::query()
             ->active()
-            ->with(['category', 'cardImage', 'variants'])
-            ->withReviewAggregates();
+            ->withCardData();
 
         // Search. A variable product has no SKU of its own -- its SKUs live on
         // the variants -- so match an active variant's SKU too. Inactive

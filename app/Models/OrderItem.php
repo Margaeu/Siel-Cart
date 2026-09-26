@@ -3,8 +3,12 @@
 namespace App\Models;
 
 use App\Enums\OrderItemResolutionType;
+use App\Observers\HomepageRankingObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 
+// Rotates the homepage ranking cache when a line of a qualifying order changes.
+#[ObservedBy(HomepageRankingObserver::class)]
 class OrderItem extends Model
 {
     protected $fillable = [

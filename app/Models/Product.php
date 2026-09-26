@@ -18,6 +18,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Product extends Model
 {
     use HasFactory, LogsActivity;
+
     // The trait's forceDelete() is aliased rather than reached via parent::.
     // A method declared here overrides the trait's, so parent::forceDelete()
     // would resolve to Model::forceDelete() -- which only calls delete() and
@@ -331,14 +332,24 @@ class Product extends Model
     public function getDisplayPriceAttribute(): ?float
     {
         $price = $this->has_variants
-            ? ($this->relationLoaded('variants')
-                ? $this->variants->where('is_active', true)->min('price')
-                : $this->variants()->active()->min('price'))
+            ? (array_key_exists('min_active_variant_price', $this->attributes)
+                ? $this->attributes['min_active_variant_price']
+                : ($this->relationLoaded('variants')
+                    ? $this->variants->where('is_active', true)->min('price')
+                    : $this->variants()->active()->min('price')))
             : $this->price;
 
         return $price === null ? null : (float) $price;
     }
 
+    /**
+     * Prefer the min/max aggregates a listing loaded with
+     * withPriceAggregates(), then the loaded relation, and only query as a
+     * last resort. Cards used to hydrate every variant row of every variable
+     * product just to read two numbers off them, and a card whose parent had
+     * not eager loaded `variants` paid one query of its own -- simple
+     * products included, since ProductCard loaded the relation regardless.
+     */
     public function getDisplayPriceLabelAttribute(): string
     {
         if (! $this->has_variants) {
@@ -347,7 +358,11 @@ class Product extends Model
                 : '₱'.number_format((float) $this->price, 2);
         }
 
-        if ($this->relationLoaded('variants')) {
+        if (array_key_exists('min_active_variant_price', $this->attributes)
+            && array_key_exists('max_active_variant_price', $this->attributes)) {
+            $minimumPrice = $this->attributes['min_active_variant_price'];
+            $maximumPrice = $this->attributes['max_active_variant_price'];
+        } elseif ($this->relationLoaded('variants')) {
             $activePrices = $this->variants
                 ->where('is_active', true)
                 ->pluck('price');
@@ -448,6 +463,88 @@ class Product extends Model
         $query->withExists([
             'variants as has_stocked_variant' => fn (Builder $variants) => $variants->active()->inStock(),
         ]);
+    }
+
+    /**
+     * Load the cheapest and dearest active-variant price the card's price
+     * label reads (see getDisplayPriceLabelAttribute()). Two subqueries for
+     * the whole listing instead of hydrating every variant row. NULL for a
+     * simple product, and for a variable product with no active variant --
+     * which the label already renders as "Unavailable".
+     */
+    #[Scope]
+    protected function withPriceAggregates(Builder $query): void
+    {
+        $query
+            ->withMin(['variants as min_active_variant_price' => fn (Builder $variants) => $variants->active()], 'price')
+            ->withMax(['variants as max_active_variant_price' => fn (Builder $variants) => $variants->active()], 'price');
+    }
+
+    /**
+     * Everything a ProductCard reads, loaded once for the whole listing:
+     * the card image, stock status, rating/review count and price label.
+     *
+     * Any listing that renders <livewire:product-card> should use this. The
+     * card only falls back to loading these itself (ProductCard::render())
+     * when a parent did not, which used to cost one to three queries per
+     * card on the homepage.
+     */
+    #[Scope]
+    protected function withCardData(Builder $query): void
+    {
+        $query->with('cardImage')
+            ->withStockAggregates()
+            ->withReviewAggregates()
+            ->withPriceAggregates();
+    }
+
+    /**
+     * Load the card aggregates onto an already-fetched product in a single
+     * query, when they are missing (or always, with $force).
+     *
+     * Livewire re-fetches a component's model on every request with a bare
+     * query, which drops the aggregates the parent listing loaded, so a card
+     * or product page acting on its own request would otherwise fall back to
+     * one query per accessor read -- five for the star row alone.
+     *
+     * The query skips global scopes to match Livewire's own restoration
+     * query, which also finds a soft-deleted product.
+     */
+    public function loadCardAggregates(bool $force = false): static
+    {
+        $loaded = array_key_exists('approved_reviews_count', $this->attributes)
+            && array_key_exists('approved_reviews_avg_rating', $this->attributes)
+            && array_key_exists('has_stocked_variant', $this->attributes)
+            && array_key_exists('min_active_variant_price', $this->attributes)
+            && array_key_exists('max_active_variant_price', $this->attributes);
+
+        if (($loaded && ! $force) || ! $this->exists) {
+            return $this;
+        }
+
+        $aggregates = $this->newQueryWithoutScopes()
+            ->whereKey($this->getKey())
+            ->select($this->qualifyColumn($this->getKeyName()))
+            ->withStockAggregates()
+            ->withReviewAggregates()
+            ->withPriceAggregates()
+            ->toBase()
+            ->first();
+
+        if ($aggregates) {
+            $values = (array) $aggregates;
+            unset($values[$this->getKeyName()]);
+
+            // Written to both attributes and original: these are read-only
+            // aggregates, not edits, so they must not make the model dirty --
+            // and syncing only these keys leaves any real pending edit alone.
+            foreach ($values as $key => $value) {
+                $this->attributes[$key] = $value;
+                $this->original[$key] = $value;
+            }
+        }
+
+        return $this;
     }
 
     /**

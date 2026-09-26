@@ -343,6 +343,99 @@ class HomepageProductRankingServiceTest extends TestCase
         $this->assertSame(3, $entry->units_sold);
     }
 
+    /**
+     * Only a refund settles a unit for good. An exchanged unit stays sold:
+     * the customer still holds something bought in the window.
+     */
+    public function test_exchanged_units_are_not_deducted(): void
+    {
+        $product = $this->eligibleProduct();
+        $line = $this->sell($this->order(), $product, 4);
+
+        app(ReturnRefundResolutionService::class)->recordExchange(
+            $line,
+            User::factory()->create(),
+            [
+                'reason' => 'defective',
+                'quantity' => 1,
+                'processed_at' => now()->toDateString(),
+            ],
+        );
+
+        $entry = $this->service()->topPicks()->firstWhere('id', $product->id);
+
+        $this->assertSame(4, $entry->units_sold);
+    }
+
+    /**
+     * The per-line clamp and the distinct-order count are separate rules: a
+     * fully refunded line contributes no units, but its order still counts as
+     * a distinct order for the product -- which decides a tie on units.
+     */
+    public function test_a_fully_refunded_line_still_counts_as_a_distinct_order(): void
+    {
+        $twoOrders = $this->eligibleProduct();
+        $refundedLine = $this->sell($this->order(), $twoOrders, 2);
+        $this->sell($this->order(), $twoOrders, 3);
+
+        app(ReturnRefundResolutionService::class)->recordRefund(
+            $refundedLine,
+            User::factory()->create(),
+            [
+                'reason' => 'defective',
+                'quantity' => 2,
+                'refund_amount' => 200,
+                'processed_at' => now()->toDateString(),
+            ],
+        );
+
+        // Same net units (3), one order: loses the tie on distinct orders.
+        $oneOrder = $this->eligibleProduct();
+        $this->sell($this->order(), $oneOrder, 3);
+
+        $topPicks = $this->service()->topPicks();
+        $entry = $topPicks->firstWhere('id', $twoOrders->id);
+
+        $this->assertSame(3, $entry->units_sold);
+        $this->assertSame(2, $entry->distinct_orders_count);
+        $this->assertSame([$twoOrders->id, $oneOrder->id], $topPicks->pluck('id')->all());
+    }
+
+    /**
+     * Refunding more than one line's worth never goes negative on another
+     * line: the clamp is per line, not per product.
+     */
+    public function test_net_units_are_clamped_per_line_not_per_product(): void
+    {
+        $product = $this->eligibleProduct();
+        $fullyRefunded = $this->sell($this->order(), $product, 2);
+        $this->sell($this->order(), $product, 5);
+
+        app(ReturnRefundResolutionService::class)->recordRefund(
+            $fullyRefunded,
+            User::factory()->create(),
+            [
+                'reason' => 'defective',
+                'quantity' => 2,
+                'refund_amount' => 200,
+                'processed_at' => now()->toDateString(),
+            ],
+        );
+
+        $this->assertSame(5, $this->service()->topPicks()->firstWhere('id', $product->id)->units_sold);
+    }
+
+    public function test_soft_deleted_orders_are_ignored(): void
+    {
+        $product = $this->eligibleProduct();
+        $order = $this->order();
+        $this->sell($order, $product, 3);
+
+        $order->delete();
+
+        $this->assertFalse($this->service()->topPicks()->contains('id', $product->id));
+    }
+
     public function test_stock_quantity_does_not_influence_ranking(): void
     {
         $lowStockHighSales = $this->eligibleProduct(['stock_quantity' => 1]);

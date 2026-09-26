@@ -75,6 +75,18 @@ return [
             // failures (Category, ProductImage).
             'throw' => true,
             'report' => true,
+            // Applied to every object written to this disk, so browsers and
+            // Cloudflare's edge stop re-fetching product/category/banner/
+            // review images on every visit. 30 days rather than the
+            // 1y/immutable that /build/assets gets (nginx.conf): most images
+            // here get a fresh, content-hashed filename per upload and could
+            // take a year safely, but CategoryForm's image field uses
+            // preserveFilenames() (see its own comment -- two categories may
+            // deliberately share one path), so a same-named re-upload must
+            // not stay stale for longer than this.
+            'options' => [
+                'CacheControl' => 'public, max-age=2592000',
+            ],
         ],
     ],
 

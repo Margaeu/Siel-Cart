@@ -3,11 +3,10 @@
 namespace App\Services;
 
 use App\Enums\OrderItemResolutionType;
-use App\Models\OrderItem;
 use App\Models\Product;
 use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Ranks in-stock products for the homepage's Best Sellers and Top Picks
@@ -36,7 +35,13 @@ class HomepageProductRankingService
 
     private const MAX_TOP_PICKS = 8;
 
+    /**
+     * Memoized for this instance, so bestSellers() and topPicks() in one
+     * request rank one snapshot and pay for it once.
+     */
     private ?Collection $ranked = null;
+
+    public function __construct(private readonly HomepageRankingCache $cache) {}
 
     /**
      * At most one winner per category: the highest-ranked eligible product
@@ -77,6 +82,17 @@ class HomepageProductRankingService
      * throw away everything that didn't sell would grow with the catalogue
      * instead of with the week's orders. A product whose units were all
      * refunded nets to zero and is dropped here too.
+     *
+     * The sales map is the only cached part (see HomepageRankingCache).
+     * Eligibility -- active, in stock, active category -- and the card data
+     * are read live on every call, so a product going out of stock or being
+     * deactivated drops out immediately without invalidating anything.
+     *
+     * withCardData(): the ranked products are rendered as homepage cards, and
+     * loading only `category` here left each Best Seller / Top Pick card to
+     * lazy-load its image and variants on its own -- two queries per card.
+     * `category` itself isn't loaded any more: ranking groups on category_id
+     * and no card reads the relation.
      */
     private function rankedEligibleProducts(): Collection
     {
@@ -84,8 +100,9 @@ class HomepageProductRankingService
             return $this->ranked;
         }
 
-        $sales = $this->salesSince(now()->subDays(self::WINDOW_DAYS))
-            ->filter(fn (array $entry) => $entry['units_sold'] > 0);
+        $sales = collect($this->cache->salesMap(
+            fn (): array => $this->salesSince(now()->subDays(self::WINDOW_DAYS)),
+        ));
 
         if ($sales->isEmpty()) {
             return $this->ranked = collect();
@@ -94,9 +111,7 @@ class HomepageProductRankingService
         $products = Product::query()
             ->eligibleForHomepage()
             ->whereKey($sales->keys()->all())
-            ->with('category')
-            ->withStockAggregates()
-            ->withReviewAggregates()
+            ->withCardData()
             ->get();
 
         foreach ($products as $product) {
@@ -133,36 +148,59 @@ class HomepageProductRankingService
      * bought in the window, and only a refund settles a unit for good (see
      * OrderItem::resolvableQuantity()).
      *
-     * @return Collection<int, array{units_sold: int, distinct_orders_count: int}>
+     * Aggregated in SQL. This used to hydrate every qualifying order line
+     * plus its refunds and sum them in PHP, so the cost grew with the week's
+     * order volume in rows and memory. The semantics are unchanged:
+     *  - the clamp is per line: max(0, quantity - refunded quantity), written
+     *    as CASE WHEN because sqlite (the test connection) has no GREATEST();
+     *  - distinct orders count every qualifying order with a line for the
+     *    product, including a line whose units were all refunded;
+     *  - soft-deleted orders are excluded, as whereHas('order') did through
+     *    Order's SoftDeletes scope;
+     *  - products whose net units come to zero are dropped.
+     *
+     * @return array<int, array{units_sold: int, distinct_orders_count: int}>
      */
-    private function salesSince(CarbonInterface $since): Collection
+    private function salesSince(CarbonInterface $since): array
     {
-        $items = OrderItem::query()
-            ->select(['id', 'product_id', 'order_id', 'quantity'])
-            ->whereNotNull('product_id')
-            ->whereHas('order', fn (Builder $query) => $query
-                ->where('status', 'completed')
-                ->where('payment_status', 'paid')
-                ->where('completed_at', '>=', $since))
-            ->with(['resolutions' => fn ($query) => $query
-                ->where('type', OrderItemResolutionType::Refund->value)])
+        $refunded = DB::table('return_refund_resolutions')
+            ->selectRaw('COALESCE(SUM(return_refund_resolutions.quantity), 0)')
+            ->whereColumn('return_refund_resolutions.order_item_id', 'order_items.id')
+            ->where('return_refund_resolutions.type', OrderItemResolutionType::Refund->value);
+
+        $lines = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereNotNull('order_items.product_id')
+            ->whereNull('orders.deleted_at')
+            ->where('orders.status', 'completed')
+            ->where('orders.payment_status', 'paid')
+            ->where('orders.completed_at', '>=', $since)
+            ->select(['order_items.product_id', 'order_items.order_id'])
+            ->selectSub($refunded, 'refunded_quantity')
+            ->addSelect('order_items.quantity');
+
+        $rows = DB::query()
+            ->fromSub($lines, 'lines')
+            ->select('lines.product_id')
+            ->selectRaw('SUM(CASE WHEN lines.quantity > lines.refunded_quantity THEN lines.quantity - lines.refunded_quantity ELSE 0 END) AS units_sold')
+            ->selectRaw('COUNT(DISTINCT lines.order_id) AS distinct_orders_count')
+            ->groupBy('lines.product_id')
             ->get();
 
-        $byProduct = [];
+        $sales = [];
 
-        foreach ($items as $item) {
-            $refunded = (int) $item->resolutions->sum('quantity');
-            $net = max(0, $item->quantity - $refunded);
+        foreach ($rows as $row) {
+            // MySQL returns SUM/COUNT as strings, sqlite as integers.
+            $units = (int) $row->units_sold;
 
-            $entry = $byProduct[$item->product_id] ??= ['units_sold' => 0, 'orders' => []];
-            $entry['units_sold'] += $net;
-            $entry['orders'][$item->order_id] = true;
-            $byProduct[$item->product_id] = $entry;
+            if ($units > 0) {
+                $sales[(int) $row->product_id] = [
+                    'units_sold' => $units,
+                    'distinct_orders_count' => (int) $row->distinct_orders_count,
+                ];
+            }
         }
 
-        return collect($byProduct)->map(fn (array $entry) => [
-            'units_sold' => $entry['units_sold'],
-            'distinct_orders_count' => count($entry['orders']),
-        ]);
+        return $sales;
     }
 }

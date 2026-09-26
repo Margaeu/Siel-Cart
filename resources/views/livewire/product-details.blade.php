@@ -618,9 +618,10 @@
                         </div>
                     @endif
 
-                    @if($product->approvedReviews->count() > 0)
+                    {{-- One page of approved reviews (ProductDetails::render()); the count in the tab and summary comes from aggregates, not from this page. --}}
+                    @if($reviews->total() > 0)
                         <div class="divide-y divide-gray-100 space-y-8">
-                            @foreach($product->approvedReviews as $review)
+                            @foreach($reviews as $review)
                                 <div class="pt-8 first:pt-0">
                                     <div class="flex items-start gap-4">
                                         <!-- Customer Avatar -->
@@ -781,6 +782,13 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        @if($reviews->hasPages())
+                            {{-- Scroll back to the reviews card, not the top of the page, when paging. --}}
+                            <div class="mt-8">
+                                {{ $reviews->links(data: ['scrollTo' => '#reviews-tab']) }}
+                            </div>
+                        @endif
                     @else
                         <div class="text-center py-12">
                             <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">

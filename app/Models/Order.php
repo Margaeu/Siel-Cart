@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Observers\HomepageRankingObserver;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +16,9 @@ use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+// Rotates the homepage ranking cache after a committed change to what counts
+// as a sale (status, payment_status, completed_at, delete/restore).
+#[ObservedBy(HomepageRankingObserver::class)]
 class Order extends Model
 {
     use LogsActivity, SoftDeletes;

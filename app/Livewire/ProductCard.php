@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Product;
 use App\Services\CartService;
+use Livewire\Attributes\Renderless;
 use Livewire\Component;
 
 class ProductCard extends Component
@@ -22,42 +23,40 @@ class ProductCard extends Component
     {
         $this->product = $product;
         $this->badge = $badge;
-        $this->restoreProductData();
     }
 
     /**
-     * Livewire re-fetches the model on every request, which drops the
-     * relations and review aggregates the parent listing loaded. The featured
-     * cards on the home page are `lazy`, so their real render happens in a
-     * later request and starts from a re-fetched model too.
-     */
-    public function hydrate(): void
-    {
-        $this->restoreProductData();
-    }
-
-    /**
-     * Reload only what the card view reads and the model is missing.
+     * Load only what the card view reads and the model is missing.
      *
-     * Inside a listing that eager loaded these, every check is a no-op and the
-     * card costs no queries of its own.
+     * Done at render time rather than on hydrate: Livewire re-fetches the
+     * model on every request of this card with a bare query, which drops
+     * the image and aggregates the parent listing loaded, but addToCart() is
+     * renderless, so the one request a card makes on its own never needs
+     * them.
+     *
+     * Inside a listing that loaded withCardData(), every check here is a
+     * no-op and the card costs no queries of its own. Only the image and the
+     * aggregates are loaded -- the card never reads `category` or the
+     * variant rows, and loading `variants` here used to cost one query per
+     * homepage card, simple products included.
      */
-    private function restoreProductData(): void
+    private function loadCardData(): void
     {
-        $this->product->loadMissing(['category', 'cardImage', 'variants']);
-
-        // reviews_count and average_rating fall back to a query per read
-        // without either the withCount()/withAvg() aggregates or the relation.
-        if (! array_key_exists('approved_reviews_count', $this->product->getAttributes())) {
-            $this->product->loadMissing('approvedReviews');
-        }
+        $this->product->loadMissing('cardImage');
+        $this->product->loadCardAggregates();
     }
 
     /**
      * Add the product to the customer's permanent cart.
      *
      * CartService handles the database cart and stock validation.
+     *
+     * Renderless because nothing on the card changes when an item is added:
+     * the toast and the cart icon react to the dispatched events (the same
+     * reasoning as ProductDetails::addToCart()). Rendering here only
+     * re-loaded the card's image and aggregates to redraw identical markup.
      */
+    #[Renderless]
     public function addToCart(CartService $cartService)
     {
         // A product card has no variant picker, so a product sold by
@@ -117,6 +116,8 @@ class ProductCard extends Component
 
     public function render()
     {
+        $this->loadCardData();
+
         return view('livewire.product-card');
     }
 }

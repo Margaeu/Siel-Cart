@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\OrderItemResolutionReason;
 use App\Enums\OrderItemResolutionType;
 use App\Enums\ReturnedItemCondition;
+use App\Observers\HomepageRankingObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use LogicException;
 
@@ -18,7 +20,11 @@ use LogicException;
  *
  * Create these through ReturnRefundResolutionService, which validates them and
  * makes whatever stock change an exchange calls for in the same transaction.
+ *
+ * A recorded refund lowers the line's net units sold, so the observer rotates
+ * the homepage ranking cache once the recording transaction commits.
  */
+#[ObservedBy(HomepageRankingObserver::class)]
 class ReturnRefundResolution extends Model
 {
     protected $fillable = [
