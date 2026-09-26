@@ -13,7 +13,7 @@ class StatsOverview extends StatsOverviewWidget
 {
     use HasWidgetShield;
 
-    protected ?string $pollingInterval = '30s';
+    protected ?string $pollingInterval = '60s';
 
     protected static ?int $sort = 0;
 

@@ -1,1 +1,1 @@
-<div wire:poll.30s="check" hidden></div>
+<div wire:poll.60s="check" hidden></div>

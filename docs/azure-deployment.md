@@ -28,7 +28,8 @@ See "Performance notes" below before assuming F1's limits apply.
    from the zip, then deploys it with `azure/webapps-deploy@v3`. See
    "Frontend assets" below.
 4. Azure starts the container and runs `startup.sh`, which installs the Nginx
-   site from `default`, optionally migrates, and rebuilds Laravel's caches.
+   site from `default`, optionally migrates, and rebuilds Laravel's and
+   Filament's caches.
 5. The workflow smoke-tests `https://<app>/up` and `https://<app>/products`,
    retrying through the cold start, and fails if either never responds.
 
@@ -142,37 +143,63 @@ Settings, never as an uploaded `.env` file.
 | `DB_SSL_REQUIRE_VERIFIED_CA` | `true` |
 | `MYSQL_ATTR_SSL_CA` | `/home/site/wwwroot/storage/certs/aiven-ca.pem` |
 | `QUEUE_CONNECTION` | `sync` |
-| `SESSION_DRIVER` / `CACHE_STORE` | `file` / `file` (recommended below, but **not currently set** on the live app — see note) |
+| `SESSION_DRIVER` / `CACHE_STORE` | `database` / `database` (intended; **not currently set** on the live app — read "Sessions and cache" below before setting them) |
 | `SESSION_SECURE_COOKIE` | `true` |
 | `FILESYSTEM_DISK` | `r2` |
 | `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | R2 API token credentials |
 | `CLOUDFLARE_R2_BUCKET`, `CLOUDFLARE_R2_ENDPOINT`, `CLOUDFLARE_R2_PUBLIC_URL` | see R2 below |
-| `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_SCHEME`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | your SMTP provider |
+| `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | your SMTP provider (see Mail below) |
 | `RUN_MIGRATIONS_ON_STARTUP` | `false` (see first deployment) |
 
 **`APP_KEY`** — generate it once (`php artisan key:generate --show`) and never
 change it. Rotating it signs every user out and makes anything encrypted with
 the old key unreadable.
 
-**Queues** — F1 runs no background worker, so `QUEUE_CONNECTION=sync` sends
-queued mail and notifications (e.g. the admin invitation) inside the request.
+**Queues** — no background queue worker is run (`startup.sh` starts none,
+and the single B1 vCPU would share it with web requests), so
+`QUEUE_CONNECTION=sync` sends queued mail and notifications (e.g. the admin
+invitation) inside the request.
 
-**Sessions** — file sessions live on the instance; a redeploy or restart can
-clear them and sign everyone out. That is acceptable for a single-instance
-preview, not for production.
+**Mail** — `MAIL_PORT` alone decides the TLS mode while `MAIL_SCHEME` is
+unset, so leave `MAIL_SCHEME` out: `465` uses implicit TLS (`smtps`), and `587`
+upgrades with STARTTLS when the server offers it. Set `MAIL_SCHEME=smtps` only
+for implicit TLS on a port other than 465. `MAIL_ENCRYPTION` does nothing on
+Laravel 12 — the mailer never reads the `encryption` key in
+`config/mail.php` — so don't add it, and a misspelled `MAIL_ENCYRPTION` can be
+deleted. Enter `MAIL_FROM_NAME` as the name itself (`SIEL CART`): App Settings
+are not read through dotenv, so `${APP_NAME}` would be sent literally. The
+server's certificate is always verified (no `stream.ssl` overrides).
 
-**Verified 2026-09-26**: `SESSION_DRIVER` and `CACHE_STORE` are **not actually
-set** in the live app's App Settings (`az webapp config appsettings list`
-confirms only `APP_DEBUG`, `DB_HOST`, `LOG_CHANNEL`, `QUEUE_CONNECTION` are
-present among these). No `.env` file is deployed either (the workflow deletes
-it after tests). So both fall back to `config/session.php` /
-`config/cache.php`'s own default of `database`, not `file` as this table
-recommends — sessions and cache reads/writes are hitting Aiven MySQL, not the
-instance disk. This isn't necessarily worse (Azure's `/home` is
-network-backed storage anyway, so `file` wouldn't be fast either), but it
-means the setting above was never actually applied. Decide deliberately
-between `file` and `database` and set the App Setting explicitly rather than
-relying on the framework default.
+**Sessions and cache** — the intended setting for this single-instance B1
+deployment is `database` for both. They then live in Aiven MySQL, so a restart
+or redeploy doesn't clear them the way `file` storage on the instance would
+(and Azure's `/home` is network-backed storage, so `file` wouldn't be faster).
+This needs three tables from the default migrations: `sessions`
+(`0001_01_01_000000_create_users_table`), and `cache` and `cache_locks`
+(`0001_01_01_000001_create_cache_table`). `cache_locks` also holds the lock
+`startup.sh` takes for `migrate --isolated`.
+
+**Intended vs. actual (checked 2026-09-26)**: `SESSION_DRIVER` and
+`CACHE_STORE` are **not set** in the live app's App Settings
+(`az webapp config appsettings list` shows only `APP_DEBUG`, `DB_HOST`,
+`LOG_CHANNEL`, `QUEUE_CONNECTION` among these), and no `.env` file is deployed
+(the workflow deletes it after tests). Both therefore fall back to the
+`database` default in `config/session.php` / `config/cache.php`, which matches
+the intended value but only by default. **Whether the live database actually
+has `sessions`, `cache` and `cache_locks` has not been verified**; the
+migration files show only what the migrations create, not what has been run
+against Aiven.
+
+Before setting them explicitly on the live app:
+
+1. Confirm all three tables exist (Aiven console, or `SHOW TABLES;`). If any
+   is missing, don't change the settings; run the pending migrations first
+   (see "First deployment and migrations").
+2. Add `SESSION_DRIVER=database` and `CACHE_STORE=database` and apply. Saving
+   App Settings restarts the app.
+3. Existing sessions should remain available if the app was already using
+   database sessions and keeps the same `APP_KEY`. If either isn't true,
+   users will have to sign in again.
 
 ## Aiven MySQL
 
@@ -212,14 +239,19 @@ and put the same values in `/home/site/ini/uploads.ini` over SSH.
 
 1. Complete the one-time setup, commit the Aiven CA, and make sure the test
    suite passes locally (`php artisan test`).
-2. Set `RUN_MIGRATIONS_ON_STARTUP=true` in App Settings.
+2. Set `RUN_MIGRATIONS_ON_STARTUP=true` in App Settings. If the database is
+   brand new (no tables yet), also set `CACHE_STORE=file` for this start:
+   `--isolated` takes its lock in the default cache store, and with
+   `database` that lock needs the `cache_locks` table the migration is about
+   to create, so every attempt would fail.
 3. Push to `main` (or run the workflow). On start, `startup.sh` runs
    `php artisan migrate --force --isolated`, retrying up to five times, ten
    seconds apart, and aborts the start if the database never accepts it.
 4. Watch the **Log stream** until you see the migrations finish and the smoke
    tests pass, then check `https://<app>/up` and `https://<app>/products`.
-5. Set `RUN_MIGRATIONS_ON_STARTUP` back to `false`. Turn it on again only for
-   a deployment that adds migrations.
+5. Set `RUN_MIGRATIONS_ON_STARTUP` back to `false` (and `CACHE_STORE` back to
+   `database` if you changed it). Turn it on again only for a deployment that
+   adds migrations.
 
 To create the first admin account, open **Development Tools → SSH** and run
 `php artisan db:seed --class=SystemSetupSeeder --force`, then sign in and
@@ -233,6 +265,9 @@ change the seeded password straight away. Do **not** run the full
 - **Monitoring → Log stream** shows `startup.sh` output (Nginx check,
   migrations, cache commands) and application errors live. From a terminal:
   `az webapp log tail --name <app> --resource-group <resource-group>`.
+  The two Filament caches are optional: if one fails to build, the log shows
+  `startup.sh: 'php artisan <command>' failed ...; continuing without that
+  cache.` after that command's error, and the app still starts.
 - `https://<app>/up` returns 200 when Laravel boots;
   `https://<app>/products` confirms database-backed pages render.
 
