@@ -803,7 +803,7 @@ class ProductCrudTest extends TestCase
         $this->actingAsAdmin();
 
         Livewire::test(ListProducts::class)
-            ->set('activeTab', 'deleted')
+            ->set('activeTab', 'trash')
             ->callTableBulkAction('restore', $products);
 
         $products->each(function (Product $product) {

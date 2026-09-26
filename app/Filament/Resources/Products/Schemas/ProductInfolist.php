@@ -214,7 +214,7 @@ class ProductInfolist
                         ->dateTime('M d, Y - h:i A'),
 
                     TextEntry::make('deleted_at')
-                        ->label('Deleted at')
+                        ->label('Moved to trash')
                         ->dateTime('M d, Y - h:i A')
                         ->color('danger')
                         ->visible(fn (Product $record): bool => $record->trashed()),
