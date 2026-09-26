@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewCustomer;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Models\Customer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -139,10 +141,16 @@ class FortifyServiceProvider extends ServiceProvider
                 ->header('Expires', '0');
         });
         Fortify::verifyEmailView(fn () => view('auth.customer.verify-email'));
-        Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
+        Fortify::confirmPasswordView(fn () => view('auth.customer.confirm-password'));
         Fortify::registerView(fn () => view('auth.customer.register'));
-        Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
-        Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
+
+        // Fortify's own GET /forgot-password and /reset-password/{token} are
+        // shadowed by the routes in routes/web.php, so these two closures do
+        // not normally run. They delegate to the same controllers anyway, so
+        // if the shadowing ever breaks the page still gets the reset-token
+        // check and link-expired handling instead of a bare form.
+        Fortify::resetPasswordView(fn (Request $request) => app(ResetPasswordController::class)->showResetForm($request, $request->route('token')));
+        Fortify::requestPasswordResetLinkView(fn () => app(ForgotPasswordController::class)->showLinkRequestForm());
     }
 
     /**
