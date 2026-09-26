@@ -441,7 +441,11 @@ class ProductDetails extends Component
     {
         // NOT IN with a NULL in the list matches no rows in SQL, so nulls
         // (a review with no surviving order) must be filtered out first.
-        $reviewedOrderIds = Review::where('product_id', $this->product->id)
+        // withTrashed(): a review an admin deleted still used up that
+        // order's one chance -- without it, deleting a reported review would
+        // invite its author to post a fresh one.
+        $reviewedOrderIds = Review::withTrashed()
+            ->where('product_id', $this->product->id)
             ->where('customer_id', $customerId)
             ->pluck('order_id')
             ->filter()
@@ -480,7 +484,10 @@ class ProductDetails extends Component
         // reviewed" if that's actually why -- a customer with no completed
         // order at all for this product should see the generic prompt
         // instead of a message implying they've reviewed it before.
-        $this->hasReview = Review::where('product_id', $this->product->id)
+        // withTrashed() to agree with completedOrderId(): a customer whose
+        // review was deleted gets this message, not the generic prompt.
+        $this->hasReview = Review::withTrashed()
+            ->where('product_id', $this->product->id)
             ->where('customer_id', $customerId)
             ->exists();
     }
