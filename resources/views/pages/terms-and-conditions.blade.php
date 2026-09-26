@@ -18,7 +18,7 @@
                             These Terms and Conditions govern access to and use of <strong>Siel Cart</strong>, the official online merchandise platform of Central Luzon State University (CLSU), operated under the University's auxiliary and business operations mandate through its Office of Business Affairs.
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            By creating an account, placing an order, or otherwise using Siel Cart, you agree to be bound by these Terms. If you do not agree, please do not use the System. These Terms should be read together with the Siel Cart Data Privacy Notice and Consent and the Siel Cart Return & Refund Policy, both incorporated here by reference.
+                            By creating an account, placing an order, or otherwise using Siel Cart, you agree to be bound by these Terms. If you do not agree, please do not use the System. These Terms should be read together with the Siel Cart Data Privacy Notice and Consent and any applicable, officially approved UBAP policies.
                         </p>
                     </section>
 
@@ -36,9 +36,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">3. Account Registration and Responsibilities</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>An account is required to place an order. You are responsible for maintaining the confidentiality of your password and for all activity that occurs under your account.</li>
-                            <li>You agree to notify us promptly of any unauthorized use of your account.</li>
-                            <li>You may update your account details (only email, phone number, and date of birth) at any time through Profile Management.</li>
+                            <li>An account is required to place an order. You are responsible for maintaining the confidentiality of your password and for activity that occurs under your account.</li>
+                            <li>You agree to notify the appropriate office promptly of any unauthorized use of your account.</li>
+                            <li>You may update your first name, last name, email address, and phone number through Profile Management, subject to the System's available functions.</li>
+                            <li>Other profile information, including your date of birth, address, and profile photo, cannot currently be updated through Profile Management.</li>
                         </ul>
                     </section>
 
@@ -46,9 +47,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">4. Products and Availability</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>All merchandise listed on Siel Cart is official CLSU merchandise, subject to availability. Product images, descriptions, and prices are provided for reference and may be updated without prior notice.</li>
-                            <li>Stock levels are shown in real time; however, in rare cases, two customers may attempt to order the last unit of an item at nearly the same time. If this occurs, our team will contact the affected customer to arrange an alternative item or reschedule — no refund is necessary, since payment is only collected at pick-up.</li>
-                            <li>Siel Cart reserves the right to limit order quantities, discontinue products, or correct pricing/description errors at any time.</li>
+                            <li>4.1. All merchandise displayed in Siel Cart is subject to availability.</li>
+                            <li>4.2. Product information, including descriptions, prices, images, and availability, is provided to help customers make informed purchasing decisions. Customers are encouraged to review the product details before placing an order.</li>
+                            <li>4.3. Product availability may change. The submission of an order does not guarantee that an item will remain available until pickup unless the order has been confirmed in accordance with the System's order-processing procedures.</li>
+                            <li>4.4. If a product becomes unavailable or an issue arises with an order, customers may contact UBAP for assistance.</li>
                         </ul>
                     </section>
 
@@ -56,18 +58,24 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">5. Orders and Payment</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>Siel Cart operates on a <strong>Cash on Pick-up</strong> basis only. No online payment is required or accepted at this time; the full order amount is paid in cash directly at the UBAP Office upon claiming your order.</li>
-                            <li>Placing an order reserves the selected item(s) and deducts them from available stock. An order is not considered complete until payment is made and the item is claimed at pick-up.</li>
-                            <li>Prices are stated in Philippine Pesos (₱) and are inclusive of applicable taxes unless otherwise indicated.</li>
+                            <li>5.1. Customers must register for an account and log in to Siel Cart to place orders.</li>
+                            <li>5.2. Customers are responsible for reviewing their selected merchandise, quantities, prices, and other order details before submitting an order.</li>
+                            <li>5.3. Upon successful order placement, the order is recorded in the System, and the corresponding product stock is deducted from the available inventory.</li>
+                            <li>5.4. Siel Cart operates on a pickup-only basis. Customers must collect their orders at the designated pickup location according to the schedule provided by UBAP.</li>
+                            <li>5.5. All payments are made in cash at UBAP upon pickup. Siel Cart does not process online payments or provide delivery services.</li>
+                            <li>5.6. Customers cannot edit existing order items or quantities through the System after an order has been placed. Any concerns regarding an existing order must be addressed through the applicable UBAP procedures.</li>
                         </ul>
                     </section>
 
-                    {{-- 6. Order Cancellation --}}
+                    {{-- 6. Order Modification and Cancellation --}}
                     <section>
-                        <h2 class="text-xl font-bold text-slate-900">6. Order Cancellation</h2>
+                        <h2 class="text-xl font-bold text-slate-900">6. Order Modification and Cancellation</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>You may cancel an order through Track Order Status, provided it has not yet been marked “Processing.” Once an order reaches this status, changes are no longer possible through the System.</li>
-                            <li>Cancelling an order releases the reserved item(s) back into available stock.</li>
+                            <li>6.1. Customers are responsible for reviewing their orders carefully before submitting them.</li>
+                            <li>6.2. Customers may cancel their orders through the cancellation feature available in Siel Cart, provided that the order has not yet been marked as "Ready for Pickup."</li>
+                            <li>6.3. Once an order has been cancelled, the System will reflect the updated order status in accordance with its implemented cancellation process.</li>
+                            <li>6.4. Orders that are not claimed within the pickup deadline assigned by UBAP are not automatically cancelled by the System. If a customer fails to claim an order, the customer must contact UBAP to arrange a rescheduled pickup. If no rescheduling request is made, the disposition of the unclaimed order shall be determined by UBAP in accordance with its applicable procedures.</li>
+                            <li>6.5. Customers who fail to claim their orders within the assigned pickup schedule must contact UBAP through its official email address at <a href="mailto:ubap@clsu.edu.ph" class="text-[var(--color-primary)] underline">ubap@clsu.edu.ph</a> to arrange a rescheduled pickup, as described in Section 7.</li>
                         </ul>
                     </section>
 
@@ -75,10 +83,11 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">7. Pick-up Policy</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>All orders are for pick-up only at the UBAP Office. Siel Cart does not offer delivery or shipping, and no delivery address is collected at any point.</li>
-                            <li>Once an order is marked “Ready for Pick-up,” you will receive a unique Claim Number. Present this Claim Number at the UBAP Office to collect your order.</li>
-                            <li>Someone other than the account holder may claim an order on your behalf, provided they present the correct Claim Number.</li>
-                            <li>Orders must be claimed within the applicable hold period after being marked ready. Orders not claimed within this period will be cancelled, and the reserved item(s) will be returned to inventory.</li>
+                            <li>7.1. Customers are responsible for claiming their orders at the designated pickup location within the pickup date and time assigned by UBAP.</li>
+                            <li>7.2. The pickup schedule is determined by UBAP and communicated to customers through the System or other official communication channels.</li>
+                            <li>7.3. If a customer fails to claim an order within the assigned pickup schedule, the customer must contact UBAP through its official email address at <a href="mailto:ubap@clsu.edu.ph" class="text-[var(--color-primary)] underline">ubap@clsu.edu.ph</a> to arrange a rescheduled pickup.</li>
+                            <li>7.4. UBAP shall determine and communicate the new pickup date and time. Customers must wait for UBAP to provide the revised schedule and may not assume that a preferred date or time has been approved. For orders that are still not claimed upon the rescheduled date, it shall be cancelled.</li>
+                            <li>7.5. Customers must follow the instructions provided by UBAP when claiming their orders.</li>
                         </ul>
                     </section>
 
@@ -86,10 +95,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">8. Returns, Refunds, and Exchanges</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Refund or exchange requests will only be accepted for items that are defective, damaged, or incorrectly sent by the seller. Please proceed to the UBAP Office to have your request processed. Bring the item along with proof of purchase (if available) to help speed up the transaction.
+                            Siel Cart Version 2.0 does not provide an online feature for submitting or tracking return, exchange, or refund requests. The System does not provide a dedicated online process for submitting supporting photos or videos, scheduling appointments, or tracking quality-check outcomes for such requests.
                         </p>
-                        <p class="mt-2 text-base font-medium text-amber-700">
-                            Note: Change of mind is not a valid reason for refund or exchange.
+                        <p class="mt-3 text-base leading-8 text-slate-600">
+                            Any concerns regarding defective, damaged, incorrect, or otherwise unsatisfactory merchandise must be addressed directly with UBAP through its official communication channels. Such concerns shall be handled in accordance with applicable, officially approved university policies and procedures. The submission of a concern does not guarantee that a return, exchange, or refund will be granted.
                         </p>
                     </section>
 
@@ -97,9 +106,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">9. Product Reviews and User-Generated Content</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>Customers who have picked up an order may submit a rating and written review for the purchased product.</li>
-                            <li>You agree not to submit reviews or other content that is false, defamatory, abusive, or unrelated to the product. Siel Cart reserves the right to edit, reject, or remove any submitted content at its discretion.</li>
-                            <li>By submitting a review, you grant Siel Cart a non-exclusive right to display that content on the platform.</li>
+                            <li>9.1. Only customers who have completed orders may submit product reviews through Siel Cart. Once submitted, reviews are automatically displayed in the Reviews section.</li>
+                            <li>9.2. UBAP Admin and Super Admin may delete reviews that are considered inappropriate, unethical, or otherwise unsuitable for public display. Customers may also delete their own personal reviews.</li>
+                            <li>9.3. StratCom Admin may view submitted reviews but does not have permission to delete them.</li>
+                            <li>9.4. Customers are responsible for ensuring that their reviews are truthful, respectful, and relevant to the product. Reviews must not contain offensive, abusive, misleading, or inappropriate content.</li>
                         </ul>
                     </section>
 
@@ -107,8 +117,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">10. AI Chatbot Assistance</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>Siel Cart provides an AI-powered chatbot for quick, automated answers to common questions. Responses are generated automatically and are provided for convenience only — they do not constitute an official commitment or guarantee by the University.</li>
-                            <li>For matters requiring official confirmation (e.g., order-specific concerns, disputes), please submit an inquiry to reach UBAP staff directly.</li>
+                            <li>10.1. Siel Cart may provide a chatbot to assist customers with general inquiries about the System and its services.</li>
+                            <li>10.2. The chatbot is intended to provide general assistance and may not be able to resolve all customer concerns.</li>
+                            <li>10.3. For order-related concerns, missed pickups, or other matters requiring assistance from UBAP, customers should contact UBAP through its official communication channels.</li>
+                            <li>10.4. Chatbot conversations are not recorded or stored by Siel Cart.</li>
                         </ul>
                     </section>
 
@@ -117,10 +129,10 @@
                         <h2 class="text-xl font-bold text-slate-900">11. Prohibited Conduct</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">You agree not to:</p>
                         <ul class="mt-2 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>Create multiple or fraudulent accounts, or provide false registration information;</li>
-                            <li>Attempt to access others’ accounts, administrative functions, or data that are not authorized for your role;</li>
-                            <li>Post false, misleading, or abusive product reviews or inquiries;</li>
-                            <li>Use the System for any unlawful purpose or in a manner that could damage, disable, or impair its operation;</li>
+                            <li>Create multiple or fraudulent accounts, or provide false registration information.</li>
+                            <li>Attempt to access other users' accounts, administrative functions, or data that are not authorized for your role.</li>
+                            <li>Post false, misleading, abusive, or inappropriate product reviews or inquiries.</li>
+                            <li>Use the System for any unlawful purpose or in a manner that could damage, disable, or impair its operation.</li>
                             <li>Attempt to reverse-engineer, scrape, or gain unauthorized access to the System's source code, data, or infrastructure.</li>
                         </ul>
                     </section>
@@ -138,7 +150,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">13. Privacy</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Your use of Siel Cart is also governed by the Siel Cart Data Privacy Notice and Consent, which explains what personal data is collected, how it is used, and your rights as a data subject under Republic Act No. 10173 (Data Privacy Act of 2012). By using the System, you acknowledge that you have read and consented to that Notice.
+                            Your use of Siel Cart is also governed by the Siel Cart Data Privacy Notice and Consent, which explains what personal data is collected, how it is used, and your rights as a data subject under Republic Act No. 10173, or the Data Privacy Act of 2012.
+                        </p>
+                        <p class="mt-3 text-base leading-8 text-slate-600">
+                            Personal data shall be processed in accordance with the Data Privacy Notice and applicable data protection laws. Any consent mechanism used by the System shall be described accurately in the Data Privacy Notice and shall reflect the System's actual implementation.
                         </p>
                     </section>
 
@@ -146,17 +161,20 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">14. Limitation of Liability and Disclaimers</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>Siel Cart is provided on an “as is” and “as available” basis. While we take reasonable steps to keep product information, stock levels, and order statuses accurate, we do not guarantee the System will be error-free or uninterrupted at all times.</li>
-                            <li>To the extent permitted by law, CLSU and the Siel Cart development team shall not be liable for indirect, incidental, or consequential damages arising from use of the System, except in cases of gross negligence or willful misconduct.</li>
-                            <li>Nothing in this section limits any right or remedy you may have under Philippine consumer protection law.</li>
+                            <li>Siel Cart is provided on an "as is" and "as available" basis. While reasonable steps are taken to keep product information, stock levels, and order statuses accurate, the System is not guaranteed to be error-free or uninterrupted at all times.</li>
+                            <li>To the extent permitted by law, CLSU and the Siel Cart development team shall not be liable for indirect, incidental, or consequential damages arising from the use of the System, except in cases of gross negligence or willful misconduct.</li>
+                            <li>Nothing in this section limits any right or remedy you may have under applicable Philippine law, including consumer protection laws.</li>
                         </ul>
                     </section>
 
-                    {{-- 15. Termination--}}
+                    {{-- 15. Account Deletion and Data Retention --}}
                     <section>
-                        <h2 class="text-xl font-bold text-slate-900">15. Termination</h2>
+                        <h2 class="text-xl font-bold text-slate-900">15. Account Deletion and Data Retention</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>You may stop using Siel Cart and delete you account at any time, subject to the data retention terms described in the Data Privacy Notice.</li>
+                            <li>Customers may initiate account deletion through the System, provided they have no pending orders.</li>
+                            <li>The Super Admin is authorized to delete Customer, UBAP Admin, and StratCom Admin accounts, subject to the System's restrictions on accounts with pending orders.</li>
+                            <li>Once an account is deleted, the affected user will no longer be able to access the account using the deleted credentials.</li>
+                            <li>Account deletion and the retention of personal data and transaction records are subject to the Siel Cart Data Privacy Notice and applicable data protection requirements.</li>
                         </ul>
                     </section>
 
@@ -164,7 +182,7 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">16. Governing Law and Dispute Resolution</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            These Terms are governed by the laws of the Republic of the Philippines. Any dispute arising from the use of Siel Cart shall first be brought to the attention of the Office of Business Affairs for resolution before pursuing formal legal action, without prejudice to either party's right to seek remedy through the appropriate Philippine courts or administrative bodies.
+                            These Terms are governed by the laws of the Republic of the Philippines. Any dispute arising from the use of Siel Cart shall first be brought to the attention of the Office of Business Affairs for resolution, without prejudice to either party's right to seek remedies through the appropriate Philippine courts or administrative bodies.
                         </p>
                     </section>
 
@@ -172,13 +190,16 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">17. Changes to These Terms</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Siel Cart may update these Terms from time to time to reflect changes in the System or applicable law. Material changes will be communicated through the System (e.g., a notice upon login) before taking effect. Continued use of Siel Cart after such changes constitutes your acceptance of the updated Terms.
+                            Siel Cart may update these Terms from time to time to reflect changes in the System or applicable law. Updates may be communicated through the System or other official communication channels. Users are encouraged to review the Terms periodically to remain informed of any changes.
                         </p>
                     </section>
 
                     {{-- 18. Contact Information --}}
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">18. Contact Information</h2>
+                        <p class="mt-3 text-base leading-8 text-slate-600">
+                            For questions or concerns regarding these Terms, you may reach out through the following channels:
+                        </p>
                         <div class="mt-3 space-y-2 text-base leading-8 text-slate-600">
                             <p><strong>System-Specific Contact</strong><br>
                             Email: <a href="mailto:ubap@clsu.edu.ph" class="text-[var(--color-primary)] underline">ubap@clsu.edu.ph</a></p>
