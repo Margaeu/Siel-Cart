@@ -34,7 +34,7 @@
                             <button type="button"
                                     wire:click="$set('statusFilter', '{{ $value }}')"
                                     class="inline-flex min-h-11 shrink-0 items-center rounded-xl px-4 text-sm whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 {{ $statusFilter === $value
-                                        ? 'bg-emerald-50 text-[var(--color-primary)] font-semibold'
+                                        ? 'bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] text-[var(--color-primary)] font-semibold'
                                         : 'text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-900' }}">
                                 {{ $label }}
                             </button>

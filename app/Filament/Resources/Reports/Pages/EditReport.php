@@ -25,7 +25,7 @@ class EditReport extends EditRecord
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Delete the reported review?')
-                ->modalDescription('This permanently removes the review itself (and any attached photos/video) from the product page — not just this report.')
+                ->modalDescription('This removes the review itself, with its photos and video, from the product page — not just this report. The customer will not be able to post another review for this purchase.')
                 ->visible(fn () => $this->record->review !== null)
                 ->action(function () {
                     $this->record->review->delete();

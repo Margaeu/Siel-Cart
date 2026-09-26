@@ -7,7 +7,7 @@
     $customer = auth('customer')->user();
     $active = $active ?? 'overview';
 
-    $activeClasses = 'bg-emerald-50 text-[var(--color-primary)] font-semibold border-l-4 border-[var(--color-primary)]';
+    $activeClasses = 'bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] text-[var(--color-primary)] font-semibold border-l-4 border-[var(--color-primary)]';
     $idleClasses = 'text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-900';
 @endphp
 

@@ -37,13 +37,13 @@ class EditProduct extends EditRecord
             RestoreAction::make()
                 ->modalDescription('The product will be restored as inactive. Activate it from the edit form when it is ready to go back on the storefront.')
                 ->after(fn () => $this->refreshFormData(['is_active'])),
-            // A soft delete: the product goes to the Deleted tab with its
+            // A soft delete: the product goes to the Trash tab with its
             // images, variants, SKU and slug intact, and can be restored.
             // "Delete" read as permanent, which is what Force delete does.
             DeleteAction::make()
                 ->label('Move to trash')
                 ->modalHeading('Move product to trash')
-                ->modalDescription('The product is hidden from the storefront and moved to the Deleted tab. You can restore it later.')
+                ->modalDescription('The product is hidden from the storefront and moved to the Trash tab. You can restore it later.')
                 ->modalSubmitActionLabel('Move to trash')
                 ->successNotificationTitle('Moved to trash'),
             ForceDeleteAction::make(),

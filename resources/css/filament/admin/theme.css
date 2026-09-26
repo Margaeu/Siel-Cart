@@ -94,6 +94,21 @@
         background-color: rgb(255 255 255 / 0.12);
     }
 
+    /* Same problem as the sidebar item above, on the tabs component: Filament's own
+       tabs.css fills the active tab with bg-gray-50, which barely shows against the
+       white toolbar. This is the same `.fi-tabs-item` component behind the resource
+       list page's status tabs (All Products/Active/Inactive/Deleted) and any relation
+       manager's tabs, so one rule covers both. Darkened to gray-200 to match the
+       sidebar's active item. Same-specificity selector (two classes) as Filament's own
+       rule, so import order (line 1) decides the winner without !important. */
+    .fi-tabs-item.fi-active {
+        background-color: var(--color-gray-200);
+    }
+
+    .dark .fi-tabs-item.fi-active {
+        background-color: rgb(255 255 255 / 0.12);
+    }
+
     .fi-resource-create-record-page .fi-section-header-description,
     .fi-resource-edit-record-page .fi-section-header-description {
         max-width: 54rem;

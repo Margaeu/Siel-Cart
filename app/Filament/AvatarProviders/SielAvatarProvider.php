@@ -2,6 +2,7 @@
 
 namespace App\Filament\AvatarProviders;
 
+use App\Models\Theme;
 use Filament\AvatarProviders\Contracts\AvatarProvider;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,10 @@ use Illuminate\Support\Str;
 
 class SielAvatarProvider implements AvatarProvider
 {
+    // CLSU green, the panel's primary-600 before theming existed. Used when no
+    // theme is active, or the active one's colour can't be read as a hex.
+    private const FALLBACK_COLOR = [85, 127, 19];
+
     public function get(Model $record): string
     {
         $initials = Str::of(Filament::getNameForDefaultAvatar($record))
@@ -20,28 +25,66 @@ class SielAvatarProvider implements AvatarProvider
             ->implode('');
 
         $initials = $initials ?: 'A';
+        $color = $this->themeColor();
 
-        if ($avatar = $this->renderAcuminAvatar($initials)) {
+        if ($avatar = $this->renderAcuminAvatar($initials, $color)) {
             return $avatar;
         }
 
         $initials = htmlspecialchars($initials, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $hex = vsprintf('#%02X%02X%02X', $color);
 
-        // White disc, CLSU green initials. The green ring is not decoration: the
-        // avatar sits on the green topbar *and* on white surfaces (the account
-        // widget, the user menu panel), and without an outline the disc would
-        // disappear into the white ones, leaving the initials floating.
+        // White disc, initials in the theme's primary colour. The ring is not
+        // decoration: the avatar sits on the coloured topbar *and* on white
+        // surfaces (the account widget, the user menu panel), and without an
+        // outline the disc would disappear into the white ones, leaving the
+        // initials floating.
         $svg = <<<SVG
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img">
-            <circle cx="20" cy="20" r="19.25" fill="#FFFFFF" stroke="#557F13" stroke-width="1.5"/>
-            <text x="20" y="21" fill="#557F13" font-family="'Acumin Pro', sans-serif" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="middle">{$initials}</text>
+            <circle cx="20" cy="20" r="19.25" fill="#FFFFFF" stroke="{$hex}" stroke-width="1.5"/>
+            <text x="20" y="21" fill="{$hex}" font-family="'Acumin Pro', sans-serif" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="middle">{$initials}</text>
         </svg>
         SVG;
 
         return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 
-    private function renderAcuminAvatar(string $initials): ?string
+    /**
+     * The active theme's primary colour as [r, g, b], so the avatar follows
+     * Admin -> Design -> Color Themes like the rest of the panel instead of
+     * staying CLSU green. The verbatim hex rather than Filament's generated
+     * primary-600, for the reason given on $primaryColorRaw in
+     * AdminPanelProvider: that shade does not reproduce the theme's colour.
+     * The lookup is wrapped for the same reason as there, since it can run
+     * before the themes table exists.
+     *
+     * @return array{int, int, int}
+     */
+    private function themeColor(): array
+    {
+        try {
+            $hex = Theme::active()->value('primary_color');
+        } catch (\Throwable) {
+            return self::FALLBACK_COLOR;
+        }
+
+        $hex = ltrim(trim((string) $hex), '#');
+
+        if (preg_match('/^[0-9a-f]{3}$/i', $hex)) {
+            $hex = preg_replace('/(.)/', '$1$1', $hex);
+        }
+
+        if (! preg_match('/^[0-9a-f]{6}$/i', $hex)) {
+            return self::FALLBACK_COLOR;
+        }
+
+        return array_map('hexdec', str_split($hex, 2));
+    }
+
+    /**
+     * @param  array{int, int, int}  $color
+     */
+    private function renderAcuminAvatar(string $initials, array $color): ?string
     {
         if (! function_exists('imagettftext')) {
             return null;
@@ -66,14 +109,15 @@ class SielAvatarProvider implements AvatarProvider
         imagefill($image, 0, 0, $transparent);
         imagealphablending($image, true);
 
-        // Mirrors the SVG fallback below: white disc, CLSU green ring and initials.
-        // The ring is drawn as a green disc with a smaller white one on top of it
-        // rather than with imageellipse(), whose stroke comes out ragged.
-        $green = imagecolorallocate($image, 85, 127, 19);
+        // Mirrors the SVG fallback above: white disc, ring and initials in the
+        // theme colour. The ring is drawn as a coloured disc with a smaller white
+        // one on top of it rather than with imageellipse(), whose stroke comes
+        // out ragged.
+        $accent = imagecolorallocate($image, ...$color);
         $white = imagecolorallocate($image, 255, 255, 255);
-        $foreground = $green;
+        $foreground = $accent;
         $ring = 4;
-        imagefilledellipse($image, $size / 2, $size / 2, $size, $size, $green);
+        imagefilledellipse($image, $size / 2, $size / 2, $size, $size, $accent);
         imagefilledellipse($image, $size / 2, $size / 2, $size - ($ring * 2), $size - ($ring * 2), $white);
 
         $fontSize = 42;

@@ -34,7 +34,13 @@
         x-data="{ navigationOpen: false, mobileSearchOpen: false }"
         x-on:keydown.escape.window="navigationOpen = false; mobileSearchOpen = false"
     >
-        <div class="mx-auto flex min-h-14 w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-16 sm:gap-4 sm:px-6 md:min-h-[4.75rem] md:px-8 lg:px-10">
+        {{--
+            Phone/tablet heights were raised from 3.5rem/4rem: at those sizes the
+            bar read as a thin strip next to other campus stores' mastheads. The
+            md height stays tied to $desktopNavLink's h-[4.75rem] so the active
+            underline still sits on the header's bottom edge.
+        --}}
+        <div class="mx-auto flex min-h-[4.25rem] w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-[4.5rem] sm:gap-4 sm:px-6 md:min-h-[4.75rem] md:px-8 lg:px-10">
             <!-- Brand -->
             <a
                 href="{{ route('home') }}"
@@ -44,7 +50,7 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-8 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-10 md:size-11 lg:size-12"
+                    class="size-10 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-11 lg:size-12"
                 >
                 <span class="hidden h-8 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
