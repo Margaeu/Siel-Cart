@@ -5,6 +5,50 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Tailwind resets list markers and margins; restore them within replies. */
+.chat-answer {
+    overflow-wrap: anywhere;
+}
+
+.chat-answer > * + * {
+    margin-top: 0.5rem;
+}
+
+.chat-answer ul,
+.chat-answer ol {
+    padding-left: 1.25rem;
+}
+
+.chat-answer ul {
+    list-style-type: disc;
+}
+
+.chat-answer ol {
+    list-style-type: decimal;
+}
+
+.chat-answer li + li {
+    margin-top: 0.25rem;
+}
+
+.chat-answer strong {
+    font-weight: 700;
+}
+
+.chat-answer a {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.chat-answer pre {
+    white-space: pre-wrap;
+}
+
+.chat-answer blockquote {
+    border-left: 2px solid var(--color-primary);
+    padding-left: 0.5rem;
+}
+
 /*
  * Acumin Pro — the single site typeface, storefront and admin panel alike.
  *

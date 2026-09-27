@@ -149,7 +149,13 @@
                     : 'self-start bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm mr-auto'
             }`;
 
-            msgDiv.innerText = text;
+            if (sender === 'user') {
+                msgDiv.style.whiteSpace = 'pre-wrap';
+                msgDiv.textContent = text;
+            } else {
+                msgDiv.classList.add('chat-answer');
+                msgDiv.innerHTML = window.renderChatMarkdown(text);
+            }
             messagesBox.appendChild(msgDiv);
             messagesBox.scrollTop = messagesBox.scrollHeight;
         }
