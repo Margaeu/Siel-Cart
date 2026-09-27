@@ -140,6 +140,7 @@ class Profile extends Component
                 'email',
                 'different:email',
                 'unique:customers,email,'.auth('customer')->id(),
+                'unique:users,email',
             ],
             'current_password_for_email' => 'required',
         ], [

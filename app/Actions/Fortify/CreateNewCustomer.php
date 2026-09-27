@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -29,11 +30,12 @@ class CreateNewCustomer implements CreatesNewUsers
                 'email',
                 'max:255',
                 Rule::unique(Customer::class),
+                Rule::unique(User::class),
             ],
 
             // Date of birth is required when creating a new customer account.
             // The customer must be at least 13 years old.
-            'date_of_birth' => ['required', 'date', 'before_or_equal:' . now()->subYears(13)->format('Y-m-d')],
+            'date_of_birth' => ['required', 'date', 'before_or_equal:'.now()->subYears(13)->format('Y-m-d')],
 
             'password' => $this->passwordRules(),
             'phone' => ['nullable', 'string', 'max:11', 'regex:/\A[0-9]+\z/'],

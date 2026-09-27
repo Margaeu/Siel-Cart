@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 
 class ConfirmEmailChangeController extends Controller
@@ -28,7 +29,8 @@ class ConfirmEmailChangeController extends Controller
 
         // Re-check uniqueness: another account could have taken the address
         // in the time between the link being sent and being clicked.
-        if (Customer::where('email', $customer->pending_email)->where('id', '!=', $customer->id)->exists()) {
+        if (Customer::where('email', $customer->pending_email)->where('id', '!=', $customer->id)->exists()
+            || User::where('email', $customer->pending_email)->exists()) {
             $customer->forceFill(['pending_email' => null])->save();
 
             return $this->redirectFor($customer, 'error', 'That email address was taken by another account before you confirmed it. Please request the change again with a different address.');

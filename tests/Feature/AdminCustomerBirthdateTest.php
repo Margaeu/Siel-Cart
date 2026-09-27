@@ -68,4 +68,17 @@ class AdminCustomerBirthdateTest extends TestCase
 
         $this->assertSame('2000-01-15', $customer->fresh()->date_of_birth);
     }
+
+    public function test_admin_cannot_change_a_customers_email_to_an_admins_email(): void
+    {
+        $customer = Customer::factory()->create();
+        $this->actingAsAdmin();
+
+        Livewire::test(EditCustomer::class, ['record' => $customer->id])
+            ->fillForm(['email' => 'admin@example.com'])
+            ->call('save')
+            ->assertHasFormErrors(['email' => 'unique']);
+
+        $this->assertNotSame('admin@example.com', $customer->fresh()->email);
+    }
 }

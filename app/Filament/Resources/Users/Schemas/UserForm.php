@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\Customer;
 use App\Models\User;
 use Closure;
 use Filament\Facades\Filament;
@@ -9,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class UserForm
@@ -33,8 +35,9 @@ class UserForm
                             // duplicate only surfaced as a raw SQL integrity error on save.
                             // ignoreRecord lets an edit keep the account's own address.
                             ->unique(ignoreRecord: true)
+                            ->rule(Rule::unique(Customer::class, 'email'))
                             ->validationMessages([
-                                'unique' => 'An administrator account with this email address already exists.',
+                                'unique' => 'An account with this email address already exists.',
                             ])
                             ->columnSpanFull(),
                     ]),

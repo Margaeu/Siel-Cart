@@ -4,6 +4,7 @@ namespace Tests\Feature\Filament\Users;
 
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
+use App\Models\Customer;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,6 +67,35 @@ class UserEmailUniquenessTest extends TestCase
             ->fillForm(['email' => $this->superAdmin->email])
             ->call('save')
             ->assertHasFormErrors(['email' => 'unique']);
+    }
+
+    public function test_creating_an_admin_with_a_customers_email_is_rejected(): void
+    {
+        $customer = Customer::factory()->create();
+
+        Livewire::test(CreateUser::class)
+            ->fillForm([
+                'first_name' => 'Another',
+                'last_name' => 'Person',
+                'email' => $customer->email,
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['email' => 'unique']);
+
+        $this->assertFalse(User::where('email', $customer->email)->exists());
+    }
+
+    public function test_editing_an_admin_to_a_customers_email_is_rejected(): void
+    {
+        $customer = Customer::factory()->create();
+        $staff = ActivityLogResourceTest::makeAdmin('Staff', 'Member');
+
+        Livewire::test(EditUser::class, ['record' => $staff->getRouteKey()])
+            ->fillForm(['email' => $customer->email])
+            ->call('save')
+            ->assertHasFormErrors(['email' => 'unique']);
+
+        $this->assertNotSame($customer->email, $staff->fresh()->email);
     }
 
     public function test_saving_an_admin_with_their_own_email_is_allowed(): void

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Customer\Profile;
 use App\Models\Customer;
+use App\Models\User;
 use App\Notifications\CustomerConfirmEmailChange;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -91,6 +92,21 @@ class CustomerEmailChangeTest extends TestCase
         $this->assertNull($customer->refresh()->pending_email);
     }
 
+    public function test_requesting_an_email_change_rejects_an_admins_address(): void
+    {
+        User::factory()->create(['email' => 'admin@example.com']);
+        $customer = $this->customer();
+
+        Livewire::actingAs($customer, 'customer')
+            ->test(Profile::class)
+            ->set('new_email', 'admin@example.com')
+            ->set('current_password_for_email', self::PASSWORD)
+            ->call('requestEmailChange')
+            ->assertHasErrors(['new_email' => 'unique']);
+
+        $this->assertNull($customer->refresh()->pending_email);
+    }
+
     public function test_confirming_the_signed_link_moves_pending_email_into_the_live_email_and_marks_it_verified(): void
     {
         $customer = $this->customer();
@@ -108,6 +124,25 @@ class CustomerEmailChangeTest extends TestCase
         $this->assertNull($customer->pending_email);
         $this->assertNotNull($customer->email_verified_at);
         $response->assertRedirect(route('customer.profile'));
+    }
+
+    public function test_confirmation_rejects_an_address_taken_by_an_admin_after_the_request(): void
+    {
+        $customer = $this->customer();
+        $customer->forceFill(['pending_email' => 'new@example.com'])->save();
+        User::factory()->create(['email' => 'new@example.com']);
+
+        $url = URL::temporarySignedRoute('customer.email.confirm', now()->addHour(), [
+            'customer' => $customer->id,
+            'hash' => sha1('new@example.com'),
+        ]);
+
+        $response = $this->actingAs($customer, 'customer')->get($url);
+
+        $this->assertSame('original@example.com', $customer->refresh()->email);
+        $this->assertNull($customer->pending_email);
+        $response->assertRedirect(route('customer.profile'));
+        $response->assertSessionHas('email_change_error');
     }
 
     public function test_confirming_with_a_tampered_hash_is_rejected_and_leaves_the_pending_change_in_place(): void

@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\Customers\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class CustomerForm
 {
@@ -25,6 +27,7 @@ class CustomerForm
                         TextInput::make('email')
                             ->label('Email address')
                             ->unique(ignoreRecord: true)
+                            ->rule(Rule::unique(User::class, 'email'))
                             ->email()
                             ->required(),
                         DateTimePicker::make('email_verified_at')
