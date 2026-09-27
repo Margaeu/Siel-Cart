@@ -35,6 +35,8 @@ class ProductsTable
                 ImageColumn::make('cardImage.image_path')
                     ->label('')
                     ->disk('r2')
+                    // Avoid a blocking R2 existence request for every row.
+                    ->checkFileExistence(false)
                     ->square(),
                 TextColumn::make('name')
                     ->searchable()

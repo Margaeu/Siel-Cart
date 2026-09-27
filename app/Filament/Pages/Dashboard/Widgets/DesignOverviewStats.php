@@ -2,24 +2,16 @@
 
 namespace App\Filament\Pages\Dashboard\Widgets;
 
+use App\Filament\Pages\Dashboard\Widgets\Concerns\HasDesignWidgetAccess;
 use App\Filament\Resources\Banners\BannerResource;
 use App\Filament\Resources\Themes\ThemeResource;
 use App\Models\Banner;
 use App\Models\Theme;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-/**
- * The three counters atop the stratcom-only Design Overview dashboard (see
- * App\Filament\Pages\Dashboard). Lives outside the auto-discovered
- * app/Filament/Widgets on purpose, the same reason
- * ActivityLogStats does: Dashboard::getWidgets() is the only place that
- * wires this in, and only for User::isDesignOnlyAdmin(), so it can never
- * land on another role's dashboard by accident of discovery.
- */
+/** Design counters shared by StratCom and authorized super admins. */
 class DesignOverviewStats extends StatsOverviewWidget
 {
     protected ?string $pollingInterval = null;
@@ -33,12 +25,7 @@ class DesignOverviewStats extends StatsOverviewWidget
     // dashboard in one request.
     protected static bool $isLazy = false;
 
-    public static function canView(): bool
-    {
-        $user = Filament::auth()?->user();
-
-        return $user instanceof User && $user->isDesignOnlyAdmin();
-    }
+    use HasDesignWidgetAccess;
 
     protected function getColumns(): array
     {

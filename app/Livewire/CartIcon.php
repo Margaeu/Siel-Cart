@@ -8,7 +8,7 @@ use Livewire\Component;
 
 class CartIcon extends Component
 {
-    // Number of items currently in the customer's cart.
+    // Number of distinct cart items, regardless of their quantities.
     public $cartCount = 0;
 
     /**
@@ -31,9 +31,9 @@ class CartIcon extends Component
         // Get the permanent cart from the database.
         $cart = $cartService->getCart();
 
-        // Count the total quantity of all cart items.
+        // Count each product/variant entry once, regardless of quantity.
         $this->cartCount = $cart
-            ? $cart->total_quantity
+            ? $cart->items()->count()
             : 0;
     }
 

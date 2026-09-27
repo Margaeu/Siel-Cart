@@ -140,7 +140,7 @@ class DesignOverviewDashboardTest extends TestCase
         }
     }
 
-    public function test_design_overview_widgets_are_hidden_from_a_multi_role_admin(): void
+    public function test_super_admin_design_widgets_are_hidden_without_widget_permissions(): void
     {
         $this->actingAs($this->makeAdminWithRoles(['stratcom', 'super_admin']));
 
@@ -351,7 +351,7 @@ class DesignOverviewDashboardTest extends TestCase
 
     // --- Dashboard page chrome (heading, subheading, header actions, columns) ---
 
-    public function test_dashboard_page_shows_design_overview_chrome_for_a_stratcom_only_admin(): void
+    public function test_stratcom_dashboard_has_a_simple_welcome_card_and_no_header_actions(): void
     {
         $this->actingAs($this->makeAdminWithRoles(['stratcom']));
         Permission::findOrCreate('Create:Banner', 'web');
@@ -359,12 +359,12 @@ class DesignOverviewDashboardTest extends TestCase
 
         $page = Livewire::test(Dashboard::class);
 
-        $this->assertSame('Design Overview', $page->instance()->getHeading());
-        $this->assertSame('Manage the look of the SIEL CART storefront.', $page->instance()->getSubheading());
+        $this->assertSame('Dashboard', $page->instance()->getHeading());
+        $this->assertNull($page->instance()->getSubheading());
         $this->assertSame(['default' => 1, 'lg' => 3], $page->instance()->getColumns());
 
-        $page->assertSeeText('View storefront')
-            ->assertSeeText('Upload banner');
+        $page->assertSeeText('Welcome')->assertSeeText('Sign out')->assertDontSeeText('View storefront')
+            ->assertDontSeeText('Upload banner');
     }
 
     public function test_dashboard_page_hides_the_upload_banner_action_without_permission(): void
@@ -372,7 +372,7 @@ class DesignOverviewDashboardTest extends TestCase
         $this->actingAs($this->makeAdminWithRoles(['stratcom']));
 
         Livewire::test(Dashboard::class)
-            ->assertSeeText('View storefront')
+            ->assertDontSeeText('View storefront')
             ->assertDontSeeText('Upload banner');
     }
 
@@ -509,19 +509,16 @@ class DesignOverviewDashboardTest extends TestCase
         $this->assertSame([$first->id], (new DesignOverviewBannerPreview)->banners()->pluck('id')->all());
     }
 
-    // --- The dashboard greeting -----------------------------------------
-    //
-    // A panel render hook, so it only appears in a full page response; a
-    // Livewire component render does not run the panel layout.
+    // --- The shared dashboard Welcome card ---
 
-    public function test_the_dashboard_greets_a_design_only_admin_by_first_name(): void
+    public function test_the_dashboard_welcome_card_shows_the_design_admins_full_name(): void
     {
         $admin = $this->makeAdminWithRoles(['stratcom']);
         $this->actingAs($admin);
 
         $this->get(Dashboard::getUrl())
             ->assertOk()
-            ->assertSee('Welcome back, '.$admin->first_name);
+            ->assertSee('Welcome')->assertSee('Sign out')->assertSee(Filament::getUserName($admin))->assertDontSee('Welcome back,');
     }
 
     public function test_the_dashboard_greeting_escapes_the_admins_name(): void
@@ -533,11 +530,11 @@ class DesignOverviewDashboardTest extends TestCase
         $response = $this->get(Dashboard::getUrl())->assertOk();
 
         // Escaped, and the raw tag never reaches the document.
-        $response->assertSee('Welcome back, Bobby&lt;script&gt;alert(1)&lt;/script&gt;', false);
+        $response->assertSee('Bobby&lt;script&gt;alert(1)&lt;/script&gt;', false);
         $response->assertDontSee('Bobby<script>', false);
     }
 
-    public function test_the_dashboard_does_not_greet_other_admins(): void
+    public function test_other_admins_do_not_have_the_old_design_greeting(): void
     {
         $this->actingAs($this->makeAdminWithRoles(['ubap']));
 

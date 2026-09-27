@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Filament\Resources\Reviews\ReviewResource;
+use App\Support\AdminNavigationBadges;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -45,6 +46,10 @@ class NavigationBadgePoller extends Component
         }
 
         $changed = false;
+
+        // A poll must see changes made by other requests, including in tests
+        // and long-lived application workers.
+        app(AdminNavigationBadges::class)->forget();
 
         if (OrderResource::canViewAny()) {
             $badge = OrderResource::getNavigationBadge();

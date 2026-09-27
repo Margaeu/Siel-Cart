@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Resources\Reports\ReportResource;
+use App\Filament\Resources\Reviews\ReviewResource;
 use App\Livewire\Admin\NavigationBadgePoller;
 use App\Models\Customer;
 use App\Models\Order;
@@ -12,6 +14,7 @@ use App\Models\Review;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -129,5 +132,67 @@ class NavigationBadgePollerTest extends TestCase
         $poller->call('check')
             ->assertDispatched('refresh-sidebar')
             ->assertSet('reportsBadge', '1');
+    }
+
+    public function test_sidebar_and_poller_share_one_count_query_per_queue(): void
+    {
+        $counts = 0;
+        DB::listen(function ($query) use (&$counts): void {
+            if (str_contains($query->sql, 'count(*)') && preg_match('/from "(orders|reviews|reports)"/', $query->sql)) {
+                $counts++;
+            }
+        });
+
+        OrderResource::getNavigationBadge();
+        ReviewResource::getNavigationBadge();
+        ReportResource::getNavigationBadge();
+        Livewire::test(NavigationBadgePoller::class);
+
+        $this->assertSame(3, $counts);
+    }
+
+    public function test_badges_are_fresh_after_moderation_deletion_and_restore(): void
+    {
+        $review = $this->review();
+        $report = $this->report();
+        $order = $this->order();
+
+        $this->assertSame('2', ReviewResource::getNavigationBadge());
+        $this->assertSame('1', ReportResource::getNavigationBadge());
+        $this->assertSame('1', OrderResource::getNavigationBadge());
+
+        $review->update(['is_approved' => true]);
+        $report->update(['status' => 'resolved']);
+        $order->delete();
+
+        $this->assertSame('1', ReviewResource::getNavigationBadge());
+        $this->assertNull(ReportResource::getNavigationBadge());
+        $this->assertNull(OrderResource::getNavigationBadge());
+
+        $order->restore();
+        $this->assertSame('1', OrderResource::getNavigationBadge());
+    }
+
+    public function test_poll_reads_changes_that_bypass_model_events(): void
+    {
+        $order = $this->order();
+        $poller = Livewire::test(NavigationBadgePoller::class);
+
+        Order::whereKey($order->id)->update(['status' => 'processing']);
+
+        $poller->call('check')
+            ->assertDispatched('refresh-sidebar')
+            ->assertSet('ordersBadge', null);
+    }
+
+    public function test_badge_counts_do_not_carry_over_to_a_new_request_scope(): void
+    {
+        $order = $this->order();
+        $this->assertSame('1', OrderResource::getNavigationBadge());
+
+        Order::whereKey($order->id)->update(['status' => 'processing']);
+        $this->app->forgetScopedInstances();
+
+        $this->assertNull(OrderResource::getNavigationBadge());
     }
 }

@@ -32,6 +32,7 @@ class CategoriesTable
                 ImageColumn::make('image')
                     ->label('')
                     ->disk('r2')
+                    ->checkFileExistence(false)
                     ->square(),
                 TextColumn::make('name')
                     ->searchable()

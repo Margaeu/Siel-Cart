@@ -20,6 +20,7 @@ class BannersTable
                 ImageColumn::make('image_path')
                     ->label('')
                     ->disk('r2')
+                    ->checkFileExistence(false)
                     ->square()
                     // A clip's URL is a real file but not one an <img> can draw, so
                     // returning null here hands the column over to defaultImageUrl

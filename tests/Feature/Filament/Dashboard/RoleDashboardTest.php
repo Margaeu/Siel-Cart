@@ -16,6 +16,7 @@ use App\Filament\Widgets\InventoryManagement;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\UnitSold;
 use App\Models\User;
+use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Facades\Filament;
 use Filament\Widgets\AccountWidget;
@@ -31,22 +32,7 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
-/**
- * The panel has one dashboard page at one URL, and it shows a different set of
- * widgets depending on who is looking.
- *
- * A super admin lands on system oversight — today's audit totals and the
- * newest entries in the trail — and explicitly *not* on shop operations, which
- * Shield would never have filtered out for them since super_admin bypasses
- * permission checks. A stratcom-only admin (User::isDesignOnlyAdmin()) lands
- * on the Design Overview instead — see DesignOverviewDashboardTest for that
- * content in detail. Every other role, including a stratcom admin who also
- * holds ubap or super_admin, keeps exactly the operations dashboard it had.
- *
- * Authorization is asserted separately from dashboard content throughout:
- * leaving a widget off a dashboard hides it, each widget's own canView() is
- * what protects it.
- */
+/** Dashboard selection, role widget toggles, and audit authorization. */
 class RoleDashboardTest extends TestCase
 {
     use RefreshDatabase;
@@ -178,7 +164,7 @@ class RoleDashboardTest extends TestCase
 
     // --- Widget selection by role -------------------------------------------
 
-    public function test_a_super_admin_gets_the_audit_widgets_and_not_the_operations_widgets(): void
+    public function test_a_super_admin_without_widget_permissions_gets_only_the_welcome_and_audit_widgets(): void
     {
         $widgets = $this->visibleWidgetsFor($this->admin(['super_admin']));
 
@@ -233,19 +219,13 @@ class RoleDashboardTest extends TestCase
         $this->assertSame([AccountWidget::class], $widgets);
     }
 
-    /**
-     * A stratcom-only admin's dashboard is App\Filament\Pages\Dashboard\Widgets\DesignOverview*
-     * (see tests/Feature/Filament/DesignOverviewDashboardTest.php for that
-     * content in detail) — not the panel's registered/discovered widget
-     * list, and not the audit widgets either. Widget permissions granted
-     * here make no difference: the branch is decided by role
-     * (User::isDesignOnlyAdmin()), same as the super-admin branch above.
-     */
+    /** StratCom keeps its design widgets and the shared Welcome card. */
     public function test_a_stratcom_only_admin_gets_the_design_overview_widgets(): void
     {
         $widgets = $this->visibleWidgetsFor($this->admin(['stratcom'], withWidgetPermissions: true));
 
         $this->assertSame([
+            AccountWidget::class,
             DesignOverviewStats::class,
             DesignOverviewBannerPreview::class,
             DesignOverviewThemeCard::class,
@@ -260,7 +240,7 @@ class RoleDashboardTest extends TestCase
             $this->assertNotContains($widget, $widgets);
         }
 
-        $this->assertNotContains(AccountWidget::class, $widgets);
+        $this->assertContains(AccountWidget::class, $widgets);
     }
 
     /**
@@ -280,22 +260,67 @@ class RoleDashboardTest extends TestCase
         $this->assertNotContains(DesignOverviewStats::class, $widgets);
     }
 
-    public function test_super_admin_takes_precedence_over_a_second_role(): void
+    public function test_super_admin_with_a_second_role_keeps_audit_and_enabled_operations_widgets(): void
     {
         $widgets = $this->visibleWidgetsFor($this->admin(['ubap', 'super_admin'], withWidgetPermissions: true));
 
-        $this->assertSame([
-            AccountWidget::class,
-            ActivityLogStats::class,
-            RecentActivity::class,
-        ], $widgets);
+        foreach ([AccountWidget::class, ...self::AUDIT_WIDGETS, ...self::OPERATIONS_WIDGETS] as $widget) {
+            $this->assertContains($widget, $widgets);
+        }
+    }
+    // --- Audit widget authorization -----------------------------------------
 
-        foreach (self::OPERATIONS_WIDGETS as $widget) {
-            $this->assertNotContains($widget, $widgets);
+    public function test_super_admin_widget_toggles_control_operations_and_design_widgets(): void
+    {
+        $admin = $this->admin(['super_admin']);
+        $role = Role::findByName('super_admin', 'web');
+        $widgets = [
+            ...self::OPERATIONS_WIDGETS,
+            DesignOverviewStats::class,
+            DesignOverviewBannerPreview::class,
+            DesignOverviewThemeCard::class,
+            DesignOverviewRecentDesigns::class,
+        ];
+
+        foreach ($widgets as $widget) {
+            $permission = 'View:'.class_basename($widget);
+            $role->givePermissionTo(Permission::findOrCreate($permission, 'web'));
+        }
+
+        foreach ($widgets as $widget) {
+            $this->assertContains($widget, $this->visibleWidgetsFor($admin));
+            $this->assertTrue($widget::canView());
+        }
+
+        foreach ($widgets as $widget) {
+            $role->revokePermissionTo('View:'.class_basename($widget));
+            $this->assertNotContains($widget, $this->visibleWidgetsFor($admin));
+            $this->assertFalse($widget::canView());
+        }
+
+        $this->assertSame([AccountWidget::class, ...self::AUDIT_WIDGETS], $this->visibleWidgetsFor($admin));
+    }
+
+    public function test_design_widgets_are_available_in_shield_role_toggles(): void
+    {
+        $widgets = FilamentShield::getWidgets();
+
+        foreach ([DesignOverviewStats::class, DesignOverviewBannerPreview::class, DesignOverviewThemeCard::class, DesignOverviewRecentDesigns::class] as $widget) {
+            $this->assertArrayHasKey($widget, $widgets);
+            $this->assertArrayHasKey('View:'.class_basename($widget), $widgets[$widget]['permissions']);
         }
     }
 
-    // --- Audit widget authorization -----------------------------------------
+    public function test_upgrade_enables_design_widgets_for_existing_super_admins(): void
+    {
+        $admin = $this->admin(['super_admin']);
+        $migration = require database_path('migrations/2026_09_27_000001_add_design_dashboard_widget_permissions.php');
+        $migration->up();
+
+        foreach ([DesignOverviewStats::class, DesignOverviewBannerPreview::class, DesignOverviewThemeCard::class, DesignOverviewRecentDesigns::class] as $widget) {
+            $this->assertContains($widget, $this->visibleWidgetsFor($admin));
+        }
+    }
 
     #[DataProvider('nonSuperAdminRoles')]
     public function test_the_audit_widgets_refuse_every_non_super_admin_on_the_server(string $role): void

@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
+use App\Models\Report;
+use App\Models\Review;
 use App\Notifications\AdminResetPassword;
+use App\Support\AdminNavigationBadges;
 use Filament\Auth\Notifications\ResetPassword as FilamentResetPassword;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         // app(Filament's ResetPassword::class), so binding it here is the only way
         // to give admins the branded email instead of Laravel's stock layout.
         $this->app->bind(FilamentResetPassword::class, AdminResetPassword::class);
+        $this->app->scoped(AdminNavigationBadges::class);
     }
 
     /**
@@ -34,6 +39,18 @@ class AppServiceProvider extends ServiceProvider
         // Azure terminates HTTPS in front of the app, so without this,
         // generated URLs default to http:// and signed verification links fail.
         URL::forceScheme('https');
+
+        // Reuse counts only until a mutation; moderation and order actions
+        // must render the updated badge in the same request.
+        foreach ([Order::class, Review::class, Report::class] as $model) {
+            $invalidateBadges = static fn () => app(AdminNavigationBadges::class)->forget();
+            $model::saved($invalidateBadges);
+            $model::deleted($invalidateBadges);
+
+            if (in_array($model, [Order::class, Review::class], true)) {
+                $model::restored($invalidateBadges);
+            }
+        }
 
         // Automatically start the chatbot when running:
         // php artisan serve

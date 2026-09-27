@@ -14,6 +14,7 @@ use App\Mail\OrderProcessingMail;
 use App\Mail\OrderReadyForPickupMail;
 use App\Mail\OrderRescheduledMail;
 use App\Models\Order;
+use App\Support\AdminNavigationBadges;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -68,9 +69,7 @@ class OrderResource extends Resource
     // excluded by the model's soft-delete scope.
     public static function getNavigationBadge(): ?string
     {
-        $pending = Order::ofStatus('pending')->count();
-
-        return $pending > 0 ? (string) $pending : null;
+        return app(AdminNavigationBadges::class)->pending(Order::class);
     }
 
     public static function getNavigationBadgeColor(): ?string

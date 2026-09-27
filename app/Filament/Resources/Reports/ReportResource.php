@@ -9,6 +9,7 @@ use App\Filament\Resources\Reports\Schemas\ReportForm;
 use App\Filament\Resources\Reports\Schemas\ReportInfolist;
 use App\Filament\Resources\Reports\Tables\ReportsTable;
 use App\Models\Report;
+use App\Support\AdminNavigationBadges;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -62,9 +63,7 @@ class ReportResource extends Resource
      */
     public static function getNavigationBadge(): ?string
     {
-        $pending = Report::where('status', 'pending')->count();
-
-        return $pending > 0 ? (string) $pending : null;
+        return app(AdminNavigationBadges::class)->pending(Report::class);
     }
 
     public static function getNavigationBadgeColor(): ?string

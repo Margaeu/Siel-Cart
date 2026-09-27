@@ -2,10 +2,9 @@
 
 namespace App\Filament\Pages\Dashboard\Widgets;
 
+use App\Filament\Pages\Dashboard\Widgets\Concerns\HasDesignWidgetAccess;
 use App\Filament\Resources\Themes\ThemeResource;
 use App\Models\Theme;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Widgets\Widget;
 
 /**
@@ -33,12 +32,7 @@ class DesignOverviewThemeCard extends Widget
     // dashboard in one request.
     protected static bool $isLazy = false;
 
-    public static function canView(): bool
-    {
-        $user = Filament::auth()?->user();
-
-        return $user instanceof User && $user->isDesignOnlyAdmin();
-    }
+    use HasDesignWidgetAccess;
 
     protected function getViewData(): array
     {
