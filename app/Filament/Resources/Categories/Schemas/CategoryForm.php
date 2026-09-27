@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Models\Category;
 use App\Rules\CategoryNameMakesASlug;
+use App\Rules\ImageWithinPixelBudget;
 use App\Support\OptimizedImageStorage;
 use Closure;
 use Filament\Forms\Components\FileUpload;
@@ -77,6 +78,8 @@ class CategoryForm
                             ->openable()
                             ->image()
                             ->maxSize(3072)
+                            // The size cap does not bound a decode; see the rule.
+                            ->rules([new ImageWithinPixelBudget])
                             ->imagePreviewHeight('220')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
                             ->helperText('Maximum file size: 3 MB.')

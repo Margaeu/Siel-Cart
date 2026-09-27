@@ -14,6 +14,57 @@
                 prefersReducedMotion() {
                     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 },
+                /*
+                 * Clip playback for the whole track. The slides used to carry
+                 * `src` + `autoplay` each, which downloaded and decoded every
+                 * clip -- the two cloned edge slides included -- on every
+                 * homepage visit; a `preload=metadata` hint did not prevent that,
+                 * because `autoplay` overrides it.
+                 *
+                 * Keyed on `position`, not `active`: `position` is the track
+                 * index, so it addresses the clones as well as the real slides,
+                 * and exactly one element is ever the one on screen. That
+                 * matters during a loop transition, where a clone is what the
+                 * visitor is looking at for the full 700ms -- gating on `active`
+                 * would leave it blank. A clone shares its URL with the real
+                 * slide it copies, so it is served from the HTTP cache rather
+                 * than fetched again.
+                 *
+                 * Under prefers-reduced-motion nothing is loaded or played at
+                 * all: motion-reduce:hidden already swaps each clip for the
+                 * flat fallback, so fetching it would be motion the visitor
+                 * asked not to see, paid for in bandwidth.
+                 */
+                syncVideos() {
+                    const reduced = this.prefersReducedMotion();
+
+                    this.$el.querySelectorAll('[data-slide-position]').forEach((slide) => {
+                        const video = slide.querySelector('video[data-banner-video]');
+
+                        if (!video) return;
+
+                        if (reduced || Number(slide.dataset.slidePosition) !== this.position) {
+                            video.pause();
+
+                            return;
+                        }
+
+                        // Assigned on first use only: re-assigning an identical
+                        // src restarts the clip from zero mid-play.
+                        if (!video.getAttribute('src') && video.dataset.src) {
+                            video.setAttribute('src', video.dataset.src);
+                        }
+
+                        // play() rejects when the browser declines (a data-saver
+                        // mode, or a decode failure). It is decorative, so the
+                        // slide simply stays on its background colour.
+                        const played = video.play();
+
+                        if (played && typeof played.catch === 'function') {
+                            played.catch(() => {});
+                        }
+                    });
+                },
                 start() {
                     this.stop();
 
@@ -105,7 +156,7 @@
                     this.start();
                 },
             }"
-            x-init="start()"
+            x-init="start(); syncVideos(); $watch('position', () => syncVideos())"
             x-on:mouseenter="stop()"
             x-on:mouseleave="start()"
             x-on:focusin="stop()"
@@ -130,13 +181,14 @@
                     x-on:transitionend.self="settleLoop()"
                 >
                     {{-- Cloned edge slides make the first/last transition loop without a visible jump. --}}
-                    <div class="relative h-full w-full shrink-0" aria-hidden="true">
+                    <div class="relative h-full w-full shrink-0" aria-hidden="true" data-slide-position="0">
                         <x-storefront.banner-slide :banner="$banners->last()" />
                     </div>
 
                     @foreach($banners as $banner)
                         <div
                             class="relative h-full w-full shrink-0"
+                            data-slide-position="{{ $loop->iteration }}"
                             role="group"
                             aria-roledescription="slide"
                             aria-label="{{ $loop->iteration }} of {{ $loop->count }}"
@@ -150,7 +202,7 @@
                         </div>
                     @endforeach
 
-                    <div class="relative h-full w-full shrink-0" aria-hidden="true">
+                    <div class="relative h-full w-full shrink-0" aria-hidden="true" data-slide-position="{{ $banners->count() + 1 }}">
                         <x-storefront.banner-slide :banner="$banners->first()" />
                     </div>
                 </div>

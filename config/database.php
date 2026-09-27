@@ -73,6 +73,34 @@ if (extension_loaded('pdo_mysql')) {
     if ($verifyConstant !== null && $mysqlSslCa !== null) {
         $mysqlOptions[$verifyConstant] = $mysqlVerifyServerCert;
     }
+
+    // Bound how long establishing a connection may take. The app runs on Azure
+    // (Malaysia West) against Aiven MySQL (Singapore), so every connection is a
+    // cross-border TCP + TLS handshake, and a free-tier database can be slow to
+    // accept the first one after it has been idle.
+    //
+    // Without this the ceiling is whatever the driver was built with:
+    // mysqlnd.connect_timeout is not set in php.ini here, so the effective
+    // limit is implicit and can differ between the local machine, CI and the
+    // Azure image. An unbounded connect occupies a PHP-FPM worker for the whole
+    // wait, and the B1 plan has few workers -- so a database that stops
+    // answering takes the entire site down rather than the one page that needed
+    // it. startup.sh already retries migrations for the same reason; this is the
+    // request-time half of that.
+    //
+    // Scope, so nobody mistakes this for a query timeout: pdo_mysql maps
+    // PDO::ATTR_TIMEOUT onto the driver's *connect* timeout only. A query that
+    // is slow once connected still runs to completion -- bounding that needs a
+    // read timeout, which PDO does not expose. PDO::ATTR_TIMEOUT is core PDO
+    // (not one of the MYSQL_ATTR_* constants deprecated in PHP 8.5), so it
+    // needs no version guard.
+    //
+    // DB_CONNECT_TIMEOUT=0 restores the driver default for a host that needs it.
+    $mysqlConnectTimeout = (int) env('DB_CONNECT_TIMEOUT', 10);
+
+    if ($mysqlConnectTimeout > 0) {
+        $mysqlOptions[PDO::ATTR_TIMEOUT] = $mysqlConnectTimeout;
+    }
 }
 
 return [

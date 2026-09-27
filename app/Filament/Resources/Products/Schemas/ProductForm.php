@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Rules\CategoryNameMakesASlug;
+use App\Rules\ImageWithinPixelBudget;
 use App\Rules\UniqueCategoryName;
 use App\Rules\UniqueProductName;
 use App\Rules\UniqueSku;
@@ -227,6 +228,8 @@ class ProductForm
                                             ->panelLayout('grid')
                                             ->directory('products')
                                             ->maxSize(3072)
+                                            // The size cap does not bound a decode; see the rule.
+                                            ->rules([new ImageWithinPixelBudget])
                                             ->reorderable()
                                             ->columnSpanFull()
                                             ->orientImagesFromExif(false)
@@ -460,6 +463,8 @@ class ProductForm
                                                     ->panelLayout('grid')
                                                     ->directory('products/variants')
                                                     ->maxSize(3072)
+                                                    // The size cap does not bound a decode; see the rule.
+                                                    ->rules([new ImageWithinPixelBudget])
                                                     ->reorderable()
                                                     ->columnSpanFull()
                                                     ->orientImagesFromExif(false)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Banners\Schemas;
 
+use App\Rules\ImageWithinPixelBudget;
 use App\Support\OptimizedImageStorage;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
@@ -51,6 +52,9 @@ class BannerForm
                             // temporary upload at max:10240 and that rule runs first, so
                             // raising this alone would change nothing. Change both together.
                             ->maxSize(10240)
+                            // File size does not bound a decode: an 8000x6000 photo is
+                            // ~1.2 MB and wants ~202 MB of bitmap. See the rule.
+                            ->rules([new ImageWithinPixelBudget])
                             // Both editor and preview are image-only in Filament; a video
                             // gets a generic file row instead, which is why the aspect-ratio
                             // guidance below matters more for clips than for stills.

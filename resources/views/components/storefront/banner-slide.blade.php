@@ -27,18 +27,33 @@
             that already owns the pointer for swipe and the arrows for navigation,
             and a control bar would sit on top of both.
 
-            `preload="metadata"` rather than `auto` because every slide -- including
-            the two cloned edge slides -- is in the DOM from first paint, so `auto`
-            would pull every clip in full before the homepage settled.
+            No `src` and no `autoplay`: the carousel owns playback, and it hands
+            this element its URL only while the slide is the one on screen (see
+            syncVideos() in livewire/home-page.blade.php, keyed on the same
+            `data-slide-position` the track stamps on each wrapper).
+
+            This used to be `src` + `autoplay` + `preload="metadata"`, with a
+            comment claiming the preload hint kept the clips from being pulled in
+            full. It does not: `autoplay` overrides `preload`, so every slide in
+            the DOM from first paint -- all the real ones plus the two cloned edge
+            slides -- downloaded and decoded its whole clip on every homepage
+            visit. With clips capped at 10 MB and the media served from R2 that
+            was the heaviest thing on the site, and the simultaneous decodes were
+            worst on exactly the phones least able to absorb them. `preload="none"`
+            is honest now that nothing autoplays.
+
+            The primary-colour background matches the reduced-motion fallback
+            below, so an element that has not been handed its URL yet reads as a
+            brand-coloured slide rather than an empty black box.
         --}}
         <video
-            src="{{ $banner->image_url }}"
-            class="h-full w-full object-cover motion-reduce:hidden"
-            autoplay
+            data-banner-video
+            data-src="{{ $banner->image_url }}"
+            class="h-full w-full bg-[var(--color-primary)] object-cover motion-reduce:hidden"
             muted
             loop
             playsinline
-            preload="metadata"
+            preload="none"
             aria-hidden="true"
             draggable="false"
         ></video>
