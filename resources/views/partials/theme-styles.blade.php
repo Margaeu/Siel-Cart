@@ -31,5 +31,7 @@
         --color-primary: {{ $themePrimaryColor }};
         --color-primary-hover: color-mix(in srgb, {{ $themePrimaryColor }} 82%, black);
         --color-secondary: {{ $themeSecondaryColor }};
+        --color-secondary-hover: color-mix(in srgb, {{ $themeSecondaryColor }} 85%, black);
+        --color-secondary-active: color-mix(in srgb, {{ $themeSecondaryColor }} 70%, black);
     }
 </style>

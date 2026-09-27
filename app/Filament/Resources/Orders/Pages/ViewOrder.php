@@ -34,6 +34,8 @@ class ViewOrder extends ViewRecord
         return [
             OrderResource::reschedulePickupAction(),
 
+            OrderResource::resendStatusEmailAction(),
+
             Action::make('record_resolution')
                 ->label('Record refund or exchange')
                 ->icon('heroicon-o-receipt-refund')

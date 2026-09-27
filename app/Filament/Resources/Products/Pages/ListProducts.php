@@ -61,8 +61,8 @@ class ListProducts extends ListRecords
                 badgeColor: 'warning',
             ),
 
-            'deleted' => $this->productTab(
-                label: 'Deleted',
+            'trash' => $this->productTab(
+                label: 'Trash',
                 scope: fn (Builder $query): Builder => $query->whereNotNull('deleted_at'),
                 badgeColor: 'danger',
             ),

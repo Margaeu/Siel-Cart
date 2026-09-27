@@ -214,7 +214,7 @@
 
                 <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                     <a href="{{ route('products.index') }}"
-                       class="inline-block transform rounded-lg bg-[var(--color-secondary)] px-8 py-3.5 font-bold text-[var(--color-primary)] shadow-lg transition hover:-translate-y-0.5 hover:bg-amber-400 active:bg-amber-500">
+                       class="inline-block transform rounded-lg bg-[var(--color-secondary)] px-8 py-3.5 font-bold text-[var(--color-primary)] shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--color-secondary-hover)] active:bg-[var(--color-secondary-active)]">
                         Shop Now
                     </a>
                 </div>
@@ -225,15 +225,9 @@
     <!-- Featured Products -->
     <section class="bg-[#F9FAFB] py-12">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-8 flex items-end justify-between">
-                <div>
-                    <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-2xl font-bold text-gray-900">Featured Products</h2>
-                    <p class="mt-2 pl-3 text-sm text-gray-500">Hand-picked favorites from the store</p>
-                </div>
-                <a href="{{ route('products.index', ['featured' => 1]) }}"
-                   class="shrink-0 font-semibold text-[var(--color-primary)] transition hover:text-[var(--color-secondary)]">
-                    View All →
-                </a>
+            <div class="mb-8">
+                <h2 class="border-l-4 border-[var(--color-secondary)] pl-3 text-2xl font-bold text-gray-900">Featured Products</h2>
+                <p class="mt-2 pl-3 text-sm text-gray-500">Hand-picked favorites from the store</p>
             </div>
 
             @if($featuredProducts->isNotEmpty())

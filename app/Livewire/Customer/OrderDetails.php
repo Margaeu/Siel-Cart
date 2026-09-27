@@ -18,6 +18,10 @@ class OrderDetails extends Component
      * Product IDs reviewed against *this* order specifically, so the "Write
      * a Review" prompt still shows for a product that was reviewed under a
      * different (e.g. earlier) order for the same product.
+     *
+     * Includes reviews an admin deleted (withTrashed), so the order line
+     * shows "Reviewed" rather than a "Write a Review" link the product page
+     * would refuse -- see Review.
      */
     public array $reviewedProductIds = [];
 
@@ -30,7 +34,8 @@ class OrderDetails extends Component
 
         $productIds = $this->order->items->pluck('product_id')->filter()->unique()->values();
 
-        $this->reviewedProductIds = Review::where('customer_id', auth('customer')->id())
+        $this->reviewedProductIds = Review::withTrashed()
+            ->where('customer_id', auth('customer')->id())
             ->where('order_id', $this->order->id)
             ->whereIn('product_id', $productIds)
             ->pluck('product_id')

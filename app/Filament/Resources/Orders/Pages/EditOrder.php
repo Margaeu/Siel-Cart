@@ -12,7 +12,6 @@ use Filament\Actions\RestoreAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class EditOrder extends EditRecord
 {
@@ -26,6 +25,7 @@ class EditOrder extends EditRecord
             // reschedule or it would save the old dates back on the next submit.
             OrderResource::reschedulePickupAction()
                 ->after(fn () => $this->fillForm()),
+            OrderResource::resendStatusEmailAction(),
             Action::make('cancel_no_show')
                 ->label('Cancel No-show Order')
                 ->icon('heroicon-o-x-circle')
@@ -70,16 +70,15 @@ class EditOrder extends EditRecord
                         return;
                     }
 
-                    Mail::to($order->customer->email)->send(new OrderCancelledNoShowMail($order));
-
                     $this->record = $order;
                     $this->fillForm();
 
-                    Notification::make()
-                        ->title('Order cancelled')
-                        ->body('The items were released and the customer was notified by email.')
-                        ->success()
-                        ->send();
+                    OrderResource::notifyCustomerByMail(
+                        $order,
+                        new OrderCancelledNoShowMail($order),
+                        'Order cancelled',
+                        'The reserved items were released.',
+                    );
                 }),
             DeleteAction::make(),
             ForceDeleteAction::make(),

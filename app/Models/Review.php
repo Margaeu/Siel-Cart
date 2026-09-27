@@ -3,10 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Soft-deleted on purpose. A customer gets exactly one review per completed
+ * order for a product (the unique product/customer/order index), and that
+ * chance is spent whether the review stays up, is hidden (is_approved =
+ * false) or is deleted by an admin after a report. A hard delete used to
+ * remove the only record that the order had been reviewed, so the author
+ * could post again straight away. Any check for "has this purchase already
+ * been reviewed" must therefore read withTrashed() -- see
+ * ProductDetails::completedOrderId() and Customer\OrderDetails.
+ *
+ * Everything that displays or counts reviews (product page, aggregates,
+ * admin lists) goes through Eloquent, so the SoftDeletingScope keeps a
+ * removed review out of all of them exactly as a hard delete did.
+ */
 class Review extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'product_id',
         'customer_id',

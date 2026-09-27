@@ -13,7 +13,7 @@ use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
- * The All/Active/Inactive/Deleted tabs replaced the product stat widgets and
+ * The All/Active/Inactive/Trash tabs replaced the product stat widgets and
  * the table's is_active and Trashed filters, so they alone decide which
  * products the admin list shows.
  */
@@ -44,7 +44,7 @@ class ProductListTabsTest extends TestCase
     {
         $active = Product::factory()->create(['is_active' => true, 'has_variants' => false]);
         $inactive = Product::factory()->create(['is_active' => false, 'has_variants' => false]);
-        // Still flagged active: a deleted product must appear only under Deleted.
+        // Still flagged active: a deleted product must appear only under Trash.
         $deleted = Product::factory()->create(['is_active' => true, 'has_variants' => false]);
         $deleted->delete();
         $this->actingAsAdmin();
@@ -57,8 +57,20 @@ class ProductListTabsTest extends TestCase
             ->set('activeTab', 'inactive')
             ->assertCanSeeTableRecords([$inactive])
             ->assertCanNotSeeTableRecords([$active, $deleted])
-            ->set('activeTab', 'deleted')
+            ->set('activeTab', 'trash')
             ->assertCanSeeTableRecords([$deleted])
             ->assertCanNotSeeTableRecords([$active, $inactive]);
+    }
+
+    public function test_variant_products_explain_their_blank_sku(): void
+    {
+        $simple = Product::factory()->create(['has_variants' => false, 'sku' => 'SIMPLE-001']);
+        $variable = Product::factory()->create(['has_variants' => true, 'sku' => null]);
+        $this->actingAsAdmin();
+
+        Livewire::test(ListProducts::class)
+            ->assertCanSeeTableRecords([$simple, $variable])
+            ->assertSee('SIMPLE-001')
+            ->assertSee('With variants');
     }
 }

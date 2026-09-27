@@ -99,7 +99,7 @@
                         <a href="{{ route('customer.orders', ['status' => 'pending']) }}" wire:navigate
                            class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -117,7 +117,7 @@
                         <a href="{{ route('customer.orders', ['status' => 'processing']) }}" wire:navigate
                            class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                                     </svg>
@@ -135,7 +135,7 @@
                         <a href="{{ route('customer.orders', ['status' => 'ready_for_pickup']) }}" wire:navigate
                            class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[7rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                     </svg>
@@ -153,7 +153,7 @@
                         <a href="{{ route('customer.orders', ['status' => 'completed']) }}" wire:navigate
                            class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
@@ -171,7 +171,7 @@
                         <a href="{{ route('customer.orders', ['status' => 'cancelled']) }}" wire:navigate
                            class="group flex flex-col items-center justify-center text-center p-2 shrink-0 min-w-[6rem] sm:min-w-0 snap-center rounded-xl transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]">
                             <div class="relative mb-2">
-                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-emerald-50 group-hover:text-[var(--color-primary)]">
+                                <div class="w-11 h-11 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center transition group-hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,white)] group-hover:text-[var(--color-primary)]">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>

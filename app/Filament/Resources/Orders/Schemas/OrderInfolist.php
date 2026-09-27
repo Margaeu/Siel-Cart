@@ -270,9 +270,12 @@ class OrderInfolist
                                 ->label('Name')
                                 ->placeholder('Not yet designated'),
 
+                            // Empty is not a gap in the record: no separate
+                            // claimant number means the customer who ordered
+                            // collected the order themselves.
                             TextEntry::make('claimant_phone')
                                 ->label('Phone')
-                                ->placeholder('Not yet provided'),
+                                ->placeholder('Same as the customer who ordered'),
 
                             TextEntry::make('or_number')
                                 ->label('Official Receipt Number')

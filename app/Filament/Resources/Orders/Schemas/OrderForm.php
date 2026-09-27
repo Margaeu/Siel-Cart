@@ -58,9 +58,12 @@ class OrderForm
                             ->placeholder('Name of person receiving order')
                             ->default(null),
 
+                        // Blank is normal: it means the customer who ordered
+                        // collected it themselves, so their own number applies.
                         TextInput::make('claimant_phone')
                             ->label('Claimant contact number')
-                            ->placeholder('Phone number of person receiving order')
+                            ->placeholder('Leave blank if the customer is collecting')
+                            ->helperText('Only needed when someone other than the customer who ordered is collecting.')
                             ->default(null),
 
                         TextInput::make('or_number')

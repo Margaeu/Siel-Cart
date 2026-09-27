@@ -22,7 +22,7 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
-            // Deleted products are listed too, under the Deleted tab; the tabs
+            // Deleted products are listed too, under the Trash tab; the tabs
             // on ListProducts apply the deleted_at condition themselves.
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withoutGlobalScopes([SoftDeletingScope::class])
@@ -39,10 +39,16 @@ class ProductsTable
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
+                // A variant product has no SKU of its own -- each variant
+                // carries one -- so a blank cell read as missing data. Say
+                // why it is empty instead, using the same "With variants"
+                // wording as the view page's Product type badge. Placeholder
+                // text renders greyed out and isn't copied by copyable().
                 TextColumn::make('sku')
                     ->label('SKU')
                     ->searchable()
-                    ->copyable(),
+                    ->copyable()
+                    ->placeholder(fn (Product $record): string => $record->has_variants ? 'With variants' : '—'),
                 TextColumn::make('category.name')
                     ->label('Category')
                     ->badge()
@@ -83,9 +89,9 @@ class ProductsTable
                 SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship('category', 'name'),
-                // No is_active or Trashed filter: the All/Active/Inactive/Deleted
+                // No is_active or Trashed filter: the All/Active/Inactive/Trash
                 // tabs on ListProducts cover both, and a TrashedFilter's default
-                // "without deleted" would leave the Deleted tab empty.
+                // "without deleted" would leave the Trash tab empty.
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -97,7 +103,7 @@ class ProductsTable
                     DeleteBulkAction::make()
                         ->label('Move to trash')
                         ->modalHeading('Move selected products to trash')
-                        ->modalDescription('The products are hidden from the storefront and moved to the Deleted tab. You can restore them later.')
+                        ->modalDescription('The products are hidden from the storefront and moved to the Trash tab. You can restore them later.')
                         ->modalSubmitActionLabel('Move to trash')
                         ->successNotificationTitle('Moved to trash'),
                     ForceDeleteBulkAction::make(),

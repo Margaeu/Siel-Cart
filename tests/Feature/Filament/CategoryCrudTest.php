@@ -5,12 +5,15 @@ namespace Tests\Feature\Filament;
 use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
+use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use App\Rules\UniqueCategoryName;
 use Database\Seeders\CategorySeeder;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -148,6 +151,56 @@ class CategoryCrudTest extends TestCase
             ->assertHasFormErrors(['name']);
 
         $this->assertSame(1, Category::count());
+    }
+
+    /**
+     * The product form's category dropdown can create a category inline,
+     * which is a second way into the same table: without these rules it
+     * happily made the "Gift Set" the Categories page would have refused.
+     */
+    public function test_the_inline_create_category_modal_rejects_a_duplicate(): void
+    {
+        Category::factory()->create(['name' => 'Gift Set', 'slug' => 'gift-set']);
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->callAction(
+                TestAction::make('createOption')->schemaComponent('category_id'),
+                ['name' => 'gift  SET!'],
+            )
+            ->assertHasActionErrors(['name' => UniqueCategoryName::messageFor('Gift Set')]);
+
+        $this->assertSame(1, Category::count());
+    }
+
+    public function test_the_inline_create_category_modal_rejects_a_name_with_no_letters_or_numbers(): void
+    {
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->callAction(
+                TestAction::make('createOption')->schemaComponent('category_id'),
+                ['name' => '!!!'],
+            )
+            ->assertHasActionErrors(['name' => Category::EMPTY_SLUG_MESSAGE]);
+
+        $this->assertSame(0, Category::count());
+    }
+
+    public function test_the_inline_create_category_modal_still_creates_a_new_category(): void
+    {
+        Category::factory()->create(['name' => 'Gift Set', 'slug' => 'gift-set']);
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->callAction(
+                TestAction::make('createOption')->schemaComponent('category_id'),
+                ['name' => 'Athletics'],
+            )
+            ->assertHasNoActionErrors();
+
+        $athletics = Category::query()->where('slug', 'athletics')->sole();
+        $this->assertSame('Athletics', $athletics->name);
     }
 
     public function test_a_name_with_no_letters_or_numbers_is_rejected_by_the_form(): void

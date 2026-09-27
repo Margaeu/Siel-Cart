@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Models\Category;
+use App\Rules\CategoryNameMakesASlug;
 use App\Support\OptimizedImageStorage;
 use Closure;
 use Filament\Forms\Components\FileUpload;
@@ -12,7 +13,6 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CategoryForm
@@ -31,28 +31,19 @@ class CategoryForm
                     ->columns(2)
                     ->schema([
                         Group::make([
-                            // The slug is generated from the name once, at
-                            // creation, so check the generated value here: a
-                            // name like "!!!" slugifies to nothing, and some
-                            // characters expand ("@" becomes "at"), so the
-                            // slug column's 255 limit is checked separately
-                            // from the name's own.
+                            // Duplicates are caught by RejectsDuplicateCategory
+                            // on the Create and Edit pages, which also converts
+                            // the database unique violation two simultaneous
+                            // submissions can still cause.
                             TextInput::make('name')
                                 ->required()
                                 ->maxLength(255)
-                                ->rule(static fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
-                                    $slug = Str::slug((string) $value);
-
-                                    if ($slug === '') {
-                                        $fail(Category::EMPTY_SLUG_MESSAGE);
-                                    } elseif (mb_strlen($slug) > 255) {
-                                        $fail('The name is too long to make a web address from. Shorten it.');
-                                    }
-                                }),
-                            TextInput::make('slug')
-                                ->unique(ignoreRecord: true)
-                                ->readOnly()
-                                ->visibleOn('edit'),
+                                ->rule(new CategoryNameMakesASlug),
+                            // No slug field, for the same reason ProductForm has
+                            // none: it is generated from the name and never follows
+                            // a rename, so on edit it was a read-only box of jargon.
+                            // The View page (CategoryInfolist) shows it for anyone
+                            // who needs the category's public address.
                             Grid::make([
                                 'default' => 1,
                                 'sm' => 2,

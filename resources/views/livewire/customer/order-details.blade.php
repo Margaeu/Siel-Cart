@@ -323,6 +323,11 @@
                                         <p class="{{ $fieldValue }}">
                                             @if($order->claimant_phone)
                                                 {{ $order->claimant_phone }}
+                                            {{-- A completed order with no claimant number was
+                                                 collected by the buyer, so nothing is outstanding;
+                                                 only an uncompleted one is still "to be designated". --}}
+                                            @elseif(strtolower($order->status) === 'completed')
+                                                <span class="{{ $pending }}">Same as your contact number</span>
                                             @else
                                                 <span class="{{ $pending }}">To be designated</span>
                                             @endif

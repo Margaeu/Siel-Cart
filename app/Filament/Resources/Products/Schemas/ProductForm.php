@@ -5,7 +5,11 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Rules\CategoryNameMakesASlug;
+use App\Rules\UniqueCategoryName;
+use App\Rules\UniqueProductName;
 use App\Rules\UniqueSku;
+use App\Support\Name;
 use App\Support\OptimizedImageStorage;
 use App\Support\Sku;
 use Closure;
@@ -17,12 +21,15 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Exceptions\Halt;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -40,12 +47,18 @@ class ProductForm
                             ->schema([
                                 Section::make('Product details')
                                     ->description('Set the product name and the category customers will browse.')
-                                    // Name and category share the first row. The slug only
-                                    // exists on edit, so it sits on its own full-width row
-                                    // below rather than pushing category onto a half-empty
-                                    // second row next to nothing.
+                                    // Name and category share the first row.
                                     ->schema([
+                                        // Two products with one name are two
+                                        // identical-looking listings a customer
+                                        // cannot tell apart, and re-adding a
+                                        // product that already exists is the
+                                        // easiest mistake to make here. The slug
+                                        // never caught it: a duplicate name just
+                                        // becomes "name-2".
                                         TextInput::make('name')
+                                            ->rule(fn (?Product $record) => new UniqueProductName(ignoreProductId: $record?->id))
+                                            ->helperText('Shown to customers. Another product cannot already use it.')
                                             ->required(),
                                         // Inactive categories stay selectable so an inactive
                                         // product can be filed under one, but an active product
@@ -61,30 +74,62 @@ class ProductForm
                                                     $fail(Product::INACTIVE_CATEGORY_MESSAGE);
                                                 }
                                             })
+                                            // The same two checks the Categories
+                                            // pages make, because this modal is a
+                                            // second way into the same table: a
+                                            // duplicate here would split one
+                                            // storefront filter into two
+                                            // half-filled ones.
                                             ->createOptionForm([
                                                 TextInput::make('name')
-                                                    ->required(),
-                                                TextInput::make('slug')
-                                                    ->unique(ignoreRecord: true)
-                                                    ->readOnly()
-                                                    ->visibleOn('edit'),
-                                            ]),
-                                        // Set once from the name at creation and never regenerated
-                                        // on rename (see Product::boot()). Shown read-only rather
-                                        // than editable: it's the product's public URL, and staff
-                                        // don't need to (or should) hand-edit it here. unique()
-                                        // checks the raw table, so a soft-deleted product's slug
-                                        // still counts.
-                                        TextInput::make('slug')
-                                            ->unique(ignoreRecord: true)
-                                            ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')
-                                            ->validationMessages([
-                                                'regex' => 'Use lowercase letters, numbers, and single hyphens only.',
+                                                    ->required()
+                                                    ->maxLength(255)
+                                                    ->rule(new CategoryNameMakesASlug)
+                                                    ->rule(new UniqueCategoryName),
                                             ])
-                                            ->readOnly()
-                                            ->visible(fn (string $operation) => $operation === 'edit')
-                                            ->helperText('Used in the product page address. It is set from the product name and does not change automatically when you rename the product.')
-                                            ->required(),
+                                            // RejectsDuplicateCategory's job on the
+                                            // Categories pages: turn the unique
+                                            // index's exception -- the race left
+                                            // when two admins submit the same new
+                                            // name at once -- into the same
+                                            // sentence, instead of a SQL error in
+                                            // the modal. Halt leaves the modal open
+                                            // with what the admin typed.
+                                            ->createOptionUsing(function (Select $component, array $data, Schema $schema): mixed {
+                                                try {
+                                                    // Filament's own createOptionUsing, kept
+                                                    // verbatim so a field added to the modal
+                                                    // later still saves its relationships.
+                                                    $record = $component->getRelationship()->newModelInstance();
+                                                    $record->fill($data);
+                                                    $record->save();
+
+                                                    $schema->model($record)->saveRelationships();
+
+                                                    return $record->getKey();
+                                                } catch (UniqueConstraintViolationException) {
+                                                    $name = trim((string) ($data['name'] ?? ''));
+                                                    $existing = Category::findByGeneratedSlug($name);
+
+                                                    Notification::make()
+                                                        ->title('Category already exists')
+                                                        ->body(UniqueCategoryName::messageFor($existing->name ?? $name))
+                                                        ->warning()
+                                                        ->send();
+
+                                                    throw new Halt;
+                                                }
+                                            }),
+                                        // There is deliberately no slug field here. The slug is
+                                        // generated from the name at creation and never follows a
+                                        // later rename (see Product::boot()), so on edit it was a
+                                        // read-only box of jargon staff can't act on. Leaving it
+                                        // out of the schema is also what actually protects it:
+                                        // ->readOnly() is only an HTML attribute, and a crafted
+                                        // Livewire request could still set the column through it.
+                                        // The slug is shown, labelled and copyable, on the View
+                                        // page (ProductInfolist), which is where someone who wants
+                                        // the product's public address goes looking.
                                     ])->columns(2),
                                 Section::make('Product description')
                                     ->description('Add a concise summary and the full details shown on the product page.')
@@ -298,10 +343,49 @@ class ProductForm
                                         Repeater::make('variants')
                                             ->relationship('variants')
                                             ->schema([
+                                                // The customer picks a variant by this
+                                                // name alone, so one product cannot
+                                                // offer two rows called "M" -- neither
+                                                // choice means anything, and it is
+                                                // usually a row typed twice rather than
+                                                // a real option. Compared by
+                                                // Name::comparisonKey(), so "M", "m" and
+                                                // " M " are one name.
+                                                //
+                                                // Only the rows in this submission are
+                                                // compared, with no check against the
+                                                // saved siblings: the repeater holds
+                                                // every variant the product will have
+                                                // after the save, so a row being deleted
+                                                // in the same save must not block its
+                                                // replacement. A row always matches
+                                                // itself once; only a second occurrence
+                                                // is a duplicate.
                                                 TextInput::make('name')
                                                     ->required()
                                                     ->label('Variant Name')
                                                     ->placeholder('e.g., Red - Large')
+                                                    ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                                                        $key = Name::comparisonKey(is_scalar($value) ? (string) $value : null);
+
+                                                        if ($key === null) {
+                                                            return;
+                                                        }
+
+                                                        // Relative to this row: up out of the row, then
+                                                        // the repeater. An absolute '/variants' would
+                                                        // miss the form's `data.` prefix and read null.
+                                                        $rows = $get('../../variants');
+
+                                                        $occurrences = collect(is_array($rows) ? $rows : [])
+                                                            ->filter(fn ($row): bool => is_array($row)
+                                                                && Name::comparisonKey(is_scalar($row['name'] ?? null) ? (string) $row['name'] : null) === $key)
+                                                            ->count();
+
+                                                        if ($occurrences > 1) {
+                                                            $fail('Another variant already uses this name.');
+                                                        }
+                                                    })
                                                     ->columnSpan(2),
                                                 // Two checks: against every saved product and variant
                                                 // (UniqueSku), and against the other rows in this same
