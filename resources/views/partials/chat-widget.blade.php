@@ -84,9 +84,8 @@
         {{--
             The quick questions belong to the greeting, so they sit inside the
             transcript directly beneath it rather than in their own strip above
-            the input. They scroll away with the greeting once the conversation
-            moves on, which is the point: they are an opening prompt, not a
-            permanent toolbar competing with the input field.
+            the input. They disappear when the shopper sends their first
+            question, whether they select a suggestion or type it themselves.
         --}}
         <div id="chat-suggestions">
             <!-- Buttons inserted by JS -->
@@ -175,14 +174,17 @@
         }
 
         // The one path to the backend. The input field and the suggestion
-        // buttons both come through here, so a reply, an error, and the
-        // follow-up re-render of the suggestions behave the same whichever
-        // one the shopper used. (They used to be two copies of this function
-        // and had already drifted: only one re-rendered suggestions on a
-        // server error.)
+        // buttons both come through here, so suggestions disappear immediately
+        // whichever way the shopper starts the conversation.
         async function sendMessageWithText(messageText) {
             const message = messageText.trim();
             if (!message) return;
+
+            const suggestions = document.getElementById('chat-suggestions');
+            if (suggestions) {
+                suggestions.replaceChildren();
+                suggestions.hidden = true;
+            }
 
             appendMessage(message, 'user');
             showTypingIndicator();
@@ -213,7 +215,6 @@
                 appendMessage('Network Error: Check browser console (F12) for details.', 'bot');
             }
 
-            renderSuggestions();
             // Hand focus back to the input so the next question can be typed
             // straight away, including after a suggestion button was clicked.
             inputField.focus();
@@ -247,18 +248,14 @@
         const SUGGESTED_QUESTIONS = [
             'How do I place an order?',
             'What payment methods do you accept?',
-            'Where and when do I pick up my order?',
-            'How can I check my order status?',
-            'What is your return and refund policy?',
-            'Can you recommend products under ₱500?'
+            'Where and when do I pick up my order?'
         ];
-
-        // Track suggestions that the user has already used in this session
-        const usedSuggestions = new Set();
 
         function renderSuggestions() {
             const container = document.getElementById('chat-suggestions');
-            if (!container) return;
+            // Livewire may initialize the existing widget again; keep opening
+            // suggestions hidden once the conversation has started.
+            if (!container || container.hidden) return;
             container.innerHTML = '';
 
             // Stacked vertically, not in a horizontal strip. The strip clipped
@@ -272,24 +269,15 @@
             // replies under the greeting rather than a menu bar. max-w matches
             // the message bubbles above it; whitespace-normal lets a long
             // question wrap to a second line instead of overflowing.
-            const remaining = SUGGESTED_QUESTIONS.filter(q => !usedSuggestions.has(q));
-
-            // Once every question has been asked, leave the container empty
-            // rather than rendering a wrapper whose padding would sit as a gap
-            // under the greeting.
-            if (remaining.length === 0) return;
-
             const wrapper = document.createElement('div');
             wrapper.className = 'flex flex-col items-start gap-1.5 pt-0.5';
 
-            remaining.forEach(q => {
+            SUGGESTED_QUESTIONS.forEach(q => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'max-w-[85%] rounded-xl border border-gray-200 bg-white px-3 py-2 text-left text-xs leading-snug whitespace-normal shadow-sm transition hover:border-[var(--color-primary)] hover:bg-gray-50';
                 btn.innerText = q;
                 btn.onclick = () => {
-                    usedSuggestions.add(q);
-                    renderSuggestions();
                     sendMessageWithText(q);
                 };
                 wrapper.appendChild(btn);

@@ -1,10 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import OpenAI from 'openai';
 import mysql from 'mysql2/promise';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(cors());
@@ -24,6 +29,43 @@ const openrouter = new OpenAI({
 const dbHost = process.env.DB_HOST || 'localhost';
 const isLocalDbHost = ['localhost', '127.0.0.1', '::1'].includes(dbHost);
 
+// Aiven requires TLS, and Node's default trust store doesn't include its CA,
+// so `rejectUnauthorized: true` with no `ca` fails the handshake on every
+// connection attempt. fetchAvailableProducts() below catches that silently
+// and falls back to a hardcoded product list -- which is why production was
+// serving fake "CLSU Notebook / Siel Cart Lanyard / UBAP Mug" recommendations
+// with no visible error. Mirrors config/database.php's CA lookup so the same
+// committed cert works for both services; see chatbot-server/certs/README.md
+// for why there are two copies.
+function loadDbSslCa() {
+    const configured = (process.env.MYSQL_ATTR_SSL_CA || '').trim();
+    const candidates = configured
+        ? [path.isAbsolute(configured) ? configured : path.resolve(__dirname, configured)]
+        : [
+            path.resolve(__dirname, 'certs/aiven-ca.pem'),
+            path.resolve(__dirname, '../storage/certs/aiven-ca.pem'),
+        ];
+
+    for (const candidate of candidates) {
+        try {
+            return fs.readFileSync(candidate, 'utf8');
+        } catch {
+            // try next candidate
+        }
+    }
+
+    return null;
+}
+
+const dbSslCa = isLocalDbHost ? null : loadDbSslCa();
+
+if (!isLocalDbHost && !dbSslCa) {
+    console.warn(
+        'MySQL SSL CA not found (checked MYSQL_ATTR_SSL_CA and chatbot-server/certs/aiven-ca.pem). ' +
+        'The connection to Aiven will fail TLS verification and product recommendations will silently fall back to stub data.'
+    );
+}
+
 const dbPool = mysql.createPool({
     host: dbHost,
     port: process.env.DB_PORT || 3306,
@@ -33,7 +75,7 @@ const dbPool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ...(isLocalDbHost ? {} : { ssl: { rejectUnauthorized: true } })
+    ...(isLocalDbHost ? {} : { ssl: dbSslCa ? { ca: dbSslCa, rejectUnauthorized: true } : { rejectUnauthorized: true } })
 });
 
 // Updated stable free OpenRouter model list
@@ -103,7 +145,12 @@ async function fetchAvailableProducts() {
         );
         return rows;
     } catch (dbError) {
-        console.error('Database fetch error:', dbError.message);
+        // Logged with the driver's error code (e.g. ECONNREFUSED,
+        // ER_ACCESS_DENIED_ERROR, HANDSHAKE_SSL_ERROR) because the message
+        // alone doesn't distinguish "wrong host/credentials" from "TLS
+        // verification failed" -- both silently fall back to the same stub
+        // product list below, so this log is the only way to tell which.
+        console.error('Database fetch error:', dbError.code || '(no code)', '-', dbError.message);
         return [];
     }
 }
