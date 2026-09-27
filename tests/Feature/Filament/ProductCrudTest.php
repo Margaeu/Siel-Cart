@@ -13,7 +13,9 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Rules\UniqueProductName;
 use App\Rules\UniqueSku;
+use App\Support\Name;
 use App\Support\Sku;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Repeater;
@@ -410,6 +412,177 @@ class ProductCrudTest extends TestCase
         $this->assertNull(Sku::comparisonKey('  '));
     }
 
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function collidingNames(): array
+    {
+        return [
+            'exact' => ['CLSU Tumbler'],
+            'case only' => ['clsu tumbler'],
+            'whitespace only' => ['  CLSU Tumbler  '],
+            'inner spacing' => ['CLSU   Tumbler'],
+        ];
+    }
+
+    #[DataProvider('collidingNames')]
+    public function test_a_product_name_cannot_reuse_another_products_name(string $submitted): void
+    {
+        $this->simpleProduct(['name' => 'CLSU Tumbler']);
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->simpleFormData(['name' => $submitted]))
+            ->call('create')
+            ->assertHasFormErrors(['name']);
+
+        $this->assertSame(1, Product::count());
+    }
+
+    public function test_a_soft_deleted_products_name_still_blocks_reuse(): void
+    {
+        // A restore would put the second "CLSU Tumbler" back on the
+        // storefront, so the name stays taken while the product is hidden.
+        // The admin cannot see that product in the list, so the message says
+        // which case they hit.
+        $this->simpleProduct(['name' => 'CLSU Tumbler'])->delete();
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->simpleFormData(['name' => 'clsu tumbler']))
+            ->call('create')
+            ->assertHasFormErrors(['name' => UniqueProductName::TRASHED_MESSAGE]);
+    }
+
+    public function test_editing_keeps_a_products_own_name_valid(): void
+    {
+        $product = $this->simpleProduct(['name' => 'CLSU Tumbler']);
+        $this->actingAsAdmin();
+
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->fillForm(['stock_quantity' => 25])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('CLSU Tumbler', $product->fresh()->name);
+    }
+
+    #[DataProvider('collidingNames')]
+    public function test_a_products_name_cannot_be_edited_onto_another_products_name(string $submitted): void
+    {
+        $this->simpleProduct(['name' => 'CLSU Tumbler']);
+        $product = $this->simpleProduct(['name' => 'CLSU Lanyard', 'sku' => 'LAN-001']);
+        $this->actingAsAdmin();
+
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->fillForm(['name' => $submitted])
+            ->call('save')
+            ->assertHasFormErrors(['name' => UniqueProductName::MESSAGE]);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function collidingVariantNames(): array
+    {
+        return [
+            'exact' => ['Medium'],
+            'case only' => ['medium'],
+            'whitespace only' => ['  Medium  '],
+            'inner spacing' => ['Extra  Large'],
+        ];
+    }
+
+    #[DataProvider('collidingVariantNames')]
+    public function test_duplicate_variant_names_in_one_submission_are_rejected(string $second): void
+    {
+        $this->actingAsAdmin();
+
+        // The first row carries the squished form of whatever the second row
+        // submits, so every provider case is the same variant name typed twice.
+        $first = trim(preg_replace('/\s+/', ' ', $second));
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->variantFormData([
+                $this->variantRow(['name' => $first, 'sku' => 'SHIRT-M']),
+                $this->variantRow(['name' => $second, 'sku' => 'SHIRT-M2']),
+            ]))
+            ->call('create')
+            ->assertHasFormErrors(['variants.0.name', 'variants.1.name']);
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_a_single_variant_row_name_does_not_collide_with_itself(): void
+    {
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->variantFormData([$this->variantRow(['name' => 'Medium'])]))
+            ->call('create')
+            ->assertHasNoFormErrors();
+    }
+
+    public function test_the_same_variant_name_can_be_used_by_different_products(): void
+    {
+        // "Medium" is only ambiguous inside one product's picker; every shirt
+        // in the catalog is allowed to have one.
+        $this->variant($this->variantProduct(['name' => 'Varsity Shirt']), ['name' => 'Medium', 'sku' => 'VS-M']);
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->variantFormData(
+                [$this->variantRow(['name' => 'Medium', 'sku' => 'PE-M'])],
+                ['name' => 'PE Shirt'],
+            ))
+            ->call('create')
+            ->assertHasNoFormErrors();
+    }
+
+    public function test_a_variant_name_is_free_again_when_its_row_is_removed_in_the_same_save(): void
+    {
+        // Retyping a row the admin just deleted is a correction, not a
+        // duplicate: only the submitted rows are compared, never the siblings
+        // still in the database mid-save.
+        $product = $this->variantProduct();
+        $this->variant($product, ['name' => 'Medium', 'sku' => 'OLD-M']);
+        $this->actingAsAdmin();
+
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->fillForm(['variants' => [$this->variantRow(['name' => 'Medium', 'sku' => 'NEW-M'])]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(['NEW-M'], $product->variants()->pluck('sku')->all());
+    }
+
+    public function test_names_are_stored_squished_with_their_case_preserved(): void
+    {
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->simpleFormData(['name' => '  CLSU   Tumbler  ']))
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $product = Product::sole();
+        $this->assertSame('CLSU Tumbler', $product->name);
+        // The slug is built after the squish, so no empty segment lands in it.
+        $this->assertSame('clsu-tumbler', $product->slug);
+
+        $variant = $this->variant($this->variantProduct(), ['name' => ' Extra  Large ']);
+        $this->assertSame('Extra Large', $variant->fresh()->name);
+    }
+
+    public function test_name_helpers_keep_storage_and_comparison_separate(): void
+    {
+        $this->assertSame('Extra Large', Name::sanitizeForStorage(' Extra  Large '));
+        $this->assertSame('', Name::sanitizeForStorage('   '));
+        $this->assertNull(Name::sanitizeForStorage('   ', blankToNull: true));
+        $this->assertSame('extra large', Name::comparisonKey(' Extra  Large '));
+        $this->assertNull(Name::comparisonKey('  '));
+    }
+
     public function test_editing_keeps_an_unchanged_sku_valid(): void
     {
         $product = $this->simpleProduct(['sku' => 'ABC-001']);
@@ -466,32 +639,24 @@ class ProductCrudTest extends TestCase
         $this->assertSame('clsu-shirt', $product->slug);
     }
 
-    public function test_an_explicit_slug_edit_must_be_unique_and_well_formed(): void
+    public function test_the_edit_form_does_not_expose_the_slug(): void
     {
-        // The field is read-only in the browser (staff aren't meant to touch
-        // it), but Livewire's fillForm() sets component state directly and
-        // isn't stopped by that HTML attribute. These validation rules stay
-        // in place as a defense-in-depth backstop, not a supported workflow.
-        $this->simpleProduct(['slug' => 'taken-slug'])->delete();
+        // The field used to render read-only on edit. A read-only TextInput is
+        // only an HTML attribute, though: fillForm() sets component state
+        // directly and sailed straight past it, so the column was writable by
+        // a crafted request. Leaving the field out of the schema is what
+        // actually closes that -- Filament saves the schema's fields, not
+        // whatever arrives in the payload.
         $product = $this->simpleProduct(['slug' => 'original']);
         $this->actingAsAdmin();
 
         Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
-            ->fillForm(['slug' => 'taken-slug'])
-            ->call('save')
-            ->assertHasFormErrors(['slug' => 'unique']);
-
-        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
-            ->fillForm(['slug' => 'Not A Slug'])
-            ->call('save')
-            ->assertHasFormErrors(['slug' => 'regex']);
-
-        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
-            ->fillForm(['slug' => 'new-address'])
+            ->assertFormFieldDoesNotExist('slug')
+            ->fillForm(['slug' => 'tampered-address'])
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame('new-address', $product->fresh()->slug);
+        $this->assertSame('original', $product->fresh()->slug);
     }
 
     // --- Update ---------------------------------------------------------------

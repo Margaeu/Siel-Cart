@@ -3,7 +3,7 @@
     <div class="bg-white text-slate-800">
         <section class="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
             <div class="mx-auto max-w-4xl">
-                <p class="text-sm font-semibold uppercase tracking-wider text-[var(--color-primary)]">Siel Cart</p>
+                <p class="text-sm font-semibold uppercase tracking-wider text-[var(--color-primary)]">SIEL CART</p>
                 <h1 class="mt-2 text-3xl font-bold leading-tight tracking-[-0.03em] text-[var(--color-primary)] sm:text-4xl">
                     Data Privacy Notice and Consent
                 </h1>
@@ -16,7 +16,7 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">1. Introduction</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Siel Cart is the official online merchandise platform operated under the auxiliary and business operations mandate of Central Luzon State University (CLSU), through its Office of Business Affairs. We are committed to protecting the privacy and personal data of our users — external customers, students, faculty, staff, and other members of the CLSU community — in accordance with Republic Act No. 10173, otherwise known as the Data Privacy Act of 2012, its Implementing Rules and Regulations, and other applicable issuances of the National Privacy Commission (NPC).
+                            SIEL CART is the official online merchandise platform operated under the auxiliary and business operations mandate of Central Luzon State University (CLSU), through its Office of Business Affairs. We are committed to protecting the privacy and personal data of our users — external customers, students, faculty, staff, and other members of the CLSU community — in accordance with Republic Act No. 10173, otherwise known as the Data Privacy Act of 2012, its Implementing Rules and Regulations, and other applicable issuances of the National Privacy Commission (NPC).
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
                             This Data Privacy Notice and Consent describes what personal data we collect through the System, why we collect it, how it is used, stored, shared, and protected, and what rights you have as a data subject.

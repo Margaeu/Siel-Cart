@@ -96,10 +96,15 @@
           <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Claimed By:</td>
           <td style="width:100%; vertical-align:top;">{{ $order->claimant_name }}</td>
         </tr>
+        {{-- Only shown when a separate claimant number was recorded. Blank
+             means the customer collected the order themselves, and an empty
+             "Contact Number:" row reads like missing data. --}}
+        @if($order->claimant_phone)
         <tr>
           <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Contact Number:</td>
           <td style="width:100%; vertical-align:top;">{{ $order->claimant_phone }}</td>
         </tr>
+        @endif
         <tr>
           <td style="white-space:nowrap; padding-right:12px; vertical-align:top; color:#000000;">Date Collected:</td>
           <td style="width:100%; vertical-align:top;">{{ $order->completed_at ? $order->completed_at->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A') }}</td>

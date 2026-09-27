@@ -116,6 +116,30 @@ class Category extends Model
         return Storage::disk('r2')->url($this->image);
     }
 
+    /**
+     * The category, if any, whose slug the given name would generate --
+     * which is what "already exists" means here, since the slug is derived
+     * from the name in boot() below and is the column with the unique index.
+     * "Gift Set", "gift  SET!" and "gift-set" are therefore one category.
+     *
+     * Every duplicate check goes through this: the admin pages by way of
+     * RejectsDuplicateCategory, and the product form's inline "create
+     * category" modal by way of App\Rules\UniqueCategoryName.
+     */
+    public static function findByGeneratedSlug(string $name, ?int $ignoreId = null): ?self
+    {
+        $slug = Str::slug($name);
+
+        if ($slug === '') {
+            return null;
+        }
+
+        return static::query()
+            ->when($ignoreId, fn ($query, $id) => $query->whereKeyNot($id))
+            ->where('slug', $slug)
+            ->first();
+    }
+
     protected static function boot()
     {
         parent::boot();

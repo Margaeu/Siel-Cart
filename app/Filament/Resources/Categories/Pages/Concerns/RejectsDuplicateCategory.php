@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Categories\Pages\Concerns;
 
 use App\Models\Category;
+use App\Rules\UniqueCategoryName;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 trait RejectsDuplicateCategory
@@ -31,16 +31,7 @@ trait RejectsDuplicateCategory
 
     protected function findCategoryWithMatchingSlug(string $name, ?Category $record = null): ?Category
     {
-        $slug = Str::slug($name);
-
-        if ($slug === '') {
-            return null;
-        }
-
-        return Category::query()
-            ->when($record, fn ($query) => $query->whereKeyNot($record->getKey()))
-            ->where('slug', $slug)
-            ->first();
+        return Category::findByGeneratedSlug($name, $record?->getKey());
     }
 
     /**
@@ -78,6 +69,6 @@ trait RejectsDuplicateCategory
 
     protected function duplicateCategoryMessage(string $existingName): string
     {
-        return "The category \"{$existingName}\" already exists. Choose a different name.";
+        return UniqueCategoryName::messageFor($existingName);
     }
 }

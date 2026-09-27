@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Name;
 use App\Support\Sku;
 use Closure;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -651,6 +652,11 @@ class Product extends Model
         // SKU of its own, so a blank one is stored as NULL, not ''.
         static::saving(function (Product $product) {
             $product->sku = Sku::sanitizeForStorage($product->sku, blankToNull: true);
+            // Same split for the name (see App\Support\Name): squished here,
+            // compared case-insensitively by UniqueProductName. Saving runs
+            // before creating, so the slug below is built from the squished
+            // name rather than from " CLSU  Tumbler ".
+            $product->name = Name::sanitizeForStorage($product->name);
         });
 
         // Converting a product between simple and variant would need

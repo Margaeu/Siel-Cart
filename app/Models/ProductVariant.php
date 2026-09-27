@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Name;
 use App\Support\Sku;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,10 +13,10 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-
 class ProductVariant extends Model
 {
     use HasFactory, LogsActivity;
+
     protected $fillable = [
         'product_id',
         'sku',
@@ -89,6 +90,7 @@ class ProductVariant extends Model
     {
         $query->where('is_active', true);
     }
+
     #[Scope]
     protected function inStock(Builder $query): void
     {
@@ -99,7 +101,7 @@ class ProductVariant extends Model
     protected function lowStock(Builder $query): void
     {
         $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
-              ->where('stock_quantity', '>', 0);
+            ->where('stock_quantity', '>', 0);
     }
 
     // Relationships
@@ -118,8 +120,9 @@ class ProductVariant extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    //event
-    protected static function boot(){
+    // event
+    protected static function boot()
+    {
         parent::boot();
 
         // Stored trimmed but in the case the admin typed; comparisons ignore
@@ -127,11 +130,15 @@ class ProductVariant extends Model
         // whitespace-only SKU is blank by the time the fallback below checks.
         static::saving(function (ProductVariant $variant) {
             $variant->sku = Sku::sanitizeForStorage($variant->sku);
+            // "M" and " M " are one variant to a customer reading the picker,
+            // so the name is squished on the way in and compared
+            // case-insensitively by the product form (see App\Support\Name).
+            $variant->name = Name::sanitizeForStorage($variant->name);
         });
 
-        static::creating(function($variant){
+        static::creating(function ($variant) {
             if (empty($variant->sku)) {
-                $variant->sku = 'VAR-'. strtoupper(Str::random(8));
+                $variant->sku = 'VAR-'.strtoupper(Str::random(8));
             }
         });
 

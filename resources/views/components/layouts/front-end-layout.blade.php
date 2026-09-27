@@ -54,7 +54,7 @@
                 >
                 <span class="hidden h-8 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
-                    <span class="block truncate text-sm font-bold leading-tight tracking-[-0.02em] sm:text-lg md:text-xl">
+                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl md:text-2xl">
                         {{ $siteName }}
                     </span>
                     <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block">

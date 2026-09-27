@@ -164,10 +164,14 @@ class OrdersTable
                             ->label('Name of Person Receiving/Claiming Order')
                             ->placeholder('e.g. Juan Dela Cruz')
                             ->required(),
+                        // Optional on purpose: the buyer collecting their own
+                        // order is the normal case, and their number is already
+                        // on the customer record. Only a third-party claimant
+                        // adds a contact number the shop does not already hold.
                         TextInput::make('claimant_phone')
                             ->label('Contact Phone Number of Receiver')
-                            ->placeholder('e.g. 0917123459')
-                            ->required(),
+                            ->placeholder('Leave blank if the customer is collecting')
+                            ->helperText('Only needed when someone other than the customer who ordered is collecting.'),
                         TextInput::make('or_number')
                             ->label('Official Receipt Number')
                             ->placeholder('e.g. or-2345')
@@ -179,7 +183,9 @@ class OrdersTable
                                 'payment_status' => 'paid',
                                 'completed_at' => now(),
                                 'claimant_name' => $data['claimant_name'],
-                                'claimant_phone' => $data['claimant_phone'],
+                                // Blank stays NULL so every reader can tell
+                                // "no separate claimant number" from a real one.
+                                'claimant_phone' => $data['claimant_phone'] ?: null,
                                 'or_number' => $data['or_number'],
                             ],
                         );

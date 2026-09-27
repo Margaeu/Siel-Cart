@@ -51,8 +51,8 @@ HOW TO ORDER:
 3. Open your cart and review the items. The whole cart is checked out together, so remove anything you are not buying yet. If an item is out of stock or the quantity is more than the remaining stock, checkout is blocked until you fix or remove that item.
 4. Proceed to checkout. There is nothing to fill in. Your name and email come from your account, and the pickup location (UBAP Office) and payment method (Cash on Pickup) are fixed and shown for confirmation only.
 5. Review your items and total, then place the order. The total is only the merchandise subtotal. There is no shipping fee, no tax, and no delivery charge.
-6. You will receive a confirmation email with your order number, and the order starts as Pending.
-7. The UBAP staff prepare the order. Once it is ready, you receive a second email with your claim number, your pickup date, and your pickup time slot.
+6. The order is placed with an order number and starts as Pending. No email is sent at this point; the order number is on the order details page under My Orders.
+7. The UBAP staff prepare the order. You are emailed when it moves to Processing, and emailed again when it becomes Ready for Pickup - that second email carries your claim number, your pickup date, and your pickup time slot. Every later status change is emailed to you as well.
 8. Go to the UBAP Office within your time slot, present your claim number, and pay in cash when you receive your items. The order is then marked Completed and Paid.
 
 PAYMENT: Cash on Pickup only, paid in person at the UBAP Office when the items are handed over. Amounts are in Philippine pesos. Siel Cart does not accept credit or debit cards, GCash, bank transfers, e-wallets, or any online or advance payment, and it does not store payment details.
