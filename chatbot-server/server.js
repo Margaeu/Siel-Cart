@@ -42,7 +42,7 @@ const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (how to order, r
 const FRIENDLY_ERROR_MESSAGE = "Our assistant is temporarily unavailable. Please browse our catalog on the store page or contact the UBAP Office directly for immediate assistance.";
 
 /**
- * Static store rules - Condensed to force short outputs
+ * Static store rules
  */
 const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU):
 Siel Cart is pickup-only and cash-only at the UBAP Office. No delivery, no couriers, no cards/GCash/online payments.
@@ -136,7 +136,9 @@ function getProductSuggestionsByQuery(userQuery, products) {
 
     const topThree = filtered.slice(0, 3);
 
-    return topThree.map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
+    return topThree.map(function(item) {
+        return "- **" + item.name + "**: ₱" + item.price;
+    }).join("\n");
 }
 
 async function generateContentWithFallback(message, systemInstruction) {
@@ -180,16 +182,36 @@ app.post('/api/chat', async (req, res) => {
             return res.status(400).json({ error: 'Message is required.' });
         }
 
-        const msgLower = message.toLowerCase();
+        const msgLower = message.toLowerCase().trim();
 
-        // DIRECT OVERRIDE FOR ORDERING FAQ (Bypasses LLM long responses)
-        const isOrderingQuery = 
-            msgLower.includes('how to order') || 
-            msgLower.includes('how do i order') || 
-            msgLower.includes('place an order') || 
-            msgLower.includes('how to place an order');
+        // 1. Direct Interceptor for Greetings
+        const GREETINGS = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo'];
+        if (GREETINGS.some(g => msgLower === g || msgLower === g + '!' || msgLower === g + '.')) {
+            return res.json({
+                response: "Hello! Welcome to Siel Cart. How can I help you today?"
+            });
+        }
 
-        if (isOrderingQuery) {
+        // 2. Direct Interceptor for Payment Methods
+        if (msgLower.includes('payment') || msgLower.includes('pay')) {
+            return res.json({
+                response: "Payment at Siel Cart is **Cash on Pickup only**, paid in person at the UBAP Office when collecting your items. We do not accept online payments or cards."
+            });
+        }
+
+        // 3. Direct Interceptor for Order Status
+        if (msgLower.includes('order status') || msgLower.includes('check my order') || msgLower.includes('track')) {
+            return res.json({
+                response: `To check your order status:
+
+1. Log in to your Siel Cart account.
+2. Go to **My Orders** and select your order.
+3. Statuses shown are: **Pending**, **Processing**, **Ready for Pickup**, or **Completed**.`
+            });
+        }
+
+        // 4. Direct Interceptor for How to Place an Order
+        if (msgLower.includes('how to order') || msgLower.includes('how do i order') || msgLower.includes('place an order') || msgLower.includes('how do i place an order')) {
             return res.json({
                 response: `To place an order:
 
@@ -201,10 +223,43 @@ app.post('/api/chat', async (req, res) => {
             });
         }
 
+        // 5. Direct Interceptor for Return & Refund Policy
+        if (msgLower.includes('return') || msgLower.includes('refund') || msgLower.includes('exchange')) {
+            return res.json({
+                response: `For returns, refunds, or defective items:
+
+- Requests cannot be submitted on the website.
+- Contact the **UBAP Office** directly via email or in person with your claim receipt.`
+            });
+        }
+
+        // 6. Direct Interceptor for Pickup Details
+        if ((msgLower.includes('where') && msgLower.includes('pick up')) || msgLower.includes('pickup location') || msgLower.includes('pick up my order')) {
+            return res.json({
+                response: `Pickup details for Siel Cart:
+
+- **Location:** UBAP Office, Central Luzon State University.
+- **Payment:** Cash on Pickup only.
+- Present your **Claim Number** during your assigned date and time slot.`
+            });
+        }
+
+        // 7. Direct Interceptor for Privacy & Terms
+        if (msgLower.includes('privacy') || msgLower.includes('data') || msgLower.includes('collect data') || msgLower.includes('terms')) {
+            return res.json({
+                response: `For details on how we collect and manage data:
+
+- View our full [Privacy Policy](/privacy-policy)
+- View our [Terms & Conditions](/terms-and-conditions)`
+            });
+        }
+
+        // Filter out off-topic queries
         if (isIrrelevantQuery(message)) {
             return res.json({ response: STANDARD_REFUSAL });
         }
 
+        // Fetch DB products
         let dbProducts = [];
         try {
             dbProducts = await fetchAvailableProducts();
@@ -257,11 +312,13 @@ app.post('/api/chat', async (req, res) => {
             const matchedList = getProductSuggestionsByQuery(message, dbProducts);
             
             return res.json({ 
-                response: `Here are 3 product recommendations matching your request:\n\n${matchedList}` 
+                response: "Here are 3 product recommendations matching your request:\n\n" + matchedList
             });
         }
 
-        const dynamicCatalog = dbProducts.slice(0, 5).map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
+        const dynamicCatalog = dbProducts.slice(0, 5).map(function(item) {
+            return "- **" + item.name + "**: ₱" + item.price;
+        }).join("\n");
         
         const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
 You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math, coding, trivia, or off-topic queries.
@@ -270,9 +327,9 @@ LANGUAGE RULE:
 Respond ONLY in English at all times.
 
 STRICT LENGTH & FORMATTING RULES:
-- Output ONLY short answers.
-- When asked "how to order", reply EXACTLY with the 5 numbered steps listed in STORE FACTS under "HOW TO ORDER".
-- DO NOT add extra commentary, detailed explanations, or closing questions like "Is there anything else I can help you with?".
+- Output ONLY short answers (3 bullet points max).
+- Use bold text for key details.
+- DO NOT add extra commentary or closing questions like "Is there anything else I can help you with?".
 
 AVAILABLE PRODUCT CATALOG IN OUR SHOP:
 ${dynamicCatalog}
