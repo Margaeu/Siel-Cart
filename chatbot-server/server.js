@@ -39,6 +39,9 @@ const FALLBACK_MODELS = [
 
 const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
 
+// User-friendly error message when LLM/Server fails or times out
+const FRIENDLY_ERROR_MESSAGE = "Our assistant is temporarily unavailable. Please browse our catalog on the store page or contact the UBAP Office directly for immediate assistance.";
+
 /**
  * Static store rules and FAQ boundaries.
  */
@@ -46,28 +49,26 @@ const STORE_FACTS = `STORE FACTS (the only accurate description of how Siel Cart
 SielCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
 
 HOW TO ORDER:
-1. Browse the Siel Cart catalog and open the product you want.
-2. Choose the variation (such as size or color) if the product has one, set the quantity, then add it to your cart.
-3. Open your cart and review the items. The whole cart is checked out together, so remove anything you are not buying yet. If an item is out of stock or the quantity is more than the remaining stock, checkout is blocked until you fix or remove that item.
-4. Proceed to checkout. There is nothing to fill in. Your name and email come from your account, and the pickup location (UBAP Office) and payment method (Cash on Pickup) are fixed and shown for confirmation only.
-5. Review your items and total, then place the order. The total is only the merchandise subtotal. There is no shipping fee, no tax, and no delivery charge.
-6. You will receive a confirmation email with your order number, and the order starts as Pending.
-7. The UBAP staff prepare the order. Once it is ready, you receive a second email with your claim number, your pickup date, and your pickup time slot.
-8. Go to the UBAP Office within your time slot, present your claim number, and pay in cash when you receive your items. The order is then marked Completed and Paid.
+1. Select product variation & quantity, then add to cart.
+2. Review cart & proceed to checkout (pickup location & cash payment are fixed).
+3. Place order to receive an Order Number (Status: Pending).
+4. When ready, receive an email with your Claim Number, pickup date, and time slot.
+5. Present Claim Number & pay cash in person at the UBAP Office to collect items.
 
-PAYMENT: Cash on Pickup only, paid in person at the UBAP Office when the items are handed over. Amounts are in Philippine pesos. Siel Cart does not accept credit or debit cards, GCash, bank transfers, e-wallets, or any online or advance payment, and it does not store payment details.
+PICKUP & CANCELLATION:
+- Claim Numbers are issued ONLY when status is "Ready for Pickup".
+- Orders must be claimed within assigned time slots. Unclaimed orders are cancelled.
+- To reschedule pickup, contact UBAP Office by email/in person.
+- Cancel orders on "My Orders" page ONLY while status is "Pending".
 
-CLAIM NUMBER: A claim number is issued only when the order becomes Ready for Pickup, not at checkout. Before that the order has an order number only. Present the claim number at the UBAP Office to collect the order.
+RETURNS & PRIVACY:
+- Returns/refunds cannot be requested on the website. Contact UBAP Office directly for damaged/incorrect items.
+- For data privacy questions, link to: [Privacy Policy](/privacy-policy).
+- For terms questions, link to: [Terms & Conditions](/terms-and-conditions).
 
-PICKUP: Orders must be claimed within the assigned date and time slot. Unclaimed orders are cancelled. A customer who cannot come on the scheduled date should contact the UBAP Office by email or in person, preferably before the pickup period ends, and ask for the pickup to be rescheduled. The customer cannot change the date on the website. UBAP sets the new date and time slot, emails it to the customer, and shows it on the order details page together with the original schedule. The claim number stays the same. Someone else may collect on the customer's behalf as long as they bring the claim number of the order.
-
-ORDER STATUS: A customer checks progress by logging in and opening My Orders, then the order. Statuses are Pending, Processing, Ready for Pickup, Completed, Cancelled, and the return statuses. There are no tracking numbers and no delivery updates because nothing is shipped.
-
-CANCELLATION: A customer can cancel from the order details page only while the order is still Pending, choosing either change of mind or incorrect items. Once the order is being processed, they must contact the UBAP Office.
-
-RETURNS AND REFUNDS: Returns, refunds, and exchanges cannot be requested through the website. For a defective or damaged item, or an item handed over in error, the customer contacts the UBAP Office directly by email or in person, and UBAP handles the verification and decision. Once UBAP has refunded or exchanged an item, the outcome is shown against that item on the customer's order details page.
-
-FORBIDDEN CLAIMS: Never mention or ask for a shipping address, delivery address, shipping method, shipping fee, delivery date, courier, tracking number, tracking link, card payment, e-wallet, online payment, or cash on delivery. Never say an order will be shipped or delivered. If a customer asks about delivery or online payment, tell them plainly that Siel Cart is pickup and cash-on-pickup only, then explain the pickup process.`;
+FORBIDDEN CLAIMS:
+- Never mention shipping fees, delivery, tracking numbers, or online payments.
+- If asked about delivery or online payment, state clearly that Siel Cart is pickup and cash-on-pickup only.`;
 
 // Pre-filter non-e-commerce inputs (Math, Coding, Simple Off-Topic)
 function isIrrelevantQuery(text) {
@@ -88,7 +89,7 @@ function isIrrelevantQuery(text) {
 }
 
 /**
- *# Fetch available/in-stock products directly from database
+ * Fetch available/in-stock products directly from database
  */
 async function fetchAvailableProducts() {
     try {
@@ -150,12 +151,10 @@ function getProductSuggestionsByQuery(userQuery, products) {
         }
     }
 
-    // Default: Return up to 6 items if no specific filter reduced the catalog
-    if (filtered.length === products.length) {
-        filtered = products.slice(0, 6);
-    }
+    // 3. Limit recommendations strictly to a maximum of 3 items
+    const topThree = filtered.slice(0, 3);
 
-    return filtered.map(p => `- \({p.name}: ₱\){p.price}`).join('\n');
+    return topThree.map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
 }
 
 async function generateContentWithFallback(message, systemInstruction) {
@@ -190,6 +189,7 @@ async function generateContentWithFallback(message, systemInstruction) {
 
     throw lastError || new Error("All fallback models failed.");
 }
+
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
@@ -248,20 +248,28 @@ app.post('/api/chat', async (req, res) => {
         if (isRecommendationQuery) {
             const matchedList = getProductSuggestionsByQuery(message, dbProducts);
             
-            // Immediately respond from Node.js in clean English without touching LLM
+            // Immediately respond from Node.js in clean English (limited to 3 items)
             return res.json({ 
-                response: `Here are the available products matching your request:\n${matchedList}` 
+                response: `Here are 3 product recommendations matching your request:\n\n${matchedList}` 
             });
         }
 
         // STEP 4: If it's a general FAQ (e.g. "how to order", "where to pick up"), use the LLM
-        const dynamicCatalog = dbProducts.map(p => `- \({p.name}: ₱\){p.price}`).join('\n');
+        const dynamicCatalog = dbProducts.map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
         
         const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
 You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math, coding, trivia, or off-topic queries.
 
 LANGUAGE RULE:
 Respond ONLY in English at all times.
+
+RESPONSE STYLE & FORMATTING:
+- Be concise and informative. Keep responses short so customers remain engaged.
+- Use **bold text** for important highlights and key actions.
+- Use bullet points (-) for steps or feature lists.
+- If asked about Data Privacy or Terms & Conditions, always include direct links:
+  • [Privacy Policy](/privacy-policy)
+  • [Terms & Conditions](/terms-and-conditions)
 
 AVAILABLE PRODUCT CATALOG IN OUR SHOP:
 ${dynamicCatalog}
@@ -270,11 +278,7 @@ ${STORE_FACTS}
 
 REFUSAL INSTRUCTIONS:
 If the user query is unrelated to Siel Cart e-commerce, output EXACTLY this response in English:
-"${STANDARD_REFUSAL}"
-
-FORMATTING:
-- Standard plain text only. No Markdown formatting.
-- Use dashes (-) for lists.`;
+"${STANDARD_REFUSAL}"`;
 
         const responseText = await generateContentWithFallback(message, systemInstruction);
         return res.json({ response: responseText });
@@ -282,8 +286,9 @@ FORMATTING:
     } catch (error) {
         console.error('All models failed or server error occurred:', error);
 
-        return res.status(200).json({ 
-            response: "Here are some available products in our shop:\n- CLSU Notebook: ₱50\n- UBAP Mug: ₱200\n- Siel Cart Tote Bag: ₱200\n- CLSU Basic Shirt: ₱250\n- CLSU T-Shirt: ₱350" 
+        // Friendly error message instead of raw server exception
+        return res.json({ 
+            response: FRIENDLY_ERROR_MESSAGE 
         });
     }
 });
