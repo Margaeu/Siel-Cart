@@ -76,10 +76,10 @@ class CategoryForm
                             ->downloadable()
                             ->openable()
                             ->image()
-                            ->maxSize(10240)
+                            ->maxSize(3072)
                             ->imagePreviewHeight('220')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
-                            ->helperText('Maximum file size: 10 MB.')
+                            ->helperText('Maximum file size: 3 MB.')
                             ->saveUploadedFileUsing(function (FileUpload $component, TemporaryUploadedFile $file): string {
                                 return OptimizedImageStorage::store(
                                     $file,

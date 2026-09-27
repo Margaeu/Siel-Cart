@@ -268,15 +268,15 @@ class ProductDetails extends Component
 
     /**
      * Appends freshly picked photos without wiping existing ones,
-     * validating each at a 10 MB ceiling and enforcing a 5-photo maximum.
+     * validating each at a 3 MB ceiling and enforcing a 5-photo maximum.
      */
     public function updatedNewReviewPhotos(): void
     {
         $this->validate([
-            'newReviewPhotos.*' => ['image', 'max:10240'],
+            'newReviewPhotos.*' => ['image', 'max:3072'],
         ], [
             'newReviewPhotos.*.image' => 'Each file must be a valid image format.',
-            'newReviewPhotos.*.max' => 'Each photo must not exceed 10 MB.',
+            'newReviewPhotos.*.max' => 'Each photo must not exceed 3 MB.',
         ]);
 
         foreach ($this->newReviewPhotos as $photo) {
@@ -331,11 +331,11 @@ class ProductDetails extends Component
             'reviewTitle' => ['nullable', 'string', 'max:255'],
             'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
             'reviewPhotos' => ['nullable', 'array', 'max:5'],
-            'reviewPhotos.*' => ['image', 'max:10240'],
+            'reviewPhotos.*' => ['image', 'max:3072'],
             'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:10240'],
         ], [
             'reviewPhotos.max' => 'You can attach up to 5 photos.',
-            'reviewPhotos.*.max' => 'Each photo must not exceed 10 MB.',
+            'reviewPhotos.*.max' => 'Each photo must not exceed 3 MB.',
             'reviewVideo.max' => 'The video must not exceed 10 MB.',
         ]);
 
