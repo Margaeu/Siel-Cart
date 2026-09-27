@@ -59,7 +59,7 @@
                                    value="{{ old('email') }}"
                                    required
                                    autofocus
-                                   placeholder="you@clsu.edu.ph"
+                                   placeholder="Email Address"
                                    class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-4 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                         </div>
                     </div>
