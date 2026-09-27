@@ -14,7 +14,7 @@
     // Preflight's html rule with no font-family declaration needed here; it's
     // pinned separately for the Filament panel in AdminPanelProvider, so admin
     // and storefront read as one product.
-    $activeTheme = \App\Models\Theme::active()->first();
+    $activeTheme = \App\Models\Theme::activeCached();
 
     $themePrimaryColor = $activeTheme?->primary_color ?? '#557F13';
 

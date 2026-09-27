@@ -49,7 +49,7 @@ class AdminPanelProvider extends PanelProvider
         // during `route:cache`/`config:cache` before migrations have run,
         // when the `themes` table may not exist yet.
         try {
-            $activeTheme = Theme::active()->first();
+            $activeTheme = Theme::activeCached();
         } catch (\Throwable) {
             $activeTheme = null;
         }

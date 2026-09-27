@@ -6,8 +6,10 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Report;
 use App\Models\Review;
+use App\Rules\ImageWithinPixelBudget;
 use App\Services\CartService;
 use App\Services\HomepageProductRankingService;
+use App\Support\OptimizedImageStorage;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -25,6 +27,21 @@ class ProductDetails extends Component
      * with the product's review count.
      */
     public const REVIEWS_PER_PAGE = 10;
+
+    /**
+     * Width a review photo is stored at.
+     *
+     * One stored file serves both sizes the page shows: a 64x64 thumbnail and
+     * the lightbox, which is capped at 85vh. The lightbox is what sets this --
+     * the thumbnail would be happy with a fraction of it -- and on a typical
+     * screen 85vh lands near 1000-1400px, so 1600 leaves headroom without
+     * carrying a phone camera's full resolution to every visitor.
+     *
+     * Lower than the 1920 product and banner images use, because these are
+     * customer snapshots shown beside a review rather than the product art
+     * the page is built around.
+     */
+    public const REVIEW_PHOTO_MAX_WIDTH = 1600;
 
     /**
      * The review list's own page name, so paging reviews never collides
@@ -273,7 +290,10 @@ class ProductDetails extends Component
     public function updatedNewReviewPhotos(): void
     {
         $this->validate([
-            'newReviewPhotos.*' => ['image', 'max:3072'],
+            // The pixel rule is not optional now these go through GD: file size
+            // does not bound a decode, so a 2 MB phone photo can still ask for
+            // more memory than the process has. See ImageWithinPixelBudget.
+            'newReviewPhotos.*' => ['image', 'max:3072', new ImageWithinPixelBudget],
         ], [
             'newReviewPhotos.*.image' => 'Each file must be a valid image format.',
             'newReviewPhotos.*.max' => 'Each photo must not exceed 3 MB.',
@@ -331,7 +351,7 @@ class ProductDetails extends Component
             'reviewTitle' => ['nullable', 'string', 'max:255'],
             'reviewComment' => ['required', 'string', 'min:10', 'max:2000'],
             'reviewPhotos' => ['nullable', 'array', 'max:5'],
-            'reviewPhotos.*' => ['image', 'max:3072'],
+            'reviewPhotos.*' => ['image', 'max:3072', new ImageWithinPixelBudget],
             'reviewVideo' => ['nullable', 'file', 'mimes:mp4,mov,webm', 'max:10240'],
         ], [
             'reviewPhotos.max' => 'You can attach up to 5 photos.',
@@ -339,8 +359,20 @@ class ProductDetails extends Component
             'reviewVideo.max' => 'The video must not exceed 10 MB.',
         ]);
 
+        // Through the optimizer rather than a bare ->store(): a review photo is
+        // whatever came off the customer's phone, and it used to reach R2 at
+        // full resolution and be served, untouched, to every visitor who opened
+        // the product page -- up to five of them per review, ten reviews to a
+        // page. hashName() keeps the random, extension-correct name ->store()
+        // was already giving these files.
         $photoPaths = collect($this->reviewPhotos)
-            ->map(fn ($photo) => $photo->store('reviews/photos', 'r2'))
+            ->map(fn (TemporaryUploadedFile $photo) => OptimizedImageStorage::store(
+                $photo,
+                'r2',
+                'reviews/photos',
+                $photo->hashName(),
+                maxWidth: self::REVIEW_PHOTO_MAX_WIDTH,
+            ))
             ->all();
 
         $videoPath = $this->reviewVideo?->store('reviews/videos', 'r2');

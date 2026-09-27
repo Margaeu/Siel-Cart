@@ -1,5 +1,29 @@
 <?php
 
+// Seconds any single SMTP socket operation may block.
+//
+// Symfony applies this to the connect *and* to every read that follows
+// (SocketStream::getTimeout() feeds both stream_socket_client() and
+// stream_set_timeout()), so it is a per-step limit, not a total for the send.
+//
+// It matters here because nothing sends mail in the background: production
+// runs QUEUE_CONNECTION=sync, so an admin moving an order to "processing"
+// waits for the whole SMTP conversation inside their own request. Left unset,
+// Laravel skips setTimeout() entirely -- `isset(null)` is false -- and Symfony
+// falls back to default_socket_timeout, 60 seconds per step. An SMTP
+// conversation is many steps (greeting, EHLO, STARTTLS, EHLO, AUTH, MAIL FROM,
+// RCPT TO, DATA, end-of-data), so a hung server held the worker until
+// max_execution_time killed it at 300 seconds. On the B1 plan, which has very
+// few PHP-FPM workers, a few of those is the whole site.
+//
+// A failed send is already handled: OrderResource::notifyCustomerByMail()
+// reports it to the admin, says the status change itself was saved, and the
+// "Resend email" action exists precisely for this. A timeout is therefore
+// recoverable in a way that a hung request is not.
+//
+// MAIL_TIMEOUT=0 restores Symfony's own default for a host that needs it.
+$mailTimeout = (float) env('MAIL_TIMEOUT', 10);
+
 return [
 
     /*
@@ -46,7 +70,7 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => $mailTimeout > 0 ? $mailTimeout : null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://clsu-shop-project.test'), PHP_URL_HOST)),
             // No `stream.ssl` overrides: the SMTP server's certificate is
             // verified normally. Turning verification off let anyone on the

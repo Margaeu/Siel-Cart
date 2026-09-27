@@ -63,7 +63,7 @@ class SielAvatarProvider implements AvatarProvider
     private function themeColor(): array
     {
         try {
-            $hex = Theme::active()->value('primary_color');
+            $hex = Theme::activeCached()?->primary_color;
         } catch (\Throwable) {
             return self::FALLBACK_COLOR;
         }

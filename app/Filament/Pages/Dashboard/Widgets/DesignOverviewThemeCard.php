@@ -43,7 +43,7 @@ class DesignOverviewThemeCard extends Widget
     protected function getViewData(): array
     {
         return [
-            'theme' => Theme::active()->first(),
+            'theme' => Theme::activeCached(),
             'manageThemesUrl' => ThemeResource::getUrl('index'),
         ];
     }

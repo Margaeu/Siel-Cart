@@ -7,6 +7,9 @@
 
     <title>{{ $title ?? config('app.name', 'SIEL CART') }}</title>
 
+    {{-- Before the stylesheet and the theme block, so the R2 handshake starts first. --}}
+    @include('partials.resource-hints')
+
     @include('partials.theme-styles')
 
     <!-- Scripts -->

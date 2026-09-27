@@ -688,7 +688,17 @@
                                                         @foreach($photos as $photoUrl)
                                                             <button type="button" @click="lightbox = '{{ $photoUrl }}'"
                                                                     class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 hover:ring-2 hover:ring-[var(--color-primary)] transition-all">
-                                                                <img src="{{ $photoUrl }}" alt="Review photo" class="w-full h-full object-cover">
+                                                                {{--
+                                                                    Lazy: a page of ten reviews can carry fifty of these
+                                                                    thumbnails, all below the fold, and they are served from
+                                                                    R2. width/height match the 64x64 button so the row does
+                                                                    not reflow as they arrive. The lightbox reuses this same
+                                                                    URL, and its <img> only gets a src once one is opened.
+                                                                --}}
+                                                                <img src="{{ $photoUrl }}" alt="Review photo"
+                                                                     width="64" height="64"
+                                                                     loading="lazy" decoding="async"
+                                                                     class="w-full h-full object-cover">
                                                             </button>
                                                         @endforeach
 
