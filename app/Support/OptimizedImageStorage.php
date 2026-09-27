@@ -13,14 +13,20 @@ use Throwable;
  * ship to every storefront visitor at full resolution. `scaleDown()` never
  * upscales, so a smaller source is stored untouched apart from re-encoding.
  *
- * SVGs and GIFs are stored as-is: GD flattens an animated GIF to its first
- * frame and can't touch vector paths. Any decode failure also falls back to
- * the original bytes, so a corrupt or unusual file never blocks the upload --
- * this is a size optimization, not a validation gate.
+ * SVGs, GIFs and video are stored as-is: GD flattens an animated GIF to its
+ * first frame, can't touch vector paths, and can't decode a video container at
+ * all. Any decode failure also falls back to the original bytes, so a corrupt
+ * or unusual file never blocks the upload -- this is a size optimization, not a
+ * validation gate.
+ *
+ * Video is skipped explicitly rather than left to that fallback: GD would throw
+ * on every clip a Design Admin uploads to the banner carousel, and the catch
+ * below report()s before returning null, so each upload would have filed a
+ * bogus exception while appearing to succeed.
  */
 class OptimizedImageStorage
 {
-    private const SKIP_EXTENSIONS = ['svg', 'gif'];
+    private const SKIP_EXTENSIONS = ['svg', 'gif', 'mp4'];
 
     private const JPEG_QUALITY = 82;
 

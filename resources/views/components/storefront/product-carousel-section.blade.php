@@ -73,7 +73,7 @@
                     x-ref="track"
                     x-on:scroll.debounce.75ms="updateScrollState()"
                     x-on:resize.window="updateScrollState()"
-                    class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    class="flex items-start gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 sm:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                     @foreach($products as $product)
                         <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[13rem] lg:w-[13.5rem]">
