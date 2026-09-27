@@ -50,9 +50,9 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-10 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-11 lg:size-12"
+                    class="size-11 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-13 md:size-14 lg:size-16"
                 >
-                <span class="hidden h-8 w-px shrink-0 bg-white/25 sm:block" aria-hidden="true"></span>
+                <span class="hidden h-9 w-px shrink-0 bg-white/25 sm:block sm:h-11 md:h-12" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
                     <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl md:text-2xl">
                         {{ $siteName }}

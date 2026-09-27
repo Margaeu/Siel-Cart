@@ -545,7 +545,7 @@
                     Add some products to get started!
                 </p>
 
-                <a href="{{ route('products.index') }}"
+                <a href="{{ auth('customer')->check() ? route('products.index') : route('login') }}"
                    class="inline-flex min-h-11 items-center rounded-full bg-[var(--color-primary)] px-6 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)] {{ $focusRing }}">
                     Start Shopping
                 </a>

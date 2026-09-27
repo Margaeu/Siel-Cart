@@ -9,6 +9,7 @@
       <p style="margin:0 0 16px 0;">
         Your order <span style="color:#547F12; font-weight:bold;">#{{ $order->order_number }}</span> has been confirmed and is now being processed.
       </p>
+      <p style="margin:0 0 16px 0;">Please allow at least <strong style="font-weight:bold;">2-3 days</strong> for your order to be processed.</p>
       <table role="presentation" cellpadding="0" cellspacing="0">
         <tr>
           <td style="border-radius:4px; background-color:#547F12;">
