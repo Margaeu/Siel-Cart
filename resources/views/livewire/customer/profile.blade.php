@@ -305,6 +305,7 @@
                                 <label class="mb-2 block text-sm font-medium text-gray-700">Current Password</label>
                                 <input type="password"
                                        wire:model="current_password"
+                                       placeholder="Current Password"
                                        class="w-full rounded-xl border border-gray-200 px-4 py-2.5 transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20">
                                 @error('current_password') <span class="mt-1 block text-sm text-red-600">{{ $message }}</span> @enderror
                             </div>
@@ -313,6 +314,7 @@
                                 <label class="mb-2 block text-sm font-medium text-gray-700">New Password</label>
                                 <input type="password"
                                        wire:model="new_password"
+                                       placeholder="New Password"
                                        class="w-full rounded-xl border border-gray-200 px-4 py-2.5 transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20">
                                 @error('new_password') <span class="mt-1 block text-sm text-red-600">{{ $message }}</span> @enderror
                             </div>
@@ -321,6 +323,7 @@
                                 <label class="mb-2 block text-sm font-medium text-gray-700">Confirm New Password</label>
                                 <input type="password"
                                        wire:model="new_password_confirmation"
+                                       placeholder="Confirm New Password"
                                        class="w-full rounded-xl border border-gray-200 px-4 py-2.5 transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20">
                             </div>
 
@@ -405,6 +408,7 @@
                     <input id="current-password-for-profile"
                            type="password"
                            wire:model="current_password_for_profile"
+                           placeholder="Current Password"
                            autocomplete="current-password"
                            x-ref="identityPassword"
                            x-init="$watch('identityModalOpen', open => open && $nextTick(() => $refs.identityPassword.focus()))"
@@ -488,6 +492,7 @@
                     <input id="current-password-for-email"
                            type="password"
                            wire:model="current_password_for_email"
+                           placeholder="Current Password"
                            autocomplete="current-password"
                            class="w-full rounded-xl border border-gray-200 px-4 py-2.5 transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20">
                     @error('current_password_for_email')

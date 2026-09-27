@@ -32,8 +32,6 @@ class ViewOrder extends ViewRecord
         $order = $this->getRecord();
 
         return [
-            OrderResource::reschedulePickupAction(),
-
             OrderResource::resendStatusEmailAction(),
 
             Action::make('record_resolution')

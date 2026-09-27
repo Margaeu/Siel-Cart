@@ -199,10 +199,7 @@ class OrdersTable
                     })
                     ->visible(fn (Order $record) => in_array(strtolower($record->status), ['ready_for_pickup', 'ready for pickup'])),
 
-                // 4. Move a ready order's pickup to another day
-                OrderResource::reschedulePickupAction(),
-
-                // 5. Send the current status email again, for a send that
+                // 4. Send the current status email again, for a send that
                 //    failed or a customer who says it never arrived.
                 OrderResource::resendStatusEmailAction(),
             ])

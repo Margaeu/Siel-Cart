@@ -237,7 +237,10 @@ class OrderStatusEmailFeedbackTest extends TestCase
             'pickup_date' => '2026-09-28',
             'pickup_slot' => '8:00 AM - 5:00 PM',
         ]);
-        $order->reschedulePickup('2026-09-30', '4:00 PM');
+        // Simulates the schedule having moved since the order was placed
+        // (e.g. an admin correcting it directly), to prove resend reads the
+        // order's current schedule rather than a stale one.
+        $order->update(['pickup_date' => '2026-09-30', 'pickup_slot' => '4:00 PM']);
 
         Livewire::test(ListOrders::class)
             ->callTableAction('resend_status_email', $order);

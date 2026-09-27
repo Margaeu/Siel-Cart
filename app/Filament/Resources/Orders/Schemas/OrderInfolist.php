@@ -222,41 +222,13 @@ class OrderInfolist
                                 ->columnSpanFull(),
 
                             TextEntry::make('pickup_date')
-                                ->label(fn ($record): string => $record->reschedule_count > 0 ? 'New date' : 'Date')
+                                ->label('Date')
                                 ->date('M d, Y')
-                                ->placeholder('Not yet scheduled')
-                                ->badge(fn ($record): bool => $record->reschedule_count > 0)
-                                ->color(fn ($record): ?string => $record->reschedule_count > 0 ? 'warning' : null),
-
-                            TextEntry::make('pickup_slot')
-                                // A reschedule sets one specific time, not an
-                                // interval — only the first, un-rescheduled
-                                // schedule from Ready for Pickup is a range.
-                                ->label(fn ($record): string => $record->reschedule_count > 0 ? 'New pickup time' : 'Time interval')
                                 ->placeholder('Not yet scheduled'),
 
-                            // Kept from the first schedule UBAP gave, however
-                            // many times the pickup has been moved since.
-                            TextEntry::make('original_pickup_date')
-                                ->label('Original date')
-                                ->date('M d, Y')
-                                ->color('gray')
-                                ->visible(fn ($record): bool => $record->reschedule_count > 0),
-
-                            TextEntry::make('original_pickup_slot')
-                                ->label('Original time interval')
-                                ->color('gray')
-                                ->visible(fn ($record): bool => $record->reschedule_count > 0),
-
-                            TextEntry::make('rescheduled_at')
-                                ->label('Last rescheduled')
-                                ->dateTime('M d, Y - h:i A')
-                                ->weight(FontWeight::Bold)
-                                ->visible(fn ($record): bool => $record->reschedule_count > 0),
-
-                            TextEntry::make('reschedule_count')
-                                ->label('Times rescheduled')
-                                ->visible(fn ($record): bool => $record->reschedule_count > 0),
+                            TextEntry::make('pickup_slot')
+                                ->label('Time interval')
+                                ->placeholder('Not yet scheduled'),
                         ]),
 
                     Fieldset::make('Claimant')
@@ -280,56 +252,6 @@ class OrderInfolist
                             TextEntry::make('or_number')
                                 ->label('Official Receipt Number')
                                 ->placeholder('Not yet provided'),
-                        ]),
-
-                    // Each move with its reason and who made it, newest
-                    // first. The reason is internal; the customer never sees
-                    // it. Full width rather than inside "Pickup schedule",
-                    // which shrinks to half width once the order is completed
-                    // and would squeeze five columns.
-                    Fieldset::make('Reschedule history')
-                        ->columns(1)
-                        ->columnSpanFull()
-                        ->visible(fn ($record): bool => $record->reschedule_count > 0)
-                        ->schema([
-                            RepeatableEntry::make('rescheduleHistories')
-                                ->hiddenLabel()
-                                ->table([
-                                    TableColumn::make('Rescheduled on'),
-                                    TableColumn::make('By'),
-                                    TableColumn::make('From'),
-                                    TableColumn::make('To'),
-                                    TableColumn::make('Reason'),
-                                ])
-                                ->schema([
-                                    TextEntry::make('created_at')
-                                        ->dateTime('M d, Y - h:i A'),
-
-                                    TextEntry::make('user.name')
-                                        ->placeholder('System'),
-
-                                    TextEntry::make('from')
-                                        ->state(fn ($record): array => array_filter([
-                                            $record->rescheduleDetails()['from_date'],
-                                            $record->rescheduleDetails()['from_slot'],
-                                        ]))
-                                        ->listWithLineBreaks()
-                                        ->color('gray')
-                                        ->placeholder('—'),
-
-                                    TextEntry::make('to')
-                                        ->state(fn ($record): array => array_filter([
-                                            $record->rescheduleDetails()['to_date'],
-                                            $record->rescheduleDetails()['to_slot'],
-                                        ]))
-                                        ->listWithLineBreaks()
-                                        ->weight(FontWeight::Bold)
-                                        ->placeholder('—'),
-
-                                    TextEntry::make('reason')
-                                        ->state(fn ($record): ?string => $record->rescheduleDetails()['reason'])
-                                        ->placeholder('No reason given'),
-                                ]),
                         ]),
 
                     TextEntry::make('admin_notes')

@@ -71,16 +71,12 @@ class OrderForm
                             ->placeholder('e.g. or-2345'),
 
                         // Read-only here. The schedule is set by "Ready for
-                        // Pickup" and moved by "Reschedule Pickup", which keep
-                        // the original schedule and email the customer. Editing
-                        // it in this form silently did neither.
+                        // Pickup", which keeps the original schedule and emails
+                        // the customer. Editing it in this form silently did not.
                         DatePicker::make('pickup_date')
                             ->label('Scheduled pickup date')
                             ->disabled()
-                            ->dehydrated(false)
-                            ->helperText(fn ($record): ?string => $record?->canBeRescheduled()
-                                ? 'Use "Reschedule Pickup" above to change the schedule.'
-                                : null),
+                            ->dehydrated(false),
 
                         TextInput::make('pickup_slot')
                             ->label('Scheduled pickup time')

@@ -121,6 +121,7 @@
                             <input id="password"
                                    type="password"
                                    name="password"
+                                   placeholder="Password"
                                    required
                                    class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
@@ -157,6 +158,7 @@
                             <input id="password_confirmation"
                                    type="password"
                                    name="password_confirmation"
+                                   placeholder="Confirm Password"
                                    required
                                    class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"

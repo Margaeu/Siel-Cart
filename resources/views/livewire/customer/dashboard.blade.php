@@ -50,9 +50,6 @@
                                             @else
                                                 Your order {{ $order->order_number }} is being processed
                                             @endif
-                                            @if($isReady && $order->reschedule_count > 0)
-                                                <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[0.6875rem] font-semibold text-amber-800">Rescheduled</span>
-                                            @endif
                                         </h4>
                                         <div class="flex flex-wrap items-center gap-x-3 text-xs text-gray-500 mt-1">
                                             @if($isReady)

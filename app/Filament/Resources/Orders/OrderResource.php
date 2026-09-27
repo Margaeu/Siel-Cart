@@ -12,15 +12,10 @@ use App\Mail\OrderCancelledNoShowMail;
 use App\Mail\OrderCompletedMail;
 use App\Mail\OrderProcessingMail;
 use App\Mail\OrderReadyForPickupMail;
-use App\Mail\OrderRescheduledMail;
 use App\Models\Order;
 use App\Support\AdminNavigationBadges;
 use BackedEnum;
-use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TimePicker;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -32,7 +27,6 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Throwable;
 use UnitEnum;
 
@@ -167,9 +161,8 @@ class OrderResource extends Resource
      *
      * This is what "resend" means for an order: not a stored copy of the last
      * message, but the same mailable the status action would build now, so it
-     * carries the current claim number and pickup schedule rather than a stale
-     * one. A rescheduled order therefore resends its ready-for-pickup email
-     * with the new date, which is the schedule the customer needs.
+     * carries the current claim number and pickup schedule rather than a
+     * stale one.
      */
     public static function statusMailableFor(Order $order): ?Mailable
     {
@@ -231,104 +224,6 @@ class OrderResource extends Resource
                 }
 
                 self::notifyCustomerByMail($record, $mailable, 'Order email resent');
-            });
-    }
-
-    /**
-     * Move a ready order's pickup to another day, usually because the
-     * customer contacted UBAP to say they cannot come on the scheduled one.
-     * Shared by OrdersTable's row action and the view/edit page headers so
-     * all three validate, record, and email the customer identically.
-     *
-     * Order::reschedulePickup() does the write; this only collects the new
-     * schedule and sends OrderRescheduledMail once the write has committed.
-     */
-    public static function reschedulePickupAction(): Action
-    {
-        return Action::make('reschedule_pickup')
-            ->label('Reschedule Pickup')
-            ->icon('heroicon-o-calendar-days')
-            ->color('warning')
-            ->authorize(fn (Order $record): bool => self::canEdit($record))
-            ->visible(fn (Order $record): bool => $record->canBeRescheduled())
-            ->modalHeading('Reschedule pickup')
-            ->modalDescription(fn (Order $record): string => 'Currently scheduled for '
-                .$record->pickup_date?->format('M d, Y').' ('.$record->pickup_slot.'). '
-                .'The customer keeps the same claim number and is emailed the new schedule.')
-            ->modalSubmitActionLabel('Reschedule and notify customer')
-            ->fillForm(function (Order $record): array {
-                // The current schedule may still be the original interval
-                // (e.g. "8:00 AM - 5:00 PM") or an earlier reschedule's single
-                // time; either way, the last time in it is the closest guess
-                // at what UBAP would arrange again.
-                preg_match_all('/(?:0?[1-9]|1[0-2]):[0-5][0-9]\s*(?:AM|PM)/i', (string) $record->pickup_slot, $matches);
-                $times = $matches[0];
-
-                return [
-                    'pickup_time' => filled($times) ? Carbon::parse(end($times))->format('H:i') : '17:00',
-                ];
-            })
-            ->schema([
-                DatePicker::make('pickup_date')
-                    ->label('New pickup date')
-                    ->minDate(today())
-                    ->required(),
-                // A reschedule is a specific time UBAP agreed with the
-                // customer over the phone, not the original pickup-period
-                // interval — see Order::pickupTimeFrom().
-                TimePicker::make('pickup_time')
-                    ->label('Pickup Time')
-                    ->seconds(false)
-                    ->required(),
-                Textarea::make('reason')
-                    ->label('Reason (internal)')
-                    ->placeholder('e.g. Customer called, unable to come on the scheduled day')
-                    ->helperText('Saved to the order history. The customer does not see this.')
-                    ->rows(2)
-                    ->maxLength(500),
-            ])
-            ->action(function (Order $record, array $data, Action $action): void {
-                // Re-read first, so the "previous schedule" in the email is the
-                // one currently stored, not whatever this page loaded earlier.
-                $record->refresh();
-                $previousDate = $record->pickup_date;
-                $previousSlot = $record->pickup_slot;
-
-                try {
-                    $order = $record->reschedulePickup(
-                        $data['pickup_date'],
-                        Order::pickupTimeFrom($data['pickup_time']),
-                        $data['reason'] ?? null,
-                        auth()->id(),
-                    );
-                } catch (ValidationException $e) {
-                    Notification::make()
-                        ->title('Pickup not rescheduled')
-                        ->body(collect($e->errors())->flatten()->first())
-                        ->danger()
-                        ->send();
-
-                    $action->halt();
-                }
-
-                if (! $order) {
-                    Notification::make()
-                        ->title('Pickup not rescheduled')
-                        ->body('Only an order that is ready for pickup can be rescheduled.')
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
-                self::notifyCustomerByMail(
-                    $order,
-                    new OrderRescheduledMail($order, $previousDate, $previousSlot),
-                    'Pickup rescheduled',
-                    'New schedule: '.$order->pickup_date->format('M d, Y').' ('.$order->pickup_slot.').',
-                );
-
-                $record->refresh();
             });
     }
 

@@ -74,6 +74,7 @@
                                    type="password"
                                    name="password"
                                    required
+                                   placeholder="New Password"
                                    autocomplete="new-password"
                                    class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
@@ -111,6 +112,7 @@
                                    type="password"
                                    name="password_confirmation"
                                    required
+                                   placeholder="Confirm New Password"
                                    autocomplete="new-password"
                                    class="w-full rounded-lg border border-gray-300 py-2.5 pl-11 pr-11 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">
                             <button type="button"
