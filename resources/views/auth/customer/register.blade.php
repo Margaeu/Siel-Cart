@@ -95,6 +95,10 @@
                         </label>
                         <input id="phone"
                                type="tel"
+                               inputmode="numeric"
+                               maxlength="11"
+                               pattern="[0-9]{1,11}"
+                               placeholder="09171234567"
                                name="phone"
                                value="{{ old('phone') }}"
                                class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition">

@@ -196,6 +196,11 @@
                                 @endif
                                 <div x-show="editingPhone || {{ $phone ? 'false' : 'true' }}">
                                     <input type="tel"
+                                           aria-label="Phone"
+                                           inputmode="numeric"
+                                           maxlength="11"
+                                           pattern="[0-9]{1,11}"
+                                           placeholder="09171234567"
                                            wire:model="phone"
                                            class="w-full rounded-xl border border-gray-200 px-4 py-2.5 transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20">
                                     @if ($phone)

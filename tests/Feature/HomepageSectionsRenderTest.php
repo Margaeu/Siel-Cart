@@ -118,6 +118,41 @@ class HomepageSectionsRenderTest extends TestCase
             ->assertSeeText('Top Pick');
     }
 
+    public function test_best_seller_headings_follow_assigned_categories_and_category_changes(): void
+    {
+        $clothing = Category::factory()->create(['is_active' => true, 'name' => 'Campus Clothing']);
+        $gifts = Category::factory()->create(['is_active' => true, 'name' => 'Gifts & Keepsakes']);
+        $shirt = $this->eligibleProduct(['name' => 'Sielesyuan T-Shirt - Green', 'category_id' => $clothing->id]);
+        $hoodie = $this->eligibleProduct(['name' => 'CLSU Hoodie', 'category_id' => $gifts->id]);
+        $this->sellOnce($shirt, 5);
+        $this->sellOnce($hoodie, 3);
+
+        $assertHeadings = function (array $categories) use ($shirt, $hoodie): void {
+            $component = Livewire::test(HomePage::class)
+                ->assertSeeText('Best Seller')
+                ->assertDontSeeText('Best Seller in');
+
+            $document = new \DOMDocument;
+            @$document->loadHTML('<?xml encoding="UTF-8">'.$component->html());
+            $xpath = new \DOMXPath($document);
+            $headings = fn (string $section) => array_map(
+                fn (\DOMNode $node) => trim($node->textContent),
+                iterator_to_array($xpath->query('//div[@aria-label="'.$section.'"]//h3')),
+            );
+
+            $this->assertSame([$categories[0], $shirt->name, $categories[1], $hoodie->name], $headings('Best sellers'));
+            $this->assertSame([$shirt->name, $hoodie->name], $headings('Top picks'));
+        };
+
+        $assertHeadings(['Campus Clothing', 'Gifts & Keepsakes']);
+
+        $clothing->update(['name' => 'University Apparel']);
+        $accessories = Category::factory()->create(['is_active' => true, 'name' => 'Accessories']);
+        $hoodie->update(['category_id' => $accessories->id]);
+
+        $assertHeadings(['University Apparel', 'Accessories']);
+    }
+
     /**
      * A Best Seller or Top Pick badge outranks the admin-set Featured tag, so
      * a ranked card drops "Featured" (components/storefront/product-badges,

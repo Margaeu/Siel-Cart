@@ -16,6 +16,8 @@ class CreateNewCustomer implements CreatesNewUsers
     {
         $messages = [
             'date_of_birth.before_or_equal' => 'You must be 13 years old to create an account.',
+            'phone.max' => 'Phone numbers must contain no more than 11 digits.',
+            'phone.regex' => 'Enter digits only for your phone number, for example 09171234567.',
         ];
 
         Validator::make($input, [
@@ -34,7 +36,7 @@ class CreateNewCustomer implements CreatesNewUsers
             'date_of_birth' => ['required', 'date', 'before_or_equal:' . now()->subYears(13)->format('Y-m-d')],
 
             'password' => $this->passwordRules(),
-            'phone' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:11', 'regex:/\A[0-9]+\z/'],
         ], $messages)->validate();
 
         $customer = Customer::create([

@@ -358,6 +358,7 @@
         description="The top seller in each category over the last 7 days."
         :products="$bestSellers"
         badge="best_seller"
+        :show-category="true"
         aria-label="Best sellers"
         section-bg-class="bg-[#F9FAFB]"
         accent-border-class="border-amber-200"

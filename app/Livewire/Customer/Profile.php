@@ -83,7 +83,7 @@ class Profile extends Component
         $this->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:255',
+            'phone' => ['nullable', 'string', 'max:11', 'regex:/\A[0-9]+\z/'],
             // Nullable: some accounts predate this field or were edited by an
             // admin without one. When it is set, it must satisfy the same
             // 13-year minimum age CreateNewCustomer enforces at registration
@@ -95,6 +95,8 @@ class Profile extends Component
             'current_password_for_profile' => 'required',
         ], [
             'date_of_birth.before_or_equal' => 'You must be at least 13 years old.',
+            'phone.max' => 'Phone numbers must contain no more than 11 digits.',
+            'phone.regex' => 'Enter digits only for your phone number, for example 09171234567.',
             'current_password_for_profile.required' => 'Please enter your current password to confirm these changes.',
         ]);
 

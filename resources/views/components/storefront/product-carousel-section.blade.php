@@ -10,6 +10,7 @@
       used to namespace its Livewire key so the same product can appear in
       both sections without a duplicate-key error.
     - emptyHeading, emptyMessage: shown when $products is empty.
+    - showCategory: display each product's assigned category above its card.
     - sectionBgClass, accentBorderClass: section background and the empty
       state's dashed border, so each section reads as visually distinct.
 --}}
@@ -23,6 +24,7 @@
     'sectionBgClass' => 'bg-white',
     'accentBorderClass' => 'border-gray-200',
     'ariaLabel' => null,
+    'showCategory' => false,
 ])
 
 <section class="{{ $sectionBgClass }} py-12">
@@ -77,6 +79,11 @@
                 >
                     @foreach($products as $product)
                         <div data-carousel-item class="w-[42vw] shrink-0 snap-start sm:w-[13rem] lg:w-[13.5rem]">
+                            @if($showCategory)
+                                <h3 class="mb-4 flex min-h-11 items-end border-b border-black pb-2 text-xs font-bold uppercase leading-snug tracking-wider text-black sm:text-sm">
+                                    <span class="min-w-0 break-words">{{ $product->category?->name }}</span>
+                                </h3>
+                            @endif
                             <livewire:product-card :product="$product" :badge="$badge" :key="$badge.'-'.$product->id" />
                         </div>
                     @endforeach

@@ -153,4 +153,15 @@ class ReviewOneChancePerPurchaseTest extends TestCase
 
         $this->assertTrue(Review::where('order_id', $repeat->id)->exists());
     }
+
+    public function test_customer_without_completed_purchase_sees_eligibility_explanation(): void
+    {
+        $this->productPage()
+            ->assertSeeText('Only customers with a completed order can review this product.')
+            ->assertDontSeeText('Write a Review')
+            ->set('reviewComment', 'A review without a completed purchase.')
+            ->call('submitReview')->assertHasErrors('review');
+
+        $this->assertSame(0, Review::count());
+    }
 }

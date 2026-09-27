@@ -91,8 +91,7 @@ class HomepageProductRankingService
      * withCardData(): the ranked products are rendered as homepage cards, and
      * loading only `category` here left each Best Seller / Top Pick card to
      * lazy-load its image and variants on its own -- two queries per card.
-     * `category` itself isn't loaded any more: ranking groups on category_id
-     * and no card reads the relation.
+     * Category names are loaded together for the Best Sellers headings.
      */
     private function rankedEligibleProducts(): Collection
     {
@@ -112,6 +111,7 @@ class HomepageProductRankingService
             ->eligibleForHomepage()
             ->whereKey($sales->keys()->all())
             ->withCardData()
+            ->with('category:id,name')
             ->get();
 
         foreach ($products as $product) {

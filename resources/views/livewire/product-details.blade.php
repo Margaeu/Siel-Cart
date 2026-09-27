@@ -189,6 +189,7 @@
                          // The new variant caps the quantity differently and
                          // the standing count may not fit under it.
                          this.qty = 1;
+                         this.quantityMessage = '';
 
                          // Mirrors what selectInitialVariant() does on the
                          // server: a variant with photos of its own shows the
@@ -205,17 +206,26 @@
                          if (Number.isNaN(n) || n < 1) return 1;
                          return Math.min(n, this.max);
                      },
-                     step(by) { this.qty = this.clamp(this.clamp(this.qty) + by); },
+                     quantityMessage: '',
+                     commitQuantity() {
+                         const requested = parseInt(this.qty, 10);
+                         if (requested > this.max) {
+                             this.quantityMessage = 'Only ' + this.max + ' available in stock. Quantity adjusted to ' + this.max + '.';
+                         }
+                         this.qty = this.clamp(this.qty);
+                     },
+                     step(by) { this.quantityMessage = ''; this.qty = this.clamp(this.clamp(this.qty) + by); },
                      typed(el) {
                          // Digits only; an empty box is allowed while typing
                          // and becomes 1 again on blur.
                          const digits = el.value.replace(/\D/g, '');
+                         this.quantityMessage = '';
                          el.value = digits;
                          this.qty = digits;
                      },
                      add() {
                          if (this.adding) return;
-                         this.qty = this.clamp(this.qty);
+                         this.commitQuantity();
                          this.adding = true;
                          $wire.addToCart(this.qty, this.selected).finally(() => this.adding = false);
                      },
@@ -401,7 +411,7 @@
                                        aria-label="Quantity"
                                        :value="qty"
                                        @input="typed($event.target)"
-                                       @blur="qty = clamp(qty)"
+                                       @blur="commitQuantity()"
                                        @keydown.enter.prevent="$event.target.blur()"
                                        class="w-14 text-center text-sm font-bold text-gray-900 border-none focus:ring-0 p-0">
                                 <button type="button"
@@ -414,6 +424,9 @@
                             </div>
                         </div>
                     </div>
+
+                    <p x-cloak x-show="quantityMessage" x-text="quantityMessage" role="status" aria-live="polite"
+                       class="text-sm font-medium text-amber-700"></p>
 
                     <!-- CTA Actions -->
                     <div>
@@ -941,6 +954,10 @@
                                         Submit Review
                                     </button>
                                 </form>
+                            @else
+                                <p class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                                    Only customers with a completed order can review this product. Complete your purchase and collect your order to leave a review.
+                                </p>
                             @endif
                         </div>
                     @endauth

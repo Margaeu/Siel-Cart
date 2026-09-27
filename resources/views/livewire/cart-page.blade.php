@@ -176,7 +176,7 @@
                                     expected to act on it.
                                 --}}
                                 <div wire:key="cart-item-{{ $item->id }}"
-                                     class="py-5 last:pb-0 flex gap-4 {{ $isUnavailable && !$isOverStock ? 'opacity-60' : '' }}">
+                                     class="py-5 last:pb-0 grid grid-cols-[5rem_minmax(0,1fr)] gap-4 sm:flex {{ $isUnavailable && !$isOverStock ? 'opacity-60' : '' }}">
 
                                     {{-- Product Image --}}
                                     <div class="size-20 sm:size-24 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
@@ -196,7 +196,7 @@
                                     </div>
 
                                     {{-- Product Info + Controls --}}
-                                    <div class="flex-1 min-w-0 flex flex-col sm:flex-row sm:justify-between gap-3">
+                                    <div class="contents sm:flex sm:flex-1 sm:min-w-0 sm:flex-row sm:justify-between sm:gap-3">
 
                                         <div class="min-w-0">
                                             <h3 class="font-semibold text-gray-900 leading-snug">
@@ -262,7 +262,7 @@
                                             the new HTML in, so data-qty would still be the old
                                             number and a 1 -> 2 save would snap back to 1.
                                         --}}
-                                        <div class="flex items-center justify-between sm:flex-col sm:items-end sm:justify-between gap-3 shrink-0"
+                                        <div class="col-span-2 flex flex-wrap items-center justify-between sm:flex-col sm:items-end sm:justify-between gap-3 shrink-0"
                                              data-max="{{ $availableStock }}"
                                              x-data="{
                                                  qty: {{ $item->quantity }},
@@ -273,11 +273,13 @@
                                                  saving: false,
                                                  again: false,
                                                  queued: false,
+                                                 quantityMessage: '',
                                                  get max() { return Math.max(1, parseInt(this.$root.dataset.max, 10) || 0); },
                                                  get current() { return parseInt(this.qty, 10) || 1; },
                                                  clamp(n) { return Math.min(Math.max(1, n), this.max); },
                                                  step(by) {
                                                      if (this.locked) return;
+                                                     this.quantityMessage = '';
                                                      // For an over-stock row, one press drops straight to
                                                      // what is actually left rather than stepping down one
                                                      // at a time into repeated 'only N available' errors.
@@ -292,6 +294,9 @@
                                                      this.qty = digits;
                                                  },
                                                  commit() {
+                                                     this.quantityMessage = this.current > this.max
+                                                         ? 'Only ' + this.max + ' available in stock. Quantity adjusted to ' + this.max + '.'
+                                                         : '';
                                                      this.qty = this.clamp(this.current);
                                                      this.queue(0);
                                                  },
@@ -321,14 +326,15 @@
                                                  },
                                              }">
 
-                                            {{-- Quantity Stepper --}}
-                                            <div class="flex items-center overflow-hidden rounded-full border border-gray-300 bg-white">
+                                            {{-- Alpine owns these values and disabled states. Prevent
+                                                 a server morph from replacing them with stale HTML. --}}
+                                            <div wire:ignore class="flex shrink-0 items-center overflow-hidden rounded-full border border-gray-300 bg-white">
                                                 <button
                                                     type="button"
                                                     @click="step(-1)"
                                                     :disabled="locked || current <= 1"
                                                     @disabled($item->quantity <= 1 || ($isUnavailable && !$isOverStock))
-                                                    class="flex size-11 items-center justify-center text-lg font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+                                                    class="flex size-11 shrink-0 items-center justify-center text-lg font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
                                                     aria-label="Decrease quantity of {{ $item->product->name }}">
                                                     &minus;
                                                 </button>
@@ -347,7 +353,7 @@
                                                     @keydown.enter.prevent="$event.target.blur()"
                                                     :readonly="locked"
                                                     @readonly($isUnavailable && !$isOverStock)
-                                                    class="h-11 w-12 border-none bg-transparent p-0 text-center text-sm font-semibold text-gray-900 focus:ring-0 read-only:text-gray-400"
+                                                    class="h-11 w-12 shrink-0 border-none bg-transparent p-0 text-center text-sm font-semibold text-gray-900 focus:ring-0 read-only:text-gray-400"
                                                     aria-label="Quantity of {{ $item->product->name }}">
 
                                                 <button
@@ -355,19 +361,19 @@
                                                     @click="step(1)"
                                                     :disabled="locked || current >= max"
                                                     @disabled($item->quantity >= $availableStock || $isUnavailable)
-                                                    class="flex size-11 items-center justify-center text-lg font-semibold text-[var(--color-primary)] transition hover:bg-[color-mix(in_srgb,var(--color-primary)_9%,white)] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
+                                                    class="flex size-11 shrink-0 items-center justify-center text-lg font-semibold text-[var(--color-primary)] transition hover:bg-[color-mix(in_srgb,var(--color-primary)_9%,white)] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-white"
                                                     aria-label="Increase quantity of {{ $item->product->name }}">
                                                     +
                                                 </button>
                                             </div>
 
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex shrink-0 items-center gap-2">
                                                 {{-- Item Subtotal. Previewed from the unit price the
                                                      server rendered (CartItem::price) so it moves with the
                                                      stepper; the re-render after the save replaces it. --}}
                                                 <p class="font-bold text-gray-900">
                                                     @if($item->price !== null)
-                                                        <span x-text="'₱' + (price * current).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">₱{{ number_format($item->subtotal, 2) }}</span>
+                                                        <span wire:ignore x-text="'₱' + (price * current).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })">₱{{ number_format($item->subtotal, 2) }}</span>
                                                     @else
                                                         &mdash;
                                                     @endif
@@ -389,6 +395,8 @@
                                                 </button>
                                             </div>
 
+                                            <p wire:ignore x-cloak x-show="quantityMessage" x-text="quantityMessage" role="status" aria-live="polite"
+                                               class="w-full text-sm font-medium text-amber-700 sm:max-w-48"></p>
                                         </div>
 
                                     </div>
