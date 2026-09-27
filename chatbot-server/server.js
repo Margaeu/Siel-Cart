@@ -180,6 +180,27 @@ app.post('/api/chat', async (req, res) => {
             return res.status(400).json({ error: 'Message is required.' });
         }
 
+        const msgLower = message.toLowerCase();
+
+        // DIRECT OVERRIDE FOR ORDERING FAQ (Bypasses LLM long responses)
+        const isOrderingQuery = 
+            msgLower.includes('how to order') || 
+            msgLower.includes('how do i order') || 
+            msgLower.includes('place an order') || 
+            msgLower.includes('how to place an order');
+
+        if (isOrderingQuery) {
+            return res.json({
+                response: `To place an order:
+
+1. Browse our catalog and select an item.
+2. Choose your preferred size or variant, then add it to your cart.
+3. Open your cart and review your items.
+4. Proceed to checkout to confirm your order details.
+5. Receive your claim number via email, then collect and pay in cash at the UBAP Office.`
+            });
+        }
+
         if (isIrrelevantQuery(message)) {
             return res.json({ response: STANDARD_REFUSAL });
         }
@@ -201,8 +222,6 @@ app.post('/api/chat', async (req, res) => {
                 { name: "UBAP Hoodie", price: 750 }
             ];
         }
-
-        const msgLower = message.toLowerCase();
 
         const isFAQIntent = 
             msgLower.includes('how') || 
