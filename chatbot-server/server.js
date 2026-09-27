@@ -300,7 +300,13 @@ If the user query is unrelated to Siel Cart e-commerce, output EXACTLY this resp
     }
 });
 
+const express = require('express');
+const app = express();
+
+// ... existing middleware and routes ...
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
 });
