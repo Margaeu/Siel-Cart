@@ -200,7 +200,14 @@ return [
         'subject' => 'class',
         'prefix' => 'view',
         'exclude' => [
-            \Filament\Pages\Dashboard::class,
+            // The panel's dashboard is App\Filament\Pages\Dashboard — a
+            // subclass of Filament's, registered in AdminPanelProvider so the
+            // widgets can be picked by role. Excluded for the same reason
+            // Filament's own was, and naming the subclass here keeps the
+            // generated permission set exactly what it was: the dashboard is
+            // every admin's landing page, so a "View:Dashboard" tickbox would
+            // only ever be a way to lock someone out of it.
+            \App\Filament\Pages\Dashboard::class,
         ],
     ],
 

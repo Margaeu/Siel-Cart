@@ -186,4 +186,18 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->is_active && $this->hasAnyRole(['super_admin', 'ubap', 'stratcom']);
     }
+
+    /**
+     * Whether this admin's only reason to be in the panel is stratcom's
+     * territory -- promotional banners and color themes -- with none of the
+     * broader roles alongside it. Decides which dashboard the admin lands on
+     * (App\Filament\Pages\Dashboard): a design-only admin gets the Design
+     * Overview built from App\Filament\Pages\Dashboard\Widgets, while a user
+     * who also holds ubap or super_admin keeps that role's usual dashboard
+     * untouched, whatever other roles they carry alongside it.
+     */
+    public function isDesignOnlyAdmin(): bool
+    {
+        return $this->hasRole('stratcom') && ! $this->hasAnyRole(['super_admin', 'ubap']);
+    }
 }

@@ -6,18 +6,20 @@ use App\Filament\AvatarProviders\SielAvatarProvider;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Filament\Pages\Auth\ResetPassword;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Filament\Resources\Reviews\ReviewResource;
 use App\Models\Theme;
+use App\Models\User;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -26,12 +28,14 @@ use Filament\View\PanelsIconAlias;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -176,6 +180,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            // App\Filament\Pages\Dashboard, not Filament's own: it picks the
+            // dashboard's widgets by role (audit oversight for super admins,
+            // the Design Overview below for stratcom-only admins, shop
+            // operations for everyone else). It keeps Filament's "/" route
+            // path and "dashboard" slug, so the URL and the single Dashboard
+            // navigation entry are unchanged. discoverPages() above finds it
+            // too; Panel::getPages() de-duplicates.
             ->pages([
                 Dashboard::class,
             ])
@@ -221,6 +232,49 @@ class AdminPanelProvider extends PanelProvider
                     '<style>:root {--color-primary-raw: {{ $color }};}</style>',
                     ['color' => $primaryColorRaw],
                 ),
+            )
+            // The small "Welcome back, <name>" line above the Design Overview
+            // heading on a stratcom-only admin's dashboard. Scoped to
+            // Dashboard::class so it only ever renders on that page, and
+            // checked again inside the closure because the page is shared by
+            // every role -- this hook fires for all of them, not just
+            // stratcom-only admins.
+            //
+            // Filament::auth() rather than auth('web'): the panel's guard is
+            // the panel's business, and every other role check in this feature
+            // (ActivityLogResource::isSuperAdmin(), each Design Overview
+            // widget's canView()) already reads it that way. Hardcoding 'web'
+            // here made this the one line that would silently stop matching if
+            // the panel were ever given an explicit ->authGuard().
+            //
+            // HtmlString with e() rather than Blade::render(): the markup is one
+            // interpolation, and Blade::render() would compile it into a hashed
+            // .blade.php under storage/framework/views. That file is written once
+            // and reused afterwards, not rewritten per request -- but it is still
+            // the one compiled view `view:cache` in startup.sh cannot pre-warm,
+            // so on Azure's network-mounted storage the first request after a
+            // deploy pays for it. A string concatenation needs no view at all.
+            // ViewManager::renderHook() casts what this returns to string and
+            // wraps the joined result in its own HtmlString, so returning
+            // HtmlString is not double-escaped -- and e() is what keeps a name
+            // containing markup from reaching the document (see
+            // DesignOverviewDashboardTest).
+            ->renderHook(
+                PanelsRenderHook::PAGE_HEADER_HEADING_BEFORE,
+                function (): string|Htmlable {
+                    $user = Filament::auth()->user();
+
+                    if (! ($user instanceof User && $user->isDesignOnlyAdmin())) {
+                        return '';
+                    }
+
+                    return new HtmlString(
+                        '<p style="margin: 0 0 0.25rem; font-size: 0.8125rem; font-weight: 500; color: var(--gray-500);">Welcome back, '
+                        .e($user->first_name)
+                        .'</p>',
+                    );
+                },
+                scopes: Dashboard::class,
             )
             ->plugins([
                 FilamentShieldPlugin::make()
