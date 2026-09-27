@@ -226,29 +226,44 @@ app.post('/api/chat', async (req, res) => {
             ];
         }
 
-        // STEP 3: DIRECT PRODUCT INTERCEPTOR (Bypasses LLM disclaimers entirely)
+        // STEP 3: DIRECT PRODUCT INTERCEPTOR
         const msgLower = message.toLowerCase();
+
+        // 1. Check if the query is an FAQ/Intent question (e.g., "how to order", "where is pickup", "cancellation")
+        const isFAQIntent = 
+            msgLower.includes('how') || 
+            msgLower.includes('where') || 
+            msgLower.includes('when') || 
+            msgLower.includes('can i') || 
+            msgLower.includes('policy') || 
+            msgLower.includes('status') || 
+            msgLower.includes('cancel') || 
+            msgLower.includes('return') || 
+            msgLower.includes('refund') || 
+            msgLower.includes('pay') || 
+            msgLower.includes('privacy');
+
+        // 2. Recommendation keywords
         const isRecommendationQuery = 
-            msgLower.includes('suggest') || 
-            msgLower.includes('recommend') || 
-            msgLower.includes('product') || 
-            msgLower.includes('item') || 
-            msgLower.includes('price') || 
-            msgLower.includes('pesos') || 
-            msgLower.includes('php') || 
-            msgLower.includes('under') || 
-            msgLower.includes('below') || 
-            msgLower.includes('shirt') || 
-            msgLower.includes('apparel') || 
-            msgLower.includes('mug') || 
-            msgLower.includes('bag') || 
-            msgLower.includes('notebook') || 
-            msgLower.includes('pen');
+            !isFAQIntent && (
+                msgLower.includes('suggest') || 
+                msgLower.includes('recommend') || 
+                msgLower.includes('price') || 
+                msgLower.includes('pesos') || 
+                msgLower.includes('php') || 
+                msgLower.includes('under') || 
+                msgLower.includes('below') || 
+                msgLower.includes('shirt') || 
+                msgLower.includes('apparel') || 
+                msgLower.includes('mug') || 
+                msgLower.includes('bag') || 
+                msgLower.includes('notebook') || 
+                msgLower.includes('pen')
+            );
 
         if (isRecommendationQuery) {
             const matchedList = getProductSuggestionsByQuery(message, dbProducts);
             
-            // Immediately respond from Node.js in clean English (limited to 3 items)
             return res.json({ 
                 response: `Here are 3 product recommendations matching your request:\n\n${matchedList}` 
             });
