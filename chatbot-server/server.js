@@ -39,38 +39,32 @@ const FALLBACK_MODELS = [
 
 const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
 
-// User-friendly error message when LLM/Server fails or times out
 const FRIENDLY_ERROR_MESSAGE = "Our assistant is temporarily unavailable. Please browse our catalog on the store page or contact the UBAP Office directly for immediate assistance.";
 
 /**
- * Static store rules and FAQ boundaries.
+ * Static store rules - Condensed to force short outputs
  */
-const STORE_FACTS = `STORE FACTS (the only accurate description of how Siel Cart works):
-SielCart is the online store of the UBAP Office at Central Luzon State University. It is pickup-only and cash-only. There is no delivery, no courier, and no online payment of any kind.
+const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU):
+Siel Cart is pickup-only and cash-only at the UBAP Office. No delivery, no couriers, no cards/GCash/online payments.
 
 HOW TO ORDER:
-1. Select product variation & quantity, then add to cart.
-2. Review cart & proceed to checkout (pickup location & cash payment are fixed).
-3. Place order to receive an Order Number (Status: Pending).
-4. When ready, receive an email with your Claim Number, pickup date, and time slot.
-5. Present Claim Number & pay cash in person at the UBAP Office to collect items.
+To place an order:
+1. Browse our catalog and select an item.
+2. Choose your preferred size or variant, then add it to your cart.
+3. Open your cart and review your items.
+4. Proceed to checkout to confirm your order details.
+5. Receive your claim number via email, then collect and pay in cash at the UBAP Office.
 
 PICKUP & CANCELLATION:
 - Claim Numbers are issued ONLY when status is "Ready for Pickup".
-- Orders must be claimed within assigned time slots. Unclaimed orders are cancelled.
-- To reschedule pickup, contact UBAP Office by email/in person.
+- Unclaimed orders are cancelled. To reschedule pickup, contact UBAP Office.
 - Cancel orders on "My Orders" page ONLY while status is "Pending".
 
 RETURNS & PRIVACY:
-- Returns/refunds cannot be requested on the website. Contact UBAP Office directly for damaged/incorrect items.
-- For data privacy questions, link to: [Privacy Policy](/privacy-policy).
-- For terms questions, link to: [Terms & Conditions](/terms-and-conditions).
+- Returns/refunds cannot be requested on the website. Contact UBAP Office directly for defective items.
+- Data Privacy: [Privacy Policy](/privacy-policy)
+- Terms & Conditions: [Terms & Conditions](/terms-and-conditions)`;
 
-FORBIDDEN CLAIMS:
-- Never mention shipping fees, delivery, tracking numbers, or online payments.
-- If asked about delivery or online payment, state clearly that Siel Cart is pickup and cash-on-pickup only.`;
-
-// Pre-filter non-e-commerce inputs (Math, Coding, Simple Off-Topic)
 function isIrrelevantQuery(text) {
     const query = text.trim().toLowerCase();
 
@@ -88,9 +82,6 @@ function isIrrelevantQuery(text) {
     return false;
 }
 
-/**
- * Fetch available/in-stock products directly from database
- */
 async function fetchAvailableProducts() {
     try {
         const [rows] = await dbPool.query(
@@ -103,17 +94,12 @@ async function fetchAvailableProducts() {
     }
 }
 
-/**
- * Universal product pre-filtering across ALL categories and price constraints
- */
 function getProductSuggestionsByQuery(userQuery, products) {
     const text = userQuery.toLowerCase();
     
-    // Extract numerical target price (e.g., "200", "under 300 pesos", "below ₱500")
     const priceMatch = text.match(/(\d+)\s*(pesos|php|₱)?/i);
     const targetPrice = priceMatch ? parseFloat(priceMatch[1]) : null;
 
-    // Standard product category keyword mappings
     const CATEGORIES = {
         apparel: ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'cap', 'hat', 'clothes', 'wear', 'apparel'],
         stationery: ['pen', 'ballpen', 'notebook', 'paper', 'pencil', 'pad', 'stationery', 'supplies', 'school'],
@@ -124,7 +110,6 @@ function getProductSuggestionsByQuery(userQuery, products) {
 
     let filtered = products;
 
-    // 1. Category Search: Match query against category synonyms or direct product name keywords
     let matchedCategoryItems = [];
     for (const [category, keywords] of Object.entries(CATEGORIES)) {
         if (keywords.some(kw => text.includes(kw))) {
@@ -135,12 +120,10 @@ function getProductSuggestionsByQuery(userQuery, products) {
         }
     }
 
-    // Deduplicate matches if category matches were found
     if (matchedCategoryItems.length > 0) {
         filtered = Array.from(new Set(matchedCategoryItems));
     }
 
-    // 2. Budget Filtering: Apply price constraints if a number is present
     if (targetPrice) {
         if (text.includes('under') || text.includes('below') || text.includes('less than')) {
             const underItems = filtered.filter(p => p.price <= targetPrice);
@@ -151,7 +134,6 @@ function getProductSuggestionsByQuery(userQuery, products) {
         }
     }
 
-    // 3. Limit recommendations strictly to a maximum of 3 items
     const topThree = filtered.slice(0, 3);
 
     return topThree.map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
@@ -198,12 +180,10 @@ app.post('/api/chat', async (req, res) => {
             return res.status(400).json({ error: 'Message is required.' });
         }
 
-        // STEP 1: Code-level check to instantly block math, coding, or trivia queries
         if (isIrrelevantQuery(message)) {
             return res.json({ response: STANDARD_REFUSAL });
         }
 
-        // STEP 2: Fetch DB products (with hardcoded fallback if DB is down/empty)
         let dbProducts = [];
         try {
             dbProducts = await fetchAvailableProducts();
@@ -213,23 +193,17 @@ app.post('/api/chat', async (req, res) => {
 
         if (!dbProducts || dbProducts.length === 0) {
             dbProducts = [
-                { name: "UBAP Ballpen", price: 20 },
                 { name: "CLSU Notebook", price: 50 },
                 { name: "Siel Cart Lanyard", price: 80 },
-                { name: "CLSU ID Holder", price: 100 },
                 { name: "UBAP Mug", price: 200 },
                 { name: "Siel Cart Tote Bag", price: 200 },
                 { name: "CLSU Basic Shirt", price: 250 },
-                { name: "CLSU Cap", price: 250 },
-                { name: "CLSU T-Shirt", price: 350 },
                 { name: "UBAP Hoodie", price: 750 }
             ];
         }
 
-        // STEP 3: DIRECT PRODUCT INTERCEPTOR
         const msgLower = message.toLowerCase();
 
-        // 1. Check if the query is an FAQ/Intent question (e.g., "how to order", "where is pickup", "cancellation")
         const isFAQIntent = 
             msgLower.includes('how') || 
             msgLower.includes('where') || 
@@ -243,7 +217,6 @@ app.post('/api/chat', async (req, res) => {
             msgLower.includes('pay') || 
             msgLower.includes('privacy');
 
-        // 2. Recommendation keywords
         const isRecommendationQuery = 
             !isFAQIntent && (
                 msgLower.includes('suggest') || 
@@ -269,8 +242,7 @@ app.post('/api/chat', async (req, res) => {
             });
         }
 
-        // STEP 4: If it's a general FAQ (e.g. "how to order", "where to pick up"), use the LLM
-        const dynamicCatalog = dbProducts.map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
+        const dynamicCatalog = dbProducts.slice(0, 5).map(p => `- **\({p.name}**: ₱\){p.price}`).join('\n');
         
         const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
 You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math, coding, trivia, or off-topic queries.
@@ -278,13 +250,10 @@ You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math, 
 LANGUAGE RULE:
 Respond ONLY in English at all times.
 
-RESPONSE STYLE & FORMATTING:
-- Be concise and informative. Keep responses short so customers remain engaged.
-- Use **bold text** for important highlights and key actions.
-- Use bullet points (-) for steps or feature lists.
-- If asked about Data Privacy or Terms & Conditions, always include direct links:
-  • [Privacy Policy](/privacy-policy)
-  • [Terms & Conditions](/terms-and-conditions)
+STRICT LENGTH & FORMATTING RULES:
+- Output ONLY short answers.
+- When asked "how to order", reply EXACTLY with the 5 numbered steps listed in STORE FACTS under "HOW TO ORDER".
+- DO NOT add extra commentary, detailed explanations, or closing questions like "Is there anything else I can help you with?".
 
 AVAILABLE PRODUCT CATALOG IN OUR SHOP:
 ${dynamicCatalog}
@@ -301,7 +270,6 @@ If the user query is unrelated to Siel Cart e-commerce, output EXACTLY this resp
     } catch (error) {
         console.error('All models failed or server error occurred:', error);
 
-        // Friendly error message instead of raw server exception
         return res.json({ 
             response: FRIENDLY_ERROR_MESSAGE 
         });
