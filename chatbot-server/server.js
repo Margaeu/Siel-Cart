@@ -88,7 +88,7 @@ function isIrrelevantQuery(text) {
 }
 
 /**
- * Fetch available/in-stock products directly from database
+ *# Fetch available/in-stock products directly from database
  */
 async function fetchAvailableProducts() {
     try {
