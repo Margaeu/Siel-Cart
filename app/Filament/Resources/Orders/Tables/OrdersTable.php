@@ -17,12 +17,10 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Notifications\Notification;
 use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class OrdersTable
@@ -103,7 +101,13 @@ class OrdersTable
                     ->icon('heroicon-o-arrow-path')
                     ->action(function (Order $record) {
                         $record->updateStatus('processing', 'Order is being processed.', auth()->id());
-                        Mail::to($record->customer->email)->send(new OrderProcessingMail($record));
+
+                        OrderResource::notifyCustomerByMail(
+                            $record,
+                            new OrderProcessingMail($record),
+                            'Order marked as processing',
+                            'The order is now being processed.',
+                        );
                     })
                     ->visible(fn (Order $record) => strtolower($record->status) === 'pending'),
 
@@ -141,7 +145,12 @@ class OrdersTable
                                 'pickup_slot' => Order::pickupSlotFrom($data['pickup_start_time'], $data['pickup_end_time']),
                             ],
                         );
-                        Mail::to($record->customer->email)->send(new OrderReadyForPickupMail($record));
+                        OrderResource::notifyCustomerByMail(
+                            $record,
+                            new OrderReadyForPickupMail($record),
+                            'Order marked as ready for pickup',
+                            'Claim number '.$record->claim_number.' issued.',
+                        );
                     })
                     ->visible(fn (Order $record) => strtolower($record->status) === 'processing'),
 
@@ -175,18 +184,21 @@ class OrdersTable
                             ],
                         );
 
-                        Mail::to($record->customer->email)->send(new OrderCompletedMail($record));
-
-                        Notification::make()
-                            ->title('Order Marked as Completed')
-                            ->body('Claimant details recorded and email notification sent.')
-                            ->success()
-                            ->send();
+                        OrderResource::notifyCustomerByMail(
+                            $record,
+                            new OrderCompletedMail($record),
+                            'Order marked as completed',
+                            'Claimant details recorded.',
+                        );
                     })
                     ->visible(fn (Order $record) => in_array(strtolower($record->status), ['ready_for_pickup', 'ready for pickup'])),
 
                 // 4. Move a ready order's pickup to another day
                 OrderResource::reschedulePickupAction(),
+
+                // 5. Send the current status email again, for a send that
+                //    failed or a customer who says it never arrived.
+                OrderResource::resendStatusEmailAction(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
