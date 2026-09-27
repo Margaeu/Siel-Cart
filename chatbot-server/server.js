@@ -39,7 +39,7 @@ const FALLBACK_MODELS = [
     'qwen/qwen-2.5-coder-32b-instruct:free'
 ];
 
-const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (how to order, returns/refunds, data handling), product recommendations, and order status inquiries. How may I help you today?";
+const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (How to Order, Returns/Refunds, Data Handling), Product Recommendations, and order status inquiries. How may I help you today?";
 
 const FRIENDLY_ERROR_MESSAGE = "Our assistant is temporarily unavailable. Please browse our catalog on the store page orr contact the UBAP Office directly for immediate assistance.";
 
@@ -50,19 +50,19 @@ const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU):
 Siel Cart is pickup-only and cash-only at the UBAP Office. No delivery, no couriers, no cards/GCash/online payments.
 
 HOW TO ORDER:
-1. Browse catalog and select item.
-2. Choose size/variant and add to cart.
-3. Review cart items.
-4. Proceed to checkout to confirm.
-5. Receive claim number via email, then collect and pay in cash at UBAP Office.
+1. 𝐁𝐫𝐨𝐰𝐬𝐞 catalog and select item.
+2. 𝐂𝐡𝐨𝐨𝐬𝐞 size/variant and add to cart.
+3. 𝐎𝐩𝐞𝐧 cart items.
+4. 𝐏𝐫𝐨𝐜𝐞𝐞𝐝 to checkout to confirm.
+5. 𝐑𝐞𝐜𝐞𝐢𝐯𝐞 claim number via email, then collect and pay in cash at UBAP Office.
 
 PICKUP & CANCELLATION:
-- Claim Numbers are issued ONLY when status is "Ready for Pickup".
-- Unclaimed orders are cancelled. To reschedule pickup, contact UBAP Office.
-- Cancel orders on "My Orders" page ONLY while status is "Pending".
+- Claim Numbers are issued ONLY when status is 𝐑𝐞𝐚𝐝𝐲 𝐟𝐨𝐫 𝐏𝐢𝐜𝐤𝐮𝐩.
+- Unclaimed Orders are cancelled. To reschedule pickup, contact 𝐔𝐁𝐀𝐏 𝐎𝐟𝐟𝐢𝐜𝐞.
+- Cancel orders on 𝐌𝐲 𝐎𝐫𝐝𝐞𝐫𝐬 page ONLY while status is 𝐏𝐞𝐧𝐝𝐢𝐧𝐠.
 
 RETURNS & PRIVACY:
-- Returns/refunds cannot be requested on website. Contact UBAP Office directly for defective items.
+- Returns/refunds cannot be requested on website. Contact 𝐔𝐁𝐀𝐏 𝐎𝐟𝐟𝐢𝐜𝐞 directly for defective items.
 - Privacy Policy: [Privacy Policy](/privacy-policy)
 - Terms & Conditions: [Terms & Conditions](/terms-and-conditions)`;
 
@@ -196,14 +196,14 @@ app.post('/api/chat', async (req, res) => {
         const GREETINGS = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo', 'halu'];
         if (GREETINGS.some(g => msgLower === g || msgLower === g + '!' || msgLower === g + '.')) {
             return res.json({
-                response: "Hello! Welcome to Siel Cart. How can I assist you with your shopping today?"
+                response: "Hello! Welcome to 𝐒𝐢𝐞𝐥 𝐂𝐚𝐫𝐭. How can I assist you with your shopping today?"
             });
         }
 
         // 2. Payment Method
         if (msgLower.includes('payment') || msgLower.includes('pay') || msgLower.includes('gcash') || msgLower.includes('card')) {
             return res.json({
-                response: "Payment at Siel Cart is **Cash on Pickup only**, paid in person at the UBAP Office when collecting your items. We do not accept online payments or credit/debit cards."
+                response: "Payment at Siel Cart is 𝐂𝐚𝐬𝐡 𝐨𝐧 𝐏𝐢𝐜𝐤𝐮𝐩 𝐨𝐧𝐥𝐲, paid in person at the UBAP Office when collecting your items. We do not accept online payments or credit/debit cards."
             });
         }
 
@@ -212,11 +212,11 @@ app.post('/api/chat', async (req, res) => {
             return res.json({
                 response: `To place an order:
 
-1. Browse our catalog and select an item.
-2. Choose your preferred size or variant, then add it to your cart.
-3. Open your cart and review your items.
-4. Proceed to checkout to confirm your order details.
-5. Receive your claim number via email, then collect and pay in cash at the UBAP Office.`
+1. 𝐁𝐫𝐨𝐰𝐬𝐞 our catalog and select an item.
+2. 𝐂𝐡𝐨𝐨𝐬𝐞 your preferred size or variant, then add it to your cart.
+3. 𝐎𝐩𝐞𝐧 your cart and review your items.
+4. 𝐏𝐫𝐨𝐜𝐞𝐞𝐝 to checkout to confirm your order details.
+5. 𝐑𝐞𝐜𝐞𝐢𝐯𝐞 your claim number via email, then collect and pay in cash at the UBAP Office.`
             });
         }
 
@@ -225,9 +225,9 @@ app.post('/api/chat', async (req, res) => {
             return res.json({
                 response: `To check your order status:
 
-1. Log in to your Siel Cart account.
-2. Go to **My Orders** and select your order.
-3. Statuses shown are: **Pending**, **Processing**, **Ready for Pickup**, or **Completed**.`
+1. Log in to your 𝐒𝐢𝐞𝐥 𝐂𝐚𝐫𝐭 account.
+2. Go to 𝐌𝐲 𝐎𝐫𝐝𝐞𝐫𝐬 and select your order.
+3. Statuses shown are: 𝐏𝐞𝐧𝐝𝐢𝐧𝐠, 𝐏𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠, 𝐑𝐞𝐚𝐝𝐲 𝐟𝐨𝐫 𝐏𝐢𝐜𝐤𝐮𝐩, or 𝐂𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝.`
             });
         }
 
@@ -288,13 +288,13 @@ app.post('/api/chat', async (req, res) => {
             const matchedList = getProductSuggestionsByQuery(message, dbProducts);
             
             return res.json({ 
-                response: "Here are 3 product recommendations matching your request:\n\n" + matchedList
+                response: "Here are 3 Product Recommendations matching your request:\n\n" + matchedList
             });
         }
 
         // Dynamic catalog context for LLM
         const dynamicCatalog = dbProducts.slice(0, 5).map(function(item) {
-            return "- **" + item.name + "**: ₱" + item.price;
+            return "- " + item.name + ": ₱" + item.price;
         }).join("\n");
         
         const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
