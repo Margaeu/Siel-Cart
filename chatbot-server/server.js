@@ -50,7 +50,7 @@ const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU):
 Siel Cart is pickup-only and cash-only at the UBAP Office. No delivery, no couriers, no cards/GCash/online payments.
 
 HOW TO ORDER:
-1. 𝐁𝐫𝐨𝐰𝐬𝐞 catalog and select item.
+1. 𝐁𝐫𝐨𝐰𝐬𝐞 catalog and select item...
 2. 𝐂𝐡𝐨𝐨𝐬𝐞 size/variant and add to cart.
 3. 𝐎𝐩𝐞𝐧 cart items.
 4. 𝐏𝐫𝐨𝐜𝐞𝐞𝐝 to checkout to confirm.
