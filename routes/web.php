@@ -107,7 +107,7 @@ Route::middleware('guest:customer')->group(function () {
 */
 
 // Open to guests on purpose, so the throttle is the only thing standing between
-// an anonymous caller and unlimited writes to chat_messages plus paid OpenRouter
+// an anonymous caller and unlimited paid OpenRouter
 // calls. Stays in the web group so CSRF still applies.
 Route::post('/api/chat', [
     ChatController::class,

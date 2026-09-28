@@ -165,14 +165,49 @@ const AVAILABLE_PRODUCTS_SQL = (extraColumns) => `SELECT
         p.name,
         p.slug,
         p.has_variants,
+        c.id AS category_id,
+        c.name AS category_name,
         CASE WHEN p.has_variants = 1 THEN MIN(pv.price) ELSE MAX(p.price) END AS price,
         CASE WHEN p.has_variants = 1 THEN COALESCE(SUM(pv.stock_quantity), 0) ELSE MAX(p.stock_quantity) END AS stock_quantity
         ${extraColumns}
      FROM products p
+     JOIN categories c ON c.id = p.category_id AND c.is_active = 1
      LEFT JOIN product_variants pv ON pv.product_id = p.id AND pv.is_active = 1
-     WHERE p.is_active = 1
-     GROUP BY p.id, p.name, p.slug, p.has_variants
+     WHERE p.is_active = 1 AND p.deleted_at IS NULL
+     GROUP BY p.id, p.name, p.slug, p.has_variants, c.id, c.name
      HAVING stock_quantity > 0`;
+
+// The categories the storefront lets customers browse to. Read from the database
+// on every request, like the products, so a category added, renamed or switched
+// off in the admin is reflected here without touching this file. Empty on a
+// failure: item words ("jacket") still work, only category names stop matching.
+async function fetchActiveCategories() {
+    try {
+        const [rows] = await dbPool.query('SELECT id, name FROM categories WHERE is_active = 1');
+        return rows;
+    } catch (dbError) {
+        console.error('Category fetch error:', dbError.code || '(no code)', '-', dbError.message);
+        return [];
+    }
+}
+
+// Every product the storefront lists, in stock or not: the names a shopper may
+// ask for. Same visibility rules as the stock query above (active, not deleted,
+// in an active category) but without the stock filter.
+async function fetchCatalogue() {
+    try {
+        const [rows] = await dbPool.query(
+            `SELECT p.id, p.name, p.slug, p.category_id
+               FROM products p
+               JOIN categories c ON c.id = p.category_id AND c.is_active = 1
+              WHERE p.is_active = 1 AND p.deleted_at IS NULL`
+        );
+        return rows;
+    } catch (dbError) {
+        console.error('Catalogue fetch error:', dbError.code || '(no code)', '-', dbError.message);
+        return [];
+    }
+}
 
 // Sales and rating signals for "popular" answers and the rating shown beside a
 // pick. Only completed, non-deleted orders count as a sale (a cancelled order's
@@ -218,13 +253,109 @@ const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // as a product list.
 const wordMatcher = (kw) => new RegExp(`\\b${escapeRegex(kw)}(?:s|es)?\\b`, 'i');
 
-const CATEGORIES = {
-    apparel: ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'cap', 'hat', 'clothes', 'wear', 'apparel'],
-    stationery: ['pen', 'ballpen', 'notebook', 'paper', 'pencil', 'pad', 'stationery', 'supplies', 'school'],
-    accessories: ['lanyard', 'holder', 'id holder', 'keychain', 'badge', 'accessory', 'accessories'],
-    bags: ['bag', 'tote', 'totebag', 'backpack', 'pouch'],
-    drinkware: ['mug', 'tumbler', 'cup', 'bottle', 'flask', 'water bottle']
+// What the shop's categories ARE comes from the database (fetchActiveCategories),
+// never from this file: the old hardcoded apparel/stationery/... list knew nothing
+// of the categories actually in the admin and could not follow a rename.
+//
+// Two small vocabularies remain, and both only translate customer wording:
+//
+// ITEM_GROUPS: words a shopper uses for a kind of item, grouped by what counts as
+// the same kind. Product names rarely say the generic word -- "CLSU Windbreaker"
+// is a jacket without containing "jacket" -- so a request for jackets has to
+// know the windbreaker qualifies. Groups are kept tight on purpose: a shirt is
+// not a jacket, so a jackets request must not fall back to shirts.
+const ITEM_GROUPS = [
+    ['shirt', 'tshirt', 't-shirt', 'tee', 'polo'],
+    ['hoodie', 'sweatshirt', 'pullover'],
+    ['jacket', 'windbreaker', 'coat', 'outerwear'],
+    ['cap', 'hat'],
+    ['pen', 'ballpen'],
+    ['notebook'],
+    ['pencil'],
+    ['lanyard'],
+    ['id holder'],
+    ['keychain'],
+    ['badge'],
+    ['bag', 'tote', 'totebag', 'backpack', 'pouch'],
+    ['mug', 'tumbler', 'cup', 'bottle', 'flask', 'water bottle']
+];
+
+// CATEGORY_ALIASES: everyday words for a whole category, tied to it by a pattern
+// on the category's real name, so "clothes" finds Apparel whatever the admin
+// calls it, and finds nothing if no such category exists.
+const CATEGORY_ALIASES = [
+    { words: ['clothes', 'clothing', 'wear', 'apparel'], name: /apparel|cloth|wear/i },
+    { words: ['stationery', 'stationary', 'supplies', 'school'], name: /station|suppl|school/i },
+    { words: ['accessory', 'accessories'], name: /accessor/i },
+    { words: ['drinkware'], name: /drink/i }
+];
+
+// A category is matched by its whole name or by any word of it long enough to be
+// meaningful ("Gift Set" -> "gift", not "set"), singular or plural.
+const categoryWords = (name) => {
+    const words = [name, ...name.split(/[^a-z0-9]+/i).filter(w => w.length >= 4)];
+    return [...new Set(words.flatMap(w => (/s$/i.test(w) && w.length > 4 ? [w, w.slice(0, -1)] : [w])))];
 };
+
+function categoriesAsked(text, categories) {
+    return categories.filter(c =>
+        categoryWords(c.name).some(w => wordMatcher(w).test(text))
+        || CATEGORY_ALIASES.some(a => a.name.test(c.name) && a.words.some(w => wordMatcher(w).test(text))));
+}
+
+// Words from the shop's own product names become one-word item groups, so a
+// product the admin adds ("Umbrella") can be asked for by name with no edit to
+// ITEM_GROUPS. That list then only has to supply synonyms.
+//
+// Read from the whole active catalogue, sold out or not, so asking for an item
+// that has run out is recognised as a product request and answered "out of
+// stock" rather than handed to the language model.
+//
+// Grammar and filler words are skipped, and so is any word that runs through
+// much of the catalogue ("CLSU", a series name): as a search word it would match
+// everything and mean nothing.
+const NAME_STOPWORDS = new Set([
+    'the', 'and', 'for', 'with', 'new', 'set', 'pack', 'pcs', 'size', 'small', 'medium', 'large', 'mini', 'big',
+    'official', 'edition', 'collection', 'design', 'series', 'version', 'special', 'limited', 'sale',
+    'product', 'products', 'item', 'items'
+]);
+const STATIC_ITEM_WORDS = new Set(ITEM_GROUPS.flat());
+const singular = (w) => (/s$/.test(w) && !/ss$/.test(w) && w.length > 3 ? w.slice(0, -1) : w);
+
+function nameVocabulary(catalogue) {
+    const counts = new Map();
+    for (const p of catalogue) {
+        const words = new Set((String(p.name).toLowerCase().match(/[a-z]{3,}/g) || [])
+            .filter(w => !NAME_STOPWORDS.has(w))
+            .map(singular));
+        for (const w of words) counts.set(w, (counts.get(w) || 0) + 1);
+    }
+    const runsThroughCatalogue = (n) => catalogue.length >= 3 && n >= 2 && n / catalogue.length > 0.3;
+    return [...counts]
+        .filter(([w, n]) => !runsThroughCatalogue(n) && !STATIC_ITEM_WORDS.has(w))
+        .map(([w]) => [w]);
+}
+
+// [{ words, asked }] for each group the text mentions: `asked` are the group's
+// words the shopper actually used, `words` the whole group.
+function itemGroupsAsked(text, extraGroups = []) {
+    return [...ITEM_GROUPS, ...extraGroups]
+        .map(words => ({ words, asked: words.filter(w => wordMatcher(w).test(text)) }))
+        .filter(g => g.asked.length > 0);
+}
+
+// `shop` is what the database says the shop sells right now: { categories,
+// catalogue, extraGroups }. See loadShop().
+const EMPTY_SHOP = { categories: [], catalogue: [], extraGroups: [] };
+
+// Everything the vocabulary above is built from, fetched fresh per request.
+async function loadShop() {
+    const [categories, catalogue] = await Promise.all([fetchActiveCategories(), fetchCatalogue()]);
+    return { categories, catalogue, extraGroups: nameVocabulary(catalogue) };
+}
+
+const mentionsCatalogTerm = (text, shop) =>
+    categoriesAsked(text, shop.categories).length > 0 || itemGroupsAsked(text, shop.extraGroups).length > 0;
 
 // Returns { amount, isCap } for "under 300", "below ₱500", "under ₱500",
 // "300 pesos", or { amount: null } when no price was given. A bare number is
@@ -252,12 +383,7 @@ const shuffle = (list) => {
 };
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
 
-function categoryOf(product) {
-    for (const [key, keywords] of Object.entries(CATEGORIES)) {
-        if (keywords.some(kw => wordMatcher(kw).test(product.name))) return key;
-    }
-    return 'other';
-}
+const categoryOf = (product) => product.category_name || 'other';
 
 // Round-robin across categories, so a request with no criteria surfaces a mix
 // (one bag, one mug, one notebook) instead of three items of the same kind.
@@ -285,12 +411,12 @@ const CHEAPEST_PATTERN = /\b(cheap\w*|affordable|lowest|budget)\b/i;
 // True when the message says WHAT to recommend (a category, a price, "cheapest",
 // "best sellers") rather than just asking for something. "Show me more" carries
 // no criteria of its own, so it inherits the previous request's.
-function queryHasCriteria(text) {
+function queryHasCriteria(text, shop) {
     const lower = text.toLowerCase();
     return parseBudget(lower).amount !== null
         || CHEAPEST_PATTERN.test(lower)
         || BEST_SELLER_PATTERN.test(lower)
-        || Object.values(CATEGORIES).some(keywords => keywords.some(kw => wordMatcher(kw).test(lower)));
+        || mentionsCatalogTerm(lower, shop);
 }
 
 // Up to three in-stock products for the request. Never returns items above a
@@ -301,28 +427,57 @@ function queryHasCriteria(text) {
 // keeps them; this service is stateless). Unseen items always rank ahead of
 // seen ones, so asking again gives new products, and `freshOnly` ("show me
 // more") drops the seen ones entirely rather than repeating them.
-function findProductSuggestions(userQuery, products, { shown = [], freshOnly = false, popular = false } = {}) {
+function findProductSuggestions(userQuery, products, { shown = [], freshOnly = false, popular = false, shop = EMPTY_SHOP } = {}) {
     const text = userQuery.toLowerCase();
     const { amount, isCap } = parseBudget(text);
     const seen = new Set(shown);
 
     let pool = products.filter(p => p.price !== null && p.price !== undefined && !isNaN(Number(p.price)));
 
-    let categoryAsked = false;
-    const inCategory = [];
-    for (const keywords of Object.values(CATEGORIES)) {
-        const asked = keywords.filter(kw => wordMatcher(kw).test(text));
-        if (asked.length > 0) {
-            categoryAsked = true;
-            // "hoodie" should surface hoodies before shirts; the wider category
-            // is only the fallback when nothing carries the exact word.
-            const exact = pool.filter(p => asked.some(kw => wordMatcher(kw).test(p.name)));
-            inCategory.push(...(exact.length > 0
-                ? exact
-                : pool.filter(p => keywords.some(kw => wordMatcher(kw).test(p.name)))));
+    // What the shopper named: a category ("apparel") and/or a kind of item
+    // ("jackets"). Naming both narrows to that kind of item within the category.
+    // An empty result is an honest answer: it is never widened to the rest of the
+    // category, which is how a jackets request used to come back as three shirts.
+    const categoryHits = categoriesAsked(text, shop.categories);
+    const itemHits = itemGroupsAsked(text, shop.extraGroups);
+    const categoryAsked = categoryHits.length > 0 || itemHits.length > 0;
+    const askedLabels = [
+        ...categoryHits.map(c => c.name),
+        ...itemHits.map(h => text.match(wordMatcher(h.asked[0]))[0])
+    ];
+    const categoryIds = new Set(categoryHits.map(c => Number(c.id)));
+    const nameMatches = (p, itemHit) => itemHit.words.some(kw => wordMatcher(kw).test(p.name));
+    let outOfStock = [];
+
+    if (categoryAsked) {
+        let scoped = pool;
+        if (categoryHits.length > 0) {
+            scoped = scoped.filter(p => categoryIds.has(Number(p.category_id)));
+        }
+        if (itemHits.length > 0) {
+            const matched = [];
+            for (const itemHit of itemHits) {
+                // "hoodie" should surface hoodies before sweatshirts; the wider
+                // group is only the fallback when nothing carries the exact word.
+                const exact = scoped.filter(p => itemHit.asked.some(kw => wordMatcher(kw).test(p.name)));
+                matched.push(...(exact.length > 0 ? exact : scoped.filter(p => nameMatches(p, itemHit))));
+            }
+            scoped = Array.from(new Set(matched));
+        }
+        pool = scoped;
+
+        // Nothing in stock, but the shop does list it: say it ran out, which is
+        // a different answer from "we don't sell that".
+        if (pool.length === 0 && itemHits.length > 0) {
+            const inStock = new Set(products.map(p => p.slug));
+            outOfStock = shop.catalogue
+                .filter(p => !inStock.has(p.slug)
+                    && (categoryHits.length === 0 || categoryIds.has(Number(p.category_id)))
+                    && itemHits.some(h => nameMatches(p, h)))
+                .map(p => p.name)
+                .slice(0, 3);
         }
     }
-    if (categoryAsked) pool = Array.from(new Set(inCategory));
 
     if (amount !== null) {
         pool = isCap
@@ -357,7 +512,7 @@ function findProductSuggestions(userQuery, products, { shown = [], freshOnly = f
         picks,
         remaining: unseen.length - picks.filter(p => !seen.has(p.slug)).length,
         allSeen: shown.length > 0 && picks.length > 0 && picks.every(p => seen.has(p.slug)),
-        meta: { amount, isCap, categoryAsked, wantsCheapest, vague, popular }
+        meta: { amount, isCap, categoryAsked, askedLabels, outOfStock, wantsCheapest, vague, popular }
     };
 }
 
@@ -382,23 +537,17 @@ function formatProductList(items) {
 
 // Each chip is a message the shopper could have typed, so tapping one goes back
 // through the same matching as everything else.
-const CATEGORY_CHIPS = {
-    apparel: 'Show me apparel',
-    stationery: 'Show me stationery',
-    accessories: 'Show me accessories',
-    bags: 'Show me bags',
-    drinkware: 'Show me mugs and bottles'
-};
-
+// The names are the database's, so a chip only ever offers a category that has
+// something in stock, and the name still resolves through categoriesAsked().
 function buildChips(products, { remaining, meta }) {
     const chips = [];
     if (remaining > 0) chips.push('Show me more');
 
     if (!meta.categoryAsked) {
-        const inStock = new Set(products.map(categoryOf));
-        shuffle(Object.keys(CATEGORY_CHIPS).filter(key => inStock.has(key)))
+        const inStock = new Set(products.map(p => p.category_name).filter(Boolean));
+        shuffle([...inStock])
             .slice(0, 2)
-            .forEach(key => chips.push(CATEGORY_CHIPS[key]));
+            .forEach(name => chips.push(`Show me ${name}`));
     }
 
     if (meta.amount === null && !meta.popular) {
@@ -436,20 +585,32 @@ function recommendationHeading({ picks, allSeen, meta }, freshOnly) {
 // more"). `products` are the slugs it recommended and `query` is what the
 // browser should send back as last_query, so a later "more" knows what to
 // continue; `chips` are the follow-up replies to offer.
-function buildRecommendationReply(query, products, { shown = [], freshOnly = false } = {}) {
+function buildRecommendationReply(query, products, { shown = [], freshOnly = false, shop = EMPTY_SHOP } = {}) {
     const popular = BEST_SELLER_PATTERN.test(query);
-    const result = findProductSuggestions(query, products, { shown, freshOnly, popular });
+    const result = findProductSuggestions(query, products, { shown, freshOnly, popular, shop });
 
     if (result.picks.length === 0) {
         let response;
+        const asked = result.meta.askedLabels.join(' / ');
         if (freshOnly) {
             response = "That's everything I have for that request. Try a different category or price range, or browse the full [catalog](/products).";
         } else if (popular) {
             response = "I can't rank best sellers yet because there aren't enough completed orders, but you can browse the whole [catalog](/products).";
+        } else if (result.meta.outOfStock.length > 0) {
+            const names = result.meta.outOfStock.map(n => `**${n.replace(/[\[\]*]/g, '')}**`);
+            const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
+            response = `${list} ${names.length > 1 ? 'are' : 'is'} out of stock right now. Try another item, or browse our [catalog](/products).`;
+        } else if (asked) {
+            // Name what was asked for, so "jackets" is not answered as if the
+            // shopper had asked for anything else.
+            const budget = result.meta.amount !== null ? ' within that budget' : '';
+            response = `Sorry, I couldn't find any ${asked} in stock${budget} right now. Try a different category or price range, or browse our [catalog](/products).`;
         } else {
             response = "Sorry, we don't have any matching products in stock right now. Please try a different price range or category, or browse our [catalog](/products).";
         }
-        return { response, products: [], query, chips: buildChips(products, { remaining: 0, meta: result.meta }) };
+        // The category chips are offered even when a category was asked for: the
+        // shopper just found nothing there, so pointing elsewhere is the useful move.
+        return { response, products: [], query, chips: buildChips(products, { remaining: 0, meta: { ...result.meta, categoryAsked: false } }) };
     }
 
     return {
@@ -795,6 +956,11 @@ app.post('/api/chat', async (req, res) => {
             console.error('Failed to fetch from DB:', dbErr);
         }
 
+        // Active categories and every listed product name, not just what is in
+        // stock: asking for something that is sold out must be answered "out of
+        // stock", not read as a vague request for a random mix.
+        const shop = await loadShop();
+
         const noProductsReply = "I couldn't find any products in stock to recommend right now. Please check our [catalog](/products) for the latest items.";
         const hasCatalog = Array.isArray(dbProducts) && dbProducts.length > 0;
 
@@ -809,15 +975,17 @@ app.post('/api/chat', async (req, res) => {
         if (isMoreRequest(msgLower, context)) {
             if (!hasCatalog) return res.json({ response: noProductsReply });
 
-            const query = queryHasCriteria(msgLower) ? message : context.lastQuery;
-            return res.json(buildRecommendationReply(query, dbProducts, { shown: context.shown, freshOnly: true }));
+            const query = queryHasCriteria(msgLower, shop) ? message : context.lastQuery;
+            return res.json(buildRecommendationReply(query, dbProducts, { shown: context.shown, freshOnly: true, shop }));
         }
 
         // 4b. Product recommendations, answered from the database (no model call).
-        if (BEST_SELLER_PATTERN.test(msgLower) || RECOMMENDATION_PATTERN.test(msgLower)) {
+        // Naming a category or a kind of item counts as asking, so a category the
+        // admin adds ("Show me Athletics") works without editing RECOMMENDATION_PATTERN.
+        if (BEST_SELLER_PATTERN.test(msgLower) || RECOMMENDATION_PATTERN.test(msgLower) || mentionsCatalogTerm(msgLower, shop)) {
             if (!hasCatalog) return res.json({ response: noProductsReply });
 
-            return res.json(buildRecommendationReply(message, dbProducts, { shown: context.shown }));
+            return res.json(buildRecommendationReply(message, dbProducts, { shown: context.shown, shop }));
         }
 
         // 5. Dynamic catalog context for the LLM

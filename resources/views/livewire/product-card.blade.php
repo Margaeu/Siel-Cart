@@ -24,7 +24,12 @@
         --}}
         <div class="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-100">
 
-            <x-storefront.product-badges :product="$product" :badge="$badge" />
+            <x-storefront.product-badges
+                :product="$product"
+                :badge="$badge"
+                :is-best-seller="$isBestSeller"
+                :is-top-pick="$isTopPick"
+            />
 
             @if($product->cardImage)
                 <img src="{{ $product->cardImage->url }}"

@@ -121,7 +121,7 @@
       <p style="margin:0 0 12px 0; font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.04em;">WHAT'S NEXT</p>
       <p style="margin:0 0 10px 0;">Visit the designated pickup location during your scheduled pickup time and present your claim number to the UBAP Office.</p>
       <p style="margin:0 0 20px 0;">After your order has been successfully collected, you’ll receive a pickup confirmation email.</p>
-      <p style="margin:0 0 20px 0;">If you are unable to collect your order during the scheduled pickup period, please contact the UBAP Office as soon as possible. Orders that are not collected within the designated pickup period may be cancelled according to our pickup policy.</p>
+      <p style="margin:0 0 20px 0;">Orders that are not collected within the designated pickup period may be cancelled according to our pickup policy.</p>
       <p style="margin:0 0 4px 0;">Cheers,</p>
       <p style="margin:0;">UBAP Team</p>
     </td>

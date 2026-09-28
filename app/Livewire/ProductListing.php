@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\HomepageProductRankingService;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
@@ -132,7 +133,7 @@ class ProductListing extends Component
         $this->dispatch('category-changed', category: '');
     }
 
-    public function render()
+    public function render(HomepageProductRankingService $rankingService)
     {
         // withCardData() loads the image and the stock/review/price
         // aggregates each card reads, instead of every variant row of every
@@ -219,10 +220,19 @@ class ProductListing extends Component
             ->withCount(['products' => fn (Builder $products) => $products->active()])
             ->get();
 
+        // The catalog uses the same rolling seven-day sales rankings as the
+        // homepage and product details. Passing the ranked IDs into each card
+        // keeps Best Seller / Top Pick labels consistent everywhere without
+        // teaching the reusable card how to query or rank the catalog itself.
+        $bestSellerIds = $rankingService->bestSellers()->pluck('id')->all();
+        $topPickIds = $rankingService->topPicks()->pluck('id')->all();
+
         return view('livewire.product-listing', [
             'products' => $products,
             'categories' => $categories,
             'allProductsCount' => $allProductsCount,
+            'bestSellerIds' => $bestSellerIds,
+            'topPickIds' => $topPickIds,
         ])
             ->layout('components.layouts.front-end-layout');
     }

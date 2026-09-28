@@ -9,8 +9,7 @@
          deleteAccountModalOpen: false,
          identityModalOpen: false,
          emailChangeModalOpen: false,
-         editingPhone: false,
-         editingDob: false
+         editingPhone: false
      }"
      x-on:hashchange.window="tab = location.hash === '#password' ? 'security' : 'profile'"
      x-on:keydown.escape.window="
@@ -216,44 +215,14 @@
                             </div>
                         </div>
 
-                        {{--
-                            Same picker as registration, so the 13-year floor
-                            can't be edited away here either. Nullable: some
-                            accounts predate this field or were set by an
-                            admin without one. Like phone above, an already-set
-                            date of birth is shown starred out (year only)
-                            until "Change" is clicked.
-                        --}}
                         <div>
-                            @if ($date_of_birth)
-                                <div x-show="!editingDob">
-                                    <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Date of Birth</label>
-                                    <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5">
-                                        <span class="truncate text-gray-900">{{ auth('customer')->user()->masked_date_of_birth }}</span>
-                                        <button type="button"
-                                                x-on:click="editingDob = true"
-                                                class="shrink-0 text-sm font-semibold text-[var(--color-primary)] hover:underline">
-                                            Change
-                                        </button>
-                                    </div>
-                                    <p class="mt-1.5 text-xs text-gray-500">You must be at least 13 years old.</p>
-                                </div>
-                            @endif
-                            <div x-show="editingDob || {{ $date_of_birth ? 'false' : 'true' }}">
-                                <x-dob-picker
-                                    name="date_of_birth"
-                                    :value="$date_of_birth"
-                                    :required="false"
-                                    wire:model="date_of_birth" />
-                                @if ($date_of_birth)
-                                    <button type="button"
-                                            x-show="editingDob"
-                                            x-on:click="editingDob = false"
-                                            class="mt-1.5 text-xs font-semibold text-gray-500 hover:underline">
-                                        Cancel
-                                    </button>
-                                @endif
+                            <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Date of Birth</label>
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5">
+                                <span class="text-gray-900">
+                                    {{ $date_of_birth ? auth('customer')->user()->masked_date_of_birth : 'Not provided' }}
+                                </span>
                             </div>
+                            <p class="mt-1.5 text-xs text-gray-500">Date of birth cannot be changed through Profile Management.</p>
                         </div>
 
                         @if (session()->has('error'))

@@ -391,7 +391,12 @@
                     --}}
                     <div class="grid grid-cols-1 gap-x-3 gap-y-7 xs:grid-cols-2 sm:gap-x-5 sm:gap-y-9 md:grid-cols-3 lg:gap-x-6 lg:gap-y-10 3xl:grid-cols-4">
                         @foreach ($products as $product)
-                            <livewire:product-card :key="$product->id" :product="$product" />
+                            <livewire:product-card
+                                :key="$product->id"
+                                :product="$product"
+                                :is-best-seller="in_array($product->id, $bestSellerIds, true)"
+                                :is-top-pick="in_array($product->id, $topPickIds, true)"
+                            />
                         @endforeach
                     </div>
 

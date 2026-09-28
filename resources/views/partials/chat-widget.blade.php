@@ -128,6 +128,9 @@
         // Open and close are two entry points for the same state, and the
         // toggle button's aria-expanded has to follow both of them.
         function openChat() {
+            // Fresh suggestions on every open. Does nothing once a conversation
+            // has started (renderSuggestions leaves a hidden container alone).
+            renderSuggestions();
             chatWidget.classList.remove('hidden');
             chatWidget.classList.add('flex');
             toggleBtn.setAttribute('aria-expanded', 'true');
@@ -290,12 +293,53 @@
             sendMessageWithText(message);
         }
 
-        // Suggested questions derived from server-side allowed topics
-        const SUGGESTED_QUESTIONS = [
-            'How do I place an order?',
-            'What payment methods do you accept?',
-            'Where and when do I pick up my order?'
+        // Suggested questions. A different few are offered each time the chat is
+        // opened, worded to invite a tap rather than read like a menu. Every one
+        // has to be something chatbot-server can actually answer -- the shopping
+        // ones through its budget / "best sellers" / cheapest / catalogue matching,
+        // the help ones through its FAQ_ENTRIES -- so a new phrasing is worth a
+        // test against the running service before it is added. Avoid "in stock"
+        // (the FAQ answers that as a stock-status question), category or item
+        // names ("gift" matched a Gift Set category with nothing in stock), and
+        // low budgets (the cheapest item may already cost more than the cap).
+        const SHOPPING_QUESTIONS = [
+            'What are your best sellers?',
+            'Surprise me with something under ₱500',
+            "What's the cheapest thing in the store?",
+            "What's a good pick under ₱1,000?",
+            'Show me a mix from your catalog',
+            'What can I get for under ₱800?'
         ];
+        const HELP_QUESTIONS = [
+            'How do I place an order?',
+            'Can I just pay in cash when I pick up?',
+            'Can a friend pick up my order for me?',
+            'How long until my order is ready?',
+            'Do you deliver to my address?',
+            'What happens if I miss my pickup?',
+            'Can I cancel my order after placing it?',
+            'How will I know when my order is ready?',
+            'What do I need to bring to claim my order?'
+        ];
+
+        const pickRandom = (list, count) => [...list].sort(() => Math.random() - 0.5).slice(0, count);
+
+        // Two or three questions, never more: a taller list crowds the greeting and
+        // overwhelms the shopper before they have asked anything. One way to get
+        // help always, plus one or two ways to browse, and never the same set
+        // twice in a row (remembered on window, like chatState, because Livewire
+        // navigation re-runs initChatbot() over the same page).
+        function chooseSuggestions() {
+            const previous = (window.__chatLastSuggestions || []).join('|');
+            let chosen;
+            for (let attempt = 0; attempt < 5; attempt++) {
+                const shoppingCount = Math.random() < 0.5 ? 1 : 2;
+                chosen = [...pickRandom(SHOPPING_QUESTIONS, shoppingCount), ...pickRandom(HELP_QUESTIONS, 1)];
+                if (chosen.join('|') !== previous) break;
+            }
+            window.__chatLastSuggestions = chosen;
+            return chosen;
+        }
 
         function renderSuggestions() {
             const container = document.getElementById('chat-suggestions');
@@ -318,7 +362,7 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'flex flex-col items-start gap-1.5 pt-0.5';
 
-            SUGGESTED_QUESTIONS.forEach(q => {
+            chooseSuggestions().forEach(q => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'max-w-[85%] rounded-xl border border-gray-200 bg-white px-3 py-2 text-left text-xs leading-snug whitespace-normal shadow-sm transition hover:border-[var(--color-primary)] hover:bg-gray-50';

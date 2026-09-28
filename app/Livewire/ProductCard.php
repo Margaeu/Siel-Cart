@@ -19,10 +19,21 @@ class ProductCard extends Component
      */
     public ?string $badge = null;
 
-    public function mount(Product $product, ?string $badge = null): void
-    {
+    /** Whether this product currently appears in each sales-ranked section. */
+    public bool $isBestSeller = false;
+
+    public bool $isTopPick = false;
+
+    public function mount(
+        Product $product,
+        ?string $badge = null,
+        bool $isBestSeller = false,
+        bool $isTopPick = false,
+    ): void {
         $this->product = $product;
         $this->badge = $badge;
+        $this->isBestSeller = $isBestSeller;
+        $this->isTopPick = $isTopPick;
     }
 
     /**

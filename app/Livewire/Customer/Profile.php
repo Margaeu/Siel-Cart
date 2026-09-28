@@ -17,6 +17,10 @@ class Profile extends Component
 
     public $phone;
 
+    /**
+     * Read-only snapshot for display. Date of birth is established during
+     * registration and is deliberately excluded from updateProfile().
+     */
     public $date_of_birth;
 
     // Identity verification for the profile form. Kept separate from
@@ -73,8 +77,9 @@ class Profile extends Component
         $this->email = $customer->email;
         $this->pending_email = $customer->pending_email;
         $this->phone = $customer->phone;
-        // date_of_birth isn't cast (see Customer::casts()), so this is
-        // already the raw 'Y-m-d' string the date_of_birth column stores.
+        // Display only. Keeping the stored value on the component lets the
+        // page render legacy accounts consistently, but it is never validated
+        // or persisted by updateProfile().
         $this->date_of_birth = $customer->date_of_birth;
     }
 
@@ -84,17 +89,11 @@ class Profile extends Component
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'phone' => ['nullable', 'string', 'max:11', 'regex:/\A[0-9]+\z/'],
-            // Nullable: some accounts predate this field or were edited by an
-            // admin without one. When it is set, it must satisfy the same
-            // 13-year minimum age CreateNewCustomer enforces at registration
-            // — editing the birthday can't be used to slip under that floor.
-            'date_of_birth' => ['nullable', 'date', 'before_or_equal:'.now()->subYears(13)->format('Y-m-d')],
             // Identity verification: any profile edit must be confirmed with
             // the account's current password before it is written, the same
             // way a password change already is.
             'current_password_for_profile' => 'required',
         ], [
-            'date_of_birth.before_or_equal' => 'You must be at least 13 years old.',
             'phone.max' => 'Phone numbers must contain no more than 11 digits.',
             'phone.regex' => 'Enter digits only for your phone number, for example 09171234567.',
             'current_password_for_profile.required' => 'Please enter your current password to confirm these changes.',
@@ -111,7 +110,6 @@ class Profile extends Component
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'phone' => $this->phone,
-            'date_of_birth' => $this->date_of_birth ?: null,
         ]);
 
         $this->reset('current_password_for_profile');
