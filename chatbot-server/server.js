@@ -78,12 +78,18 @@ const dbPool = mysql.createPool({
     ...(isLocalDbHost ? {} : { ssl: dbSslCa ? { ca: dbSslCa, rejectUnauthorized: true } : { rejectUnauthorized: true } })
 });
 
-// Updated stable free OpenRouter model list
+// Free OpenRouter models, tried in order until one answers. OpenRouter retires
+// and re-slugs free models without notice: the previous list (gemini-2.0-flash-lite,
+// llama-3.3-70b:free, deepseek-r1:free, qwen-2.5-coder:free) all returned 404, so
+// every AI-answered question fell through to FRIENDLY_ERROR_MESSAGE. Checked
+// against GET https://openrouter.ai/api/v1/models on 2026-09-28. If the chat goes
+// down again, re-check that list before suspecting anything else. Plain instruct
+// models only: reasoning models can return empty content inside the 6s timeout.
 const FALLBACK_MODELS = [
-    'google/gemini-2.0-flash-lite-001',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'deepseek/deepseek-r1:free',
-    'qwen/qwen-2.5-coder-32b-instruct:free'
+    'google/gemma-4-31b-it:free',
+    'qwen/qwen3.8-27b:free',
+    'nvidia/nemotron-3-super-120b-a12b:free',
+    'google/gemma-4-26b-a4b-it:free'
 ];
 
 const STANDARD_REFUSAL = "I can only assist with Siel Cart FAQs (How to Order, Returns/Refunds, Data Handling), Product Recommendations, and order status inquiries. How may I help you today?";
@@ -237,7 +243,7 @@ async function generateContentWithFallback(message, systemInstruction) {
             }
             throw new Error(`Model [${modelName}] returned an empty text payload.`);
         } catch (error) {
-            console.warn(`Model [\({modelName}] failed/timed out:\){error.message}. Trying next model...`);
+            console.warn(`Model [${modelName}] failed/timed out: ${error.message}. Trying next model...`);
             lastError = error;
         }
     }
