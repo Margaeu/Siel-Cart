@@ -49,10 +49,11 @@
     Below sm the window spans the viewport minus the 16px mobile gutter and
     takes its height from dvh, so it fits a 320px phone instead of overflowing
     it -- the old fixed w-80 plus right-6 measured 344px. From sm up the
-    desktop/tablet panel stays compact enough to leave the storefront visible
-    behind it, while the narrow-screen layout still uses the available width.
+    desktop/tablet panel gives replies room to breathe while leaving the
+    storefront visible behind it. The narrow-screen layout uses the available
+    width instead of forcing a fixed panel beyond the viewport.
 --}}
-<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[27rem] sm:w-80">
+<div id="chat-widget" wire:ignore role="dialog" aria-label="Shopping assistant" class="hidden fixed bottom-20 left-4 right-4 z-50 h-[min(30rem,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl transition-all duration-300 sm:bottom-24 sm:left-auto sm:right-6 sm:h-[27rem] sm:w-[500px]">
     <!-- Header -->
     <div class="flex h-16 shrink-0 items-center justify-between bg-[var(--color-primary)] px-4 text-white shadow-sm">
         <div class="flex min-w-0 items-center gap-2.5">

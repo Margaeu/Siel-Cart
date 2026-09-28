@@ -12,6 +12,14 @@ use Illuminate\Validation\ValidationException;
 class Login extends BaseLogin
 {
     /**
+     * Keep Filament's five-attempt limit, but extend its window to five minutes.
+     */
+    protected function rateLimit($maxAttempts, $decaySeconds = 300, $method = null, $component = null)
+    {
+        parent::rateLimit($maxAttempts, $decaySeconds, $method, $component);
+    }
+
+    /**
      * Clear the attempted credentials and show one error above the form.
      */
     protected function throwFailureValidationException(): never
