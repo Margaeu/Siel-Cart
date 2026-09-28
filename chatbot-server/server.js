@@ -1,15 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import OpenAI from 'openai';
 import mysql from 'mysql2/promise';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(cors());
@@ -26,56 +21,18 @@ const openrouter = new OpenAI({
 });
 
 // 2. Initialize Database Connection Pool
-const dbHost = process.env.DB_HOST || 'localhost';
-const isLocalDbHost = ['localhost', '127.0.0.1', '::1'].includes(dbHost);
-
-// Aiven requires TLS, and Node's default trust store doesn't include its CA,
-// so `rejectUnauthorized: true` with no `ca` fails the handshake on every
-// connection attempt. fetchAvailableProducts() below catches that silently
-// and falls back to a hardcoded product list -- which is why production was
-// serving fake "CLSU Notebook / Siel Cart Lanyard / UBAP Mug" recommendations
-// with no visible error. Mirrors config/database.php's CA lookup so the same
-// committed cert works for both services; see chatbot-server/certs/README.md
-// for why there are two copies.
-function loadDbSslCa() {
-    const configured = (process.env.MYSQL_ATTR_SSL_CA || '').trim();
-    const candidates = configured
-        ? [path.isAbsolute(configured) ? configured : path.resolve(__dirname, configured)]
-        : [
-            path.resolve(__dirname, 'certs/aiven-ca.pem'),
-            path.resolve(__dirname, '../storage/certs/aiven-ca.pem'),
-        ];
-
-    for (const candidate of candidates) {
-        try {
-            return fs.readFileSync(candidate, 'utf8');
-        } catch {
-            // try next candidate
-        }
-    }
-
-    return null;
-}
-
-const dbSslCa = isLocalDbHost ? null : loadDbSslCa();
-
-if (!isLocalDbHost && !dbSslCa) {
-    console.warn(
-        'MySQL SSL CA not found (checked MYSQL_ATTR_SSL_CA and chatbot-server/certs/aiven-ca.pem). ' +
-        'The connection to Aiven will fail TLS verification and product recommendations will silently fall back to stub data.'
-    );
-}
-
 const dbPool = mysql.createPool({
-    host: dbHost,
+    host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || process.env.DB_USERNAME || 'root',
+    user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || process.env.DB_DATABASE || 'siel_cart',
+    database: process.env.DB_NAME || 'siel_cart',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ...(isLocalDbHost ? {} : { ssl: dbSslCa ? { ca: dbSslCa, rejectUnauthorized: true } : { rejectUnauthorized: true } })
+    ssl: {
+        rejectUnauthorized: true
+    }
 });
 
 // Updated stable free OpenRouter model list
@@ -97,19 +54,19 @@ const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU):
 Siel Cart is pickup-only and cash-only at the UBAP Office. No delivery, no couriers, no cards/GCash/online payments.
 
 HOW TO ORDER:
-1. **Browse** catalog and select item...
-2. **Choose** size/variant and add to cart.
-3. **Open** cart items.
-4. **Proceed** to checkout to confirm.
-5. **Receive** claim number via email, then collect and pay in cash at UBAP Office.
+1. 𝐁𝐫𝐨𝐰𝐬𝐞 catalog and select item...
+2. 𝐂𝐡𝐨𝐨𝐬𝐞 size/variant and add to cart.
+3. 𝐎𝐩𝐞𝐧 cart items.
+4. 𝐏𝐫𝐨𝐜𝐞𝐞𝐝 to checkout to confirm.
+5. 𝐑𝐞𝐜𝐞𝐢𝐯𝐞 claim number via email, then collect and pay in cash at UBAP Office.
 
 PICKUP & CANCELLATION:
-- Claim Numbers are issued ONLY when status is **Ready for Pickup**.
-- Unclaimed Orders are cancelled. To reschedule pickup, contact **UBAP Office**.
-- Cancel orders on **My Orders** page ONLY while status is **Pending**.
+- Claim Numbers are issued ONLY when status is 𝐑𝐞𝐚𝐝𝐲 𝐟𝐨𝐫 𝐏𝐢𝐜𝐤𝐮𝐩.
+- Unclaimed Orders are cancelled. To reschedule pickup, contact 𝐔𝐁𝐀𝐏 𝐎𝐟𝐟𝐢𝐜𝐞.
+- Cancel orders on 𝐌𝐲 𝐎𝐫𝐝𝐞𝐫𝐬 page ONLY while status is 𝐏𝐞𝐧𝐝𝐢𝐧𝐠.
 
 RETURNS & PRIVACY:
-- Returns/refunds cannot be requested on website. Contact **UBAP Office** directly for defective items.
+- Returns/refunds cannot be requested on website. Contact 𝐔𝐁𝐀𝐏 𝐎𝐟𝐟𝐢𝐜𝐞 directly for defective items.
 - Privacy Policy: [Privacy Policy](/privacy-policy)
 - Terms & Conditions: [Terms & Conditions](/terms-and-conditions)`;
 
@@ -127,30 +84,12 @@ function isIrrelevantQuery(text) {
 
 async function fetchAvailableProducts() {
     try {
-        // Variant-based products (has_variants = 1) keep their real price and
-        // stock on product_variants, not on the products row itself -- p.price
-        // is NULL and p.stock_quantity is unused for those. Pull the lowest
-        // active-variant price and total active-variant stock for them, and
-        // fall back to the product's own columns otherwise.
         const [rows] = await dbPool.query(
-            `SELECT
-                p.name,
-                CASE WHEN p.has_variants = 1 THEN MIN(pv.price) ELSE MAX(p.price) END AS price,
-                CASE WHEN p.has_variants = 1 THEN COALESCE(SUM(pv.stock_quantity), 0) ELSE MAX(p.stock_quantity) END AS stock_quantity
-             FROM products p
-             LEFT JOIN product_variants pv ON pv.product_id = p.id AND pv.is_active = 1
-             WHERE p.is_active = 1
-             GROUP BY p.id, p.name, p.has_variants
-             HAVING stock_quantity > 0`
+            'SELECT name, price FROM products WHERE is_active = 1 AND stock > 0'
         );
         return rows;
     } catch (dbError) {
-        // Logged with the driver's error code (e.g. ECONNREFUSED,
-        // ER_ACCESS_DENIED_ERROR, HANDSHAKE_SSL_ERROR) because the message
-        // alone doesn't distinguish "wrong host/credentials" from "TLS
-        // verification failed" -- both silently fall back to the same stub
-        // product list below, so this log is the only way to tell which.
-        console.error('Database fetch error:', dbError.code || '(no code)', '-', dbError.message);
+        console.error('Database fetch error:', dbError.message);
         return [];
     }
 }
@@ -198,7 +137,7 @@ function getProductSuggestionsByQuery(userQuery, products) {
     const topThree = filtered.slice(0, 3);
 
     return topThree.map(function(item) {
-        return "- **" + item.name + "**: ₱" + item.price;
+        return "- *" + item.name + "*: ₱" + item.price;
     }).join("\n");
 }
 
@@ -214,7 +153,7 @@ async function createCompletionWithTimeout(modelName, systemInstruction, message
             ],
         }),
         new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+            setTimeout(() => reject(new Error(Timeout after ${timeoutMs}ms)), timeoutMs)
         )
     ]);
 }
@@ -224,7 +163,7 @@ async function generateContentWithFallback(message, systemInstruction) {
 
     for (const modelName of FALLBACK_MODELS) {
         try {
-            console.log(`Attempting completion with model: ${modelName}`);
+            console.log(Attempting completion with model: ${modelName});
             const completion = await createCompletionWithTimeout(modelName, systemInstruction, message, 6000);
 
             let text = completion.choices[0]?.message?.content;
@@ -235,9 +174,9 @@ async function generateContentWithFallback(message, systemInstruction) {
                     return text;
                 }
             }
-            throw new Error(`Model [${modelName}] returned an empty text payload.`);
+            throw new Error(Model [${modelName}] returned an empty text payload.);
         } catch (error) {
-            console.warn(`Model [\({modelName}] failed/timed out:\){error.message}. Trying next model...`);
+            console.warn(Model [\({modelName}] failed/timed out:\){error.message}. Trying next model...);
             lastError = error;
         }
     }
@@ -261,14 +200,14 @@ app.post('/api/chat', async (req, res) => {
         const GREETINGS = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo', 'halu'];
         if (GREETINGS.some(g => msgLower === g || msgLower === g + '!' || msgLower === g + '.')) {
             return res.json({
-                response: "Hello! Welcome to Siel Cart. How can I assist you with your shopping today???"
+                response: "Hello! Welcome to 𝐒𝐢𝐞𝐥 𝐂𝐚𝐫𝐭. How can I assist you with your shopping today???"
             });
         }
 
         // 2. Payment Method
         if (msgLower.includes('payment') || msgLower.includes('pay') || msgLower.includes('gcash') || msgLower.includes('card')) {
             return res.json({
-                response: "Payment at Siel Cart is **Cash on Pickup only**, paid in person at the UBAP Office when collecting your items. We do not accept online payments or credit/debit cards."
+                response: "Payment at Siel Cart is 𝐂𝐚𝐬𝐡 𝐨𝐧 𝐏𝐢𝐜𝐤𝐮𝐩 𝐨𝐧𝐥𝐲, paid in person at the UBAP Office when collecting your items. We do not accept online payments or credit/debit cards."
             });
         }
 
@@ -277,11 +216,11 @@ app.post('/api/chat', async (req, res) => {
             return res.json({
                 response: `To place an order:
 
-1. **Browse** our catalog and select an item.
-2. **Choose** your preferred size or variant, then add it to your cart.
-3. **Open** your cart and review your items.
-4. **Proceed** to checkout to confirm your order details.
-5. **Receive** your claim number via email, then collect and pay in cash at the UBAP Office.`
+1. 𝐁𝐫𝐨𝐰𝐬𝐞 our catalog and select an item.
+2. 𝐂𝐡𝐨𝐨𝐬𝐞 your preferred size or variant, then add it to your cart.
+3. 𝐎𝐩𝐞𝐧 your cart and review your items.
+4. 𝐏𝐫𝐨𝐜𝐞𝐞𝐝 to checkout to confirm your order details.
+5. 𝐑𝐞𝐜𝐞𝐢𝐯𝐞 your claim number via email, then collect and pay in cash at the UBAP Office.`
             });
         }
 
@@ -290,9 +229,9 @@ app.post('/api/chat', async (req, res) => {
             return res.json({
                 response: `To check your order status:
 
-1. Log in to your **Siel Cart** account.
-2. Go to **My Orders** and select your order.
-3. Statuses shown are: **Pending**, **Processing**, **Ready for Pickup**, or **Completed**.`
+1. Log in to your 𝐒𝐢𝐞𝐥 𝐂𝐚𝐫𝐭 account.
+2. Go to 𝐌𝐲 𝐎𝐫𝐝𝐞𝐫𝐬 and select your order.
+3. Statuses shown are: 𝐏𝐞𝐧𝐝𝐢𝐧𝐠, 𝐏𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠, 𝐑𝐞𝐚𝐝𝐲 𝐟𝐨𝐫 𝐏𝐢𝐜𝐤𝐮𝐩, or 𝐂𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝.`
             });
         }
 
@@ -351,14 +290,8 @@ app.post('/api/chat', async (req, res) => {
 
         if (isRecommendationQuery) {
             const matchedList = getProductSuggestionsByQuery(message, dbProducts);
-
-            if (!matchedList) {
-                return res.json({
-                    response: "Sorry, we don't have any matching products in stock right now. Please try a different price range or category."
-                });
-            }
-
-            return res.json({
+            
+            return res.json({ 
                 response: "Here are 3 Product Recommendations matching your request:\n\n" + matchedList
             });
         }
@@ -376,8 +309,7 @@ Respond ONLY in English at all times.
 
 STRICT LENGTH & FORMATTING RULES:
 - Output ONLY short answers (3 bullet points max).
-- Format responses as Markdown: use **bold** for key details, - for bullet lists, and [label](url) for links.
-- Separate paragraphs and lists with a blank line. Do not output HTML or special Unicode bold letters.
+- Use bold text for key details.
 - DO NOT add extra commentary or closing questions like "Is there anything else I can help you with?".
 
 AVAILABLE PRODUCT CATALOG IN OUR SHOP:
@@ -404,5 +336,5 @@ If the user query is unrelated to Siel Cart e-commerce, output EXACTLY this resp
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(Server listening on port ${PORT});
 });
