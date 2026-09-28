@@ -116,6 +116,15 @@
 
         if (!toggleBtn || !chatWidget) return;
 
+        // What the assistant has recommended so far. The Node service keeps no
+        // per-customer state, so the browser carries it: `shown` lets a repeat
+        // request or "Show me more" skip products already offered, and
+        // `lastQuery` is what "more" continues from. It lives on window rather
+        // than in this function because Livewire navigation re-runs
+        // initChatbot() over the same transcript, which would otherwise forget
+        // everything the shopper was already shown.
+        const chatState = (window.__chatState = window.__chatState || { shown: [], lastQuery: '' });
+
         // Open and close are two entry points for the same state, and the
         // toggle button's aria-expanded has to follow both of them.
         function openChat() {
@@ -160,6 +169,31 @@
             messagesBox.scrollTop = messagesBox.scrollHeight;
         }
 
+        // Follow-up replies the assistant offers beneath a recommendation
+        // ("Show me more", a category, a price cap). Only the newest set is
+        // kept: stale chips from earlier answers would point at a conversation
+        // that has moved on. Text goes in via textContent, never markup.
+        function clearChips() {
+            messagesBox.querySelectorAll('.chat-chips').forEach(el => el.remove());
+        }
+
+        function appendChips(chips) {
+            if (!Array.isArray(chips) || chips.length === 0) return;
+
+            const row = document.createElement('div');
+            row.className = 'chat-chips flex max-w-[85%] flex-wrap gap-1.5 mr-auto';
+            chips.forEach(label => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs leading-snug shadow-sm transition hover:border-[var(--color-primary)] hover:bg-gray-50';
+                btn.textContent = String(label);
+                btn.onclick = () => sendMessageWithText(String(label));
+                row.appendChild(btn);
+            });
+            messagesBox.appendChild(row);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
         // Map the statuses the /api/chat route actually produces to something a
         // shopper can act on. 429 is the route's throttle:10,1, 422 is
         // ChatController::MAX_MESSAGE_LENGTH, and 419 is an expired CSRF token --
@@ -187,6 +221,7 @@
                 suggestions.hidden = true;
             }
 
+            clearChips();
             appendMessage(message, 'user');
             showTypingIndicator();
 
@@ -199,7 +234,7 @@
                         'Accept': 'application/json'
                     },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({ message, shown: chatState.shown, last_query: chatState.lastQuery })
                 });
 
                 removeTypingIndicator();
@@ -209,6 +244,16 @@
                 } else {
                     const data = await response.json();
                     appendMessage(data.response || 'Error: Received invalid response from server.', 'bot');
+
+                    // A recommendation: remember what it named (newest 100) and
+                    // what to continue from, then offer the follow-up chips.
+                    if (Array.isArray(data.products) && data.products.length > 0) {
+                        chatState.shown = [...new Set([...chatState.shown, ...data.products])].slice(-100);
+                    }
+                    if (typeof data.query === 'string' && data.query !== '') {
+                        chatState.lastQuery = data.query;
+                    }
+                    appendChips(data.chips);
                 }
             } catch (error) {
                 removeTypingIndicator();

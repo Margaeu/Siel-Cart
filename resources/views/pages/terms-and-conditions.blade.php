@@ -7,7 +7,7 @@
                     Terms and Conditions
                 </h1>
                 <p class="mt-2 text-sm text-slate-500">
-                    The Official CLSU Merchandise Store — Office of Business Affairs
+                    The Official CLSU Merchandise Store
                 </p>
 
                 <div class="mt-10 space-y-10">
@@ -39,7 +39,7 @@
                             <li>An account is required to place an order. You are responsible for maintaining the confidentiality of your password and for activity that occurs under your account.</li>
                             <li>You agree to notify the appropriate office promptly of any unauthorized use of your account.</li>
                             <li>You may update your first name, last name, email address, and phone number through Profile Management, subject to the System's available functions.</li>
-                            <li>Other profile information, including your date of birth, address, and profile photo, cannot currently be updated through Profile Management.</li>
+                            <li>Other profile information such as your date of birth cannot be updated through Profile Management.</li>
                         </ul>
                     </section>
 
@@ -67,27 +67,26 @@
                         </ul>
                     </section>
 
-                    {{-- 6. Order Modification and Cancellation --}}
+                    {{-- 6. Order Cancellation --}}
                     <section>
-                        <h2 class="text-xl font-bold text-slate-900">6. Order Modification and Cancellation</h2>
+                        <h2 class="text-xl font-bold text-slate-900">6. Order Cancellation</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>6.1. Customers are responsible for reviewing their orders carefully before submitting them.</li>
-                            <li>6.2. Customers may cancel their orders through the cancellation feature available in Siel Cart, provided that the order has not yet been marked as "Ready for Pickup."</li>
-                            <li>6.3. Once an order has been cancelled, the System will reflect the updated order status in accordance with its implemented cancellation process.</li>
-                            <li>6.4. Orders that are not claimed within the pickup deadline assigned by UBAP are not automatically cancelled by the System. If a customer fails to claim an order, the customer must contact UBAP to arrange a rescheduled pickup. If no rescheduling request is made, the disposition of the unclaimed order shall be determined by UBAP in accordance with its applicable procedures.</li>
-                            <li>6.5. Customers who fail to claim their orders within the assigned pickup schedule must contact UBAP through its official email address at <a href="mailto:ubap@clsu.edu.ph" class="text-[var(--color-primary)] underline">ubap@clsu.edu.ph</a> to arrange a rescheduled pickup, as described in Section 7.</li>
+                            <li>6.1. Customers may cancel their orders through the cancellation feature available in Siel Cart, provided that the order has not yet been marked as "Processing."</li>
+                            <li>6.2. Once an order has been cancelled, the System will reflect the updated order status in accordance with its implemented cancellation process.</li>
+                            <li>6.3. Orders that are not picked up within the pickup schedule assigned by UBAP shall be cancelled by UBAP, with the cancellation also reflected in the System.</li>
                         </ul>
                     </section>
 
-                    {{-- 7. Pick-up Policy --}}
+                    {{-- 7. Pickup Policy --}}
                     <section>
-                        <h2 class="text-xl font-bold text-slate-900">7. Pick-up Policy</h2>
+                        <h2 class="text-xl font-bold text-slate-900">7. Pickup Policy</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
-                            <li>7.1. Customers are responsible for claiming their orders at the designated pickup location within the pickup date and time assigned by UBAP.</li>
+                            <li>7.1. Customers are responsible for picking up their orders at the designated pickup location within the pickup schedule assigned by UBAP.</li>
                             <li>7.2. The pickup schedule is determined by UBAP and communicated to customers through the System or other official communication channels.</li>
-                            <li>7.3. If a customer fails to claim an order within the assigned pickup schedule, the customer must contact UBAP through its official email address at <a href="mailto:ubap@clsu.edu.ph" class="text-[var(--color-primary)] underline">ubap@clsu.edu.ph</a> to arrange a rescheduled pickup.</li>
-                            <li>7.4. UBAP shall determine and communicate the new pickup date and time. Customers must wait for UBAP to provide the revised schedule and may not assume that a preferred date or time has been approved. For orders that are still not claimed upon the rescheduled date, it shall be cancelled.</li>
-                            <li>7.5. Customers must follow the instructions provided by UBAP when claiming their orders.</li>
+                            <li>7.3. If a customer fails to claim an order within the assigned pickup schedule, the order will be cancelled by UBAP. Upon cancellation, the quantity of each item deducted from inventory for that order will be restored to the available stock, returning the inventory to its quantity before the order was placed.</li>
+                            <li>7.4. Customers must follow the instructions provided by UBAP when picking up their orders.</li>
+                            <li>7.5. A customer who is unable to personally claim an order may authorize another person to collect it on their behalf. The authorized representative must provide the correct claim number assigned to the order, which must be verified before the order is released.</li>
+                            <li>7.5.1. Customers are responsible for safeguarding their claim numbers and ensuring that they are shared only with their authorized representatives. UBAP shall not be held responsible for losses, disputes, or unauthorized claims arising from the customer's voluntary disclosure of the claim number, provided that UBAP has followed the applicable verification procedures.</li>
                         </ul>
                     </section>
 
@@ -95,10 +94,10 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">8. Returns, Refunds, and Exchanges</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Siel Cart Version 2.0 does not provide an online feature for submitting or tracking return, exchange, or refund requests. The System does not provide a dedicated online process for submitting supporting photos or videos, scheduling appointments, or tracking quality-check outcomes for such requests.
+                            Siel Cart does not provide an online feature for submitting or tracking return, exchange, or refund requests. The System does not provide a dedicated online process for submitting supporting photos or videos, scheduling appointments, or tracking quality-check outcomes for such requests.
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            Any concerns regarding defective, damaged, incorrect, or otherwise unsatisfactory merchandise must be addressed directly with UBAP through its official communication channels. Such concerns shall be handled in accordance with applicable, officially approved university policies and procedures. The submission of a concern does not guarantee that a return, exchange, or refund will be granted.
+                            Any concerns regarding defective, damaged, incorrect, or otherwise unsatisfactory merchandise must be addressed directly with UBAP through its official email address at <a href="mailto:ubap@clsu.edu.ph" class="text-[var(--color-primary)] underline">ubap@clsu.edu.ph</a>, or customers may proceed directly to the UBAP office. Such concerns shall be handled in accordance with applicable, officially approved university policies and procedures. The submission of a concern does not guarantee that a return, exchange, or refund will be granted.
                         </p>
                     </section>
 
@@ -107,9 +106,8 @@
                         <h2 class="text-xl font-bold text-slate-900">9. Product Reviews and User-Generated Content</h2>
                         <ul class="mt-3 list-disc space-y-2 pl-5 text-base leading-8 text-slate-600">
                             <li>9.1. Only customers who have completed orders may submit product reviews through Siel Cart. Once submitted, reviews are automatically displayed in the Reviews section.</li>
-                            <li>9.2. UBAP Admin and Super Admin may delete reviews that are considered inappropriate, unethical, or otherwise unsuitable for public display. Customers may also delete their own personal reviews.</li>
-                            <li>9.3. StratCom Admin may view submitted reviews but does not have permission to delete them.</li>
-                            <li>9.4. Customers are responsible for ensuring that their reviews are truthful, respectful, and relevant to the product. Reviews must not contain offensive, abusive, misleading, or inappropriate content.</li>
+                            <li>9.2. UBAP Admin and Super Admin may delete reviews that are considered inappropriate, unethical, or otherwise unsuitable for public display.</li>
+                            <li>9.3. Customers are responsible for ensuring that their reviews are truthful, respectful, and relevant to the product. Reviews must not contain offensive, abusive, misleading, or inappropriate content.</li>
                         </ul>
                     </section>
 
