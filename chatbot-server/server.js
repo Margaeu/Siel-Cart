@@ -99,30 +99,47 @@ const FRIENDLY_ERROR_MESSAGE = "Our assistant is temporarily unavailable. Please
 /**
  * Static store facts context provided to LLM
  */
-const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU):
+// Kept in sync with CheckoutPage, Order, CancelOrderModal, and the FAQ_ENTRIES
+// below: the model may only describe the store in these terms.
+const STORE_FACTS = `STORE FACTS (Siel Cart - UBAP Office at CLSU; UBAP = University Business Affairs Program):
 Siel Cart is pickup-only and cash-only at the UBAP Office. No delivery, no couriers, no cards/GCash/online payments.
+
+ACCOUNTS:
+- A free account with a verified email is required to place an order. You must be at least 13 years old to register.
 
 HOW TO ORDER:
 1. **Browse** catalog and select item...
 2. **Choose** size/variant and add to cart.
 3. **Open** cart items.
 4. **Proceed** to checkout to confirm.
-5. **Receive** claim number via email, then collect and pay in cash at UBAP Office.
+5. **Receive** an email when the order is ready, with the claim number, then collect and pay in cash at UBAP Office.
 
-PICKUP & CANCELLATION:
-- Claim Numbers are issued ONLY when status is **Ready for Pickup**.
-- Unclaimed Orders are cancelled. To reschedule pickup, contact **UBAP Office**.
-- Cancel orders on **My Orders** page ONLY while status is **Pending**.
+PROCESSING & PICKUP:
+- Allow at least 2-3 days for an order to be processed. Do not promise an exact ready date.
+- The customer is emailed when the order is **Ready for Pickup**; that email has the claim number, pickup date and time.
+- Claim Numbers are issued ONLY when status is **Ready for Pickup**. Show it at the UBAP Office.
+- A customer may authorize another person to collect the order. That person must give the correct claim number, which UBAP verifies before release. Customers must share the claim number only with their authorized representative; UBAP is not responsible for losses, disputes, or unauthorized claims from the customer's voluntary disclosure of the claim number, provided UBAP followed its verification procedures.
+- Orders not claimed by the pickup deadline are NOT cancelled automatically: UBAP staff cancel them and the items return to stock. To arrange a new pickup, email ubap@clsu.edu.ph.
+- There is no reschedule feature on the website.
+
+CANCELLATION:
+- Customers cancel from the **My Orders** page ONLY while status is **Pending**. Once **Processing**, it cannot be cancelled online.
+
+REVIEWS:
+- Only after an order is **Completed**, from the product page's Reviews tab.
 
 RETURNS & PRIVACY:
-- Returns/refunds cannot be requested on website. Contact **UBAP Office** directly for defective items.
+- Returns/refunds cannot be requested on website. Contact **UBAP Office** directly (ubap@clsu.edu.ph) for defective items.
+- There is no in-app inquiry form; other questions go to ubap@clsu.edu.ph or the UBAP Office.
 - Privacy Policy: [Privacy Policy](/privacy-policy)
 - Terms & Conditions: [Terms & Conditions](/terms-and-conditions)`;
 
 function isIrrelevantQuery(text) {
     const query = text.trim().toLowerCase();
 
-    const mathPattern = /^(\d+[\s\+\-\*\/\^%\=]+\d+|\b(what is|calculate|compute|solve)\b.*?\d+)/i;
+    // "what is" only counts as maths when a number/bracket follows it directly; the old
+    // \b(what is)\b.*?\d+ form also refused "what is available under 300".
+    const mathPattern = /^(\d+[\s\+\-\*\/\^%\=]+\d+|what is\s*[\d(]|\b(calculate|compute|solve)\b.*?\d+)/i;
     if (mathPattern.test(query)) return true;
     if (/^\d+\s*[\+\-\*\/]\s*\d+/.test(query)) return true;
     if (/\b(write code|python|javascript|function|html|css|sql|script)\b/i.test(query)) return true;
@@ -141,12 +158,14 @@ async function fetchAvailableProducts() {
         const [rows] = await dbPool.query(
             `SELECT
                 p.name,
+                p.slug,
+                p.has_variants,
                 CASE WHEN p.has_variants = 1 THEN MIN(pv.price) ELSE MAX(p.price) END AS price,
                 CASE WHEN p.has_variants = 1 THEN COALESCE(SUM(pv.stock_quantity), 0) ELSE MAX(p.stock_quantity) END AS stock_quantity
              FROM products p
              LEFT JOIN product_variants pv ON pv.product_id = p.id AND pv.is_active = 1
              WHERE p.is_active = 1
-             GROUP BY p.id, p.name, p.has_variants
+             GROUP BY p.id, p.name, p.slug, p.has_variants
              HAVING stock_quantity > 0`
         );
         return rows;
@@ -161,52 +180,231 @@ async function fetchAvailableProducts() {
     }
 }
 
-function getProductSuggestionsByQuery(userQuery, products) {
-    const text = userQuery.toLowerCase();
-    
-    const priceMatch = text.match(/(\d+)\s*(pesos|php|₱)?/i);
-    const targetPrice = priceMatch ? parseFloat(priceMatch[1]) : null;
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    const CATEGORIES = {
-        apparel: ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'cap', 'hat', 'clothes', 'wear', 'apparel'],
-        stationery: ['pen', 'ballpen', 'notebook', 'paper', 'pencil', 'pad', 'stationery', 'supplies', 'school'],
-        accessories: ['lanyard', 'holder', 'id holder', 'keychain', 'badge', 'accessory', 'accessories'],
-        bags: ['bag', 'tote', 'totebag', 'backpack', 'pouch'],
-        drinkware: ['mug', 'tumbler', 'cup', 'bottle', 'flask', 'water bottle']
-    };
+// Whole-word match, plural allowed. The old `text.includes(kw)` matched "pen" in
+// "happens" and "cap" in "capital", so an FAQ about a missed pickup came back
+// as a product list.
+const wordMatcher = (kw) => new RegExp(`\\b${escapeRegex(kw)}(?:s|es)?\\b`, 'i');
 
-    let filtered = products;
+const CATEGORIES = {
+    apparel: ['shirt', 'tshirt', 't-shirt', 'hoodie', 'jacket', 'cap', 'hat', 'clothes', 'wear', 'apparel'],
+    stationery: ['pen', 'ballpen', 'notebook', 'paper', 'pencil', 'pad', 'stationery', 'supplies', 'school'],
+    accessories: ['lanyard', 'holder', 'id holder', 'keychain', 'badge', 'accessory', 'accessories'],
+    bags: ['bag', 'tote', 'totebag', 'backpack', 'pouch'],
+    drinkware: ['mug', 'tumbler', 'cup', 'bottle', 'flask', 'water bottle']
+};
 
-    let matchedCategoryItems = [];
-    for (const [category, keywords] of Object.entries(CATEGORIES)) {
-        if (keywords.some(kw => text.includes(kw))) {
-            const matches = products.filter(p => 
-                keywords.some(kw => p.name.toLowerCase().includes(kw))
-            );
-            matchedCategoryItems.push(...matches);
-        }
-    }
+// Returns { amount, isCap } for "under 300", "below ₱500", "300 pesos", or
+// { amount: null } when no price was given. A bare number is NOT a price.
+function parseBudget(text) {
+    const t = text.replace(/(\d),(\d{3})/g, '$1$2');
+    const m = t.match(/(under|below|less than|within|up to|at most|not more than|max(?:imum)?(?: of)?|budget(?: of)?|around|about|₱|php)\s*(\d+(?:\.\d+)?)/i)
+        || t.match(/(\d+(?:\.\d+)?)\s*(pesos?|php|₱)/i);
+    if (!m) return { amount: null, isCap: false };
 
-    if (matchedCategoryItems.length > 0) {
-        filtered = Array.from(new Set(matchedCategoryItems));
-    }
-
-    if (targetPrice) {
-        if (text.includes('under') || text.includes('below') || text.includes('less than')) {
-            const underItems = filtered.filter(p => p.price <= targetPrice);
-            filtered = underItems.length > 0 ? underItems : filtered.filter(p => p.price <= targetPrice * 1.25);
-        } else {
-            const matching = filtered.filter(p => p.price <= targetPrice * 1.2);
-            filtered = matching.length > 0 ? matching : filtered;
-        }
-    }
-
-    const topThree = filtered.slice(0, 3);
-
-    return topThree.map(function(item) {
-        return "- **" + item.name + "**: ₱" + item.price;
-    }).join("\n");
+    const amount = parseFloat(isNaN(parseFloat(m[1])) ? m[2] : m[1]);
+    const isCap = /(under|below|less than|within|up to|at most|not more than|max)/i.test(m[0]);
+    return { amount, isCap };
 }
+
+// Up to three in-stock products for the request. Never returns items above a
+// stated cap: the old code widened "under 300" to 375 when nothing fit, so a
+// customer asking for a limit was shown products over it.
+function findProductSuggestions(userQuery, products) {
+    const text = userQuery.toLowerCase();
+    const { amount, isCap } = parseBudget(text);
+
+    let pool = products.filter(p => p.price !== null && p.price !== undefined && !isNaN(Number(p.price)));
+
+    let categoryAsked = false;
+    const inCategory = [];
+    for (const keywords of Object.values(CATEGORIES)) {
+        const asked = keywords.filter(kw => wordMatcher(kw).test(text));
+        if (asked.length > 0) {
+            categoryAsked = true;
+            // "hoodie" should surface hoodies before shirts; the wider category
+            // is only the fallback when nothing carries the exact word.
+            const exact = pool.filter(p => asked.some(kw => wordMatcher(kw).test(p.name)));
+            inCategory.push(...(exact.length > 0
+                ? exact
+                : pool.filter(p => keywords.some(kw => wordMatcher(kw).test(p.name)))));
+        }
+    }
+    if (categoryAsked) pool = Array.from(new Set(inCategory));
+
+    if (amount !== null) {
+        pool = isCap
+            ? pool.filter(p => Number(p.price) <= amount)
+            : pool.filter(p => Number(p.price) <= amount * 1.2);
+    }
+
+    // Closest to the budget first (best value for "under 300"); otherwise cheapest first.
+    const wantsCheapest = /\b(cheap\w*|affordable|lowest|budget)\b/i.test(text);
+    pool.sort((a, b) => (amount !== null && !wantsCheapest)
+        ? Math.abs(amount - Number(a.price)) - Math.abs(amount - Number(b.price))
+        : Number(a.price) - Number(b.price));
+
+    return pool.slice(0, 3);
+}
+
+// Markdown, because the chat widget renders it (sanitised) and the link lets the
+// customer open the product page straight from the recommendation.
+function formatProductList(items) {
+    return items.map(function(item) {
+        const name = String(item.name).replace(/[\[\]]/g, '');
+        const price = Number(item.price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const label = `${name} – ${item.has_variants ? 'from ' : ''}₱${price}`;
+        return item.slug ? `- [${label}](/product/${encodeURIComponent(item.slug)})` : `- ${label}`;
+    }).join('\n');
+}
+
+// --- FAQ ANSWERS ------------------------------------------------------------
+// Fixed replies for the store's published FAQ. They are answered here, before
+// any model call, so they are instant, identical every time, and still work
+// when OpenRouter's free models are rate-limited or gone. Keep the wording in
+// step with STORE_FACTS above and with what the store really does (Order,
+// CancelOrderModal, CheckoutPage, the Terms & Conditions).
+const contactUbap = 'email **ubap@clsu.edu.ph** or visit the UBAP Office';
+
+// A matcher is a regex or a function of the text, so all()/any() can nest.
+const runMatcher = (m, t) => (typeof m === 'function' ? m(t) : m.test(t));
+const all = (...matchers) => (t) => matchers.every(m => runMatcher(m, t));
+const any = (...matchers) => (t) => matchers.some(m => runMatcher(m, t));
+
+// Order matters: the first entry that matches wins, so narrower questions
+// (missed pickup, cancel) sit above broader ones (ready notice, payment).
+const FAQ_ENTRIES = [
+    {
+        id: 'returns',
+        match: /\b(returns?|refunds?|exchange[sd]?|defective|damaged|faulty|wrong item)\b/,
+        answer: `Returns, refunds, and exchanges can't be requested on the website. For a defective, damaged, or wrong item, ${contactUbap} directly.`
+    },
+    {
+        id: 'delivery',
+        match: /\b(deliver\w*|shipping|ship|courier|shipping fee)\b/,
+        answer: 'Siel Cart is **pickup-only**: there is no delivery or shipping. Collect your order at the UBAP Office and pay in cash there.'
+    },
+    {
+        id: 'missed-pickup',
+        match: any(/\b(miss(ed)?|forgot|forget|unclaimed|deadline)\b/, /\bhold(ing)? (period|my order)\b/, /\bfail(ed)? to (claim|pick)/, /\bnot (picked up|claimed)\b/),
+        answer: `Once your order is **Ready for Pickup**, claim it at the UBAP Office within the pickup date and time given in your email. If it isn't claimed in time, UBAP will cancel the order and the reserved items go back into stock for other customers. To arrange a new pickup, ${contactUbap}.`
+    },
+    {
+        id: 'cancel',
+        match: /\bcancel(l?ed|l?ing|lation)?\b/,
+        answer: 'Yes, but only while your order is still **Pending**. Open your order under **My Orders** and use the cancel option. Once it is marked **Processing**, it can no longer be cancelled online.'
+    },
+    {
+        id: 'someone-else',
+        match: all(/\b(someone|somebody|another person|other person|representative|friend|relative|behalf)\b/, /\b(pick|claim|collect)/),
+        answer: "Yes. You may authorize another person to collect your order on your behalf. They must provide the correct **claim number** for the order, which UBAP verifies before releasing it. Share your claim number only with your authorized representative: UBAP is not responsible for losses, disputes, or unauthorized claims that result from you giving out the claim number, as long as UBAP followed its verification procedures."
+    },
+    {
+        id: 'bring',
+        match: any(/\bclaim (number|code)\b/, all(/\b(bring|show|present|need|requirements?|required)\b/, /\b(pick|claim|collect)/)),
+        answer: 'Yes, show your **claim number** at the UBAP Office. You can find it in your Ready for Pickup email and on your order page under **My Orders**.'
+    },
+    {
+        id: 'how-long',
+        match: /\b(how long|how many (days|weeks)|how soon|processing time|turnaround|when will my order (be )?(ready|done|processed))\b/,
+        answer: 'Please allow **at least 2–3 days** for your order to be processed. You will get an email once it is ready for pickup, and you can follow its status under **My Orders**.'
+    },
+    {
+        id: 'ready-notice',
+        match: all(/\b(how (will|do|can|would) i know|notif\w*|notify|email|alert|inform)\b/, /\b(ready|pick[- ]?up|claim|processing|status)\b/),
+        answer: 'You will receive an **email** when your order status changes to **Ready for Pickup**. It includes your claim number and your pickup date and time. You can also check the status any time under **My Orders**.'
+    },
+    {
+        id: 'where-pickup',
+        match: any(/\bwhere\b.*\b(pick|claim|collect)/, /\bpick[- ]?up (location|place|address|area|schedule|time|date|hours)\b/, /\bwhere (is|are) (the )?(ubap|office)\b/, /\bwhen (can|do|should) i (pick|claim|collect)/),
+        answer: 'Orders are picked up at the **UBAP Office** (University Business Affairs Program). Once your order is **Ready for Pickup**, you will get an email with your claim number, pickup date, and pickup time. The same details appear under **My Orders**.'
+    },
+    {
+        id: 'same-last-item',
+        match: /\b(same time|last (item|one|piece|stock)|two people|both order|simultaneous(ly)?)\b/,
+        answer: 'The first order to complete checkout gets the item. If someone else takes the last one first, you will see a message that only a limited quantity is left (or that it is unavailable), and you can adjust your cart. Nothing is charged online, since payment is only collected in cash at pickup, so no refund is needed.'
+    },
+    {
+        id: 'stock',
+        match: /\b(in stock|out of stock|sold out|availability|stock status)\b/,
+        answer: "Availability is shown on each product's page. Items that are out of stock are clearly marked and can't be checked out, and your cart flags any item that is no longer available."
+    },
+    {
+        id: 'age',
+        match: /\b(age (requirement|limit|restriction)|minimum age|how old|old enough|13 years)\b/,
+        answer: 'Yes. You must be at least **13 years old** to create an account, in line with our [Privacy Policy](/privacy-policy).'
+    },
+    {
+        id: 'account',
+        match: any(/\b(need|require[sd]?|must|have to)\b.*\b(account|log ?in|sign ?up|register|registration)\b/, /\b(create|make|open)\b.*\baccount\b/),
+        answer: 'Yes. You need a free Siel Cart account (with a verified email address) to place an order. An account lets you track your order status, view your order history, and leave reviews after pickup.'
+    },
+    {
+        id: 'review',
+        match: all(/\b(leave|write|post|give|add|submit|can i|how (do|can) i)\b/, /\b(review|reviews|rating|rate|feedback)\b/),
+        answer: "Yes. Once your order is **Completed**, open the product's page and use its **Reviews** tab to leave a rating and review. You can also reach it from your order under **My Orders**."
+    },
+    {
+        id: 'privacy',
+        match: /\b(privacy|personal (information|data|info)|data (privacy|protection|handling)|my data|my information)\b/,
+        answer: 'We only collect the information needed to process your orders and manage your account. For full details, see our [Privacy Policy](/privacy-policy).'
+    },
+    {
+        id: 'contact',
+        match: /\b(contact|inquiry|inquire|enquir\w*|customer (service|support)|support|human|hotline|phone number|email address|reach (you|ubap|someone)|not answered|other question)\b/,
+        answer: `If your question isn't covered here, ${contactUbap}. You can also keep asking me about ordering, pickup, payment, and products.`
+    },
+    {
+        id: 'payment',
+        match: /\b(payment|paying|pay|gcash|cash|(credit|debit) cards?)\b/,
+        answer: 'Payment at Siel Cart is **Cash on Pickup only**, paid in person at the UBAP Office when collecting your items. We do not accept online payments or credit/debit cards.'
+    },
+    {
+        id: 'order-status',
+        match: /\b(order status|check my order|track(ing)? (my )?(order|status)|track status|where is my order)\b/,
+        answer: `To check your order status:
+
+1. Log in to your **Siel Cart** account.
+2. Go to **My Orders** and select your order.
+3. Statuses shown are: **Pending**, **Processing**, **Ready for Pickup**, or **Completed** (or **Cancelled**).`
+    },
+    {
+        id: 'how-to-order',
+        match: /\b(how (to|do i|can i|would i) (place |make )?(an? )?order|place an order|ordering process|how does ordering work|how (to|do i) buy)\b/,
+        answer: `To place an order:
+
+1. **Browse** our catalog and select an item.
+2. **Choose** your preferred size or variant, then add it to your cart.
+3. **Open** your cart and review your items.
+4. **Proceed** to checkout (you'll need to log in) and check your order details.
+5. **Submit** your order, then wait for the email that says it is ready.
+6. **Collect** it and pay in cash at the UBAP Office, showing your claim number.`
+    },
+    {
+        id: 'about',
+        match: /\b(what is siel ?cart|about siel ?cart|what is this (store|shop|website|site))\b/,
+        answer: '**Siel Cart** is the official online store for CLSU merchandise, run by the UBAP Office (University Business Affairs Program). It is pickup-only and cash-only: order online, then collect and pay in cash at the UBAP Office.'
+    }
+];
+
+const GREETINGS = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo', 'halu'];
+
+function findFaqAnswer(message) {
+    const text = message.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
+
+    if (GREETINGS.some(g => text === g || text === g + '!' || text === g + '.')) {
+        return "Hello! Welcome to **Siel Cart**. How can I assist you with your shopping today?";
+    }
+
+    for (const entry of FAQ_ENTRIES) {
+        if (runMatcher(entry.match, text)) return entry.answer;
+    }
+    return null;
+}
+
+const RECOMMENDATION_PATTERN = /\b(suggest\w*|recommend\w*|price[sd]?|pesos?|php|under|below|less than|budget|cheap\w*|affordable|shirts?|t-?shirts?|hoodies?|jackets?|apparel|clothes|mugs?|tumblers?|bottles?|bags?|totes?|notebooks?|pens?|lanyards?|keychains?|merch\w*|products?|items?|catalog|what do you (sell|have)|what can i buy)\b|₱\s*\d/i;
+const BEST_SELLER_PATTERN = /\b(best[- ]?sell(ers?|ing)|top[- ]?sell(ers?|ing)|most popular|popular)\b/i;
 
 // Helper to wrap API calls with a fast 6-second timeout
 async function createCompletionWithTimeout(modelName, systemInstruction, message, timeoutMs = 6000) {
@@ -261,53 +459,20 @@ app.post('/api/chat', async (req, res) => {
 
         const msgLower = message.toLowerCase().trim();
 
-        // --- FAST-PASS INTERCEPTORS FOR CORE QUERY BUTTONS ---
-        
-        // 1. Greetings
-        const GREETINGS = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo', 'halu'];
-        if (GREETINGS.some(g => msgLower === g || msgLower === g + '!' || msgLower === g + '.')) {
-            return res.json({
-                response: "Hello! Welcome to Siel Cart. How can I assist you with your shopping today???"
-            });
+        // 1. Published FAQ, greetings, payment, ordering, order status, ...
+        const faqAnswer = findFaqAnswer(message);
+        if (faqAnswer) {
+            return res.json({ response: faqAnswer });
         }
 
-        // 2. Payment Method
-        if (msgLower.includes('payment') || msgLower.includes('pay') || msgLower.includes('gcash') || msgLower.includes('card')) {
-            return res.json({
-                response: "Payment at Siel Cart is **Cash on Pickup only**, paid in person at the UBAP Office when collecting your items. We do not accept online payments or credit/debit cards."
-            });
-        }
-
-        // 3. How to Order
-        if (msgLower.includes('how to order') || msgLower.includes('how do i order') || msgLower.includes('place an order') || msgLower.includes('how do i place an order')) {
-            return res.json({
-                response: `To place an order:
-
-1. **Browse** our catalog and select an item.
-2. **Choose** your preferred size or variant, then add it to your cart.
-3. **Open** your cart and review your items.
-4. **Proceed** to checkout to confirm your order details.
-5. **Receive** your claim number via email, then collect and pay in cash at the UBAP Office.`
-            });
-        }
-
-        // 4. Order Status
-        if (msgLower.includes('order status') || msgLower.includes('check my order') || msgLower.includes('track status')) {
-            return res.json({
-                response: `To check your order status:
-
-1. Log in to your **Siel Cart** account.
-2. Go to **My Orders** and select your order.
-3. Statuses shown are: **Pending**, **Processing**, **Ready for Pickup**, or **Completed**.`
-            });
-        }
-
-        // 5. Off-Topic Check
+        // 2. Off-Topic Check
         if (isIrrelevantQuery(message)) {
             return res.json({ response: STANDARD_REFUSAL });
         }
 
-        // Fetch DB products
+        // 3. Fetch DB products. If the database can't be reached we say so instead
+        // of inventing a stub catalogue: the old hardcoded "CLSU Notebook / UBAP
+        // Mug" list was served to real customers as if it were in stock.
         let dbProducts = [];
         try {
             dbProducts = await fetchAvailableProducts();
@@ -315,65 +480,43 @@ app.post('/api/chat', async (req, res) => {
             console.error('Failed to fetch from DB:', dbErr);
         }
 
-        if (!dbProducts || dbProducts.length === 0) {
-            dbProducts = [
-                { name: "CLSU Notebook", price: 50 },
-                { name: "Siel Cart Lanyard", price: 80 },
-                { name: "UBAP Mug", price: 200 },
-                { name: "Siel Cart Tote Bag", price: 200 },
-                { name: "CLSU Basic Shirt", price: 250 },
-                { name: "UBAP Hoodie", price: 750 }
-            ];
-        }
+        const noProductsReply = "I couldn't find any products in stock to recommend right now. Please check our [catalog](/products) for the latest items.";
 
-        const isFAQIntent = 
-            msgLower.includes('how') || 
-            msgLower.includes('where') || 
-            msgLower.includes('when') || 
-            msgLower.includes('can i') || 
-            msgLower.includes('policy') || 
-            msgLower.includes('status') || 
-            msgLower.includes('cancel') || 
-            msgLower.includes('return') || 
-            msgLower.includes('refund') || 
-            msgLower.includes('privacy');
-
-        const isRecommendationQuery = 
-            !isFAQIntent && (
-                msgLower.includes('suggest') || 
-                msgLower.includes('recommend') || 
-                msgLower.includes('price') || 
-                msgLower.includes('pesos') || 
-                msgLower.includes('php') || 
-                msgLower.includes('under') || 
-                msgLower.includes('below') || 
-                msgLower.includes('shirt') || 
-                msgLower.includes('apparel') || 
-                msgLower.includes('mug') || 
-                msgLower.includes('bag') || 
-                msgLower.includes('notebook') || 
-                msgLower.includes('pen')
-            );
-
-        if (isRecommendationQuery) {
-            const matchedList = getProductSuggestionsByQuery(message, dbProducts);
-
-            if (!matchedList) {
-                return res.json({
-                    response: "Sorry, we don't have any matching products in stock right now. Please try a different price range or category."
-                });
-            }
+        // 4. Product recommendations, answered from the database (no model call).
+        if (BEST_SELLER_PATTERN.test(msgLower)) {
+            const picks = dbProducts && dbProducts.length ? findProductSuggestions(message, dbProducts) : [];
+            if (picks.length === 0) return res.json({ response: noProductsReply });
 
             return res.json({
-                response: "Here are 3 Product Recommendations matching your request:\n\n" + matchedList
+                response: "I don't have sales rankings, but here are some items available right now:\n\n" + formatProductList(picks)
             });
         }
 
-        // Dynamic catalog context for LLM
-        const dynamicCatalog = dbProducts.slice(0, 5).map(function(item) {
-            return "- " + item.name + ": ₱" + item.price;
-        }).join("\n");
-        
+        if (RECOMMENDATION_PATTERN.test(msgLower)) {
+            const picks = dbProducts && dbProducts.length ? findProductSuggestions(message, dbProducts) : [];
+
+            if (picks.length === 0) {
+                return res.json({
+                    response: dbProducts && dbProducts.length
+                        ? "Sorry, we don't have any matching products in stock right now. Please try a different price range or category, or browse our [catalog](/products)."
+                        : noProductsReply
+                });
+            }
+
+            const heading = picks.length === 1
+                ? "Here is 1 product matching your request:"
+                : `Here are ${picks.length} products matching your request:`;
+
+            return res.json({ response: heading + "\n\n" + formatProductList(picks) });
+        }
+
+        // 5. Dynamic catalog context for the LLM
+        const dynamicCatalog = dbProducts && dbProducts.length
+            ? dbProducts.slice(0, 5).map(function(item) {
+                return "- " + item.name + ": ₱" + item.price;
+            }).join("\n")
+            : "(catalog unavailable right now - do not name specific products or prices)";
+
         const systemInstruction = `CRITICAL ASSISTANT BOUNDARY:
 You are strictly an e-commerce assistant for Siel Cart. You DO NOT answer math, coding, trivia, or off-topic queries.
 
