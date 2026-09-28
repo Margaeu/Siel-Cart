@@ -261,7 +261,7 @@ app.post('/api/chat', async (req, res) => {
         const GREETINGS = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'kumusta', 'yo', 'halu'];
         if (GREETINGS.some(g => msgLower === g || msgLower === g + '!' || msgLower === g + '.')) {
             return res.json({
-                response: "Hello! Welcome to **Siel Cart**. How can I assist you with your shopping today???"
+                response: "Hello! Welcome to Siel Cart. How can I assist you with your shopping today???"
             });
         }
 
