@@ -74,11 +74,14 @@ class ReviewsTable
                     ->boolean()
                     ->toggleable(),
 
+                // Reviews go live the moment a customer submits them
+                // (ProductDetails sets is_approved = true), so there is no
+                // "pending" state: an admin only ever hides or re-shows one.
                 Tables\Columns\TextColumn::make('is_approved')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Approved' : 'Pending')
-                    ->color(fn (mixed $state): string => $state ? 'success' : 'warning')
+                    ->formatStateUsing(fn (mixed $state): string => $state ? 'Visible' : 'Hidden')
+                    ->color(fn (mixed $state): string => $state ? 'success' : 'gray')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -88,10 +91,10 @@ class ReviewsTable
             ])
             ->filters([
                 TernaryFilter::make('is_approved')
-                    ->label('Approval status')
+                    ->label('Visibility')
                     ->placeholder('All reviews')
-                    ->trueLabel('Approved only')
-                    ->falseLabel('Pending only'),
+                    ->trueLabel('Visible only')
+                    ->falseLabel('Hidden only'),
 
                 SelectFilter::make('rating')
                     ->label('Rating')
@@ -111,33 +114,33 @@ class ReviewsTable
                     ->falseLabel('Unverified only'),
             ])
             ->recordActions([
-                Action::make('approve')
-                    ->label('Approve')
-                    ->icon('heroicon-o-check-circle')
+                Action::make('show')
+                    ->label('Show')
+                    ->icon('heroicon-o-eye')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalDescription('This review will become visible on the product page.')
+                    ->modalDescription('This review will become visible on the product page again.')
                     ->action(function (Review $record) {
                         $record->update(['is_approved' => true]);
 
                         Notification::make()
-                            ->title('Review approved')
+                            ->title('Review is now visible')
                             ->success()
                             ->send();
                     })
                     ->visible(fn (Review $record): bool => ! $record->is_approved),
 
-                Action::make('unapprove')
-                    ->label('Unapprove')
+                Action::make('hide')
+                    ->label('Hide')
                     ->icon('heroicon-o-eye-slash')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->modalDescription('This review will be hidden from the product page.')
+                    ->modalDescription('This review will be hidden from the product page and left out of its average rating.')
                     ->action(function (Review $record) {
                         $record->update(['is_approved' => false]);
 
                         Notification::make()
-                            ->title('Review unapproved')
+                            ->title('Review hidden')
                             ->success()
                             ->send();
                     })
@@ -149,9 +152,9 @@ class ReviewsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkAction::make('approve')
-                        ->label('Approve selected')
-                        ->icon('heroicon-o-check-circle')
+                    BulkAction::make('show')
+                        ->label('Show selected')
+                        ->icon('heroicon-o-eye')
                         ->color('success')
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion()
@@ -160,13 +163,13 @@ class ReviewsTable
                                 ->update(['is_approved' => true]);
 
                             Notification::make()
-                                ->title("{$count} review(s) approved")
+                                ->title("{$count} review(s) now visible")
                                 ->success()
                                 ->send();
                         }),
 
-                    BulkAction::make('unapprove')
-                        ->label('Unapprove selected')
+                    BulkAction::make('hide')
+                        ->label('Hide selected')
                         ->icon('heroicon-o-eye-slash')
                         ->color('warning')
                         ->requiresConfirmation()
@@ -176,7 +179,7 @@ class ReviewsTable
                                 ->update(['is_approved' => false]);
 
                             Notification::make()
-                                ->title("{$count} review(s) unapproved")
+                                ->title("{$count} review(s) hidden")
                                 ->success()
                                 ->send();
                         }),

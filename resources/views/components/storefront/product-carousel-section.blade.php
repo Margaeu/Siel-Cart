@@ -47,15 +47,18 @@
                     scrollByCard(direction) {
                         const el = $refs.track;
                         const card = el.querySelector('[data-carousel-item]');
-                        const distance = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
+                        const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+                        const distance = card ? card.getBoundingClientRect().width + gap : el.clientWidth * 0.8;
                         el.scrollBy({ left: direction * distance, behavior: 'smooth' });
                     }
                 }"
-                x-init="updateScrollState()"
+                x-init="$nextTick(() => updateScrollState())"
                 class="relative"
                 role="region"
                 aria-label="{{ $ariaLabel ?? $heading }}"
             >
+                <x-storefront.carousel-mobile-controls />
+
                 <!-- Left arrow -->
                 <button
                     type="button"

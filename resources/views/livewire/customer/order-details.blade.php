@@ -148,12 +148,12 @@
                             </section>
 
                             {{-- Order Items --}}
-                            <section class="{{ $card }} p-6">
+                            <section class="{{ $card }} p-4 sm:p-6">
                                 <h2 class="text-base font-bold text-gray-900 mb-2">Order Items</h2>
                                 <div class="divide-y divide-gray-100">
                                     @foreach($order->items as $item)
-                                        <div class="flex gap-4 py-5 last:pb-0">
-                                            <div class="size-20 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                                        <div class="grid grid-cols-[4rem_minmax(0,1fr)] gap-3 py-5 last:pb-0 sm:flex sm:gap-4">
+                                            <div class="size-16 sm:size-20 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                                                 @if($item->display_image_url)
                                                     <img
                                                         src="{{ $item->display_image_url }}"
@@ -165,7 +165,7 @@
                                                     </div>
                                                 @endif
                                             </div>
-                                            <div class="flex-1 min-w-0">
+                                            <div class="flex-1 min-w-0 break-words">
                                                 <h3 class="font-semibold text-gray-900 leading-snug">{{ $item->product_name }}</h3>
                                                 @if($item->variant_name)
                                                     <p class="text-xs text-gray-500 mt-0.5">Variation: {{ $item->variant_name }}</p>
@@ -202,11 +202,11 @@
                                                     </div>
                                                 @endforeach
                                             </div>
-                                            <div class="text-right shrink-0">
-                                                <p class="font-bold text-gray-900">₱{{ number_format($item->subtotal, 2) }}</p>
+                                            <div class="col-span-2 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3 sm:block sm:shrink-0 sm:border-0 sm:pt-0 sm:text-right">
+                                                <p class="font-bold text-gray-900 whitespace-nowrap">₱{{ number_format($item->subtotal, 2) }}</p>
                                                 @if(strtolower($order->status) === 'completed' && $item->product_id)
                                                     @if(in_array($item->product_id, $reviewedProductIds))
-                                                        <p class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 mt-2">
+                                                        <p class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 sm:mt-2">
                                                             <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                                                             </svg>
@@ -214,7 +214,7 @@
                                                         </p>
                                                     @elseif($item->product && ! $item->is_unavailable)
                                                         <a href="{{ route('products.show', $item->product->slug) }}?tab=reviews#review-tab"
-                                                           class="mt-2 inline-flex min-h-9 items-center rounded-full bg-[var(--color-secondary)] px-3.5 text-xs font-semibold text-gray-900 transition hover:opacity-90 {{ $focusRing }}">
+                                                           class="inline-flex min-h-11 sm:mt-2 sm:min-h-9 items-center justify-center rounded-full bg-[var(--color-secondary)] px-3.5 text-xs font-semibold text-gray-900 transition hover:opacity-90 {{ $focusRing }}">
                                                             Write a Review
                                                         </a>
                                                     @endif

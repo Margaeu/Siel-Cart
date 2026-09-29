@@ -45,7 +45,7 @@ class ReviewsRelationManager extends RelationManager
                         count($record->photos ?? []).' photo(s)'.($record->video_path ? ', 1 video' : '')
                     )),
                 IconColumn::make('is_approved')
-                    ->label('Approved')
+                    ->label('Visible')
                     ->boolean(),
                 TextColumn::make('created_at')
                     ->label('Submitted')

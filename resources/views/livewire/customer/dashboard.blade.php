@@ -185,7 +185,7 @@
                 </div>
 
                 {{-- Recent Orders List --}}
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
                     <div class="flex items-center justify-between mb-5">
                         <h2 class="text-base font-bold text-gray-900">Recent orders</h2>
                         <a href="{{ route('customer.orders') }}" class="text-xs font-medium text-gray-500 hover:text-[var(--color-primary)] transition">
@@ -197,12 +197,12 @@
                         <div class="divide-y divide-gray-100">
                             @foreach($recentOrders as $order)
                                 <a href="{{ route('customer.orders.show', $order->id) }}" 
-                                   class="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4 hover:bg-gray-50/70 -mx-4 px-4 rounded-xl transition">
+                                   class="py-4 first:pt-0 last:pb-0 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:items-center sm:justify-between sm:gap-4 hover:bg-gray-50/70 -mx-4 px-4 rounded-xl transition">
                                     
                                     {{-- Left: Item Thumbnails + Order Info --}}
-                                    <div class="flex items-center gap-4 min-w-0">
+                                    <div class="contents sm:flex sm:items-center sm:gap-4 sm:min-w-0">
                                         {{-- Thumbnails --}}
-                                        <div class="flex items-center gap-1.5 shrink-0">
+                                        <div class="col-span-2 flex items-center gap-1.5 shrink-0">
                                             @foreach($order->items->take(3) as $item)
                                                 <div class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center">
                                                     @if($item->display_image_url)
@@ -225,7 +225,7 @@
 
                                         {{-- Order Code, Product Names & Date --}}
                                         <div class="min-w-0">
-                                            <p class="font-bold text-gray-900 text-sm leading-tight">
+                                            <p class="font-bold text-gray-900 text-sm leading-snug break-words">
                                                 {{ $order->order_number }}
                                             </p>
                                             <p class="text-xs text-gray-500 truncate max-w-xs sm:max-w-md mt-0.5">
@@ -259,7 +259,7 @@
 
                                         {{-- Price & Quantity --}}
                                         <div>
-                                            <p class="font-bold text-gray-900 text-sm">
+                                            <p class="font-bold text-gray-900 text-sm whitespace-nowrap">
                                                 ₱{{ number_format($order->total, 2) }}
                                             </p>
                                             <p class="text-[0.6875rem] text-gray-400">

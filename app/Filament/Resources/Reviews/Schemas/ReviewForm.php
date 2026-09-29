@@ -68,12 +68,12 @@ class ReviewForm
                     ]),
 
                 Section::make('Moderation')
-                    ->description('Control whether this review appears publicly on the product page.')
+                    ->description('Reviews are published as soon as they are submitted. Hide one to remove it from the product page.')
                     ->columnSpanFull()
                     ->schema([
                         Toggle::make('is_approved')
-                            ->label('Approved')
-                            ->helperText('Approved reviews are visible on the product page and counted in its average rating.')
+                            ->label('Visible')
+                            ->helperText('Visible reviews appear on the product page and count toward its average rating.')
                             ->inline(false),
                     ]),
             ]);

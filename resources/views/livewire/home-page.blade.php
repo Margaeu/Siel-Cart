@@ -238,7 +238,7 @@
                                 aria-label="Go to banner {{ $loop->iteration }}"
                                 x-bind:aria-current="active === {{ $loop->index }} ? 'true' : null"
                                 class="size-2.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
-                                x-bind:class="active === {{ $loop->index }} ? 'w-7 bg-[var(--color-secondary)]' : 'bg-white/75 hover:bg-white'"
+                                x-bind:class="active === {{ $loop->index }} ? 'bg-[var(--color-secondary)]' : 'bg-white/75 hover:bg-white'"
                         >
                         </button>
                     @endforeach
@@ -295,13 +295,16 @@
                         scrollByCard(direction) {
                             const el = $refs.featuredTrack;
                             const card = el.querySelector('[data-carousel-item]');
-                            const distance = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
+                            const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
+                            const distance = card ? card.getBoundingClientRect().width + gap : el.clientWidth * 0.8;
                             el.scrollBy({ left: direction * distance, behavior: 'smooth' });
                         }
                     }"
-                    x-init="updateScrollState()"
+                    x-init="$nextTick(() => updateScrollState())"
                     class="relative"
                 >
+                    <x-storefront.carousel-mobile-controls />
+
                     <!-- Left arrow -->
                     <button
                         type="button"

@@ -34,8 +34,8 @@ class ReviewInfolist
                         TextEntry::make('is_approved')
                             ->label('Status')
                             ->badge()
-                            ->formatStateUsing(fn (mixed $state): string => $state ? 'Approved' : 'Pending')
-                            ->color(fn (mixed $state): string => $state ? 'success' : 'warning'),
+                            ->formatStateUsing(fn (mixed $state): string => $state ? 'Visible' : 'Hidden')
+                            ->color(fn (mixed $state): string => $state ? 'success' : 'gray'),
 
                         TextEntry::make('title')
                             ->label('Title')
