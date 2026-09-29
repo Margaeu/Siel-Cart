@@ -215,6 +215,7 @@ class ProductCrudTest extends TestCase
 
         Livewire::test(CreateProduct::class)
             ->assertSee('8 products are currently marked Featured')
+            ->assertFormFieldDisabled('is_featured')
             ->fillForm($this->simpleFormData(['is_featured' => true]))
             ->call('create')
             ->assertHasFormErrors(['is_featured']);
@@ -240,10 +241,12 @@ class ProductCrudTest extends TestCase
         $this->actingAsAdmin();
 
         Livewire::test(EditProduct::class, ['record' => $featured->first()->getRouteKey()])
+            ->assertFormFieldEnabled('is_featured')
             ->call('save')
             ->assertHasNoFormErrors();
 
         Livewire::test(EditProduct::class, ['record' => $unfeatured->getRouteKey()])
+            ->assertFormFieldDisabled('is_featured')
             ->fillForm(['is_featured' => true])
             ->call('save')
             ->assertHasFormErrors(['is_featured']);
@@ -256,6 +259,7 @@ class ProductCrudTest extends TestCase
             ->assertHasNoFormErrors();
 
         Livewire::test(EditProduct::class, ['record' => $unfeatured->getRouteKey()])
+            ->assertFormFieldEnabled('is_featured')
             ->fillForm(['is_featured' => true])
             ->call('save')
             ->assertHasNoFormErrors();

@@ -158,8 +158,11 @@ class ProductForm
                                             ->markAsRequired(false),
                                         Toggle::make('is_featured')
                                             ->label('Feature')
+                                            ->disabled(static fn (?Product $record): bool => ! ($record?->is_featured && ! $record->trashed())
+                                                && Product::featured()->count() >= Product::MAX_FEATURED)
+                                            ->dehydrated()
                                             ->helperText(static function (?Product $record): string {
-                                                $description = 'Mark up to 8 products as Featured. Only active, in-stock products appear on the homepage. Best Sellers and Top Picks are based on completed sales.';
+                                                $description = 'Mark this product as featured to set it in the home page.';
 
                                                 $featuredCount = Product::featured()->count();
 
