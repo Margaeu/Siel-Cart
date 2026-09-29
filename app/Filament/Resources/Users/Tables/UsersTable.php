@@ -20,6 +20,9 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Newest first, so an admin sees a record they just created or changed
+            // at the top and can confirm the change landed.
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')

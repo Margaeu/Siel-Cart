@@ -73,6 +73,26 @@ class Customer extends Authenticatable implements MustVerifyEmail
         $query->where('is_active', true);
     }
 
+    /**
+     * Match a typed name against the real columns behind the `name` accessor.
+     * `name` is not a column, so an admin table that lets Filament search
+     * `customer.name` runs `where name like ...` and fails with an unknown
+     * column error. Each whitespace-separated word must hit the first or last
+     * name, so "danna" and "danna cruz" both find Danna Cruz. Plain LIKEs
+     * rather than CONCAT so it behaves the same on MySQL and the sqlite tests.
+     */
+    #[Scope]
+    protected function nameLike(Builder $query, string $search): void
+    {
+        foreach (preg_split('/\s+/', trim($search), -1, PREG_SPLIT_NO_EMPTY) as $term) {
+            $term = addcslashes($term, '\\%_');
+
+            $query->where(fn (Builder $q) => $q
+                ->where('first_name', 'like', "%{$term}%")
+                ->orWhere('last_name', 'like', "%{$term}%"));
+        }
+    }
+
     // Relationships with the other features
 
     public function orders()

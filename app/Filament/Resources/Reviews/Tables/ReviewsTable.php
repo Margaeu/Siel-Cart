@@ -37,12 +37,13 @@ class ReviewsTable
 
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
-                    // first_name/last_name are the real columns behind the accessor.
+                    // `name` is an accessor, not a column; search the real ones.
+                    // nameLike() groups its OR, which the old inline
+                    // where/orWhere did not: ungrouped, the OR escaped the
+                    // whereHas correlation and matched every review.
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
                         'customer',
-                        fn (Builder $q) => $q
-                            ->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
+                        fn (Builder $q) => $q->nameLike($search),
                     )),
 
                 Tables\Columns\TextColumn::make('rating')

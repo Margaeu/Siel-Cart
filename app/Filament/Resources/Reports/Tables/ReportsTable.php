@@ -26,11 +26,18 @@ class ReportsTable
             ->columns([
                 Tables\Columns\TextColumn::make('reporter.name')
                     ->label('Reported by')
-                    ->searchable(),
+                    // `name` is an accessor, not a column; search the real ones.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'reporter',
+                        fn (Builder $q) => $q->nameLike($search),
+                    )),
 
                 Tables\Columns\TextColumn::make('reportedCustomer.name')
                     ->label('Reported user')
-                    ->searchable(),
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'reportedCustomer',
+                        fn (Builder $q) => $q->nameLike($search),
+                    )),
 
                 Tables\Columns\TextColumn::make('reason')
                     ->limit(30),

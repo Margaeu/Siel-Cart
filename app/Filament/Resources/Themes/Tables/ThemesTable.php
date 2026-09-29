@@ -39,7 +39,7 @@ class ThemesTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('is_active', 'desc')
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

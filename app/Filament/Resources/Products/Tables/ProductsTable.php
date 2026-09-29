@@ -27,6 +27,9 @@ class ProductsTable
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withoutGlobalScopes([SoftDeletingScope::class])
                 ->with(['variants', 'cardImage']))
+            // Newest first, so an admin sees a record they just created or changed
+            // at the top and can confirm the change landed.
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 // cardImage, not primaryImage: a variant product often has no
                 // shared primary photo, only per-variant ones, and primaryImage

@@ -6,6 +6,7 @@ use App\Filament\Resources\Orders\OrderResource;
 use App\Mail\OrderCompletedMail;
 use App\Mail\OrderProcessingMail;
 use App\Mail\OrderReadyForPickupMail;
+use App\Models\Customer;
 use App\Models\Order;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -21,6 +22,7 @@ use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class OrdersTable
@@ -36,6 +38,9 @@ class OrdersTable
             // badge poller (NavigationBadgePoller), which runs on the same
             // interval.
             ->poll('60s')
+            // Newest first, so an admin sees a record they just created or changed
+            // at the top and can confirm the change landed.
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('order_number')
                     ->label('Order #')
@@ -44,8 +49,18 @@ class OrdersTable
 
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
-                    ->searchable()
-                    ->sortable(),
+                    // `name` is an accessor, not a column: the default search
+                    // queried customers.name and threw, which the panel shows
+                    // as "Error while loading page". The relation is
+                    // withTrashed(), so a deleted customer's orders stay findable.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
+                        'customer',
+                        fn (Builder $q) => $q->nameLike($search),
+                    ))
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy(
+                        Customer::withTrashed()->select('first_name')->whereColumn('customers.id', 'orders.customer_id')->limit(1),
+                        $direction,
+                    )),
 
                 Tables\Columns\TextColumn::make('total')
                     ->label('Total Amount')

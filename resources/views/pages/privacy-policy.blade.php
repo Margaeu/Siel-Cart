@@ -1,11 +1,11 @@
-<x-layouts.front-end-layout title="Data Privacy Notice and Consent">
+<x-layouts.front-end-layout title="Data Privacy Policy">
 
     <div class="bg-white text-slate-800">
         <section class="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
             <div class="mx-auto max-w-4xl">
                 <p class="text-sm font-semibold uppercase tracking-wider text-[var(--color-primary)]">SIEL CART</p>
                 <h1 class="mt-2 text-3xl font-bold leading-tight tracking-[-0.03em] text-[var(--color-primary)] sm:text-4xl">
-                    Data Privacy Notice and Consent
+                    Data Privacy Policy
                 </h1>
                 <p class="mt-2 text-sm text-slate-500">
                     Issued pursuant to Republic Act No. 10173, the Data Privacy Act of 2012, and its Implementing Rules and Regulations
@@ -19,7 +19,7 @@
                             SIEL CART is the official online merchandise platform operated under the auxiliary and business operations mandate of Central Luzon State University (CLSU), through its Office of Business Affairs. We are committed to protecting the privacy and personal data of our users — external customers, students, faculty, staff, and other members of the CLSU community — in accordance with Republic Act No. 10173, otherwise known as the Data Privacy Act of 2012, its Implementing Rules and Regulations, and other applicable issuances of the National Privacy Commission (NPC).
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            This Data Privacy Notice and Consent describes what personal data we collect through the System, why we collect it, how it is used, stored, shared, and protected, and what rights you have as a data subject.
+                            This Data Privacy Policy describes what personal data we collect through the System, why we collect it, how it is used, stored, shared, and protected, and what rights you have as a data subject.
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
                             Please read this Notice carefully before creating an account, placing an order, or otherwise using the System.
@@ -299,7 +299,7 @@
                     <section>
                         <h2 class="text-xl font-bold text-slate-900">12. Consent</h2>
                         <p class="mt-3 text-base leading-8 text-slate-600">
-                            By creating an account and using Siel Cart, you acknowledge that you have read and understood this Data Privacy Notice and Consent.
+                            By creating an account and using Siel Cart, you acknowledge that you have read and understood this Data Privacy Policy.
                         </p>
                         <p class="mt-3 text-base leading-8 text-slate-600">
                             By checking the applicable consent checkbox during registration, you consent to the collection, processing, storage, and use of your personal data for the purposes described in this Notice, subject to your rights under applicable law.

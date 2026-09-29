@@ -28,6 +28,9 @@ class CategoriesTable
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->withCount([
                 'products as trashed_products_count' => fn (Builder $products) => $products->onlyTrashed(),
             ]))
+            // Newest first, so an admin sees a record they just created or changed
+            // at the top and can confirm the change landed.
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 ImageColumn::make('image')
                     ->label('')

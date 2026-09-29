@@ -27,7 +27,7 @@
     @php
         $siteName = config('app.name', 'SIEL CART');
         $siteTagline = 'The CLSU Campus Store';
-        $desktopNavLink = 'relative flex h-[4.75rem] items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)]';
+        $desktopNavLink = 'relative flex h-[9rem] items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)] xl:h-[10rem]';
         $mobileNavLink = 'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]';
     @endphp
 
@@ -37,13 +37,9 @@
         x-data="{ navigationOpen: false, mobileSearchOpen: false }"
         x-on:keydown.escape.window="navigationOpen = false; mobileSearchOpen = false"
     >
-        {{--
-            Phone/tablet heights were raised from 3.5rem/4rem: at those sizes the
-            bar read as a thin strip next to other campus stores' mastheads. The
-            md height stays tied to $desktopNavLink's h-[4.75rem] so the active
-            underline still sits on the header's bottom edge.
-        --}}
-        <div class="mx-auto flex min-h-[4.25rem] w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-[4.5rem] sm:gap-4 sm:px-6 md:min-h-[4.75rem] md:px-8 lg:px-10">
+        {{-- Keep the desktop nav link height in step with the masthead so its
+             active underline stays on the bottom edge. --}}
+        <div class="mx-auto flex min-h-[5.5rem] w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-[6.5rem] sm:gap-4 sm:px-6 md:min-h-[7rem] md:px-8 lg:min-h-[9rem] lg:px-10 xl:min-h-[10rem]">
             <!-- Brand -->
             <a
                 href="{{ route('home') }}"
@@ -53,21 +49,21 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-11 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-13 md:size-14 lg:size-16"
+                    class="size-16 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-20 md:size-[5.5rem] lg:size-28 xl:size-32"
                 >
-                <span class="hidden h-9 w-px shrink-0 bg-white/25 sm:block sm:h-11 md:h-12" aria-hidden="true"></span>
+                <span class="hidden h-14 w-px shrink-0 bg-white/40 sm:block sm:h-18 md:h-20 lg:h-28 xl:h-32" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
-                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl md:text-2xl">
+                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl md:text-2xl lg:text-[2.75rem] xl:text-[3.25rem]">
                         {{ $siteName }}
                     </span>
-                    <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block">
+                    <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block lg:text-base xl:text-lg">
                         {{ $siteTagline }}
                     </span>
                 </span>
             </a>
 
             <!-- Desktop navigation + actions, in the same row as the brand -->
-            <div class="hidden min-w-0 items-center gap-6 md:flex lg:gap-9">
+            <div class="hidden min-w-0 items-center gap-6 lg:flex lg:gap-9">
                 <nav aria-label="Store navigation">
                     <ul class="flex items-center gap-6 lg:gap-9">
                         <li>
@@ -159,7 +155,7 @@
             </div>
 
             <!-- Mobile: search toggle + cart + nav toggle -->
-            <div class="flex shrink-0 items-center gap-0.5 sm:gap-1 md:hidden">
+            <div class="flex shrink-0 items-center gap-0.5 sm:gap-1 lg:hidden">
                 <button
                     type="button"
                     class="inline-flex size-11 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -200,7 +196,7 @@
             x-show="mobileSearchOpen"
             x-transition.opacity.duration.150ms
             x-effect="if (mobileSearchOpen) $nextTick(() => $refs.mobileSearchInput.focus())"
-            class="border-t border-white/15 px-4 py-3 md:hidden"
+            class="border-t border-white/15 px-4 py-3 lg:hidden"
         >
             <form action="{{ route('products.index') }}" method="GET" role="search" aria-label="Search products">
                 <label for="mobile-product-search-input" class="sr-only">Search products</label>
@@ -228,7 +224,7 @@
             x-cloak
             x-show="navigationOpen"
             x-transition.opacity.duration.150ms
-            class="border-t border-gray-100 bg-white px-4 py-3 shadow-lg md:hidden"
+            class="border-t border-gray-100 bg-white px-4 py-3 shadow-lg lg:hidden"
             aria-label="Mobile store navigation"
         >
             <ul class="space-y-1">

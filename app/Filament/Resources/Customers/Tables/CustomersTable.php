@@ -25,6 +25,9 @@ class CustomersTable
             // Deleted accounts are listed too, under the Deleted tab; the tabs
             // on ListCustomers apply the deleted_at condition themselves.
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->withoutGlobalScopes([SoftDeletingScope::class]))
+            // Newest first, so an admin sees a record they just created or changed
+            // at the top and can confirm the change landed.
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')
                     ->label('Name')
