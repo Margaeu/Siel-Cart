@@ -47,14 +47,14 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-14 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-16 md:size-18"
+                    class="size-14 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-16 md:size-18 lg:size-20"
                 >
-                <span class="hidden h-14 w-px shrink-0 bg-white/40 sm:block md:h-16" aria-hidden="true"></span>
+                <span class="hidden h-14 w-px shrink-0 bg-white/40 sm:block md:h-16 lg:h-18" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
-                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl lg:text-2xl xl:text-3xl">
+                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-lg lg:text-xl xl:text-2xl">
                         {{ $siteName }}
                     </span>
-                    <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block lg:text-sm xl:text-base">
+                    <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block xl:text-sm">
                         {{ $siteTagline }}
                     </span>
                 </span>
