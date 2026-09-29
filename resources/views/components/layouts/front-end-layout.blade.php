@@ -27,7 +27,7 @@
     @php
         $siteName = config('app.name', 'SIEL CART');
         $siteTagline = 'The CLSU Campus Store';
-        $desktopNavLink = 'relative flex h-[9rem] items-center px-0.5 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)] xl:h-[10rem]';
+        $desktopNavLink = 'relative inline-flex items-center px-0.5 py-1 text-[0.95rem] font-semibold tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-primary)]';
         $mobileNavLink = 'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)]';
     @endphp
 
@@ -37,9 +37,7 @@
         x-data="{ navigationOpen: false, mobileSearchOpen: false }"
         x-on:keydown.escape.window="navigationOpen = false; mobileSearchOpen = false"
     >
-        {{-- Keep the desktop nav link height in step with the masthead so its
-             active underline stays on the bottom edge. --}}
-        <div class="mx-auto flex min-h-[5.5rem] w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-[6.5rem] sm:gap-4 sm:px-6 md:min-h-[7rem] md:px-8 lg:min-h-[9rem] lg:px-10 xl:min-h-[10rem]">
+        <div class="mx-auto flex min-h-[4.75rem] w-full max-w-[87.5rem] items-center justify-between gap-2 px-4 sm:min-h-[5.25rem] sm:gap-4 sm:px-6 md:min-h-[5.5rem] md:px-8 lg:min-h-24 lg:px-10">
             <!-- Brand -->
             <a
                 href="{{ route('home') }}"
@@ -49,14 +47,14 @@
                 <img
                     src="{{ asset('images/LOGO.png') }}"
                     alt="CLSU seal"
-                    class="size-16 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-20 md:size-[5.5rem] lg:size-28 xl:size-32"
+                    class="size-14 shrink-0 object-contain transition-transform duration-200 group-hover:scale-[1.03] sm:size-16 md:size-18"
                 >
-                <span class="hidden h-14 w-px shrink-0 bg-white/40 sm:block sm:h-18 md:h-20 lg:h-28 xl:h-32" aria-hidden="true"></span>
+                <span class="hidden h-14 w-px shrink-0 bg-white/40 sm:block md:h-16" aria-hidden="true"></span>
                 <span class="min-w-0 pl-2">
-                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl md:text-2xl lg:text-[2.75rem] xl:text-[3.25rem]">
+                    <span class="block truncate text-base font-bold leading-tight tracking-[-0.02em] sm:text-xl lg:text-2xl xl:text-3xl">
                         {{ $siteName }}
                     </span>
-                    <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block lg:text-base xl:text-lg">
+                    <span class="mt-0.5 hidden truncate text-xs font-medium text-white/75 sm:block lg:text-sm xl:text-base">
                         {{ $siteTagline }}
                     </span>
                 </span>
@@ -71,7 +69,7 @@
                                 href="{{ route('home') }}"
                                 @class([
                                     $desktopNavLink,
-                                    'text-white after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-t-full after:bg-[var(--color-secondary)]' => request()->routeIs('home'),
+                                    'text-white after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-[var(--color-secondary)]' => request()->routeIs('home'),
                                     'text-white/75 hover:text-white' => ! request()->routeIs('home'),
                                 ])
                                 @if(request()->routeIs('home')) aria-current="page" @endif
@@ -82,7 +80,7 @@
                                 href="{{ route('products.index') }}"
                                 @class([
                                     $desktopNavLink,
-                                    'text-white after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-t-full after:bg-[var(--color-secondary)]' => request()->routeIs('products.*'),
+                                    'text-white after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-[var(--color-secondary)]' => request()->routeIs('products.*'),
                                     'text-white/75 hover:text-white' => ! request()->routeIs('products.*'),
                                 ])
                                 @if(request()->routeIs('products.*')) aria-current="page" @endif
@@ -93,7 +91,7 @@
                                 href="{{ route('about') }}"
                                 @class([
                                     $desktopNavLink,
-                                    'text-white after:absolute after:inset-x-0 after:bottom-0 after:h-1 after:rounded-t-full after:bg-[var(--color-secondary)]' => request()->routeIs('about'),
+                                    'text-white after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-[var(--color-secondary)]' => request()->routeIs('about'),
                                     'text-white/75 hover:text-white' => ! request()->routeIs('about'),
                                 ])
                                 @if(request()->routeIs('about')) aria-current="page" @endif
