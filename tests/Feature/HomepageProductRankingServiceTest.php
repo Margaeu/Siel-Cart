@@ -21,7 +21,7 @@ use Tests\TestCase;
  * Best Sellers and Top Picks both rank the same active, in-stock eligible
  * set (admin highlighting plays no part) from a rolling 7-day window of
  * completed sales, and both only show products with at least one qualifying
- * sale. Best Sellers takes the top two products per category; Top Picks ranks
+ * sale. Best Sellers takes the top product per category; Top Picks ranks
  * them store-wide and returns at most eight.
  */
 class HomepageProductRankingServiceTest extends TestCase
@@ -249,7 +249,7 @@ class HomepageProductRankingServiceTest extends TestCase
         $this->assertSame(4, $entry->units_sold);
     }
 
-    public function test_best_sellers_returns_the_top_two_products_per_category(): void
+    public function test_best_sellers_returns_the_top_product_per_category(): void
     {
         $category = $this->category();
         $a = $this->eligibleProduct(['category_id' => $category->id]);
@@ -263,11 +263,12 @@ class HomepageProductRankingServiceTest extends TestCase
         $bestSellers = $this->service()->bestSellers();
         $winnersInCategory = $bestSellers->where('category_id', $category->id);
 
-        $this->assertSame([$b->id, $a->id], $winnersInCategory->pluck('id')->all());
+        $this->assertSame([$b->id], $winnersInCategory->pluck('id')->all());
+        $this->assertFalse($bestSellers->contains('id', $a->id));
         $this->assertFalse($bestSellers->contains('id', $c->id));
     }
 
-    public function test_best_sellers_can_show_two_products_from_each_of_five_categories(): void
+    public function test_best_sellers_can_show_one_product_from_each_of_five_categories(): void
     {
         foreach (range(1, 5) as $index) {
             $category = $this->category();
@@ -280,8 +281,8 @@ class HomepageProductRankingServiceTest extends TestCase
 
         $bestSellers = $this->service()->bestSellers();
 
-        $this->assertCount(10, $bestSellers);
-        $this->assertSame([2], $bestSellers->groupBy('category_id')->map->count()->unique()->values()->all());
+        $this->assertCount(5, $bestSellers);
+        $this->assertSame([1], $bestSellers->groupBy('category_id')->map->count()->unique()->values()->all());
     }
 
     public function test_top_picks_stays_capped_at_eight_store_wide(): void

@@ -129,9 +129,9 @@ class UnitSoldWidgetTest extends TestCase
     }
 
     /**
-     * The admin filter uses the same two winners per category as the homepage.
+     * The admin filter uses the same one winner per category as the homepage.
      */
-    public function test_highlight_filter_best_seller_returns_the_top_two_in_a_category(): void
+    public function test_highlight_filter_best_seller_returns_only_the_top_product_in_a_category(): void
     {
         $category = $this->category();
         $winner = $this->eligibleProduct(['category_id' => $category->id]);
@@ -147,7 +147,7 @@ class UnitSoldWidgetTest extends TestCase
         Livewire::test(UnitSold::class)
             ->filterTable('highlight', 'best_seller')
             ->assertSee($winner->name)
-            ->assertSee($runnerUp->name)
+            ->assertDontSee($runnerUp->name)
             ->assertDontSee($third->name);
     }
 

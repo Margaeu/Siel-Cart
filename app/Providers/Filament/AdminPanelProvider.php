@@ -233,6 +233,15 @@ class AdminPanelProvider extends PanelProvider
                     ['color' => $primaryColorRaw],
                 ),
             )
+            // Livewire restores old HTML for browser Back/Forward navigation.
+            // Lists, record pages, and dashboard widgets can all become stale
+            // after a create, update, delete, restore, or other admin action.
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn () => view('filament.admin.refresh-admin-history', [
+                    'panelPath' => '/'.trim($panel->getPath(), '/'),
+                ]),
+            )
             ->plugins([
                 FilamentShieldPlugin::make()
                     ->navigationGroup('System Administration')

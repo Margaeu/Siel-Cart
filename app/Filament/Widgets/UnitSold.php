@@ -154,7 +154,7 @@ class UnitSold extends TableWidget
                 // Best Seller and Top Pick are not stored flags -- Product has
                 // no such column. They're computed live by
                 // HomepageProductRankingService from a rolling 7-day window of
-                // completed, paid sales (Best Sellers capped at two per
+                // completed, paid sales (Best Sellers capped at one per
                 // category; Top Picks capped at eight store-wide), exactly as the
                 // homepage badges them. This filter reuses that same service
                 // rather than re-deriving the rule, so it always agrees with

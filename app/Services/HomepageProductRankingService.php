@@ -31,7 +31,7 @@ class HomepageProductRankingService
 {
     private const WINDOW_DAYS = 7;
 
-    private const BEST_SELLERS_PER_CATEGORY = 2;
+    private const BEST_SELLERS_PER_CATEGORY = 1;
 
     private const MAX_TOP_PICKS = 8;
 
@@ -44,7 +44,7 @@ class HomepageProductRankingService
     public function __construct(private readonly HomepageRankingCache $cache) {}
 
     /**
-     * Up to two winners per category, each with a qualifying sale in the
+     * One winner per category, with a qualifying sale in the
      * window. The global sales ranking determines each category's order.
      * A category with no qualifying sale gets no winner.
      */

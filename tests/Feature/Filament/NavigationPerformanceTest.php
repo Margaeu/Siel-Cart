@@ -14,6 +14,7 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Js;
 use Livewire\Livewire;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -72,5 +73,28 @@ class NavigationPerformanceTest extends TestCase
         $this->get('/admin/themes')
             ->assertOk()
             ->assertSeeHtml('wire:navigate');
+    }
+
+    public static function adminPages(): array
+    {
+        return array_map(fn (string $path): array => [$path], [
+            '/admin', '/admin/products', '/admin/categories', '/admin/banners',
+            '/admin/themes', '/admin/users', '/admin/customers', '/admin/orders',
+            '/admin/reviews', '/admin/reports', '/admin/return-refunds', '/admin/admin-activity-logs',
+            '/admin/products/create', '/admin/categories/create',
+        ]);
+    }
+
+    #[DataProvider('adminPages')]
+    public function test_admin_history_refresh_hook_covers_every_section(string $path): void
+    {
+        $this->get($path)
+            ->assertOk()
+            ->assertSee('livewire:navigate', false)
+            ->assertSee('event.detail.cached', false)
+            ->assertSee('event.detail.history', false)
+            ->assertSee('const panelPath = '.Js::from('/admin')->toHtml(), false)
+            ->assertSee('destination.pathname.startsWith', false)
+            ->assertSee('window.location.replace(destination.href)', false);
     }
 }
