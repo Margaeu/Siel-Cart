@@ -205,6 +205,80 @@ class ProductCrudTest extends TestCase
         $this->assertTrue(Product::sole()->is_active);
     }
 
+    public function test_create_form_rejects_a_ninth_featured_product(): void
+    {
+        foreach (range(1, Product::MAX_FEATURED) as $index) {
+            $this->simpleProduct(['is_featured' => true]);
+        }
+
+        $this->actingAsAdmin();
+
+        Livewire::test(CreateProduct::class)
+            ->assertSee('8 products are currently marked Featured')
+            ->fillForm($this->simpleFormData(['is_featured' => true]))
+            ->call('create')
+            ->assertHasFormErrors(['is_featured']);
+
+        $this->assertSame(Product::MAX_FEATURED, Product::featured()->count());
+        $this->assertSame(Product::MAX_FEATURED, Product::count());
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($this->simpleFormData(['is_featured' => false]))
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(Product::MAX_FEATURED, Product::featured()->count());
+        $this->assertSame(Product::MAX_FEATURED + 1, Product::count());
+    }
+
+    public function test_edit_form_allows_an_existing_featured_product_but_rejects_another(): void
+    {
+        $featured = collect(range(1, Product::MAX_FEATURED))
+            ->map(fn () => $this->simpleProduct(['is_featured' => true]));
+        $unfeatured = $this->simpleProduct(['is_featured' => false]);
+
+        $this->actingAsAdmin();
+
+        Livewire::test(EditProduct::class, ['record' => $featured->first()->getRouteKey()])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        Livewire::test(EditProduct::class, ['record' => $unfeatured->getRouteKey()])
+            ->fillForm(['is_featured' => true])
+            ->call('save')
+            ->assertHasFormErrors(['is_featured']);
+
+        $this->assertFalse($unfeatured->fresh()->is_featured);
+
+        Livewire::test(EditProduct::class, ['record' => $featured->first()->getRouteKey()])
+            ->fillForm(['is_featured' => false])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        Livewire::test(EditProduct::class, ['record' => $unfeatured->getRouteKey()])
+            ->fillForm(['is_featured' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($unfeatured->fresh()->is_featured);
+        $this->assertSame(Product::MAX_FEATURED, Product::featured()->count());
+    }
+
+    public function test_restoring_a_featured_product_does_not_retake_a_filled_slot(): void
+    {
+        $trashed = $this->simpleProduct(['is_featured' => true]);
+        $trashed->delete();
+
+        foreach (range(1, Product::MAX_FEATURED) as $index) {
+            $this->simpleProduct(['is_featured' => true]);
+        }
+
+        $trashed->restore();
+
+        $this->assertFalse($trashed->fresh()->is_featured);
+        $this->assertSame(Product::MAX_FEATURED, Product::featured()->count());
+    }
+
     public function test_a_simple_product_requires_its_fields(): void
     {
         $this->actingAsAdmin();
@@ -947,7 +1021,7 @@ class ProductCrudTest extends TestCase
 
     public function test_a_restored_product_comes_back_inactive(): void
     {
-        $product = $this->simpleProduct(['is_active' => true]);
+        $product = $this->simpleProduct(['is_active' => true, 'is_featured' => true]);
 
         $product->delete();
         // Trashing leaves is_active alone; only restoring changes it.
@@ -956,6 +1030,7 @@ class ProductCrudTest extends TestCase
         $product->restore();
         $this->assertNotSoftDeleted($product);
         $this->assertFalse($product->fresh()->is_active);
+        $this->assertFalse($product->fresh()->is_featured);
     }
 
     public function test_bulk_restore_brings_products_back_inactive(): void
@@ -979,7 +1054,7 @@ class ProductCrudTest extends TestCase
 
     public function test_restoring_from_the_edit_page_refreshes_the_active_toggle(): void
     {
-        $product = $this->simpleProduct(['is_active' => true]);
+        $product = $this->simpleProduct(['is_active' => true, 'is_featured' => true]);
         $product->delete();
         $this->actingAsAdmin();
 
@@ -987,10 +1062,11 @@ class ProductCrudTest extends TestCase
         // the toggle state the form was filled with before it.
         Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
             ->callAction('restore')
-            ->assertSchemaStateSet(['is_active' => false])
+            ->assertSchemaStateSet(['is_active' => false, 'is_featured' => false])
             ->call('save');
 
         $this->assertFalse($product->fresh()->is_active);
+        $this->assertFalse($product->fresh()->is_featured);
     }
 
     public function test_the_soft_delete_action_is_labelled_move_to_trash(): void

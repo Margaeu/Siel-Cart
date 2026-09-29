@@ -27,6 +27,8 @@ class ViewReport extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            ReportResource::hideReviewAction(),
+
             // Same shortcut EditReport offers: act on the actual reported
             // content from the review page instead of hunting for it separately.
             Action::make('deleteReview')

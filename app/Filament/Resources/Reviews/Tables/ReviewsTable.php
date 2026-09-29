@@ -107,11 +107,12 @@ class ReviewsTable
                     ])
                     ->native(false),
 
-                TernaryFilter::make('is_verified_purchase')
+                SelectFilter::make('is_verified_purchase')
                     ->label('Verified purchase')
                     ->placeholder('All reviews')
-                    ->trueLabel('Verified only')
-                    ->falseLabel('Unverified only'),
+                    ->options([
+                        1 => 'Verified only',
+                    ]),
             ])
             ->recordActions([
                 Action::make('show')

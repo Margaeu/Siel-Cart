@@ -32,6 +32,10 @@ class Product extends Model
 
     public const TYPE_LOCKED_MESSAGE = 'A product cannot be switched between simple and variant after it is created. Create a new product instead.';
 
+    public const MAX_FEATURED = 8;
+
+    public const FEATURED_LIMIT_MESSAGE = 'Only 8 products can be featured at a time. Turn off Feature for another product first.';
+
     protected $fillable = [
         'category_id',
         'name',
@@ -672,11 +676,10 @@ class Product extends Model
             }
         });
 
-        // Trashing keeps is_active, so a product that was live when it went to
-        // the trash would go straight back onto the storefront the moment it
-        // was restored -- possibly with a stale price or stock count nobody
-        // re-checked. Restoring always lands it inactive; the admin publishes
-        // it again deliberately. A hook rather than an action callback so the
+        // Trashing keeps is_active and is_featured. Restoring clears both so
+        // it cannot republish stale stock or silently take a Featured slot
+        // that another product filled while it was in the trash. A hook rather
+        // than an action callback so the
         // edit-page RestoreAction, the RestoreBulkAction, and any tinker or
         // seeder restore() all behave the same. restore() saves the model
         // after this fires, so the change is written in the same update.
@@ -703,6 +706,7 @@ class Product extends Model
 
         static::restoring(function (Product $product) {
             $product->is_active = false;
+            $product->is_featured = false;
         });
     }
 }

@@ -16,13 +16,13 @@ class HomePage extends Component
             ->ordered()
             ->get();
 
-        // withCardData(): everything the cards read, for all eight at once.
+        // withCardData(): everything the cards read, for the capped selection at once.
         // `category` is no longer eager loaded -- no card reads it.
         $featuredProducts = Product::where('is_active', true)
             ->featured()
             ->inStock()
             ->withCardData()
-            ->limit(8)
+            ->limit(Product::MAX_FEATURED)
             ->get();
 
         $categories = Category::where('is_active', true)

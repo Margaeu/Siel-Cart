@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\Reports\Pages\EditReport;
+use App\Filament\Resources\Reports\Pages\ViewReport;
+use App\Filament\Resources\Reports\ReportResource;
 use App\Livewire\Customer\OrderDetails;
 use App\Livewire\ProductDetails;
 use App\Models\Category;
@@ -9,9 +12,14 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Report;
 use App\Models\Review;
+use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -86,6 +94,75 @@ class ReviewOneChancePerPurchaseTest extends TestCase
         $this->actingAs($this->customer, 'customer');
 
         return Livewire::test(ProductDetails::class, ['slug' => $this->product->slug]);
+    }
+
+    private function actingAsAdmin(): void
+    {
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole(Role::findOrCreate('super_admin', 'web'));
+        Gate::before(fn () => true);
+        Filament::setCurrentPanel('admin');
+        $this->actingAs($admin);
+    }
+
+    private function reportFor(Review $review): Report
+    {
+        return Report::create([
+            'reporter_customer_id' => Customer::factory()->create()->id,
+            'reported_customer_id' => $this->customer->id,
+            'review_id' => $review->id,
+            'reason' => 'Fake or misleading review',
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_reports_can_hide_a_review_without_deleting_it_or_allowing_another_review(): void
+    {
+        $this->actingAsAdmin();
+
+        foreach ([EditReport::class, ViewReport::class] as $page) {
+            $review = $this->reviewFor($this->completedOrder());
+            $report = $this->reportFor($review);
+
+            Livewire::test($page, ['record' => $report->id])
+                ->assertActionVisible('hideReview')
+                ->callAction('hideReview')
+                ->assertNotified('Review hidden')
+                ->assertRedirect(ReportResource::getUrl('index'));
+
+            $this->assertFalse($review->fresh()->is_approved);
+            $this->assertFalse($review->fresh()->trashed());
+            $this->assertSame('reviewed', $report->fresh()->status);
+            $this->assertSame($review->id, $report->fresh()->review_id);
+            $this->assertSame(0, $this->product->fresh()->reviews_count);
+
+            $this->productPage()
+                ->assertDontSeeText('The review that gets reported.')
+                ->assertSet('canReview', false)
+                ->assertSet('hasReview', true);
+        }
+    }
+
+    public function test_report_hide_action_is_unavailable_for_hidden_or_deleted_reviews(): void
+    {
+        $this->actingAsAdmin();
+        $review = $this->reviewFor($this->completedOrder());
+        $report = $this->reportFor($review);
+        $review->update(['is_approved' => false]);
+
+        foreach ([EditReport::class, ViewReport::class] as $page) {
+            Livewire::test($page, ['record' => $report->id])
+                ->assertActionHidden('hideReview');
+        }
+
+        $review->delete();
+
+        foreach ([EditReport::class, ViewReport::class] as $page) {
+            Livewire::test($page, ['record' => $report->id])
+                ->assertActionHidden('hideReview');
+        }
+
+        $this->assertSame('pending', $report->fresh()->status);
     }
 
     public function test_a_deleted_review_does_not_let_the_customer_review_again(): void

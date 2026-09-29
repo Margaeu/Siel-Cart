@@ -358,7 +358,7 @@
     <!-- Best Sellers -->
     <x-storefront.product-carousel-section
         heading="Best Sellers"
-        description="The top seller in each category over the last 7 days."
+        description="The top two sellers in each category over the last 7 days."
         :products="$bestSellers"
         badge="best_seller"
         :show-category="true"

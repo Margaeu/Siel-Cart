@@ -11,10 +11,13 @@ use App\Filament\Resources\Reports\Tables\ReportsTable;
 use App\Models\Report;
 use App\Support\AdminNavigationBadges;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 use UnitEnum;
 
 class ReportResource extends Resource
@@ -40,6 +43,33 @@ class ReportResource extends Resource
     public static function table(Table $table): Table
     {
         return ReportsTable::configure($table);
+    }
+
+    public static function hideReviewAction(): Action
+    {
+        return Action::make('hideReview')
+            ->label('Hide Reported Review')
+            ->icon('heroicon-o-eye-slash')
+            ->color('warning')
+            ->authorize(fn (Report $record): bool => self::canEdit($record)
+                && $record->review !== null
+                && auth()->user()->can('update', $record->review))
+            ->visible(fn (Report $record): bool => (bool) $record->review?->is_approved)
+            ->requiresConfirmation()
+            ->modalHeading('Hide the reported review?')
+            ->modalDescription('This hides the review from the product page and excludes it from the average rating. The report will be marked as reviewed. You can show the review again from Reviews.')
+            ->action(function (Report $record): void {
+                DB::transaction(function () use ($record): void {
+                    $record->review()->update(['is_approved' => false]);
+                    $record->update(['status' => 'reviewed']);
+                });
+
+                Notification::make()
+                    ->title('Review hidden')
+                    ->success()
+                    ->send();
+            })
+            ->successRedirectUrl(self::getUrl('index'));
     }
 
     public static function getRelations(): array

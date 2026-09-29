@@ -38,6 +38,9 @@ class OrdersTable
             // badge poller (NavigationBadgePoller), which runs on the same
             // interval.
             ->poll('60s')
+            ->recordClasses(fn (Order $record): ?string => $record->canBeCancelledForNoShow()
+                ? 'fi-order-pickup-overdue'
+                : null)
             // Newest first, so an admin sees a record they just created or changed
             // at the top and can confirm the change landed.
             ->defaultSort('created_at', 'desc')

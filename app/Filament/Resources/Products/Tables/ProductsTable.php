@@ -113,7 +113,7 @@ class ProductsTable
                         ->successNotificationTitle('Moved to trash'),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make()
-                        ->modalDescription('The products will be restored as inactive. Activate each one when it is ready to go back on the storefront.'),
+                        ->modalDescription('The products will be restored as inactive and no longer featured. Activate or feature each one when it is ready.'),
                 ]),
             ]);
     }

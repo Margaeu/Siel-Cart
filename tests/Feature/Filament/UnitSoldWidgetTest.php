@@ -129,25 +129,26 @@ class UnitSoldWidgetTest extends TestCase
     }
 
     /**
-     * Best Sellers keeps only the top-selling product per category, so a
-     * runner-up in the same category must not pass this filter even though
-     * it sold, and even though it does pass the Top Picks filter.
+     * The admin filter uses the same two winners per category as the homepage.
      */
-    public function test_highlight_filter_best_seller_returns_only_the_category_winner(): void
+    public function test_highlight_filter_best_seller_returns_the_top_two_in_a_category(): void
     {
         $category = $this->category();
         $winner = $this->eligibleProduct(['category_id' => $category->id]);
         $runnerUp = $this->eligibleProduct(['category_id' => $category->id]);
+        $third = $this->eligibleProduct(['category_id' => $category->id]);
 
         $this->sell($this->order(now()->subDay()), $winner, 10);
         $this->sell($this->order(now()->subDay()), $runnerUp, 5);
+        $this->sell($this->order(now()->subDay()), $third, 1);
 
         $this->actingAsAdmin();
 
         Livewire::test(UnitSold::class)
             ->filterTable('highlight', 'best_seller')
             ->assertSee($winner->name)
-            ->assertDontSee($runnerUp->name);
+            ->assertSee($runnerUp->name)
+            ->assertDontSee($third->name);
     }
 
     /**

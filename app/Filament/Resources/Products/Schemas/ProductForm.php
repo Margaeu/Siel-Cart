@@ -158,7 +158,26 @@ class ProductForm
                                             ->markAsRequired(false),
                                         Toggle::make('is_featured')
                                             ->label('Feature')
-                                            ->helperText('Shows this product in the Featured Products section. Best Sellers and Top Picks are filled by completed sales and do not depend on this setting.')
+                                            ->helperText(static function (?Product $record): string {
+                                                $description = 'Mark up to 8 products as Featured. Only active, in-stock products appear on the homepage. Best Sellers and Top Picks are based on completed sales.';
+
+                                                $featuredCount = Product::featured()->count();
+
+                                                if (! $record?->is_featured && $featuredCount >= Product::MAX_FEATURED) {
+                                                    return $description." {$featuredCount} products are currently marked Featured; turn off Feature for another product first.";
+                                                }
+
+                                                return $description;
+                                            })
+                                            ->rule(static fn (?Product $record): Closure => static function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                                if (! $value || ($record?->is_featured && ! $record->trashed())) {
+                                                    return;
+                                                }
+
+                                                if (Product::featured()->count() >= Product::MAX_FEATURED) {
+                                                    $fail(Product::FEATURED_LIMIT_MESSAGE);
+                                                }
+                                            })
                                             ->default(false)
                                             ->required()
                                             ->markAsRequired(false),

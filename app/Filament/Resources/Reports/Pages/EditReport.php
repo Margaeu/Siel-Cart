@@ -15,6 +15,8 @@ class EditReport extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            ReportResource::hideReviewAction(),
+
             // A report is just the complaint ticket — deleting it does NOT
             // remove the review it's about. This gives admins a direct way
             // to act on the actual reported content from the same screen,

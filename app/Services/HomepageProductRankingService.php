@@ -31,7 +31,7 @@ class HomepageProductRankingService
 {
     private const WINDOW_DAYS = 7;
 
-    private const MAX_BEST_SELLERS = 8;
+    private const BEST_SELLERS_PER_CATEGORY = 2;
 
     private const MAX_TOP_PICKS = 8;
 
@@ -44,17 +44,16 @@ class HomepageProductRankingService
     public function __construct(private readonly HomepageRankingCache $cache) {}
 
     /**
-     * At most one winner per category: the highest-ranked eligible product
-     * with at least one qualifying sale in the window. A category with no
-     * qualifying sale gets no winner, and a zero-sale product never wins one.
+     * Up to two winners per category, each with a qualifying sale in the
+     * window. The global sales ranking determines each category's order.
+     * A category with no qualifying sale gets no winner.
      */
     public function bestSellers(): Collection
     {
         return $this->rankedEligibleProducts()
             ->groupBy('category_id')
-            ->map(fn (Collection $products) => $products->first())
-            ->values()
-            ->take(self::MAX_BEST_SELLERS);
+            ->flatMap(fn (Collection $products) => $products->take(self::BEST_SELLERS_PER_CATEGORY))
+            ->values();
     }
 
     /**

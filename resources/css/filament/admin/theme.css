@@ -372,6 +372,18 @@
         width: min(100%, 21rem);
     }
 
+    /* Match the inventory's out-of-stock highlight for missed pickup windows. */
+    .fi-ta-row.fi-order-pickup-overdue,
+    .fi-ta-record.fi-order-pickup-overdue {
+        background-color: var(--danger-50);
+        box-shadow: inset 3px 0 0 var(--danger-600);
+    }
+
+    .dark .fi-ta-row.fi-order-pickup-overdue,
+    .dark .fi-ta-record.fi-order-pickup-overdue {
+        background-color: color-mix(in oklab, var(--danger-400) 10%, transparent);
+    }
+
     .fi-ta-row .fi-ta-actions {
         gap: 0.35rem;
     }

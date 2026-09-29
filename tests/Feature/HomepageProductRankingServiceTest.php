@@ -21,8 +21,8 @@ use Tests\TestCase;
  * Best Sellers and Top Picks both rank the same active, in-stock eligible
  * set (admin highlighting plays no part) from a rolling 7-day window of
  * completed sales, and both only show products with at least one qualifying
- * sale. Best Sellers takes the
- * top product per category; Top Picks ranks them store-wide.
+ * sale. Best Sellers takes the top two products per category; Top Picks ranks
+ * them store-wide and returns at most eight.
  */
 class HomepageProductRankingServiceTest extends TestCase
 {
@@ -62,13 +62,14 @@ class HomepageProductRankingServiceTest extends TestCase
      */
     private function eligibleProduct(array $attributes = []): Product
     {
+        $attributes['category_id'] ??= $this->category()->id;
+
         return Product::factory()->create(array_merge([
             'is_active' => true,
             'is_featured' => false,
             'has_variants' => false,
             'price' => 100,
             'stock_quantity' => 10,
-            'category_id' => $this->category()->id,
         ], $attributes));
     }
 
@@ -248,20 +249,56 @@ class HomepageProductRankingServiceTest extends TestCase
         $this->assertSame(4, $entry->units_sold);
     }
 
-    public function test_best_sellers_returns_only_one_winner_per_category(): void
+    public function test_best_sellers_returns_the_top_two_products_per_category(): void
     {
         $category = $this->category();
         $a = $this->eligibleProduct(['category_id' => $category->id]);
         $b = $this->eligibleProduct(['category_id' => $category->id]);
+        $c = $this->eligibleProduct(['category_id' => $category->id]);
 
         $this->sell($this->order(), $a, 5);
         $this->sell($this->order(), $b, 9);
+        $this->sell($this->order(), $c, 3);
 
         $bestSellers = $this->service()->bestSellers();
         $winnersInCategory = $bestSellers->where('category_id', $category->id);
 
-        $this->assertCount(1, $winnersInCategory);
-        $this->assertSame($b->id, $winnersInCategory->first()->id);
+        $this->assertSame([$b->id, $a->id], $winnersInCategory->pluck('id')->all());
+        $this->assertFalse($bestSellers->contains('id', $c->id));
+    }
+
+    public function test_best_sellers_can_show_two_products_from_each_of_five_categories(): void
+    {
+        foreach (range(1, 5) as $index) {
+            $category = $this->category();
+
+            foreach (range(1, 2) as $rank) {
+                $product = $this->eligibleProduct(['category_id' => $category->id]);
+                $this->sell($this->order(), $product, 10 - $rank);
+            }
+        }
+
+        $bestSellers = $this->service()->bestSellers();
+
+        $this->assertCount(10, $bestSellers);
+        $this->assertSame([2], $bestSellers->groupBy('category_id')->map->count()->unique()->values()->all());
+    }
+
+    public function test_top_picks_stays_capped_at_eight_store_wide(): void
+    {
+        $products = collect();
+
+        foreach (range(1, 9) as $units) {
+            $product = $this->eligibleProduct();
+            $this->sell($this->order(), $product, $units);
+            $products->push($product);
+        }
+
+        $topPicks = $this->service()->topPicks();
+
+        $this->assertCount(8, $topPicks);
+        $this->assertSame($products->last()->id, $topPicks->first()->id);
+        $this->assertFalse($topPicks->contains('id', $products->first()->id));
     }
 
     public function test_zero_sale_product_cannot_become_a_best_seller(): void

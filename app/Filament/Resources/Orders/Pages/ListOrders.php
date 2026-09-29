@@ -12,6 +12,11 @@ class ListOrders extends ListRecords
 {
     protected static string $resource = OrderResource::class;
 
+    /** @var array<string, int>|null */
+    private ?array $statusCounts = null;
+
+    private ?int $returnActivityCount = null;
+
     public function getTabs(): array
     {
         return [
@@ -50,7 +55,7 @@ class ListOrders extends ListRecords
             // Orders with a recorded refund or exchange.
             'returns' => Tab::make('Returns/Refunds')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->withReturnActivity())
-                ->badge(static fn (): int => OrderResource::getEloquentQuery()->withReturnActivity()->count())
+                ->badge(fn (): int => $this->returnActivityCount ??= OrderResource::getEloquentQuery()->withReturnActivity()->count())
                 ->badgeColor('warning'),
 
         ];
@@ -68,10 +73,22 @@ class ListOrders extends ListRecords
                 fn (Builder $query): Builder => $query->whereIn('status', $statuses)
             )
             ->badge(
-                static fn (): int => OrderResource::getEloquentQuery()
-                    ->whereIn('status', $statuses)
-                    ->count()
+                fn (): int => array_sum(array_map(
+                    fn (string $status): int => $this->statusCounts()[$status] ?? 0,
+                    $statuses,
+                ))
             )
             ->badgeColor($badgeColor);
+    }
+
+    /** @return array<string, int> */
+    private function statusCounts(): array
+    {
+        return $this->statusCounts ??= OrderResource::getEloquentQuery()
+            ->selectRaw('status, COUNT(*) AS total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($total): int => (int) $total)
+            ->all();
     }
 }

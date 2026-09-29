@@ -28,15 +28,14 @@ class EditProduct extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            // Product::restoring() makes the restored product inactive; the
-            // modal says so, since otherwise it looks like the restore failed
-            // to put it back on the storefront.
-            // The form was filled before the restore, so its Active toggle
-            // still shows the old value; saving it unchanged would republish
-            // the product and undo the hook. Refresh that one field.
+            // Product::restoring() makes the restored product inactive and
+            // unfeatured; the modal says so, since otherwise it looks like the
+            // restore failed to put it back on the storefront.
+            // The form was filled before the restore, so refresh both status
+            // toggles to keep a later save from undoing the restoring hook.
             RestoreAction::make()
-                ->modalDescription('The product will be restored as inactive. Activate it from the edit form when it is ready to go back on the storefront.')
-                ->after(fn () => $this->refreshFormData(['is_active'])),
+                ->modalDescription('The product will be restored as inactive and no longer featured. Activate or feature it from the edit form when it is ready.')
+                ->after(fn () => $this->refreshFormData(['is_active', 'is_featured'])),
             // A soft delete: the product goes to the Trash tab with its
             // images, variants, SKU and slug intact, and can be restored.
             // "Delete" read as permanent, which is what Force delete does.

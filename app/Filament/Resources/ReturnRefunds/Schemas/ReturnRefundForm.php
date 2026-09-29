@@ -66,19 +66,20 @@ class ReturnRefundForm
     }
 
     /**
-     * Collected orders, found by order number or customer name.
+     * Collected orders, found by order number, OR number, or customer name.
      */
     private static function orderSelect(): Select
     {
         return Select::make('order_id')
             ->label('Order')
-            ->placeholder('Search by order number or customer')
+            ->placeholder('Search by order number, OR number, or customer')
             ->searchable()
             ->getSearchResultsUsing(fn (string $search): array => Order::query()
                 ->with('customer')
                 ->whereIn('status', Order::RESOLVABLE_STATUSES)
                 ->where(fn ($query) => $query
                     ->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('or_number', 'like', "%{$search}%")
                     ->orWhereHas('customer', fn ($query) => $query
                         ->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")))
@@ -211,8 +212,14 @@ class ReturnRefundForm
     {
         return Select::make('incorrect_product_id')
             ->label('Item released in error')
-            ->options(fn (): array => Product::query()->orderBy('name')->pluck('name', 'id')->all())
             ->searchable()
+            ->getSearchResultsUsing(fn (string $search): array => Product::query()
+                ->where('name', 'like', "%{$search}%")
+                ->orderBy('name')
+                ->limit(50)
+                ->pluck('name', 'id')
+                ->all())
+            ->getOptionLabelUsing(fn ($value): ?string => Product::query()->whereKey($value)->value('name'))
             ->required()
             ->live()
             ->afterStateUpdated(fn (Set $set) => $set('incorrect_variant_id', null))
@@ -307,15 +314,34 @@ class ReturnRefundForm
             return null;
         }
 
-        return OrderItem::query()
+        $orderId = (int) $get('order_id');
+        $itemId = (int) $get('order_item_id');
+        $cacheKey = self::class.":selected-item:{$orderId}:{$itemId}";
+
+        // Several field callbacks read the same line during one form render.
+        // Request attributes keep the result local to this HTTP request, while
+        // the IDs make a changed selection fetch its own line.
+        if (request()->attributes->has($cacheKey)) {
+            return request()->attributes->get($cacheKey);
+        }
+
+        $item = OrderItem::query()
             ->with('resolutions')
-            ->where('order_id', (int) $get('order_id'))
-            ->find((int) $get('order_item_id'));
+            ->where('order_id', $orderId)
+            ->find($itemId);
+
+        request()->attributes->set($cacheKey, $item);
+
+        return $item;
     }
 
     private static function orderLabel(Order $order): string
     {
-        return collect([$order->order_number, $order->customer?->name])->filter()->implode(' — ');
+        return collect([
+            $order->order_number,
+            filled($order->or_number) ? 'OR Number: '.$order->or_number : null,
+            $order->customer?->name,
+        ])->filter()->implode(' — ');
     }
 
     private static function itemLabel(OrderItem $item): string
