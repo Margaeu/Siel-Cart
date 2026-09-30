@@ -8,8 +8,8 @@
 # the repository's Nginx site, optionally migrate, rebuild Laravel's caches,
 # and fix permissions. Dependencies and frontend assets are built in GitHub
 # Actions and arrive in the deployed package -- never install or build here,
-# because the B1 plan has a single vCPU and every restart would pay for it
-# again in cold-start time.
+# because the App Service plan's CPU is shared with the chatbot and every
+# restart would pay for it again in cold-start time.
 #
 # Any failure aborts the start instead of leaving a half-configured app
 # serving requests (stale config, missing tables, or the stock Nginx site

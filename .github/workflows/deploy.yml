@@ -165,7 +165,7 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: ../release.zip
 
-      # A deploy restarts the container (Always On on B1 only keeps a running
+      # A deploy restarts the container (Always On only keeps a running
       # app warm), so the first request after it waits for a cold start (and
       # for migrations, when enabled). /up proves Laravel
       # boots; /products proves a database-backed page renders.

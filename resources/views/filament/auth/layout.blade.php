@@ -17,11 +17,6 @@
         <div class="clsu-auth-stage">
             <div class="clsu-auth-column">
                 <main id="fi-main-content" tabindex="-1" class="fi-simple-main clsu-auth-card">
-                    <div class="clsu-auth-eyebrow">
-                        <x-filament::icon :icon="\Filament\Support\Icons\Heroicon::OutlinedShieldCheck" class="clsu-auth-eyebrow__icon" />
-                        <span>Administrator access</span>
-                    </div>
-
                     {{ $slot }}
                 </main>
             </div>

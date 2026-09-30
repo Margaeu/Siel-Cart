@@ -1,5 +1,8 @@
 /* Shared with the storefront: Acumin Pro, the active theme, and a quiet white card.
-   The administrator label distinguishes the staff entry point. */
+   Spacing is kept to the storefront login's rhythm (resources/views/auth/customer/login.blade.php):
+   Filament's own field gaps plus 44px hit areas on every row stacked up to a card
+   noticeably taller than the storefront's, so touch targets grow through ::after
+   instead of layout height. */
 @layer components {
     /* The storefront scales its root fluidly (resources/css/app.css) and sizes the
        masthead in rem, so on Filament's fixed 16px root the same header markup
@@ -23,7 +26,7 @@
         flex: 1;
         align-items: center;
         justify-content: center;
-        padding: 2.5rem 1rem;
+        padding: 2rem 1rem;
     }
 
     .clsu-auth-column {
@@ -43,24 +46,6 @@
         --tw-ring-shadow: 0 0 #0000;
     }
 
-    .clsu-auth-eyebrow {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        color: var(--color-gray-600);
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-
-    .clsu-auth-eyebrow__icon {
-        width: 1.125rem;
-        height: 1.125rem;
-        color: var(--color-primary-700);
-    }
-
     .clsu-auth-card .fi-simple-header {
         align-items: flex-start;
     }
@@ -78,14 +63,21 @@
     }
 
     .clsu-auth-card .fi-simple-header-subheading {
-        margin-top: 0.5rem;
+        margin-top: 0.25rem;
         color: var(--color-gray-600);
         line-height: 1.5;
     }
 
-    .clsu-auth-card .fi-simple-page-content,
-    .clsu-auth-card .fi-sc-form {
+    .clsu-auth-card .fi-simple-page-content {
         gap: 1.5rem;
+    }
+
+    .clsu-auth-card .fi-sc-form {
+        gap: 1.25rem;
+    }
+
+    .clsu-auth-card .fi-fo-field {
+        row-gap: 0.375rem;
     }
 
     .clsu-auth-card .fi-fo-field-label:not(:has(.fi-checkbox-input)) .fi-fo-field-label-content {
@@ -101,7 +93,7 @@
     }
 
     .clsu-auth-card .fi-input-wrp {
-        min-height: 3rem;
+        min-height: 2.75rem;
         border-radius: 0.5rem;
         box-shadow: 0 0 0 1px var(--color-gray-300);
     }
@@ -119,8 +111,26 @@
     }
 
     .clsu-auth-card .fi-input {
-        min-height: 3rem;
+        min-height: 2.75rem;
         font-size: 1rem;
+    }
+
+    /* Filament zeroes the input's start padding when the icon is inline, leaving
+       only the prefix's 0.5rem between icon and text — too tight against a typed
+       or autofilled value. */
+    .clsu-auth-card .fi-input.fi-input-has-inline-prefix {
+        padding-inline-start: 0.5rem;
+    }
+
+    /* Browsers paint autofilled values light blue, and only over the <input>, so
+       the icon beside it stayed white. Browsers ignore background-color on an
+       autofilled field, hence the inset shadow painted over it in white. */
+    .clsu-auth-card .fi-input:-webkit-autofill,
+    .clsu-auth-card .fi-input:-webkit-autofill:hover,
+    .clsu-auth-card .fi-input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 100px white inset;
+        -webkit-text-fill-color: var(--color-gray-950);
+        caret-color: var(--color-gray-950);
     }
 
     .clsu-auth-card .fi-input-wrp-suffix .fi-icon-btn {
@@ -129,12 +139,11 @@
     }
 
     .clsu-auth-card .fi-fo-field-label:has(.fi-checkbox-input) {
-        min-height: 2.75rem;
         align-items: center;
     }
 
     .clsu-auth-card form .fi-btn {
-        min-height: 3rem;
+        min-height: 2.75rem;
         border-radius: 0.5rem;
         font-size: 1rem;
         font-weight: 600;
@@ -150,10 +159,29 @@
     }
 
     .clsu-auth-card .fi-link {
+        position: relative;
         display: inline-flex;
         align-items: center;
-        min-height: 2.75rem;
         color: var(--color-primary-700);
+    }
+
+    /* Keeps a 44px tap area without the link stretching its row (the "Forgot
+       password?" hint sits on the label line). */
+    .clsu-auth-card .fi-link::after {
+        content: '';
+        position: absolute;
+        inset: -0.75rem -0.5rem;
+    }
+
+    .clsu-auth-card .fi-fo-field-label:has(.fi-checkbox-input) {
+        position: relative;
+    }
+
+    .clsu-auth-card .fi-fo-field-label:has(.fi-checkbox-input)::after {
+        content: '';
+        position: absolute;
+        inset: -0.5rem 0;
+        pointer-events: none;
     }
 
     .clsu-auth-card .fi-link:hover {
@@ -177,7 +205,7 @@
 
     @media (min-width: 40rem) {
         .clsu-auth-stage {
-            padding: 3rem 1.5rem;
+            padding: 2.5rem 1.5rem;
         }
 
         .fi-simple-main.clsu-auth-card {

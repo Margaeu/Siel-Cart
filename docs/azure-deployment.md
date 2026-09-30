@@ -5,10 +5,11 @@ image, Nginx + PHP-FPM), Aiven MySQL, Cloudflare R2 for media, and GitHub
 Actions for build and deploy. Nothing here contains real credentials; every
 value below is a placeholder.
 
-The live app runs on **B1 (Basic)**, not F1 — it was upgraded at some point
-for Always On, and the App Service Plan (`ASP-SielCartgroup-9fe3`) was
-confirmed by `az appservice plan show` to be `Basic/B1` (1 vCPU, 1.75 GB RAM).
-See "Performance notes" below before assuming F1's limits apply.
+The live app runs on **B2 (Basic)**, not F1 — it was upgraded from F1 to B1
+for Always On, and later from B1 to B2 (2 vCPU, 3.5 GB RAM; the plan is
+`ASP-SielCartgroup-9fe3`, reported by the owner on 2026-09-30 and not
+re-confirmed with `az appservice plan show`). The "Performance notes" below
+were measured while the plan was still B1; read them with that in mind.
 
 ## How a deployment works
 
@@ -156,7 +157,7 @@ change it. Rotating it signs every user out and makes anything encrypted with
 the old key unreadable.
 
 **Queues** — no background queue worker is run (`startup.sh` starts none,
-and the single B1 vCPU would share it with web requests), so
+and it would share the plan's CPU with web requests), so
 `QUEUE_CONNECTION=sync` sends queued mail and notifications (e.g. the admin
 invitation) inside the request.
 
@@ -170,7 +171,7 @@ deleted. Enter `MAIL_FROM_NAME` as the name itself (`SIEL CART`): App Settings
 are not read through dotenv, so `${APP_NAME}` would be sent literally. The
 server's certificate is always verified (no `stream.ssl` overrides).
 
-**Sessions and cache** — the intended setting for this single-instance B1
+**Sessions and cache** — the intended setting for this single-instance
 deployment is `database` for both. They then live in Aiven MySQL, so a restart
 or redeploy doesn't clear them the way `file` storage on the instance would
 (and Azure's `/home` is network-backed storage, so `file` wouldn't be faster).
@@ -290,11 +291,14 @@ The storefront was compared against an external reference site that returned
 in ~80ms TTFB versus ours at 300ms-plus warm and multiple seconds cold. What
 was checked, on the live subscription, before touching anything:
 
-- **Plan**: `ASP-SielCartgroup-9fe3` is `Basic/B1` (1 vCPU, 1.75 GB RAM),
-  Always On is `true`, `numberOfWorkers: 1` (single instance, no scale-out).
+- **Plan**: at the time of these measurements `ASP-SielCartgroup-9fe3` was
+  `Basic/B1` (1 vCPU, 1.75 GB RAM), Always On `true`, `numberOfWorkers: 1`
+  (single instance, no scale-out). **It has since been upgraded to B2**
+  (2 vCPU, 3.5 GB RAM) and Always On is still enabled (owner-confirmed
+  2026-09-30). The B1 figures below are therefore historical.
 - **The Node chatbot app (`sielcart-chatbot`) runs on the same plan** as
   `sielcart` — confirmed via `az webapp show --query serverFarmId` on both.
-  They share one vCPU.
+  They share the plan's CPU (one vCPU on B1 when measured, two on B2 now).
 - **HTTP/2 was off** (`http20Enabled: false`) and has been turned on
   (`az webapp config set --http20-enabled true`); `httpsOnly` and
   `minTlsVersion` (1.2) were left untouched. Confirmed via browser
@@ -344,8 +348,9 @@ was checked, on the live subscription, before touching anything:
   `/products`; those spikes are more likely just the same single-vCPU
   App Service CPU contention described above compounding on a route that also
   has to do DB + Livewire work, not a separate database-side cold start.
-  Aiven's region relative to Malaysia West (cross-region network hops add
-  fixed per-query latency) is still unverified — worth checking in the Aiven
+  Aiven is in Singapore (owner-confirmed 2026-09-30) and the App Service is in
+  Malaysia West; that is a short cross-region hop, not a distant one, but it
+  still adds fixed per-query latency. It was previously unverified — worth checking in the Aiven
   console if `/products` keeps measurably outrunning `/up` by more than the
   query cost alone would suggest.
 
@@ -357,6 +362,18 @@ every cold start pays a multi-second PHP/OPcache warm-up tax on top of that.
 Fixing the floor means more CPU (B2+) or accepting B1's ceiling; fixing cold
 starts means avoiding unnecessary restarts and keeping the always-on instance
 genuinely warm.
+
+**Re-check on B2 (2026-09-30, unauthenticated `curl` TTFB, four requests
+each, first request of each route excluded as cold)**: `/up` 0.31-0.40s,
+`/about` 0.29-0.39s, `/admin/login` 0.38-0.43s, `/products` 0.55-0.64s. The
+zero-DB `/up` is still ~300-400ms warm after doubling the cores, so the
+warm floor is not simply the vCPU count; the extra cost of DB-backed routes
+(`/products` ≈ +200ms over `/up`) points at per-query latency to Aiven, which
+is why the Aiven region check above is the next thing to do. Admin login
+itself was not timed here (it needs a signed-in session): it runs a bcrypt
+check (`BCRYPT_ROUNDS=12`), session/cache/rate-limiter reads and writes
+against the database, an `activity_log` insert, and then a dashboard that
+renders several widgets and the sidebar badge counts, all of it DB round trips.
 
 ## Free-tier limits
 
@@ -374,13 +391,12 @@ and student subscriptions can only create resources in an allowed set of
 regions. If creating the App Service fails with a policy error, choose
 another region. Upgrading to B1 (for Always On or more CPU) starts drawing on
 the credit, and resources are disabled when the credit or term runs out — the
-live app is already on B1 and therefore already drawing on the credit. Check
+live app is already on B2 and therefore already drawing on the credit. Check
 **Cost Management + Billing** in the portal for the current credit balance
 before changing tiers again; it isn't reliably readable through the CLI for
 an Azure for Students subscription. As of 2026-09-26, retail pricing for
 Malaysia West was **B1 ≈ $0.017/hr (~$12.4/mo), B2 ≈ $0.034/hr (~$24.8/mo)**
-— a second B1 plan for the chatbot costs the same as upgrading the shared
-plan to B2, but gives the two apps dedicated CPU instead of a shared pool.
+— B2 is now the live plan, so this figure is the current cost; a separate B1 plan for the chatbot would add about $12.4/mo and give the two apps dedicated CPU instead of a shared pool.
 
 **Aiven MySQL free tier**: single node, 1 GB RAM, 1 GB storage, 76 maximum
 connections, no SLA, and the service may be powered off after a period of

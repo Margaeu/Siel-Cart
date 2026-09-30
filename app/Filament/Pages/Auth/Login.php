@@ -21,7 +21,7 @@ class Login extends BaseLogin
 
     public function getHeading(): string|Htmlable|null
     {
-        return filled($this->userUndertakingMultiFactorAuthentication) ? parent::getHeading() : 'Welcome back';
+        return filled($this->userUndertakingMultiFactorAuthentication) ? parent::getHeading() : 'Welcome back, Admin';
     }
 
     public function getSubheading(): string|Htmlable|null
