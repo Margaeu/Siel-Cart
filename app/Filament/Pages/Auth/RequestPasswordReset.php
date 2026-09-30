@@ -40,6 +40,22 @@ class RequestPasswordReset extends BaseRequestPasswordReset
         return parent::getRequestFormAction()->label('Send reset link')->icon(Heroicon::ArrowRight)->iconPosition('after');
     }
 
+    /**
+     * Put the way back beneath the submit button. Filament's own login link is
+     * the subheading, which this page replaces with the instruction line above,
+     * so without this an admin who remembered their password has no exit.
+     */
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getRequestFormAction(),
+            $this->loginAction()
+                ->label('Back to admin login')
+                ->color('gray')
+                ->extraAttributes(['class' => 'justify-center']),
+        ];
+    }
+
     public function request(): void
     {
         parent::request();
