@@ -1,6 +1,15 @@
 /* Shared with the storefront: Acumin Pro, the active theme, and a quiet white card.
-   The accent edge and administrator label distinguish the staff entry point. */
+   The administrator label distinguishes the staff entry point. */
 @layer components {
+    /* The storefront scales its root fluidly (resources/css/app.css) and sizes the
+       masthead in rem, so on Filament's fixed 16px root the same header markup
+       rendered smaller than the storefront's on desktop. Repeat the storefront's
+       clamp here, on the auth pages only; the panel proper keeps Filament's own
+       scale. Change both together. */
+    html:has(.clsu-auth-layout) {
+        font-size: clamp(1rem, 0.875rem + 0.3125vw, 1.125rem);
+    }
+
     .clsu-auth-layout {
         --color-primary: var(--color-primary-raw);
         display: flex;
@@ -28,7 +37,6 @@
         margin: 0;
         padding: 1.5rem;
         border: 1px solid rgb(0 0 0 / 0.05);
-        border-top: 4px solid var(--secondary-600);
         border-radius: 1rem;
         background: white;
         box-shadow: 0 16px 30px -12px rgb(0 0 0 / 0.12);
@@ -154,27 +162,6 @@
 
     .clsu-auth-card .fi-link > .fi-link-label {
         align-self: center;
-    }
-
-    .clsu-auth-navigation {
-        margin-top: 0.75rem;
-        text-align: center;
-    }
-
-    .clsu-auth-navigation a {
-        display: inline-flex;
-        min-height: 2.75rem;
-        align-items: center;
-        gap: 0.5rem;
-        padding-inline: 0.5rem;
-        border-radius: 0.25rem;
-        color: var(--color-gray-600);
-        font-size: 0.875rem;
-        transition: color 150ms;
-    }
-
-    .clsu-auth-navigation a:hover {
-        color: black;
     }
 
     .clsu-auth-layout a:focus-visible,

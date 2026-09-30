@@ -4,7 +4,6 @@
 
     $livewire ??= null;
     $renderHookScopes = $livewire?->getRenderHookScopes();
-    $isLogin = $livewire instanceof \App\Filament\Pages\Auth\Login;
 @endphp
 
 <x-filament-panels::layout.base :livewire="$livewire">
@@ -25,13 +24,6 @@
 
                     {{ $slot }}
                 </main>
-
-                <nav class="clsu-auth-navigation" aria-label="Authentication navigation">
-                    <a href="{{ $isLogin ? route('login') : filament()->getLoginUrl() }}">
-                        <span aria-hidden="true">&larr;</span>
-                        {{ $isLogin ? 'Customer login' : 'Back to admin login' }}
-                    </a>
-                </nav>
             </div>
         </div>
 

@@ -174,29 +174,29 @@
 @layer base {
 
     /*
-     * Root size: fixed at 1.0625rem (~17px off a 16px browser default)
-     * across every viewport, storefront-wide.
+     * Root size: fluid, 16px on phones rising to 18px at a 1280px viewport
+     * (1rem at <=640px, 1.125rem at >=1280px, linear in between).
      *
-     * This used to grow fluidly up to 18px on desktop (1.125rem at 1280px+),
-     * which carried every rem-based Tailwind text-*, spacing, size-* and icon
-     * utility up with it -- the storefront read as zoomed-in next to
-     * comparable marketplaces (Shopee runs a 16px root desktop and up). It was
-     * first brought down to a flat 1rem (16px) to match that density, then
-     * eased back up slightly here: 16px alone read a little cramped, so this
-     * is a uniform ~6% bump that keeps header, hero, headings, section
-     * padding and product cards all in proportion without hand-tuning any of
-     * them individually -- they're all rem-based, so they scale with this one
-     * number. The hero banner height is the one exception (sized in vw, not
-     * rem) and is bumped by hand to match, in home-page.blade.php.
+     * Every rem-based Tailwind text-*, spacing, size-* and icon utility scales
+     * off this one number, so header, hero, headings, section padding and
+     * product cards stay in proportion without hand-tuning any of them. The
+     * hero banner height is the one exception (sized in vw, not rem) and is
+     * kept in step by hand in home-page.blade.php.
      *
-     * A rem multiplier, not a literal 17px, so a reader who raised their
+     * History: this was fluid first (2026-09-21, desktop text read too small),
+     * then flattened to 1rem and later 1.0625rem (2026-09-25, desktop read
+     * zoomed-in). It is fluid again by the user's decision; do not flatten it
+     * again without asking. The admin auth pages repeat this exact clamp in
+     * resources/css/filament/admin/auth.css so their masthead matches.
+     *
+     * A rem multiplier, not literal px, so a reader who raised their
      * browser's default font size still gets that larger base.
      *
      * Anything written as an arbitrary px value (text-[11px], w-[240px])
      * was never affected by this rule either way.
      */
     html {
-        font-size: 1.0625rem;
+        font-size: clamp(1rem, 0.875rem + 0.3125vw, 1.125rem);
     }
 
     *,

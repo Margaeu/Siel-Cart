@@ -46,13 +46,14 @@
 
     /* Filament chooses a lighter button shade for pale accents such as yellow.
        Keep filled accent buttons on the saved base color; Filament still chooses
-       contrasting text and icons from the palette. */
+       contrasting text and icons from the palette. Registered custom palettes use
+       --secondary-* variables (not Tailwind's --color-secondary-* namespace). */
     .fi-btn.fi-color-secondary:not(.fi-outlined):not(label) {
-        background-color: var(--color-secondary-600);
+        background-color: var(--secondary-600);
     }
 
     .fi-btn.fi-color-secondary:not(.fi-outlined):not(label):not(.fi-disabled):not([disabled]):hover {
-        background-color: color-mix(in srgb, var(--color-secondary-600) 85%, black);
+        background-color: color-mix(in srgb, var(--secondary-600) 85%, black);
     }
 
     /* brand.blade.php sets `color: inherit` so it can follow whatever surface it
