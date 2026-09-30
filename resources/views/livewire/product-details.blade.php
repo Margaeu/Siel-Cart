@@ -787,14 +787,14 @@
                                                             </div>
                                                         @else
                                                             <!-- Clean Trigger Button -->
-                                                            <button wire:click="startReport({{ $review->id }})" type="button" class="inline-flex items-center gap-1 text-[0.75rem] font-medium text-gray-400 hover:text-rose-600 transition-colors">
+                                                            <button wire:click="startReport({{ $review->id }})" type="button" class="inline-flex items-center gap-1 text-[0.75rem] font-medium text-rose-600 hover:text-rose-700 transition-colors">
                                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
                                                                 Report review
                                                             </button>
                                                         @endif
                                                     @endif
                                                 @else
-                                                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1 text-[0.75rem] font-medium text-gray-400 hover:text-gray-700 transition-colors">
+                                                    <a href="{{ route('login') }}" class="inline-flex items-center gap-1 text-[0.75rem] font-medium text-rose-600 hover:text-rose-700 transition-colors">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
                                                         Log in to report
                                                     </a>

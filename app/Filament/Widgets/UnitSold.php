@@ -159,6 +159,8 @@ class UnitSold extends TableWidget
                 // homepage badges them. This filter reuses that same service
                 // rather than re-deriving the rule, so it always agrees with
                 // what customers currently see badged on the storefront.
+                // This table is per variant, so Best Seller narrows further to
+                // each winner's top-selling variant: one row per category.
                 SelectFilter::make('highlight')
                     ->label('Homepage Highlight')
                     ->options([
@@ -174,11 +176,29 @@ class UnitSold extends TableWidget
 
                         $ranking = app(HomepageProductRankingService::class);
 
-                        $productIds = $value === 'best_seller'
-                            ? $ranking->bestSellers()->pluck('id')
-                            : $ranking->topPicks()->pluck('id');
+                        if ($value === 'best_seller') {
+                            // One row per category: the table has a row per
+                            // variant, so the winning product alone would
+                            // bring every one of its sizes along.
+                            $winners = $ranking->bestSellerVariantIds();
 
-                        return $query->whereIn('order_items.product_id', $productIds);
+                            return $query->where(function (Builder $lines) use ($winners): void {
+                                // Matches nothing when there are no winners.
+                                $lines->whereRaw('1 = 0');
+
+                                foreach ($winners as $productId => $variantId) {
+                                    $lines->orWhere(fn (Builder $line): Builder => $line
+                                        ->where('order_items.product_id', $productId)
+                                        ->when(
+                                            $variantId === null,
+                                            fn (Builder $line): Builder => $line->whereNull('order_items.product_variant_id'),
+                                            fn (Builder $line): Builder => $line->where('order_items.product_variant_id', $variantId),
+                                        ));
+                                }
+                            });
+                        }
+
+                        return $query->whereIn('order_items.product_id', $ranking->topPicks()->pluck('id'));
                     }),
             ])
             ->emptyStateHeading('No sales to show')

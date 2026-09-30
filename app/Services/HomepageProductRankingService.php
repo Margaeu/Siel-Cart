@@ -57,6 +57,60 @@ class HomepageProductRankingService
     }
 
     /**
+     * For each Best Seller, the one variant that sold the most in the window:
+     * product id => product_variant_id (null for a simple product).
+     *
+     * The admin's Units Sold table has a row per variant, so filtering it by
+     * the Best Seller product ids alone shows every size of the winning shirt
+     * -- five rows for two categories. Callers narrow to this variant so the
+     * table shows exactly one row per category. Units are net of refunds, the
+     * same as the product ranking; ties go to the lower variant id so the
+     * choice is stable. Uncached: only the admin table asks.
+     *
+     * @return array<int, int|null>
+     */
+    public function bestSellerVariantIds(): array
+    {
+        $productIds = $this->bestSellers()->pluck('id')->all();
+
+        if ($productIds === []) {
+            return [];
+        }
+
+        $refunded = DB::table('return_refund_resolutions')
+            ->selectRaw('COALESCE(SUM(return_refund_resolutions.quantity), 0)')
+            ->whereColumn('return_refund_resolutions.order_item_id', 'order_items.id')
+            ->where('return_refund_resolutions.type', OrderItemResolutionType::Refund->value);
+
+        $rows = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('order_items.product_id', $productIds)
+            ->whereNull('orders.deleted_at')
+            ->where('orders.status', 'completed')
+            ->where('orders.payment_status', 'paid')
+            ->where('orders.completed_at', '>=', now()->subDays(self::WINDOW_DAYS))
+            ->select(['order_items.product_id', 'order_items.product_variant_id', 'order_items.quantity'])
+            ->selectSub($refunded, 'refunded_quantity')
+            ->get()
+            ->groupBy(fn ($row) => $row->product_id.'|'.$row->product_variant_id)
+            ->map(fn (Collection $lines) => [
+                'product_id' => (int) $lines->first()->product_id,
+                'variant_id' => $lines->first()->product_variant_id === null ? null : (int) $lines->first()->product_variant_id,
+                'units' => $lines->sum(fn ($line) => max(0, (int) $line->quantity - (int) $line->refunded_quantity)),
+            ])
+            ->filter(fn (array $variant) => $variant['units'] > 0)
+            ->sortBy([['units', 'desc'], ['variant_id', 'asc']]);
+
+        $winners = [];
+
+        foreach ($rows as $variant) {
+            $winners[$variant['product_id']] ??= $variant['variant_id'];
+        }
+
+        return $winners;
+    }
+
+    /**
      * The top eligible products store-wide, by completed sales in the
      * window. A product needs at least one qualifying sale to appear, the
      * same bar as Best Sellers: Top Picks used to pad itself out with

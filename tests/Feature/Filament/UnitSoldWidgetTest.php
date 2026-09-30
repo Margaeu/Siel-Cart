@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -149,6 +150,50 @@ class UnitSoldWidgetTest extends TestCase
             ->assertSee($winner->name)
             ->assertDontSee($runnerUp->name)
             ->assertDontSee($third->name);
+    }
+
+    /**
+     * The table has a row per variant, so the winning product alone would
+     * list every size. Best Seller keeps only its top-selling variant: one
+     * row per category.
+     */
+    public function test_highlight_filter_best_seller_shows_one_variant_row_per_category(): void
+    {
+        $winners = [];
+
+        foreach (['Merchandise', 'Athletics'] as $name) {
+            $product = $this->eligibleProduct([
+                'category_id' => $this->category(['name' => $name])->id,
+                'has_variants' => true,
+                'price' => null,
+                'stock_quantity' => 0,
+            ]);
+
+            $top = ProductVariant::factory()->create(['product_id' => $product->id, 'name' => "{$name}-Top", 'stock_quantity' => 5]);
+            $minor = ProductVariant::factory()->create(['product_id' => $product->id, 'name' => "{$name}-Minor", 'stock_quantity' => 5]);
+            $winners[] = $top->name;
+
+            foreach ([[$top, 9], [$minor, 3]] as [$variant, $quantity]) {
+                OrderItem::create([
+                    'order_id' => $this->order(now()->subDay())->id,
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variant->id,
+                    'product_name' => $product->name,
+                    'variant_name' => $variant->name,
+                    'product_sku' => $variant->sku,
+                    'price' => 100,
+                    'quantity' => $quantity,
+                    'subtotal' => 100 * $quantity,
+                ]);
+            }
+        }
+
+        $this->actingAsAdmin();
+
+        Livewire::test(UnitSold::class)
+            ->filterTable('highlight', 'best_seller')
+            ->assertSee($winners)
+            ->assertDontSee(['Merchandise-Minor', 'Athletics-Minor']);
     }
 
     /**
