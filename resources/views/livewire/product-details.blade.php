@@ -892,7 +892,7 @@
                                     <div>
                                         <div class="flex items-center justify-between mb-2">
                                             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
-                                                Photos <span class="text-gray-400 font-normal lowercase">(optional, up to 5 images, max 10 MB each)</span>
+                                                Photos <span class="text-gray-400 font-normal lowercase">(optional, up to 5 images, max 3 MB each)</span>
                                             </label>
                                             <span class="text-xs text-gray-400 font-medium">{{ count($reviewPhotos) }}/5</span>
                                         </div>

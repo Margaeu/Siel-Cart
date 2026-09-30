@@ -107,13 +107,6 @@ class OrderInfolist
                                 ->state(fn ($record) => $record->customer?->trashed()
                                     ? Customer::REMOVED_LABEL
                                     : $record->customer?->email),
-
-                            TextEntry::make('customer.phone')
-                                ->label('Phone')
-                                ->state(fn ($record) => $record->customer?->trashed()
-                                    ? Customer::REMOVED_LABEL
-                                    : $record->customer?->phone)
-                                ->placeholder('Not provided'),
                         ]),
 
                     Fieldset::make('Totals')

@@ -69,7 +69,7 @@ class ProductDetails extends Component
     public array $newReviewPhotos = [];
 
     /**
-     * Persistent accumulated array of photos (up to 5 photos, max 10 MB each)
+     * Persistent accumulated array of photos (up to 5 photos, max 3 MB each)
      *
      * @var TemporaryUploadedFile[]
      */

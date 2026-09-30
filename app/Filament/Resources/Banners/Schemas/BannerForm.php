@@ -63,7 +63,7 @@ class BannerForm
                             ->orientImagesFromExif(false)
                             ->imagePreviewHeight('250')
                             ->extraAttributes(['class' => 'clsu-image-upload'])
-                            ->helperText('PNG, JPG, WebP, GIF or MP4. Recommended: wide landscape 16:9 (e.g. 1920×1080). Maximum file size: 10 MB — keep clips to a few seconds and compress before uploading. Clips play muted and on loop.')
+                            ->helperText('PNG, JPG, WebP, GIF or MP4. Recommended: wide landscape 16:9 (e.g. 1920x600). Maximum file size: 10 MB — keep clips to a few seconds and compress before uploading. Clips play muted and on loop.')
                             ->saveUploadedFileUsing(function (FileUpload $component, TemporaryUploadedFile $file): string {
                                 return OptimizedImageStorage::store(
                                     $file,

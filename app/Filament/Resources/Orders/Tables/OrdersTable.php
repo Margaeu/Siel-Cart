@@ -188,11 +188,10 @@ class OrdersTable
                         // adds a contact number the shop does not already hold.
                         TextInput::make('claimant_phone')
                             ->label('Contact Phone Number of Receiver')
-                            ->placeholder('Leave blank if the customer is collecting')
                             ->helperText('Only needed when someone other than the customer who ordered is collecting.'),
                         TextInput::make('or_number')
                             ->label('Official Receipt Number')
-                            ->placeholder('e.g. or-2345')
+                            ->placeholder('e.g. 1234567')
                             ->required(),
                     ])
                     ->action(function (Order $record, array $data) {
