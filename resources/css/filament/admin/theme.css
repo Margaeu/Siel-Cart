@@ -1,7 +1,9 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import './auth.css';
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/components/customer-auth-header.blade.php';
 
 @layer components {
     /* Panel chrome — sidebar, page header, tables, sections — is deliberately left to
@@ -20,12 +22,7 @@
 
        These rules are same-specificity overrides of Filament's own `.fi-topbar` block.
        They work because this file is imported after Filament's stylesheet and both sit
-       in `layer(components)`, so source order decides. Keep them in this layer.
-
-       The `.dark` rules further down are inert: AdminPanelProvider calls
-       `->darkMode(false)`, so `.dark` is never applied and the panel is light-only.
-       They are kept as the correct dark styling should the switcher ever come back —
-       if you add a component here, note that its dark variant is currently untestable. */
+       in `layer(components)`, so source order decides. Keep them in this layer. */
 
     /* 4rem is Filament's default and leaves the brand cramped at storefront scale.
        Filament drives the topbar, the sidebar's top offset and height, the sidebar
@@ -40,15 +37,26 @@
        than flipped with the theme — including the seal, which brand.blade.php swaps
        to the white cut inside `.fi-topbar`. */
     .fi-topbar {
-        background-color: var(--color-primary-600);
+        background-color: var(--color-primary-raw);
         color: #ffffff;
         /* ring-1 ring-gray-950/5 is invisible on green; darken it into a hairline
            edge. --tw-ring-shadow reads this var, so setting it is enough. */
         --tw-ring-color: rgb(0 0 0 / 0.15);
     }
 
+    /* Filament chooses a lighter button shade for pale accents such as yellow.
+       Keep filled accent buttons on the saved base color; Filament still chooses
+       contrasting text and icons from the palette. */
+    .fi-btn.fi-color-secondary:not(.fi-outlined):not(label) {
+        background-color: var(--color-secondary-600);
+    }
+
+    .fi-btn.fi-color-secondary:not(.fi-outlined):not(label):not(.fi-disabled):not([disabled]):hover {
+        background-color: color-mix(in srgb, var(--color-secondary-600) 85%, black);
+    }
+
     /* brand.blade.php sets `color: inherit` so it can follow whatever surface it
-       lands on, but Filament puts `text-gray-950 dark:text-white` on `.fi-logo`
+       lands on, but Filament puts `text-gray-950` on `.fi-logo`
        itself — a declaration on the wrapper, which inheritance from `.fi-topbar`
        can never outrank. Without this the seal turned white while the wordmark
        stayed near-black. Only inside the topbar: the same view renders on the
@@ -90,10 +98,6 @@
         background-color: var(--color-gray-200);
     }
 
-    .dark .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
-        background-color: rgb(255 255 255 / 0.12);
-    }
-
     /* Same problem as the sidebar item above, on the tabs component: Filament's own
        tabs.css fills the active tab with bg-gray-50, which barely shows against the
        white toolbar. This is the same `.fi-tabs-item` component behind the resource
@@ -103,10 +107,6 @@
        rule, so import order (line 1) decides the winner without !important. */
     .fi-tabs-item.fi-active {
         background-color: var(--color-gray-200);
-    }
-
-    .dark .fi-tabs-item.fi-active {
-        background-color: rgb(255 255 255 / 0.12);
     }
 
     .fi-resource-create-record-page .fi-section-header-description,
@@ -119,46 +119,6 @@
     .fi-resource-edit-record-page form#form > .fi-sc-actions {
         border-top: 1px solid var(--color-gray-200);
         padding-top: 1.25rem;
-    }
-
-    .fi-simple-page form .fi-input-wrp.fi-invalid:focus-within {
-        @apply ring-1;
-    }
-
-    /* Login, forgot-password, register, and reset-password pages render through
-       Filament's "simple" layout, a bare flex column with no background of its own —
-       the gray backdrop behind the white card is actually .fi-body's bg-gray-50,
-       shared with every panel page. .fi-simple-layout fills the full viewport height
-       and width, so painting the theme's primary colour there instead swaps the
-       backdrop on just these auth pages without touching the gray used everywhere
-       else. Same colour in both themes for the same reason .fi-topbar is: the brand
-       colour is not something that should flip with dark mode.
-
-       Uses --color-primary-raw (AdminPanelProvider::panel(), injected as a plain
-       <style> tag), not --color-primary-600: Color::hex() regenerates -600 from
-       only the hue/chroma of the theme's hex, on Filament's own lightness curve, so
-       it does not reproduce that hex — it would visibly disagree with the storefront,
-       which prints the theme's primary_color verbatim (theme-styles.blade.php). */
-    .fi-simple-layout {
-        background-color: var(--color-primary-raw);
-    }
-
-    /* Filament's simple layout (login, forgot-password, reset-password — the only
-       pages that render through it here) fixes the card at exactly max-w-lg (32rem)
-       past that viewport width, so it stays the same size on a 1366px laptop and a
-       4K monitor, and its padding jumps once at the sm: breakpoint instead of scaling
-       with the card. clamp() replaces both so the card keeps growing/shrinking with
-       the viewport across its whole range, the same fluid approach used for the
-       storefront's root font size. Selector specificity has to match Filament's own
-       `.fi-simple-main.fi-width-lg` rule (two classes) for the max-width override to
-       win on source order alone. */
-    .fi-simple-main.fi-width-lg {
-        max-width: clamp(20rem, 15rem + 21vw, 40rem);
-    }
-
-    .fi-simple-main {
-        padding-inline: clamp(1.25rem, 0.75rem + 2vw, 3rem);
-        padding-block: clamp(2rem, 1.5rem + 2vw, 4rem);
     }
 
     .clsu-login-error {
@@ -180,12 +140,6 @@
         height: 1.25rem;
         flex: none;
         margin-top: 0.0625rem;
-    }
-
-    .dark .clsu-login-error {
-        border-color: var(--color-danger-800);
-        background-color: var(--color-danger-950);
-        color: var(--color-danger-200);
     }
 
     .clsu-user-profile {
@@ -379,11 +333,6 @@
         box-shadow: inset 3px 0 0 var(--danger-600);
     }
 
-    .dark .fi-ta-row.fi-order-pickup-overdue,
-    .dark .fi-ta-record.fi-order-pickup-overdue {
-        background-color: color-mix(in oklab, var(--danger-400) 10%, transparent);
-    }
-
     .fi-ta-row .fi-ta-actions {
         gap: 0.35rem;
     }
@@ -416,64 +365,5 @@
         a.fi-wi-stats-overview-stat.clsu-stat:hover {
             transform: none;
         }
-    }
-
-    .dark .fi-resource-create-record-page form#form > .fi-sc-actions,
-    .dark .fi-resource-edit-record-page form#form > .fi-sc-actions {
-        border-color: var(--color-gray-700);
-    }
-
-    .dark .clsu-user-profile {
-        border-color: var(--color-gray-700);
-        background: var(--color-gray-900);
-        color: var(--color-gray-100);
-    }
-
-    .dark .clsu-user-profile__header,
-    .dark .clsu-user-profile__section--history {
-        border-color: var(--color-gray-700);
-    }
-
-    .dark .clsu-user-profile__list dt {
-        color: var(--color-gray-400);
-    }
-
-    .dark .clsu-user-profile__status--active {
-        border-color: var(--color-success-800);
-        background: var(--color-success-950);
-        color: var(--color-success-200);
-    }
-
-    .dark .clsu-user-profile__status--inactive {
-        border-color: var(--color-danger-800);
-        background: var(--color-danger-950);
-        color: var(--color-danger-200);
-    }
-
-    .dark .clsu-user-profile a {
-        color: var(--color-primary-400);
-    }
-
-    .dark .clsu-image-upload .filepond--root {
-        border-color: var(--color-gray-600);
-        background-color: var(--color-gray-800);
-    }
-
-    .dark .fi-wi-stats-overview-stat.clsu-stat {
-        border-color: var(--color-gray-700);
-        background: var(--color-gray-900);
-    }
-
-    .dark a.fi-wi-stats-overview-stat.clsu-stat:hover {
-        border-color: var(--color-gray-600);
-    }
-
-    .dark .clsu-stat--critical {
-        border-color: var(--color-danger-800) !important;
-    }
-
-    .dark .clsu-stat--critical .fi-wi-stats-overview-stat-label,
-    .dark .clsu-stat--critical .fi-wi-stats-overview-stat-value {
-        color: var(--color-danger-200);
     }
 }

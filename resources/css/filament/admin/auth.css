@@ -1,0 +1,210 @@
+/* Shared with the storefront: Acumin Pro, the active theme, and a quiet white card.
+   The accent edge and administrator label distinguish the staff entry point. */
+@layer components {
+    .clsu-auth-layout {
+        --color-primary: var(--color-primary-raw);
+        display: flex;
+        min-height: 100dvh;
+        flex-direction: column;
+        background: var(--color-gray-50);
+    }
+
+    .clsu-auth-stage {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1rem;
+    }
+
+    .clsu-auth-column {
+        width: 100%;
+        max-width: 28rem;
+        min-width: 0;
+    }
+
+    .fi-simple-main.clsu-auth-card {
+        width: 100%;
+        margin: 0;
+        padding: 1.5rem;
+        border: 1px solid rgb(0 0 0 / 0.05);
+        border-top: 4px solid var(--secondary-600);
+        border-radius: 1rem;
+        background: white;
+        box-shadow: 0 16px 30px -12px rgb(0 0 0 / 0.12);
+        --tw-ring-shadow: 0 0 #0000;
+    }
+
+    .clsu-auth-eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: var(--color-gray-600);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .clsu-auth-eyebrow__icon {
+        width: 1.125rem;
+        height: 1.125rem;
+        color: var(--color-primary-700);
+    }
+
+    .clsu-auth-card .fi-simple-header {
+        align-items: flex-start;
+    }
+
+    .clsu-auth-card .fi-simple-header-heading,
+    .clsu-auth-card .fi-simple-header-subheading {
+        text-align: start;
+        overflow-wrap: anywhere;
+    }
+
+    .clsu-auth-card .fi-simple-header-heading {
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: var(--color-gray-900);
+    }
+
+    .clsu-auth-card .fi-simple-header-subheading {
+        margin-top: 0.5rem;
+        color: var(--color-gray-600);
+        line-height: 1.5;
+    }
+
+    .clsu-auth-card .fi-simple-page-content,
+    .clsu-auth-card .fi-sc-form {
+        gap: 1.5rem;
+    }
+
+    .clsu-auth-card .fi-fo-field-label:not(:has(.fi-checkbox-input)) .fi-fo-field-label-content {
+        color: var(--color-gray-600);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.025em;
+        text-transform: uppercase;
+    }
+
+    .clsu-auth-card .fi-fo-field-label-ctn {
+        align-items: center;
+    }
+
+    .clsu-auth-card .fi-input-wrp {
+        min-height: 3rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0 0 1px var(--color-gray-300);
+    }
+
+    .clsu-auth-card .fi-input-wrp:focus-within:not(.fi-invalid) {
+        box-shadow: 0 0 0 2px var(--color-primary-600);
+    }
+
+    .clsu-auth-card .fi-input-wrp.fi-invalid {
+        box-shadow: 0 0 0 1px var(--color-danger-600);
+    }
+
+    .clsu-auth-card .fi-input-wrp.fi-invalid:focus-within {
+        box-shadow: 0 0 0 2px var(--color-danger-600);
+    }
+
+    .clsu-auth-card .fi-input {
+        min-height: 3rem;
+        font-size: 1rem;
+    }
+
+    .clsu-auth-card .fi-input-wrp-suffix .fi-icon-btn {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .clsu-auth-card .fi-fo-field-label:has(.fi-checkbox-input) {
+        min-height: 2.75rem;
+        align-items: center;
+    }
+
+    .clsu-auth-card form .fi-btn {
+        min-height: 3rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.08);
+    }
+
+    .clsu-auth-card .fi-btn.fi-color-secondary:not(.fi-outlined) {
+        background-color: var(--secondary-600);
+    }
+
+    .clsu-auth-card .fi-btn.fi-color-secondary:not(.fi-outlined):not(.fi-disabled):not([disabled]):hover {
+        background-color: color-mix(in srgb, var(--secondary-600) 85%, black);
+    }
+
+    .clsu-auth-card .fi-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        color: var(--color-primary-700);
+    }
+
+    .clsu-auth-card .fi-link:hover {
+        color: var(--color-primary-900);
+    }
+
+    .clsu-auth-card .fi-link > .fi-link-label {
+        align-self: center;
+    }
+
+    .clsu-auth-navigation {
+        margin-top: 0.75rem;
+        text-align: center;
+    }
+
+    .clsu-auth-navigation a {
+        display: inline-flex;
+        min-height: 2.75rem;
+        align-items: center;
+        gap: 0.5rem;
+        padding-inline: 0.5rem;
+        border-radius: 0.25rem;
+        color: var(--color-gray-600);
+        font-size: 0.875rem;
+        transition: color 150ms;
+    }
+
+    .clsu-auth-navigation a:hover {
+        color: black;
+    }
+
+    .clsu-auth-layout a:focus-visible,
+    .clsu-auth-card .fi-btn:focus-visible,
+    .clsu-auth-card .fi-icon-btn:focus-visible {
+        outline: 2px solid var(--color-primary-700);
+        outline-offset: 4px;
+    }
+
+    .clsu-auth-layout > header a:focus-visible {
+        outline-color: white;
+    }
+
+    @media (min-width: 40rem) {
+        .clsu-auth-stage {
+            padding: 3rem 1.5rem;
+        }
+
+        .fi-simple-main.clsu-auth-card {
+            padding: 2rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .clsu-auth-layout *,
+        .clsu-auth-layout *::before,
+        .clsu-auth-layout *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}

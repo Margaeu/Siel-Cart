@@ -66,14 +66,14 @@ class ThemeForm
                             ->required()
                             ->rules(self::HEX_RULES)
                             ->validationMessages(self::HEX_MESSAGES)
-                            ->default('#1E6031'),
+                            ->default('#557F13'),
 
                         ColorPicker::make('secondary_color')
                             ->label('Secondary color')
                             ->required()
                             ->rules(self::HEX_RULES)
                             ->validationMessages(self::HEX_MESSAGES)
-                            ->default('#E0A70D'),
+                            ->default('#FFD801'),
                     ])->columns(2),
             ]);
     }

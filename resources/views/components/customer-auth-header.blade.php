@@ -1,3 +1,5 @@
+@props(['admin' => false])
+
 @php
     // Same source of truth as the storefront masthead
     // (components/layouts/front-end-layout.blade.php) - keeps the auth pages
@@ -32,5 +34,12 @@
                 </span>
             </span>
         </a>
+
+        @if ($admin)
+            <span class="ml-auto pl-4 text-xs font-semibold tracking-wide sm:text-sm">
+                <span class="sm:hidden">Admin</span>
+                <span class="hidden sm:inline">Administration</span>
+            </span>
+        @endif
     </div>
 </header>

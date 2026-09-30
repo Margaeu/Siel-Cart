@@ -2,8 +2,13 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Filament\Pages\Auth\Concerns\HasAuthLayout;
+use Filament\Actions\Action;
 use Filament\Auth\Pages\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Component;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Password;
 
 /**
@@ -18,6 +23,23 @@ use Illuminate\Support\Facades\Password;
  */
 class RequestPasswordReset extends BaseRequestPasswordReset
 {
+    use HasAuthLayout;
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return 'Enter your admin email to receive a password reset link.';
+    }
+
+    protected function getEmailFormComponent(): Component
+    {
+        return $this->authField(parent::getEmailFormComponent(), 'Email Address', Heroicon::OutlinedEnvelope);
+    }
+
+    protected function getRequestFormAction(): Action
+    {
+        return parent::getRequestFormAction()->label('Send reset link')->icon(Heroicon::ArrowRight)->iconPosition('after');
+    }
+
     public function request(): void
     {
         parent::request();

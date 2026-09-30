@@ -75,15 +75,16 @@ class AdminPanelProvider extends PanelProvider
                 950 => '#172508',
             ];
 
-        // Color::hex() below regenerates the whole 50-950 palette from just the
-        // hue/chroma of this hex — it does not preserve the hex itself at any
-        // shade, so --color-primary-600 in theme.css is visibly *not* the same
-        // colour as the storefront's --color-primary (theme-styles.blade.php),
-        // which prints $activeTheme->primary_color verbatim. --color-primary-raw
-        // is that same verbatim value, injected below, so anything in theme.css
-        // that needs to match the storefront exactly (rather than take Filament's
-        // generated shade) reads this instead of a -600/-500/etc slot.
+        // Filament regenerates shades on its own lightness curve. Anchor the
+        // base shade to the saved hex so the panel matches the storefront.
         $primaryColorRaw = $activeTheme?->primary_color ?? '#557f13';
+        $primaryPalette[600] = $primaryColorRaw;
+
+        // Mix accent shades from the actual color rather than regenerating its
+        // hue as a different gold. Keep the base button shade exact as well.
+        $secondaryColorRaw = $activeTheme?->secondary_color ?? '#FFD801';
+        $secondaryPalette = Color::generateV3Palette($secondaryColorRaw);
+        $secondaryPalette[600] = $secondaryColorRaw;
 
         // Filament treats `primary` as the default for routine actions such as
         // Sign in, Add, Create, Save and Edit. In Siel Cart, green is reserved
@@ -172,7 +173,7 @@ class AdminPanelProvider extends PanelProvider
             // these through --color-*-* rather than repeating hex values.
             ->colors([
                 'primary' => $primaryPalette,
-                'secondary' => Color::hex($activeTheme?->secondary_color ?? '#E0A70D'),
+                'secondary' => $secondaryPalette,
             ])
             ->navigationGroups([
                 'System Administration',
@@ -224,8 +225,7 @@ class AdminPanelProvider extends PanelProvider
             )
             // Makes the theme's raw primary hex available as --color-primary-raw
             // on every panel page, alongside Filament's generated --color-primary-*
-            // shades. See the comment on $primaryColorRaw above for why theme.css
-            // needs this instead of -600 wherever it must match the storefront exactly.
+            // shades. Brand surfaces use the raw value to match the storefront.
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => Blade::render(

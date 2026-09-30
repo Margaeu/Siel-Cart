@@ -9,12 +9,12 @@
     $size ??= 'md';
 
     $toneClasses = match ($presenter->eventTone()) {
-        'green' => 'bg-emerald-50 text-emerald-600 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-400 dark:ring-emerald-400/30',
-        'amber' => 'bg-amber-50 text-amber-600 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-400 dark:ring-amber-400/30',
-        'red' => 'bg-red-50 text-red-600 ring-red-600/20 dark:bg-red-500/15 dark:text-red-400 dark:ring-red-400/30',
-        'blue' => 'bg-sky-50 text-sky-600 ring-sky-600/20 dark:bg-sky-500/15 dark:text-sky-400 dark:ring-sky-400/30',
-        'orange' => 'bg-orange-50 text-orange-600 ring-orange-600/20 dark:bg-orange-500/15 dark:text-orange-400 dark:ring-orange-400/30',
-        default => 'bg-gray-50 text-gray-500 ring-gray-500/20 dark:bg-gray-900 dark:text-gray-400 dark:ring-white/20',
+        'green' => 'bg-emerald-50 text-emerald-600 ring-emerald-600/20',
+        'amber' => 'bg-amber-50 text-amber-600 ring-amber-600/20',
+        'red' => 'bg-red-50 text-red-600 ring-red-600/20',
+        'blue' => 'bg-sky-50 text-sky-600 ring-sky-600/20',
+        'orange' => 'bg-orange-50 text-orange-600 ring-orange-600/20',
+        default => 'bg-gray-50 text-gray-500 ring-gray-500/20',
     };
 @endphp
 

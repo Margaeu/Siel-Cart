@@ -2,10 +2,13 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Filament\Pages\Auth\Concerns\HasAuthLayout;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\PasswordResetResponse;
 use Filament\Auth\Pages\PasswordReset\ResetPassword as BaseResetPassword;
 use Filament\Facades\Filament;
+use Filament\Schemas\Components\Component;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Password;
@@ -26,6 +29,8 @@ use SensitiveParameter;
  */
 class ResetPassword extends BaseResetPassword
 {
+    use HasAuthLayout;
+
     #[Locked]
     public bool $isInvitation = false;
 
@@ -110,9 +115,33 @@ class ResetPassword extends BaseResetPassword
         return $this->isInvitation ? 'Set your password' : parent::getHeading();
     }
 
+    public function getSubheading(): string|Htmlable|null
+    {
+        return $this->isInvitation
+            ? 'Choose a password to activate your admin access.'
+            : 'Choose a new password for your admin account.';
+    }
+
+    protected function getEmailFormComponent(): Component
+    {
+        return $this->authField(parent::getEmailFormComponent(), 'Email Address', Heroicon::OutlinedEnvelope)
+            ->autofocus(false);
+    }
+
+    protected function getPasswordFormComponent(): Component
+    {
+        return $this->authField(parent::getPasswordFormComponent(), 'New password', Heroicon::OutlinedLockClosed)
+            ->autofocus();
+    }
+
+    protected function getPasswordConfirmationFormComponent(): Component
+    {
+        return $this->authField(parent::getPasswordConfirmationFormComponent(), 'Confirm password', Heroicon::OutlinedLockClosed);
+    }
+
     public function getResetPasswordFormAction(): Action
     {
-        $action = parent::getResetPasswordFormAction();
+        $action = parent::getResetPasswordFormAction()->icon(Heroicon::ArrowRight)->iconPosition('after');
 
         return $this->isInvitation ? $action->label('Set password') : $action;
     }

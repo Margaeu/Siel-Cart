@@ -10,13 +10,13 @@
 @endphp
 
 @if (empty($photos) && ! $videoUrl)
-    <p class="text-sm text-gray-500 dark:text-gray-400">The customer did not attach any photos or video.</p>
+    <p class="text-sm text-gray-500">The customer did not attach any photos or video.</p>
 @else
     <div class="space-y-6">
         @if (! empty($photos))
             <div>
-                <p class="mb-2 text-sm font-medium text-gray-950 dark:text-white">
-                    Photos <span class="text-gray-500 dark:text-gray-400">({{ count($photos) }})</span>
+                <p class="mb-2 text-sm font-medium text-gray-950">
+                    Photos <span class="text-gray-500">({{ count($photos) }})</span>
                 </p>
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                     @foreach ($photos as $index => $url)
@@ -24,7 +24,7 @@
                             href="{{ $url }}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="group block aspect-square overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10"
+                            class="group block aspect-square overflow-hidden rounded-lg bg-gray-50 ring-1 ring-gray-950/5"
                             title="Open photo {{ $index + 1 }} in a new tab"
                         >
                             <img
@@ -41,12 +41,12 @@
 
         @if ($videoUrl)
             <div>
-                <p class="mb-2 text-sm font-medium text-gray-950 dark:text-white">Video</p>
+                <p class="mb-2 text-sm font-medium text-gray-950">Video</p>
                 <video
                     src="{{ $videoUrl }}"
                     controls
                     preload="metadata"
-                    class="max-h-96 w-full max-w-2xl rounded-lg bg-black ring-1 ring-gray-950/5 dark:ring-white/10"
+                    class="max-h-96 w-full max-w-2xl rounded-lg bg-black ring-1 ring-gray-950/5"
                 >
                     <a href="{{ $videoUrl }}" target="_blank" rel="noopener noreferrer">Open the video</a>
                 </video>

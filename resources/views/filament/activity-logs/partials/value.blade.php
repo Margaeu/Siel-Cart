@@ -11,7 +11,7 @@
 @endphp
 
 @if ($sensitive)
-    <span class="inline-flex items-center gap-1 italic text-gray-400 dark:text-gray-500">
+    <span class="inline-flex items-center gap-1 italic text-gray-400">
         <x-filament::icon icon="heroicon-m-eye-slash" class="size-3.5" />
         {{ $cell['full'] }}
     </span>
@@ -19,10 +19,10 @@
     <details class="group inline-block max-w-full align-top">
         <summary class="cursor-pointer list-none break-words [&::-webkit-details-marker]:hidden">
             <span class="{{ $valueClass }}">{{ $cell['display'] }}</span>
-            <span class="ms-1 whitespace-nowrap text-xs font-medium text-primary-600 underline-offset-2 hover:underline group-open:hidden dark:text-primary-400">Show full value</span>
-            <span class="ms-1 hidden whitespace-nowrap text-xs font-medium text-primary-600 underline-offset-2 hover:underline group-open:inline dark:text-primary-400">Hide</span>
+            <span class="ms-1 whitespace-nowrap text-xs font-medium text-primary-600 underline-offset-2 hover:underline group-open:hidden">Show full value</span>
+            <span class="ms-1 hidden whitespace-nowrap text-xs font-medium text-primary-600 underline-offset-2 hover:underline group-open:inline">Hide</span>
         </summary>
-        <div class="mt-1 max-h-64 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-2 text-xs text-gray-700 ring-1 ring-gray-950/5 dark:bg-white/5 dark:text-gray-300 dark:ring-white/10">{{ $cell['full'] }}</div>
+        <div class="mt-1 max-h-64 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-gray-50 p-2 text-xs text-gray-700 ring-1 ring-gray-950/5">{{ $cell['full'] }}</div>
     </details>
 @else
     <span class="break-words {{ $valueClass }}">{{ $cell['display'] }}</span>

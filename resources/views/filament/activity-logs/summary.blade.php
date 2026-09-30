@@ -15,16 +15,16 @@
     @include('filament.activity-logs.partials.event-icon', ['presenter' => $presenter, 'size' => 'lg'])
 
     <div class="min-w-0 flex-1">
-        <p class="text-base leading-7 text-gray-700 dark:text-gray-300">
-            <span class="font-semibold text-gray-950 dark:text-white">{{ $presenter->actorName() }}</span>
+        <p class="text-base leading-7 text-gray-700">
+            <span class="font-semibold text-gray-950">{{ $presenter->actorName() }}</span>
             {{ $presenter->action() }}
             @if ($target)
-                <span class="font-semibold text-gray-950 dark:text-white">{{ $target }}</span>
+                <span class="font-semibold text-gray-950">{{ $target }}</span>
             @endif
         </p>
 
         @if ($createdAt)
-            <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+            <p class="mt-0.5 text-sm text-gray-500">
                 <time datetime="{{ $createdAt->toIso8601String() }}">
                     {{ $createdAt->diffForHumans() }} · {{ $createdAt->format('l, F j, Y g:i:s A') }}
                 </time>

@@ -31,23 +31,23 @@
     --}}
     <span
         aria-hidden="true"
-        class="pointer-events-none absolute start-4 -top-6 -bottom-14 w-px -translate-x-1/2 bg-gray-200 rtl:translate-x-1/2 dark:bg-white/10 [.fi-ta-record:first-child_&]:top-5 [.fi-ta-record:last-child_&]:bottom-[calc(100%-1.25rem)]"
+        class="pointer-events-none absolute start-4 -top-6 -bottom-14 w-px -translate-x-1/2 bg-gray-200 rtl:translate-x-1/2 [.fi-ta-record:first-child_&]:top-5 [.fi-ta-record:last-child_&]:bottom-[calc(100%-1.25rem)]"
     ></span>
 
-    <span class="relative z-10 shrink-0 rounded-full bg-white dark:bg-gray-900">
+    <span class="relative z-10 shrink-0 rounded-full bg-white">
         @include('filament.activity-logs.partials.event-icon', ['presenter' => $presenter])
     </span>
 
     <div class="min-w-0 flex-1 pt-1">
         <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-            <p class="min-w-0 text-sm leading-6 text-gray-700 dark:text-gray-300">
-                <span class="font-semibold text-gray-950 dark:text-white">{{ $presenter->actorName() }}</span>
+            <p class="min-w-0 text-sm leading-6 text-gray-700">
+                <span class="font-semibold text-gray-950">{{ $presenter->actorName() }}</span>
                 {{ $presenter->action() }}
                 @if ($target)
-                    <span class="font-semibold text-gray-950 dark:text-white">{{ $target }}</span>
+                    <span class="font-semibold text-gray-950">{{ $target }}</span>
                 @endif
                 @if ($subjectTitle)
-                    <span class="text-gray-500 dark:text-gray-400">· {{ $subjectTitle }}</span>
+                    <span class="text-gray-500">· {{ $subjectTitle }}</span>
                 @endif
             </p>
 
@@ -55,9 +55,9 @@
                 <time
                     datetime="{{ $createdAt->toIso8601String() }}"
                     title="{{ $createdAt->format('l, F j, Y g:i:s A T') }}"
-                    class="shrink-0 text-xs leading-5 text-gray-500 sm:pt-0.5 sm:text-end dark:text-gray-400"
+                    class="shrink-0 text-xs leading-5 text-gray-500 sm:pt-0.5 sm:text-end"
                 >
-                    <span class="font-medium text-gray-600 dark:text-gray-300">{{ $createdAt->diffForHumans() }}</span>
+                    <span class="font-medium text-gray-600">{{ $createdAt->diffForHumans() }}</span>
                     <span class="sm:block">
                         <span class="sm:hidden" aria-hidden="true">·</span>
                         {{ $createdAt->format('M j, Y g:i:s A') }}
@@ -66,7 +66,7 @@
             @endif
         </div>
 
-        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
             <span>{{ $presenter->eventLabel() }}</span>
             @if (filled($activity->log_name))
                 <span aria-hidden="true">·</span>
@@ -79,7 +79,7 @@
         </div>
 
         @if ($extraDescription)
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ $extraDescription }}</p>
+            <p class="mt-2 text-sm text-gray-600">{{ $extraDescription }}</p>
         @endif
 
         @if ($changes !== [])

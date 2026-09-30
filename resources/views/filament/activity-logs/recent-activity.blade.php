@@ -30,21 +30,21 @@
             <div class="flex flex-col items-center gap-3 px-6 py-8 text-center">
                 <x-filament::icon
                     icon="heroicon-o-clipboard-document-list"
-                    class="size-10 text-gray-400 dark:text-gray-500"
+                    class="size-10 text-gray-400"
                 />
 
                 <div>
-                    <p class="text-sm font-medium text-gray-950 dark:text-white">
+                    <p class="text-sm font-medium text-gray-950">
                         No activity recorded yet
                     </p>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-gray-500">
                         Activity will appear here after administrators sign in or change tracked
                         records such as products, categories, orders, and users.
                     </p>
                 </div>
             </div>
         @else
-            <ul role="list" class="divide-y divide-gray-100 dark:divide-white/10">
+            <ul role="list" class="divide-y divide-gray-100">
                 @foreach ($activities as $activity)
                     @php
                         $presenter = ActivityLogPresenter::for($activity);
@@ -59,18 +59,18 @@
                         @include('filament.activity-logs.partials.event-icon', ['presenter' => $presenter, 'size' => 'md'])
 
                         <div class="min-w-0 flex-1">
-                            <p class="text-sm leading-6 text-gray-700 dark:text-gray-300">
-                                <span class="font-semibold text-gray-950 dark:text-white">{{ $presenter->actorName() }}</span>
+                            <p class="text-sm leading-6 text-gray-700">
+                                <span class="font-semibold text-gray-950">{{ $presenter->actorName() }}</span>
                                 {{ $presenter->action() }}
                                 @if ($target)
-                                    <span class="font-semibold text-gray-950 dark:text-white">{{ $target }}</span>
+                                    <span class="font-semibold text-gray-950">{{ $target }}</span>
                                 @endif
                                 @if ($subjectTitle)
-                                    <span class="text-gray-500 dark:text-gray-400">· {{ $subjectTitle }}</span>
+                                    <span class="text-gray-500">· {{ $subjectTitle }}</span>
                                 @endif
                             </p>
 
-                            <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                            <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
                                 <span>{{ $presenter->eventLabel() }}</span>
 
                                 @if ($createdAt)
@@ -88,7 +88,7 @@
 
                         <a
                             href="{{ ActivityLogResource::getUrl('view', ['record' => $activity]) }}"
-                            class="shrink-0 text-xs font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                            class="shrink-0 text-xs font-medium text-primary-600 underline-offset-2 hover:underline"
                         >
                             Details<span class="sr-only"> of {{ $presenter->sentence() }}</span>
                         </a>
@@ -102,7 +102,7 @@
                 @foreach ($shortcuts as $shortcut)
                     <a
                         href="{{ $shortcut['url'] }}"
-                        class="inline-flex items-center gap-x-1.5 text-sm font-medium text-primary-600 underline-offset-2 hover:underline dark:text-primary-400"
+                        class="inline-flex items-center gap-x-1.5 text-sm font-medium text-primary-600 underline-offset-2 hover:underline"
                     >
                         <x-filament::icon :icon="$shortcut['icon']" class="size-4" />
                         {{ $shortcut['label'] }}

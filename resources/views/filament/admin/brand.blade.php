@@ -17,26 +17,16 @@
     black one. Which is right depends on the surface behind it, and the panel
     renders this same view onto two different ones:
 
-      - the topbar, which theme.css paints CLSU green in BOTH light and dark mode
-        (it matches the storefront header) -> always the white cut;
-      - the mobile sidebar drawer header and the login card, which stay white in
-        light mode and near-black in dark -> black cut, flipping with the theme.
+      - the topbar, which theme.css paints CLSU green (it matches the
+        storefront header) -> always the white cut;
+      - the mobile sidebar drawer header and the login card, which stay white -> black cut.
 
-    Hence the swap keys off `.fi-topbar` first and `.dark` second. Filament hides
+    Hence the swap keys off `.fi-topbar`. Filament hides
     the sidebar header at lg and up (`.fi-body-has-topbar .fi-sidebar-header` is
     `lg:hidden`), so the two never show at once.
-
-    The panel is light-only since AdminPanelProvider set `->darkMode(false)`, so
-    `.dark` is never on <html> and the two `.dark` rules below are currently inert.
-    They are kept, not deleted, because they are the correct behaviour the moment
-    dark mode is switched back on.
 --}}
 <style>
     .clsu-brand__seal--dark { display: none; }
-    .dark .clsu-brand__seal--light { display: none; }
-    .dark .clsu-brand__seal--dark { display: block; }
-
-    /* Must stay last: same specificity as the .dark rules, so source order wins. */
     .fi-topbar .clsu-brand__seal--light { display: none; }
     .fi-topbar .clsu-brand__seal--dark { display: block; }
 </style>
