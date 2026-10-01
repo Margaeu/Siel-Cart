@@ -34,6 +34,13 @@ class InventoryManagement extends TableWidget
 
     protected static ?int $sort = 2;
 
+    // Eager, like the Design Overview widgets and ActivityLogStats. Widget::$isLazy
+    // defaults to true, which makes this widget its own Livewire round trip
+    // after first paint, and each of those re-pays the panel's session, auth
+    // and role/permission lookups against Aiven. Eager renders it in the
+    // dashboard's own request.
+    protected static bool $isLazy = false;
+
     protected int | string | array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.inventory-management';

@@ -184,7 +184,11 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active && $this->hasAnyRole(['super_admin', 'ubap', 'stratcom']);
+        // Any role grants entry, not a fixed list: a super admin can create
+        // new roles from the panel, and a hardcoded list would lock their
+        // holders out. What each role may then do is Shield's job. A role-less
+        // account is still refused, so it can't be invited to a dead login.
+        return $this->is_active && $this->roles()->exists();
     }
 
     /**
