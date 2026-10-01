@@ -414,7 +414,6 @@ class ActivityLogResourceTest extends TestCase
         $this->activity(['event' => 'login']);
         $this->activity(['event' => 'login_failed']);
         $this->activity(['event' => 'login_failed']);
-        $this->activity(['event' => 'login_throttled']);
         $this->activity(['event' => 'created']);
         $this->activity(['event' => 'deleted']);
         $this->activity(['event' => 'logout']);
@@ -423,10 +422,9 @@ class ActivityLogResourceTest extends TestCase
 
         Livewire::test(ActivityLogStats::class)
             ->assertSeeInOrder([
-                'Activities today', '7',
+                'Activities today', '6',
                 'Successful logins today', '1',
-                'Failed login attempts today', '3',
-                '1 blocked by the lockout',
+                'Failed login attempts today', '2',
                 'Record changes today', '2',
             ]);
     }

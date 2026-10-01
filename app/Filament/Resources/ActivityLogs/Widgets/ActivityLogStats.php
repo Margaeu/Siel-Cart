@@ -55,9 +55,7 @@ class ActivityLogStats extends StatsOverviewWidget
                 ->color('success'),
 
             Stat::make('Failed login attempts today', number_format($counts['failed']))
-                ->description($counts['throttled'] > 0
-                    ? number_format($counts['throttled']).' blocked by the lockout'
-                    : 'Wrong email or password')
+                ->description('Wrong email or password')
                 ->icon(Heroicon::OutlinedExclamationTriangle)
                 ->color($counts['failed'] > 0 ? 'danger' : 'gray'),
 
@@ -74,7 +72,7 @@ class ActivityLogStats extends StatsOverviewWidget
      * midnight in the app timezone (Asia/Manila), which is also the timezone
      * the created_at values are written in.
      *
-     * @return array{total: int, logins: int, failed: int, throttled: int, crud: int}
+     * @return array{total: int, logins: int, failed: int, crud: int}
      */
     private function todaysCounts(): array
     {
@@ -86,7 +84,6 @@ class ActivityLogStats extends StatsOverviewWidget
             ->selectRaw('COUNT(*) AS total')
             ->selectRaw('SUM(CASE WHEN event = ? THEN 1 ELSE 0 END) AS logins', ['login'])
             ->selectRaw("SUM(CASE WHEN event IN ({$failedPlaceholders}) THEN 1 ELSE 0 END) AS failed", ActivityLogPresenter::LOGIN_FAILURE_EVENTS)
-            ->selectRaw('SUM(CASE WHEN event = ? THEN 1 ELSE 0 END) AS throttled', ['login_throttled'])
             ->selectRaw("SUM(CASE WHEN event IN ({$crudPlaceholders}) THEN 1 ELSE 0 END) AS crud", ActivityLogPresenter::CRUD_EVENTS)
             ->toBase()
             ->first();
@@ -96,7 +93,6 @@ class ActivityLogStats extends StatsOverviewWidget
             'total' => (int) ($row->total ?? 0),
             'logins' => (int) ($row->logins ?? 0),
             'failed' => (int) ($row->failed ?? 0),
-            'throttled' => (int) ($row->throttled ?? 0),
             'crud' => (int) ($row->crud ?? 0),
         ];
     }

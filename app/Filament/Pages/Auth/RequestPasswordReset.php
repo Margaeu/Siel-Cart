@@ -6,7 +6,9 @@ use App\Filament\Pages\Auth\Concerns\HasAuthLayout;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Password;
@@ -45,15 +47,22 @@ class RequestPasswordReset extends BaseRequestPasswordReset
      * the subheading, which this page replaces with the instruction line above,
      * so without this an admin who remembered their password has no exit.
      */
-    protected function getFormActions(): array
+    public function getFormContentComponent(): Component
     {
-        return [
-            $this->getRequestFormAction(),
-            $this->loginAction()
-                ->label('Back to admin login')
-                ->color('gray')
-                ->extraAttributes(['class' => 'justify-center']),
-        ];
+        return parent::getFormContentComponent()
+            ->footer([
+                Actions::make($this->getFormActions())
+                    ->alignment($this->getFormActionsAlignment())
+                    ->fullWidth($this->hasFullWidthFormActions())
+                    ->key('form-actions'),
+                Actions::make([
+                    $this->loginAction()
+                        ->label('Back to admin login')
+                        ->color('gray'),
+                ])
+                    ->alignment(Alignment::Center)
+                    ->key('login-action'),
+            ]);
     }
 
     public function request(): void

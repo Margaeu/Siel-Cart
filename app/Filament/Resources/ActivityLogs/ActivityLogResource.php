@@ -63,9 +63,8 @@ class ActivityLogResource extends Resource
     }
 
     /**
-     * Newest-first ordering is the table's default sort rather than an
-     * orderBy here: Filament appends the user's chosen sort after anything
-     * already on the query, so a hard-coded order would override it.
+     * Newest-first ordering is applied by the table (modifyQueryUsing), not
+     * here, so the eager loads stay the only concern of this query.
      */
     public static function getEloquentQuery(): Builder
     {

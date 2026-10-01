@@ -26,10 +26,10 @@ final class ActivityLogPresenter
     public const CRUD_EVENTS = ['created', 'updated', 'deleted', 'restored'];
 
     /** Authentication events written by the App\Listeners\*AdminLogin listeners. */
-    public const AUTH_EVENTS = ['login', 'logout', 'login_failed', 'login_throttled'];
+    public const AUTH_EVENTS = ['login', 'logout', 'login_failed'];
 
-    /** Both count as a failed sign-in: a throttled attempt is still a rejected one. */
-    public const LOGIN_FAILURE_EVENTS = ['login_failed', 'login_throttled'];
+    /** Events that count as a failed sign-in. */
+    public const LOGIN_FAILURE_EVENTS = ['login_failed'];
 
     /**
      * Longer values are cut short in the list and expandable on demand, so one
@@ -49,7 +49,6 @@ final class ActivityLogPresenter
         'login' => ['label' => 'Login', 'verb' => 'signed in to the admin panel', 'tone' => 'green', 'color' => 'success', 'icon' => Heroicon::OutlinedArrowLeftEndOnRectangle],
         'logout' => ['label' => 'Logout', 'verb' => 'signed out of the admin panel', 'tone' => 'gray', 'color' => 'gray', 'icon' => Heroicon::OutlinedArrowRightStartOnRectangle],
         'login_failed' => ['label' => 'Failed login', 'verb' => 'failed to sign in', 'tone' => 'red', 'color' => 'danger', 'icon' => Heroicon::OutlinedExclamationTriangle],
-        'login_throttled' => ['label' => 'Login throttled', 'verb' => 'was locked out after too many failed sign-in attempts', 'tone' => 'orange', 'color' => 'orange', 'icon' => Heroicon::OutlinedLockClosed],
     ];
 
     /**

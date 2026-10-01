@@ -34,18 +34,21 @@ class ActivityLogsTable
         return $table
             ->columns([
                 Stack::make([
-                    // Named after created_at so the toolbar's sort control
-                    // reads "Date" and sorts on the indexed timestamp.
+                    // Deliberately not sortable: a timeline only makes sense
+                    // newest-first, and a "Sort by" control with a single
+                    // "Date" option just invited a meaningless blank choice.
                     ViewColumn::make('created_at')
                         ->label('Date')
                         ->view('filament.activity-logs.timeline-entry')
-                        ->sortable(query: fn (Builder $query, string $direction): Builder => $query
-                            ->orderBy('created_at', $direction)
-                            ->orderBy('id', $direction))
                         ->searchable(query: fn (Builder $query, string $search): Builder => static::search($query, $search)),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc')
+            // Fixed order instead of defaultSort(): with no sortable column
+            // the toolbar renders no sort control at all. `id` breaks ties
+            // between rows written in the same second.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->orderByDesc('created_at')
+                ->orderByDesc('id'))
             ->searchPlaceholder('Search description, event, log, admin, or record ID')
             ->filters([
                 SelectFilter::make('event')
@@ -88,6 +91,10 @@ class ActivityLogsTable
 
                 Filter::make('created_at')
                     ->label('Date')
+                    // Span the whole filter grid and split it in two, so From
+                    // and Until sit side by side instead of stacking in one cell.
+                    ->columnSpanFull()
+                    ->columns(2)
                     ->schema([
                         DatePicker::make('from')
                             ->label('From')
