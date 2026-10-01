@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Models\Customer;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +17,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -38,6 +40,26 @@ class FortifyServiceProvider extends ServiceProvider
 
                     // 3. Redirect directly to /my-account
                     return redirect('/my-account');
+                }
+            };
+        });
+
+        // Fortify's default register response is redirect()->intended(home). A
+        // guest who hit "Add to cart" has the product page stored as the intended
+        // URL, and product pages are public, so nothing would ever stop a brand
+        // new, unverified account there. Send it to the verification notice
+        // instead. The intended URL is deliberately left in the session: the
+        // verify link then returns the customer to the product they wanted
+        // (VerifyEmailResponse also uses intended()).
+        $this->app->singleton(RegisterResponse::class, function () {
+            return new class implements RegisterResponse {
+                public function toResponse($request)
+                {
+                    if ($request->wantsJson()) {
+                        return new JsonResponse('', 201);
+                    }
+
+                    return redirect()->route('verification.notice');
                 }
             };
         });

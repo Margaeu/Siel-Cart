@@ -33,12 +33,34 @@ class RegistrationTest extends TestCase
         ]);
 
         $response->assertSessionHasNoErrors()
-            ->assertRedirect(route('customer.dashboard', absolute: false));
+            ->assertRedirect(route('verification.notice', absolute: false));
 
         $customer = Customer::where('email', 'test@example.com')->firstOrFail();
 
         $this->assertAuthenticatedAs($customer, 'customer');
         $this->assertNull($customer->email_verified_at);
         Notification::assertSentTo($customer, CustomerVerifyEmail::class);
+    }
+
+    public function test_registering_after_add_to_cart_lands_on_verify_notice_and_keeps_the_product_to_return_to(): void
+    {
+        Notification::fake();
+
+        // What ProductDetails/ProductCard store when a guest presses "Add to cart".
+        $productUrl = route('products.show', 'some-product');
+
+        $response = $this->withSession(['url.intended' => $productUrl])
+            ->post(route('register.store'), [
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'test@example.com',
+                'date_of_birth' => now()->subYears(20)->format('Y-m-d'),
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ]);
+
+        $response->assertSessionHasNoErrors()
+            ->assertRedirect(route('verification.notice', absolute: false))
+            ->assertSessionHas('url.intended', $productUrl);
     }
 }
