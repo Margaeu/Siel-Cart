@@ -19,6 +19,12 @@
                 <main id="fi-main-content" tabindex="-1" class="fi-simple-main clsu-auth-card">
                     {{ $slot }}
                 </main>
+
+                @if ($livewire instanceof \App\Filament\Pages\Auth\RequestPasswordReset)
+                    <div class="clsu-auth-footer">
+                        {{ $livewire->loginAction }}
+                    </div>
+                @endif
             </div>
         </div>
 

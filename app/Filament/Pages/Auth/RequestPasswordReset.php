@@ -6,9 +6,7 @@ use App\Filament\Pages\Auth\Concerns\HasAuthLayout;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
-use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Password;
@@ -42,27 +40,11 @@ class RequestPasswordReset extends BaseRequestPasswordReset
         return parent::getRequestFormAction()->label('Send reset link')->icon(Heroicon::ArrowRight)->iconPosition('after');
     }
 
-    /**
-     * Put the way back beneath the submit button. Filament's own login link is
-     * the subheading, which this page replaces with the instruction line above,
-     * so without this an admin who remembered their password has no exit.
-     */
-    public function getFormContentComponent(): Component
+    public function loginAction(): Action
     {
-        return parent::getFormContentComponent()
-            ->footer([
-                Actions::make($this->getFormActions())
-                    ->alignment($this->getFormActionsAlignment())
-                    ->fullWidth($this->hasFullWidthFormActions())
-                    ->key('form-actions'),
-                Actions::make([
-                    $this->loginAction()
-                        ->label('Back to admin login')
-                        ->color('gray'),
-                ])
-                    ->alignment(Alignment::Center)
-                    ->key('login-action'),
-            ]);
+        return parent::loginAction()
+            ->label('Back to admin login')
+            ->color('gray');
     }
 
     public function request(): void

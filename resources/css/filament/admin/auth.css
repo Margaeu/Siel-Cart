@@ -35,6 +35,12 @@
         min-width: 0;
     }
 
+    .clsu-auth-footer {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
     .fi-simple-main.clsu-auth-card {
         width: 100%;
         margin: 0;
