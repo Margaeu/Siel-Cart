@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Azure App Service (Linux, built-in PHP 8.2 image) startup command:
+# Azure App Service (Linux, built-in PHP 8.3 image) startup command:
 #
 #   bash /home/site/wwwroot/startup.sh
 #

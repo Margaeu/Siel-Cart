@@ -1,6 +1,6 @@
 # Deploying Siel Cart to Azure App Service
 
-A low-cost live-test deployment: Azure App Service Linux (built-in PHP 8.2
+A low-cost live-test deployment: Azure App Service Linux (built-in PHP 8.3
 image, Nginx + PHP-FPM), Aiven MySQL, Cloudflare R2 for media, and GitHub
 Actions for build and deploy. Nothing here contains real credentials; every
 value below is a placeholder.
@@ -39,7 +39,7 @@ were measured while the plan was still B1; read them with that in mind.
 In the Azure portal, on the Web App:
 
 - **Settings → Configuration → General settings**
-  - Stack: **PHP**, version **8.2**
+  - Stack: **PHP**, version **8.3**
   - Startup command: `bash /home/site/wwwroot/startup.sh`
   - HTTPS Only: **On**
   - SCM Basic Auth Publishing Credentials: **On** (needed to download a
@@ -96,7 +96,7 @@ It then packages the complete folder and checks it again inside `release.zip`.
 
 Use this when the host can't run Node, or when deploying outside the workflow.
 
-1. On a machine with PHP 8.2, Composer and Node 20.19+ or 22.12+ (Vite 7's
+1. On a machine with PHP 8.3, Composer and Node 20.19+ or 22.12+ (Vite 7's
    minimum), check out the exact commit being deployed and run:
    `composer install`, then `npm ci`, then `npm run build`.
    `npm ci` installs exactly what `package-lock.json` pins. Don't use
@@ -325,7 +325,7 @@ was checked, on the live subscription, before touching anything:
   or SSH credentials counts as credential materialization): whether OPcache
   is actually enabled/tuned in the **PHP-FPM** pool serving requests, versus
   just the CLI SAPI (the two can load different `php.ini`s on the same
-  image). Azure's built-in Linux PHP 8.2 image ships OPcache on by default,
+  image). Azure's built-in Linux PHP 8.3 image ships OPcache on by default,
   but that's an assumption, not a measurement. To check it yourself: **Azure
   Portal → sielcart → Development Tools → SSH → Go** (a real terminal inside
   the running container, not a separate sandbox), then run `ps aux | grep
@@ -411,6 +411,8 @@ Class A (write) and Class B (read) operations; egress is free. The `r2.dev`
 public development URL is rate-limited and not meant for production. Use a
 custom domain before real traffic.
 
-**PHP 8.2** receives security fixes only until **31 December 2026**. This
-deployment stays on 8.2 as requested; test on PHP 8.3 or 8.4 next and switch
-the Azure stack and `PHP_VERSION` in the workflow together.
+**PHP 8.2** receives security fixes only until **31 December 2026**, so the
+project moved to **PHP 8.3** (`composer.json` requires `^8.3`). The Azure
+stack version and `PHP_VERSION` in the workflow must always match: the vendor
+folder is built under the workflow's PHP, and Composer's platform check
+refuses to boot it on an older runtime.
