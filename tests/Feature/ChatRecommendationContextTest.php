@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Api\ChatController;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -51,6 +52,20 @@ class ChatRecommendationContextTest extends TestCase
         $this->postJson('/api/chat', ['message' => 'How do I pay?'])
             ->assertOk()
             ->assertExactJson(['response' => 'Payment is cash on pickup.']);
+    }
+
+    public function test_message_is_capped_at_the_widget_limit(): void
+    {
+        Http::fake(['*' => Http::response(['response' => 'ok'])]);
+
+        $this->postJson('/api/chat', ['message' => str_repeat('a', ChatController::MAX_MESSAGE_LENGTH)])
+            ->assertOk();
+
+        $this->postJson('/api/chat', ['message' => str_repeat('a', ChatController::MAX_MESSAGE_LENGTH + 1)])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('message');
+
+        $this->assertSame(100, ChatController::MAX_MESSAGE_LENGTH);
     }
 
     public function test_shown_list_is_bounded(): void

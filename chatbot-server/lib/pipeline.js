@@ -28,6 +28,7 @@ import {
     mentionsCatalogTerm,
     parseBudget,
     queryHasCriteria,
+    RECOMMENDATION_PATTERN,
     wordMatcher
 } from './vocabulary.js';
 import {
@@ -46,6 +47,13 @@ const NO_PRODUCTS_REPLY = "I couldn't find any products in stock to recommend ri
 
 const CONTACT_FALLBACK = "I don't have that in my store information. Please email **ubap@clsu.edu.ph** or visit the UBAP Office, and they can help you directly.";
 
+// What a message gets when the model could not read it and the shopper's own
+// words give no sign of a shopping request either (a pasted story, small talk).
+// It states the scope rather than guessing at a product list.
+const NOT_A_SHOPPING_REQUEST_REPLY = "I'm not sure what you're asking. I can help you find merchandise (try \"jackets under ₱500\" or \"what do you sell?\") and answer questions about ordering, pickup and payment.";
+
+const MAX_KEYWORD_FALLBACK_WORDS = 30;
+
 // Only what the widget is allowed to send: a bounded list of slugs and one
 // bounded query string. Anything else is dropped, since this endpoint is open to
 // guests and both values end up in matching logic.
@@ -53,7 +61,7 @@ export function readConversationContext(body) {
     const shown = Array.isArray(body?.shown)
         ? body.shown.filter(s => typeof s === 'string' && s.length > 0 && s.length <= 255).slice(-100)
         : [];
-    const lastQuery = typeof body?.last_query === 'string' ? body.last_query.trim().slice(0, 2000) : '';
+    const lastQuery = typeof body?.last_query === 'string' ? body.last_query.trim().slice(0, 100) : '';
     return { shown, lastQuery };
 }
 
@@ -376,7 +384,24 @@ export async function handleChat(request, deps) {
             };
         }
     } else {
-        // No usable reading of the message: the keyword path, exactly as before.
+        // No usable reading of the message, so the keyword rules answer. They
+        // may only do so for something that sounds like shopping: a vague request
+        // is read as "show me anything", which turned a pasted story into three
+        // product links whenever the free model was rate-limited. When the model
+        // DID read it (interpretation !== null) its verdict stands, so a genuine
+        // "recommend something" with no concepts still gets a list.
+        //
+        // A keyword alone is not enough: any long prose contains "under", "item"
+        // or "bag" somewhere, so a message past MAX_KEYWORD_FALLBACK_WORDS is
+        // never read as a shopping request without the model's say-so.
+        const wordCount = effectiveQuery.trim().split(/\s+/).length;
+        const soundsLikeShopping = wordCount <= MAX_KEYWORD_FALLBACK_WORDS
+            && (queryHasCriteria(msgLower, shop) || RECOMMENDATION_PATTERN.test(effectiveQuery));
+
+        if (interpretation === null && !freshOnly && !soundsLikeShopping) {
+            return { response: storePart ?? NOT_A_SHOPPING_REQUEST_REPLY };
+        }
+
         reply = toWireReply(buildRecommendationReply(effectiveQuery, dbProducts, { shown: context.shown, freshOnly, shop }));
     }
 

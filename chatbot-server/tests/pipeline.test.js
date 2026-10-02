@@ -235,6 +235,37 @@ test('an unreachable provider falls back to the keyword rules', async () => {
     assert.ok(slugs(reply).every(s => s.includes('jacket')));
 });
 
+// A pasted story used to come back as three product links whenever the model was
+// unavailable: with no criteria the keyword path reads any message as "show me
+// anything".
+const STORY = 'The forest stood silent under a pale moon, and the old path wound between the pines toward a hidden valley. '.repeat(15);
+
+test('a message with no shopping content is not answered with products when the model is down', async () => {
+    const reply = await ask(STORY, { llm: deadLlm() });
+
+    assert.equal(reply.products, undefined, 'a story was answered with a product list');
+    assert.match(reply.response, /not sure what you're asking/i);
+});
+
+test('a short message with no shopping words is not answered with products either', async () => {
+    const reply = await ask('the forest was quiet tonight', { llm: deadLlm() });
+
+    assert.equal(reply.products, undefined);
+    assert.match(reply.response, /not sure what you're asking/i);
+});
+
+test('the same is true when the model returns something unreadable', async () => {
+    const reply = await ask(STORY, { replies: ['I am not sure what you mean.'] });
+
+    assert.equal(reply.products, undefined);
+});
+
+test('with the model down, a vague but real shopping request still gets a list', async () => {
+    const reply = await ask('what do you sell?', { llm: deadLlm() });
+
+    assert.ok(slugs(reply).length > 0);
+});
+
 test('with no model configured at all the service still recommends', async () => {
     const reply = await handleChat(
         { message: 'Recommend products under ₱200', shown: [], lastQuery: '' },

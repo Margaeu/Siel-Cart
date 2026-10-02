@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class ChatController extends Controller
 {
-    public const MAX_MESSAGE_LENGTH = 2000;
+    public const MAX_MESSAGE_LENGTH = 100;
 
     public function store(Request $request)
     {
