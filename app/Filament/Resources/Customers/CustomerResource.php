@@ -122,7 +122,11 @@ class CustomerResource extends Resource
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->authorize(fn (Customer $record): bool => self::canDelete($record))
-            ->requiresConfirmation()
+            // A customer with an active order cannot be deleted, so asking
+            // the admin to confirm would only lead to a refusal. Skipping the
+            // modal sends the click straight to the action, whose catch below
+            // shows the refusal. deleteAccount() still re-checks under lock.
+            ->requiresConfirmation(fn (Customer $record): bool => ! $record->hasActiveOrders())
             ->modalHeading('Permanently delete this customer account?')
             ->modalDescription('This erases the customer\'s name, email, phone number and password. It cannot be undone and the account can never be restored. Their orders, reviews and reports are kept for the store\'s records. Blocked while they have a pending, processing, or ready-for-pickup order.')
             ->modalSubmitActionLabel('Delete account')
@@ -132,8 +136,11 @@ class CustomerResource extends Resource
                     $record->deleteAccount();
                 } catch (ValidationException $e) {
                     Notification::make()
-                        ->title('Cannot delete this account')
-                        ->body($e->validator->errors()->first('account'))
+                        ->title('No, this customer cannot be deleted.')
+                        // The model's message is written for the customer
+                        // ("your account"), so it is not shown to the admin.
+                        // 'account' is only ever thrown for an active order.
+                        ->body('You cannot delete this customer account because they have an order that is pending, being processed, or ready for pickup.')
                         ->danger()
                         ->send();
 

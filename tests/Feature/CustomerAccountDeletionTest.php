@@ -672,7 +672,7 @@ class CustomerAccountDeletionTest extends TestCase
 
         Livewire::test(EditCustomer::class, ['record' => $customer->id])
             ->callAction('delete_account')
-            ->assertNotified('Cannot delete this account');
+            ->assertNotified('No, this customer cannot be deleted.');
 
         $this->assertFalse($customer->fresh()->trashed());
     }
