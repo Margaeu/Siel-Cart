@@ -122,11 +122,16 @@ class CustomerResource extends Resource
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->authorize(fn (Customer $record): bool => self::canDelete($record))
+            ->requiresConfirmation()
             // A customer with an active order cannot be deleted, so asking
-            // the admin to confirm would only lead to a refusal. Skipping the
+            // the admin to confirm would only lead to a refusal. Hiding the
             // modal sends the click straight to the action, whose catch below
             // shows the refusal. deleteAccount() still re-checks under lock.
-            ->requiresConfirmation(fn (Customer $record): bool => ! $record->hasActiveOrders())
+            // This must be modalHidden(), not a closure passed to
+            // requiresConfirmation(): Filament caches that closure's first
+            // result, and with confirmation "off" the modal loses its icon,
+            // centring and narrow width and renders as a wide rectangle.
+            ->modalHidden(fn (Customer $record): bool => $record->hasActiveOrders())
             ->modalHeading('Permanently delete this customer account?')
             ->modalDescription('This erases the customer\'s name, email, phone number and password. It cannot be undone and the account can never be restored. Their orders, reviews and reports are kept for the store\'s records. Blocked while they have a pending, processing, or ready-for-pickup order.')
             ->modalSubmitActionLabel('Delete account')
