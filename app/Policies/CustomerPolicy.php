@@ -24,4 +24,9 @@ class CustomerPolicy
         return $authUser->can('Update:Customer');
     }
 
+    public function delete(AuthUser $authUser): bool
+    {
+        return $authUser->can('Delete:Customer');
+    }
+
 }

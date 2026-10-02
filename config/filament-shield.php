@@ -195,14 +195,16 @@ return [
                 'restoreAny',
                 'recordResolution',
             ],
-            // No Create, Delete, Restore or Force Delete: customers register
-            // on the storefront, deletion is super-admin-only and enforced in
-            // CustomerResource itself, and restore/force delete are refused
-            // there for everyone. Only viewing and editing are role-driven.
+            // No Create, Restore or Force Delete: customers register on the
+            // storefront, and restore/force delete are refused in
+            // CustomerResource for everyone. Delete stays, because it is what
+            // CustomerResource::canDelete() reads to allow "Delete account"
+            // (anonymise + soft delete), so tick it sparingly.
             \App\Filament\Resources\Customers\CustomerResource::class => [
                 'viewAny',
                 'view',
                 'update',
+                'delete',
             ],
             // Reviews are written by customers and have no edit action in the
             // panel; admins can only look at them and remove them.

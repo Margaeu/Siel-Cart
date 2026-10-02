@@ -36,7 +36,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /**
@@ -458,7 +460,12 @@ class CustomerAccountDeletionTest extends TestCase
         $this->actingAsAdminWithRole('super_admin');
     }
 
-    private function actingAsAdminWithRole(string $role, string $email = 'admin@example.com'): User
+    /**
+     * $gateAllowsDelete = false lets the Gate approve everything except
+     * Delete:Customer, so that ability is decided by the permission the role
+     * actually holds, as in production.
+     */
+    private function actingAsAdminWithRole(string $role, string $email = 'admin@example.com', bool $gateAllowsDelete = true): User
     {
         $admin = new User;
         $admin->forceFill([
@@ -472,9 +479,9 @@ class CustomerAccountDeletionTest extends TestCase
         $admin->assignRole(Role::findOrCreate($role, 'web'));
 
         // Authorization is not what these tests are about, except for the
-        // super-admin-only delete checks below, which read the role directly
-        // off the model rather than through Shield/Gate.
-        Gate::before(fn () => true);
+        // Delete:Customer checks below. Returning null for that one ability
+        // defers to the permissions the user really has.
+        Gate::before(fn ($user, string $ability) => ! $gateAllowsDelete && $ability === 'Delete:Customer' ? null : true);
         Filament::setCurrentPanel('admin');
         $this->actingAs($admin);
 
@@ -677,12 +684,12 @@ class CustomerAccountDeletionTest extends TestCase
         $this->assertFalse($customer->fresh()->trashed());
     }
 
-    /** Only a super admin may delete a customer account; ubap/stratcom cannot. */
-    public function test_non_super_admins_cannot_delete_a_customer_account(): void
+    /** Deleting an account needs Delete:Customer; a role without it gets nothing. */
+    public function test_roles_without_delete_customer_cannot_delete_a_customer_account(): void
     {
         foreach (['ubap', 'stratcom'] as $role) {
             $customer = Customer::factory()->create();
-            $this->actingAsAdminWithRole($role, "{$role}@example.com");
+            $this->actingAsAdminWithRole($role, "{$role}@example.com", gateAllowsDelete: false);
 
             $this->assertFalse(CustomerResource::canDelete($customer));
 
@@ -697,6 +704,24 @@ class CustomerAccountDeletionTest extends TestCase
 
             $this->assertFalse($customer->fresh()->trashed());
         }
+    }
+
+    /** A non-super-admin role that has been given Delete:Customer can delete. */
+    public function test_a_role_granted_delete_customer_can_delete_a_customer_account(): void
+    {
+        $customer = Customer::factory()->create();
+        $admin = $this->actingAsAdminWithRole('ubap', 'granted@example.com', gateAllowsDelete: false);
+
+        $this->assertFalse(CustomerResource::canDelete($customer));
+
+        $admin->givePermissionTo(Permission::findOrCreate('Delete:Customer', 'web'));
+        $admin->unsetRelation('permissions');
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertTrue(CustomerResource::canDelete($customer));
+
+        Livewire::test(ViewCustomer::class, ['record' => $customer->id])
+            ->assertActionVisible('delete_account');
     }
 
     /** An already-deleted account cannot be "deleted" again from the panel. */

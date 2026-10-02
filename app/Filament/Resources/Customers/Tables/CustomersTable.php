@@ -90,7 +90,7 @@ class CustomersTable
                 // not CustomerResource::canEdit(), which refuses deleted records.
                 EditAction::make()
                     ->hidden(fn (Customer $record): bool => $record->trashed()),
-                // Hidden for everyone but super admins (and already-deleted
+                // Hidden for roles without Delete:Customer (and already-deleted
                 // rows) by CustomerResource::canDelete(), which backs this
                 // action's ->authorize(). See deleteAccountAction() for why
                 // it calls Customer::deleteAccount() instead of DeleteAction.

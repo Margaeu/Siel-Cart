@@ -63,16 +63,18 @@ class CustomerResource extends Resource
 
     // Filament's generic DeleteAction is unsafe for customers: a plain soft
     // delete leaves identity and credentials in place, so it is never used
-    // here (see deleteAccountAction()). Deletion itself is super-admin-only,
-    // enforced here rather than by the Shield `Delete:Customer` permission
-    // alone, for the same reason as canCreate() — super_admin bypasses Shield
-    // checks entirely, so a ticked box would let any role delete accounts.
-    // An already-deleted account cannot be deleted again.
+    // here (see deleteAccountAction()). Deleting an account is gated on the
+    // Shield `Delete:Customer` permission, read directly rather than through
+    // the policy: Filament treats an ability the policy does not define as
+    // allowed, so the check must not depend on that method existing.
+    // super_admin passes through Shield's bypass. Because this erases a
+    // person's identity for good, tick the box only for roles that should be
+    // able to do that. An already-deleted account cannot be deleted again.
     public static function canDelete(Model $record): bool
     {
         $user = Filament::auth()->user();
 
-        return $user instanceof User && $user->hasRole('super_admin') && ! $record->trashed();
+        return $user instanceof User && $user->can('Delete:Customer') && ! $record->trashed();
     }
 
     // No bulk delete: deleteAccountAction() has to check each customer's
