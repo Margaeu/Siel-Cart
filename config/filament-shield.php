@@ -117,11 +117,20 @@ return [
 
     'policies' => [
         'path' => app_path('Policies'),
-        'merge' => true,
+        // Off so a resource listed under resources.manage gets exactly that
+        // list. With merge on, the defaults were added back to every entry, so
+        // a read-only resource could never lose its Create/Update/Delete boxes.
+        'merge' => false,
         'generate' => true,
+        // Replicate and Reorder are not offered: nothing in the panel
+        // duplicates a record, and the one reorderable table (banners) is
+        // gated on Update:Banner in BannerResource::canReorder(). Note that
+        // Filament treats an ability the policy does not define as ALLOWED,
+        // so dropping a box here is only safe where no UI exposes the action
+        // or the resource class refuses it itself (as those overrides do).
         'methods' => [
             'viewAny', 'view', 'create', 'update', 'delete', 'restore',
-            'forceDelete', 'forceDeleteAny', 'restoreAny', 'replicate', 'reorder',
+            'forceDelete', 'forceDeleteAny', 'restoreAny',
         ],
         'single_parameter_methods' => [
             'viewAny',
@@ -170,14 +179,64 @@ return [
                 'update',
                 'delete',
             ],
+            // Orders are created by checkout, never from the panel
+            // (OrderResource::canCreate()), so there is no Create box.
             // Refunds and exchanges are recorded under Returns & Refunds, but
             // recording one is something done to an order, so the permission
             // lives with orders rather than on a resource of its own.
             \App\Filament\Resources\Orders\OrderResource::class => [
+                'viewAny',
+                'view',
+                'update',
+                'delete',
+                'restore',
+                'forceDelete',
+                'forceDeleteAny',
+                'restoreAny',
                 'recordResolution',
+            ],
+            // No Create, Delete, Restore or Force Delete: customers register
+            // on the storefront, deletion is super-admin-only and enforced in
+            // CustomerResource itself, and restore/force delete are refused
+            // there for everyone. Only viewing and editing are role-driven.
+            \App\Filament\Resources\Customers\CustomerResource::class => [
+                'viewAny',
+                'view',
+                'update',
+            ],
+            // Reviews are written by customers and have no edit action in the
+            // panel; admins can only look at them and remove them.
+            \App\Filament\Resources\Reviews\ReviewResource::class => [
+                'viewAny',
+                'view',
+                'delete',
+            ],
+            // Reports are filed by customers, so there is no Create page.
+            \App\Filament\Resources\Reports\ReportResource::class => [
+                'viewAny',
+                'view',
+                'update',
+                'delete',
+            ],
+            // Not soft-deleted, so Restore and Force Delete have nothing to act on.
+            \App\Filament\Resources\Banners\BannerResource::class => [
+                'viewAny', 'view', 'create', 'update', 'delete',
+            ],
+            \App\Filament\Resources\Categories\CategoryResource::class => [
+                'viewAny', 'view', 'create', 'update', 'delete',
+            ],
+            \App\Filament\Resources\Themes\ThemeResource::class => [
+                'viewAny', 'view', 'create', 'update', 'delete',
+            ],
+            \App\Filament\Resources\Users\UserResource::class => [
+                'viewAny', 'view', 'create', 'update', 'delete',
             ],
         ],
         'exclude' => [
+            // Read-only and super-admin-only, enforced in the resource class
+            // itself (see ActivityLogResource), so no box here would ever
+            // change who can see or touch the audit trail.
+            \App\Filament\Resources\ActivityLogs\ActivityLogResource::class,
             // Access follows the order permissions above -- see
             // ReturnRefundResolutionPolicy -- so there is nothing of its own for
             // Shield to generate, and a generated policy would replace that.

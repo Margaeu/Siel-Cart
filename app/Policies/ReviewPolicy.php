@@ -22,49 +22,9 @@ class ReviewPolicy
         return $authUser->can('View:Review');
     }
 
-    public function create(AuthUser $authUser): bool
-    {
-        return $authUser->can('Create:Review');
-    }
-
-    public function update(AuthUser $authUser, Review $review): bool
-    {
-        return $authUser->can('Update:Review');
-    }
-
     public function delete(AuthUser $authUser, Review $review): bool
     {
         return $authUser->can('Delete:Review');
-    }
-
-    public function restore(AuthUser $authUser, Review $review): bool
-    {
-        return $authUser->can('Restore:Review');
-    }
-
-    public function forceDelete(AuthUser $authUser, Review $review): bool
-    {
-        return $authUser->can('ForceDelete:Review');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Review');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Review');
-    }
-
-    public function replicate(AuthUser $authUser, Review $review): bool
-    {
-        return $authUser->can('Replicate:Review');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Review');
     }
 
 }

@@ -37,34 +37,4 @@ class BannerPolicy
         return $authUser->can('Delete:Banner');
     }
 
-    public function restore(AuthUser $authUser, Banner $banner): bool
-    {
-        return $authUser->can('Restore:Banner');
-    }
-
-    public function forceDelete(AuthUser $authUser, Banner $banner): bool
-    {
-        return $authUser->can('ForceDelete:Banner');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Banner');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Banner');
-    }
-
-    public function replicate(AuthUser $authUser, Banner $banner): bool
-    {
-        return $authUser->can('Replicate:Banner');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Banner');
-    }
-
 }

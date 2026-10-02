@@ -22,11 +22,6 @@ class OrderPolicy
         return $authUser->can('View:Order');
     }
 
-    public function create(AuthUser $authUser): bool
-    {
-        return $authUser->can('Create:Order');
-    }
-
     public function update(AuthUser $authUser, Order $order): bool
     {
         return $authUser->can('Update:Order');
@@ -55,16 +50,6 @@ class OrderPolicy
     public function restoreAny(AuthUser $authUser): bool
     {
         return $authUser->can('RestoreAny:Order');
-    }
-
-    public function replicate(AuthUser $authUser, Order $order): bool
-    {
-        return $authUser->can('Replicate:Order');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Order');
     }
 
     public function recordResolution(AuthUser $authUser, Order $order): bool

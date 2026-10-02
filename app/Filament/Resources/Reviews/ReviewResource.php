@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 class ReviewResource extends Resource
 {
@@ -37,6 +38,17 @@ class ReviewResource extends Resource
     public static function table(Table $table): Table
     {
         return ReviewsTable::configure($table);
+    }
+
+    // Reviews are the customer's own words, so admins moderate them (view,
+    // delete) and never edit them. The table and view page offer no edit
+    // action, but the edit route is still registered, and Update:Review is no
+    // longer a Shield permission: Filament treats an ability the policy does
+    // not define as allowed, so without this any admin who can view reviews
+    // could open /edit by URL.
+    public static function canEdit(Model $record): bool
+    {
+        return false;
     }
 
     public static function getRelations(): array

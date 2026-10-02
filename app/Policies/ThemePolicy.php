@@ -37,34 +37,4 @@ class ThemePolicy
         return $authUser->can('Delete:Theme');
     }
 
-    public function restore(AuthUser $authUser, Theme $theme): bool
-    {
-        return $authUser->can('Restore:Theme');
-    }
-
-    public function forceDelete(AuthUser $authUser, Theme $theme): bool
-    {
-        return $authUser->can('ForceDelete:Theme');
-    }
-
-    public function forceDeleteAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('ForceDeleteAny:Theme');
-    }
-
-    public function restoreAny(AuthUser $authUser): bool
-    {
-        return $authUser->can('RestoreAny:Theme');
-    }
-
-    public function replicate(AuthUser $authUser, Theme $theme): bool
-    {
-        return $authUser->can('Replicate:Theme');
-    }
-
-    public function reorder(AuthUser $authUser): bool
-    {
-        return $authUser->can('Reorder:Theme');
-    }
-
 }

@@ -11,6 +11,7 @@ use App\Filament\Resources\Banners\Schemas\BannerInfolist;
 use App\Filament\Resources\Banners\Tables\BannersTable;
 use App\Models\Banner;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -44,6 +45,15 @@ class BannerResource extends Resource
     public static function table(Table $table): Table
     {
         return BannersTable::configure($table);
+    }
+
+    // Drag-ordering rewrites sort_order, so it needs the same permission as
+    // editing a banner. Reorder:Banner is no longer a Shield permission, and
+    // Filament treats an ability the policy does not define as allowed, so
+    // without this any admin who can view banners could reorder them.
+    public static function canReorder(): bool
+    {
+        return (bool) Filament::auth()->user()?->can('Update:Banner');
     }
 
     public static function getRelations(): array
