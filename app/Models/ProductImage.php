@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
-use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Concerns\LogsAdminActivity;
 
 class ProductImage extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsAdminActivity;
 
     protected $fillable = [
         'product_id',

@@ -13,14 +13,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Concerns\LogsAdminActivity;
 
 // Rotates the homepage ranking cache after a committed change to what counts
 // as a sale (status, payment_status, completed_at, delete/restore).
 #[ObservedBy(HomepageRankingObserver::class)]
 class Order extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use LogsAdminActivity, SoftDeletes;
 
     /**
      * Statuses that mean the order is no longer a sale, so its units belong

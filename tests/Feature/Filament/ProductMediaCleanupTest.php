@@ -360,6 +360,8 @@ class ProductMediaCleanupTest extends TestCase
     public function test_force_delete_fires_lifecycle_events_without_soft_deleting_first(): void
     {
         ['product' => $product] = $this->catalogueWithHistory();
+        // The audit trail only records an admin's deletions.
+        $this->actingAsAdmin();
         $events = [];
 
         Product::forceDeleting(function () use (&$events) {

@@ -26,9 +26,6 @@ use Spatie\Activitylog\Models\Activity;
  */
 class ActivityLogsTable
 {
-    /** Filter value for activity nobody signed in caused (the app itself, or a guest). */
-    private const NO_CAUSER = '__none';
-
     public static function configure(Table $table): Table
     {
         return $table
@@ -64,22 +61,6 @@ class ActivityLogsTable
                     ->options(fn (): array => collect(static::distinctValues('log_name'))
                         ->mapWithKeys(fn (string $name): array => [$name => str($name)->headline()->toString()])
                         ->all()),
-
-                SelectFilter::make('causer')
-                    ->label('Administrator')
-                    ->searchable()
-                    ->options(fn (): array => [
-                        self::NO_CAUSER => 'System / Guest (no signed-in admin)',
-                        ...User::query()
-                            ->orderBy('first_name')
-                            ->orderBy('last_name')
-                            ->get(['id', 'first_name', 'last_name', 'email'])
-                            ->mapWithKeys(fn (User $user): array => [
-                                (string) $user->id => trim("{$user->name} ({$user->email})"),
-                            ])
-                            ->all(),
-                    ])
-                    ->query(fn (Builder $query, array $data): Builder => static::filterByCauser($query, $data['value'] ?? null)),
 
                 SelectFilter::make('subject_type')
                     ->label('Record type')
@@ -190,21 +171,6 @@ class ActivityLogsTable
                     ->orWhere('id', (int) $id);
             }
         });
-    }
-
-    private static function filterByCauser(Builder $query, ?string $value): Builder
-    {
-        if (blank($value)) {
-            return $query;
-        }
-
-        if ($value === self::NO_CAUSER) {
-            return $query->whereNull('causer_id');
-        }
-
-        return $query
-            ->where('causer_type', (new User)->getMorphClass())
-            ->where('causer_id', (int) $value);
     }
 
     /**

@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Concerns\LogsAdminActivity;
 
 class Category extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsAdminActivity;
 
     protected $fillable = [
         'name',

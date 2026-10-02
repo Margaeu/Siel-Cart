@@ -12,9 +12,6 @@
     $changes = $presenter->changes();
     $createdAt = $activity->created_at?->copy()->timezone(config('app.timezone'));
     $target = $presenter->target();
-    $subjectTitle = in_array($presenter->event(), ActivityLogPresenter::CRUD_EVENTS, true)
-        ? $presenter->subjectTitle()
-        : null;
     $extraDescription = $presenter->extraDescription();
     $ipAddress = $presenter->ipAddress();
     $detailsUrl = ActivityLogResource::getUrl('view', ['record' => $activity]);
@@ -45,9 +42,6 @@
                 {{ $presenter->action() }}
                 @if ($target)
                     <span class="font-semibold text-gray-950">{{ $target }}</span>
-                @endif
-                @if ($subjectTitle)
-                    <span class="text-gray-500">· {{ $subjectTitle }}</span>
                 @endif
             </p>
 

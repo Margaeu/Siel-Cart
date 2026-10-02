@@ -86,6 +86,27 @@ class ProductChildActivityTest extends TestCase
         $this->assertSame('deleted', $this->lastActivityFor($variant)->event);
     }
 
+    public function test_changes_nobody_signed_in_as_admin_made_are_not_logged(): void
+    {
+        $admin = ActivityLogResourceTest::makeAdmin();
+        $product = Product::factory()->create(['name' => 'Sticker', 'stock_quantity' => 116]);
+        $variant = ProductVariant::factory()->for($product)->create(['stock_quantity' => 25]);
+        $before = Activity::count();
+
+        // A customer's checkout decrements stock with no admin in the session.
+        $product->update(['stock_quantity' => 103]);
+        $variant->update(['stock_quantity' => 24]);
+
+        $this->assertSame($before, Activity::count());
+
+        // The same edit by an admin is the audit trail's business.
+        $this->actingAs($admin);
+        $product->update(['stock_quantity' => 90]);
+
+        $this->assertSame($before + 1, Activity::count());
+        $this->assertSame($admin->id, $this->lastActivityFor($product)->causer_id);
+    }
+
     public function test_saving_an_unchanged_image_writes_no_row(): void
     {
         $image = ProductImage::factory()->create();

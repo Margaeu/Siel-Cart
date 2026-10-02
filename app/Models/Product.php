@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Concerns\LogsAdminActivity;
 
 class Product extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsAdminActivity;
 
     // The trait's forceDelete() is aliased rather than reached via parent::.
     // A method declared here overrides the trait's, so parent::forceDelete()

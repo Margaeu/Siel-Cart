@@ -74,7 +74,7 @@ class ActivityLogInfolist
                     TextEntry::make('subject')
                         ->label('Affected record')
                         ->state(fn (Activity $record): ?string => self::present($record)->subjectLabel())
-                        ->helperText(fn (Activity $record): ?string => self::present($record)->subjectTitle())
+                        ->helperText(fn (Activity $record): ?string => self::present($record)->subjectReference())
                         ->placeholder('Not tied to a record'),
 
                     TextEntry::make('log_name')

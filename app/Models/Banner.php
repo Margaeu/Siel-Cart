@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Concerns\LogsAdminActivity;
 
 class Banner extends Model
 {
@@ -17,7 +17,7 @@ class Banner extends Model
     // and a banner change wrote no audit row (0 of 178 rows in the log were
     // Banner's). Product, Order, Category and User all apply it; this one was
     // missed. Found because Pint flagged the import as unused.
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsAdminActivity;
 
     /**
      * Extensions the carousel renders with <video> instead of <img>.

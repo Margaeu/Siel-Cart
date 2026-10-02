@@ -153,7 +153,37 @@ class ActivityLogPresenterTest extends TestCase
         $presenter = $this->present(['subject_type' => 'App\\Models\\Order', 'subject_id' => 105]);
 
         $this->assertSame('Order #105', $presenter->subjectLabel());
+        $this->assertSame('Order #105', $presenter->subjectReference());
         $this->assertSame('Order', ActivityLogPresenter::modelLabelFor('App\\Models\\Order'));
         $this->assertSame('Product Variant', ActivityLogPresenter::modelLabelFor('App\\Models\\ProductVariant'));
+    }
+
+    public function test_subjects_are_named_the_way_an_admin_knows_them(): void
+    {
+        $order = $this->present([
+            'subject_type' => 'App\\Models\\Order', 'subject_id' => 53,
+            'properties' => ['attributes' => ['order_number' => 'ORD-RKIYFWOA']],
+        ]);
+        $this->assertSame('Order ORD-RKIYFWOA', $order->subjectLabel());
+        $this->assertSame('Order #53', $order->subjectReference());
+
+        $product = $this->present([
+            'subject_type' => 'App\\Models\\Product', 'subject_id' => 23,
+            'properties' => ['attributes' => ['name' => 'Sticker']],
+        ]);
+        $this->assertSame('Product Sticker', $product->subjectLabel());
+
+        // A variant leads with its product, taken from the log so it survives deletion.
+        $variant = $this->present([
+            'subject_type' => 'App\\Models\\ProductVariant', 'subject_id' => 5,
+            'properties' => ['attributes' => ['name' => 'M'], 'product_name' => 'Sticker'],
+        ]);
+        $this->assertSame('Product Variant Sticker – M', $variant->subjectLabel());
+
+        $image = $this->present([
+            'subject_type' => 'App\\Models\\ProductImage', 'subject_id' => 9,
+            'properties' => ['old' => ['image_path' => 'products/hoodie-front.jpg'], 'product_name' => 'CLSU Hoodie'],
+        ]);
+        $this->assertSame('Product Image CLSU Hoodie – hoodie-front.jpg', $image->subjectLabel());
     }
 }

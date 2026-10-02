@@ -219,8 +219,39 @@ final class ActivityLogPresenter
 
     // --- Subject ---------------------------------------------------------
 
-    /** "Product #42", or null when the activity is not about a record. */
+    /**
+     * What an admin recognises the record by: "Order ORD-2026-0001",
+     * "Product Sticker", or "Product Variant Sticker – M". A variant or image
+     * has no meaning without its product, so the product name the log saved
+     * alongside it leads. Falls back to "Product #42" when the record has no
+     * name to show; null when the activity is not about a record.
+     */
     public function subjectLabel(): ?string
+    {
+        if (blank($this->activity->subject_type)) {
+            return null;
+        }
+
+        $name = $this->subjectTitle();
+
+        if (blank($name)) {
+            return $this->subjectReference();
+        }
+
+        // An image's only identity is its storage path; the file name is enough.
+        $name = str_contains($name, '/') ? basename($name) : $name;
+
+        $product = $this->scalarOrNull($this->properties()['product_name'] ?? null);
+
+        if (filled($product) && $product !== $name) {
+            $name = Str::limit($product, 40).' – '.$name;
+        }
+
+        return self::modelLabelFor($this->activity->subject_type).' '.$name;
+    }
+
+    /** The raw reference, "Product #42": still what support needs to find the row. */
+    public function subjectReference(): ?string
     {
         if (blank($this->activity->subject_type)) {
             return null;

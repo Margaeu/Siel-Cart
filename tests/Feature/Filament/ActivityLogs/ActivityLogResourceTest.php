@@ -264,7 +264,8 @@ class ActivityLogResourceTest extends TestCase
 
         Livewire::test(ListActivityLogs::class)
             ->assertSee($admin->name)
-            ->assertSee('Product #42')
+            ->assertSee('Product Mug')
+            ->assertDontSee('Product #42')
             ->assertSeeInOrder(['Price:', '₱100.00', '₱120.00'])
             ->assertSeeInOrder(['Is active:', 'No', 'Yes'])
             ->assertSeeInOrder(['Status:', 'Pending', 'Ready for pickup'])
@@ -383,16 +384,6 @@ class ActivityLogResourceTest extends TestCase
             ->filterTable('log_name', ['authentication'])
             ->assertCanSeeTableRecords([$login, $failed])
             ->assertCanNotSeeTableRecords([$productUpdate]);
-
-        Livewire::test(ListActivityLogs::class)
-            ->filterTable('causer', (string) $other->getKey())
-            ->assertCanSeeTableRecords([$productUpdate])
-            ->assertCanNotSeeTableRecords([$login, $failed]);
-
-        Livewire::test(ListActivityLogs::class)
-            ->filterTable('causer', '__none')
-            ->assertCanSeeTableRecords([$failed])
-            ->assertCanNotSeeTableRecords([$login, $productUpdate]);
 
         Livewire::test(ListActivityLogs::class)
             ->filterTable('subject_type', [self::PRODUCT])
