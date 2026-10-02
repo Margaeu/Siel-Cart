@@ -106,8 +106,12 @@ class CategoryInfolist
                             TextEntry::make('name')
                                 ->url(fn (Product $record): string => ProductResource::getUrl('view', ['record' => $record]))
                                 ->color('primary'),
+                            // A variable product keeps its SKUs on the variants, so its
+                            // own sku column is empty; say so instead of showing a dash.
                             TextEntry::make('sku')
-                                ->placeholder('—'),
+                                ->state(fn (Product $record): string => $record->has_variants
+                                    ? 'With variants'
+                                    : ($record->sku ?: '—')),
                             TextEntry::make('display_price_label'),
                             TextEntry::make('stock_status')
                                 ->badge()
