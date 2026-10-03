@@ -93,6 +93,11 @@
         </div>
     </div>
 
+    {{-- The input's maxlength drops extra keystrokes and pasted text without a
+         word, so the shopper sees their typing stop for no visible reason. This
+         line says why. It is a live region so a screen reader announces it. --}}
+    <p id="chat-limit-notice" role="status" aria-live="polite" hidden class="bg-white px-4 pt-2 text-xs font-medium text-amber-700"></p>
+
     <!-- Input Area -->
     <div class="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
         <label for="chat-input" class="sr-only">Message the shopping assistant</label>
@@ -284,9 +289,25 @@
             if (indicator) indicator.remove();
         }
 
+        // Shown while the input sits at the cap, hidden as soon as there is room
+        // again or the message is sent. Driven by `input`, which also fires for a
+        // paste that the browser trimmed down to the limit.
+        const limitNotice = document.getElementById('chat-limit-notice');
+        const maxLength = inputField.maxLength;
+
+        function syncLimitNotice() {
+            if (!limitNotice) return;
+            const atLimit = maxLength > 0 && inputField.value.length >= maxLength;
+            limitNotice.textContent = atLimit
+                ? `You've reached the ${maxLength}-character limit. Please shorten your message.`
+                : '';
+            limitNotice.hidden = !atLimit;
+        }
+
         function sendMessage() {
             const message = inputField.value;
             inputField.value = '';
+            syncLimitNotice();
             sendMessageWithText(message);
         }
 
@@ -352,6 +373,7 @@
         renderSuggestions();
 
         sendBtn.onclick = sendMessage;
+        inputField.oninput = syncLimitNotice;
         inputField.onkeypress = (e) => {
             if (e.key === 'Enter') sendMessage();
         };

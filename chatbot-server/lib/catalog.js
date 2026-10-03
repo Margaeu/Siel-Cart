@@ -209,13 +209,49 @@ export function createCatalog(db, { log = console } = {}) {
         }
     }
 
+    // The stock behind named products, sold out included, for "is it in stock /
+    // in Large?". Unlike VARIANTS_SQL this keeps zero-stock variants: the answer
+    // "Large is sold out, Small and Medium are left" needs the rows that are gone.
+    // Unlike fetchAvailableProducts a product with nothing left is still returned,
+    // so it can be reported as out of stock. A failure is raised, not swallowed:
+    // guessing at stock would be a claim about the shop.
+    async function fetchStockFor(slugs) {
+        if (!Array.isArray(slugs) || slugs.length === 0) return { products: [], variants: new Map() };
+        try {
+            const [products] = await db.query(
+                `SELECT p.name, p.slug, p.has_variants, p.price, p.stock_quantity
+                   FROM products p
+                   JOIN categories c ON c.id = p.category_id AND c.is_active = 1
+                  WHERE p.is_active = 1 AND p.deleted_at IS NULL AND p.slug IN (?)`,
+                [slugs]
+            );
+            const [variantRows] = await db.query(
+                `SELECT p.slug, pv.name, pv.price, pv.stock_quantity
+                   FROM product_variants pv
+                   JOIN products p ON p.id = pv.product_id
+                  WHERE pv.is_active = 1 AND p.is_active = 1 AND p.deleted_at IS NULL AND p.slug IN (?)
+                  ORDER BY pv.sort_order, pv.id`,
+                [slugs]
+            );
+            const variants = new Map();
+            for (const row of variantRows) {
+                if (!variants.has(row.slug)) variants.set(row.slug, []);
+                variants.get(row.slug).push(row);
+            }
+            return { products, variants };
+        } catch (dbError) {
+            log.error('Stock fetch error:', dbError.code || '(no code)', '-', dbError.message);
+            throw new CatalogUnavailableError(dbError);
+        }
+    }
+
     // Everything the vocabulary above is built from, fetched fresh per request.
     async function loadShop() {
         const [categories, catalogue] = await Promise.all([fetchActiveCategories(), fetchCatalogue()]);
         return { categories, catalogue, extraGroups: nameVocabulary(catalogue) };
     }
 
-    return { fetchActiveCategories, fetchCatalogue, fetchAvailableProducts, searchProducts, fetchVariantsFor, loadShop };
+    return { fetchActiveCategories, fetchCatalogue, fetchAvailableProducts, searchProducts, fetchVariantsFor, fetchStockFor, loadShop };
 }
 
 // A customer may type "50%" or "a_b". Left unescaped those are LIKE wildcards

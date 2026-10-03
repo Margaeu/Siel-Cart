@@ -42,7 +42,7 @@ CREATE TABLE products (
 );
 CREATE TABLE product_variants (
     id INTEGER PRIMARY KEY, product_id INTEGER, name TEXT, price REAL,
-    stock_quantity INTEGER, is_active INTEGER
+    stock_quantity INTEGER, is_active INTEGER, sort_order INTEGER DEFAULT 0
 );
 CREATE TABLE orders (id INTEGER PRIMARY KEY, status TEXT, deleted_at TEXT);
 CREATE TABLE order_items (id INTEGER PRIMARY KEY, order_id INTEGER, product_id INTEGER, quantity INTEGER);

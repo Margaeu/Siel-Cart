@@ -19,6 +19,7 @@ import {
     normalizeForMatching
 } from './store-knowledge.js';
 import { CatalogUnavailableError } from './catalog.js';
+import { AVAILABILITY_PATTERN, buildAvailabilityReply, matchAvailabilityProducts } from './availability.js';
 import {
     BEST_SELLER_PATTERN,
     CHEAPEST_PATTERN,
@@ -207,6 +208,31 @@ export async function handleChat(request, deps) {
         log.error('Shop load failed:', error.message);
         return EMPTY_SHOP;
     });
+
+    // "Is the hoodie in stock?" / "...available in Large?" is answered from the
+    // stock rows of the products named, before the FAQ: the FAQ's "availability
+    // is shown on each product's page" is true of every question about stock and
+    // answers none of them. Any OTHER policy the message touched ("...and do you
+    // deliver?") is still answered, ahead of the stock answer.
+    const availabilityAsked = AVAILABILITY_PATTERN.test(msgLower) && !isIrrelevantQuery(message)
+        ? matchAvailabilityProducts(msgLower, shop)
+        : { products: [] };
+
+    if (availabilityAsked.products.length > 0) {
+        try {
+            const rows = await catalog.fetchStockFor(availabilityAsked.products.map(p => p.slug));
+            const answer = buildAvailabilityReply(message, availabilityAsked, rows);
+            const policy = faqIsPolicy && faqEntry.id !== 'stock' ? `${faqEntry.answer}\n\n` : '';
+            // No `products`: this is not a recommendation, so it must not use up
+            // the picks a later "show me more" would skip.
+            return { response: policy + answer.response, products: [], query: message, chips: answer.chips };
+        } catch (error) {
+            if (error instanceof CatalogUnavailableError) {
+                return { response: CATALOG_UNAVAILABLE_MESSAGE };
+            }
+            throw error;
+        }
+    }
 
     // "Do you have jackets, and do you accept GCash?" used to be answered with
     // the payment paragraph alone: the FAQ matched first and the jackets half was

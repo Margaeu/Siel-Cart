@@ -2,8 +2,9 @@
 
 A low-cost live-test deployment: Azure App Service Linux (built-in PHP 8.3
 image, Nginx + PHP-FPM), Aiven MySQL, Cloudflare R2 for media, and GitHub
-Actions for build and deploy. Nothing here contains real credentials; every
-value below is a placeholder.
+Actions for build and deploy. The AI chatbot is a separate Node.js service
+hosted on Railway (see "AI chatbot on Railway" below). Nothing here contains
+real credentials; every value below is a placeholder.
 
 The live app runs on **B2 (Basic)**, not F1 — it was upgraded from F1 to B1
 for Always On, and later from B1 to B2 (2 vCPU, 3.5 GB RAM; the plan is
@@ -150,6 +151,7 @@ Settings, never as an uploaded `.env` file.
 | `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | R2 API token credentials |
 | `CLOUDFLARE_R2_BUCKET`, `CLOUDFLARE_R2_ENDPOINT`, `CLOUDFLARE_R2_PUBLIC_URL` | see R2 below |
 | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | your SMTP provider (see Mail below) |
+| `CHATBOT_URL` | the Railway chatbot's public HTTPS URL ending in `/api/chat` (see "AI chatbot on Railway") |
 | `RUN_MIGRATIONS_ON_STARTUP` | `false` (see first deployment) |
 
 **`APP_KEY`** — generate it once (`php artisan key:generate --show`) and never
@@ -227,6 +229,64 @@ Before setting them explicitly on the live app:
   fails the save instead of storing a broken path. Failed deletes after a
   committed delete are logged, not shown to the user.
 
+## AI chatbot on Railway
+
+The chatbot (`chatbot-server/`, Node.js 22 + Express) is **not** part of the
+Azure deployment. It is deployed as its own Railway service, and the Laravel
+app on Azure reaches it over HTTPS:
+
+```
+browser → POST /api/chat (Azure, Laravel ChatController)
+        → POST <CHATBOT_URL> (Railway, chatbot-server)
+        → OpenRouter (model) + Aiven MySQL (catalog, read-only questions)
+```
+
+**Service setup (Railway)**
+
+- Create a Railway service from this repository with its **root directory set
+  to `chatbot-server`**, so Railway builds that folder and not the Laravel app.
+  The start command is `npm start` (`node server.js`); Railway supplies `PORT`
+  and the server listens on it (default 3000 only when unset).
+- Generate a public domain for the service (Settings → Networking). The
+  chatbot has a single route, `POST /api/chat`, and no health route, so the
+  URL to use is `https://<service>.up.railway.app/api/chat`.
+- Set these as **Railway variables on that service**. The chatbot never reads
+  the Laravel app's settings or `.env`; see `chatbot-server/.env.example`.
+
+| Variable | Value |
+|---|---|
+| `OPENROUTER_API_KEY` | the OpenRouter key |
+| `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | the **same Aiven MySQL** the Laravel app uses, so recommendations reflect the real catalog (`DB_USER` / `DB_NAME` are accepted aliases) |
+| `MYSQL_ATTR_SSL_CA` | optional; only to override the committed `chatbot-server/certs/aiven-ca.pem` |
+
+**Wiring it to Azure**
+
+- In the Azure Web App's App Settings, set `CHATBOT_URL` to the Railway URL
+  above. When it is unset it defaults to `http://127.0.0.1:3000/api/chat`,
+  which on Azure points at nothing, so chat would fail with "provider down".
+  Saving App Settings restarts the app.
+- `ChatController` waits up to 60 seconds for the chatbot, while the chatbot
+  bounds a whole request at 20 seconds, so a slow model never reaches Laravel's
+  limit.
+
+**Things to remember**
+
+- **Aiven access:** the chatbot connects to Aiven from Railway's network, not
+  Azure's. If Aiven's *Allowed IP addresses* is restricted, Railway's outbound
+  address has to be allowed too, or catalog lookups fail and the chatbot
+  answers "I can't reach our product catalog".
+- **CA certificate:** `chatbot-server/certs/aiven-ca.pem` is a copy of
+  `storage/certs/aiven-ca.pem`. When Aiven rotates its CA, replace both and
+  redeploy **both** services (see `chatbot-server/certs/README.md`).
+- **Local development is unchanged:** `AppServiceProvider::boot()` still
+  launches the chatbot as a child process under `php artisan serve`, and
+  `CHATBOT_URL` falls back to localhost.
+- **Deploys are separate.** The GitHub Actions workflow above deploys only the
+  Laravel app. A change under `chatbot-server/` reaches production through
+  Railway, not through `deploy.yml`.
+- **Railway plan, region and domain are not recorded in the repo.** Record
+  them here once confirmed in the Railway dashboard.
+
 ## Uploads
 
 Each image or video is limited to **10 MB** (Livewire and validation rules).
@@ -296,8 +356,12 @@ was checked, on the live subscription, before touching anything:
   (single instance, no scale-out). **It has since been upgraded to B2**
   (2 vCPU, 3.5 GB RAM) and Always On is still enabled (owner-confirmed
   2026-09-30). The B1 figures below are therefore historical.
-- **The Node chatbot app (`sielcart-chatbot`) runs on the same plan** as
-  `sielcart` — confirmed via `az webapp show --query serverFarmId` on both.
+- **Historical: the Node chatbot app (`sielcart-chatbot`) ran on the same
+  plan** as `sielcart` — confirmed via `az webapp show --query serverFarmId` on
+  both. **The chatbot is now hosted on Railway** (see "AI chatbot on
+  Railway"), so it no longer shares this plan's CPU; whether the old Azure app
+  has been deleted has not been checked, and the A/B test below describes the
+  setup as it was then.
   They share the plan's CPU (one vCPU on B1 when measured, two on B2 now).
 - **HTTP/2 was off** (`http20Enabled: false`) and has been turned on
   (`az webapp config set --http20-enabled true`); `httpsOnly` and
