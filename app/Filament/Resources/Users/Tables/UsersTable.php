@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class UsersTable
 {
@@ -106,10 +107,34 @@ class UsersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    // Without this the bulk action only checks `deleteAny`, which
-                    // would let a selection sweep up protected super admins.
+                    // authorizeIndividualRecords() runs the `delete` permission per
+                    // record, but Shield lets super_admin past every gate, so it
+                    // can't protect accounts. before() refuses the whole selection
+                    // (all or nothing, like the category bulk delete) if it holds
+                    // the admin's own account or every remaining active super
+                    // admin -- a case no per-record check catches, since with two
+                    // super admins neither one is "the last".
                     DeleteBulkAction::make()
-                        ->authorizeIndividualRecords('delete'),
+                        ->authorizeIndividualRecords('delete')
+                        ->modalHeading('Delete selected administrators?')
+                        ->modalDescription(fn (Collection $records): string => 'These accounts will lose access to the admin panel immediately and cannot be restored: '
+                            .$records->map(fn (User $user): string => $user->email)->implode(', ')
+                            .'. Their past activity stays in the activity log.')
+                        ->before(function (DeleteBulkAction $action, Collection $records): void {
+                            $reason = User::selectionAccessLossBlockedReason($records, Filament::auth()->user(), 'delete');
+
+                            if ($reason === null) {
+                                return;
+                            }
+
+                            Notification::make()
+                                ->title('No administrators were deleted')
+                                ->body($reason)
+                                ->danger()
+                                ->send();
+
+                            $action->cancel();
+                        }),
                 ]),
             ]);
     }

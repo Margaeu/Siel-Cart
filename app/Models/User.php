@@ -182,6 +182,36 @@ class User extends Authenticatable implements FilamentUser
         return null;
     }
 
+    /**
+     * panelAccessLossBlockedReason() for several accounts at once, e.g. a bulk
+     * delete. Checking each record on its own is not enough: with two active
+     * super admins, neither is "the last", yet selecting both would remove
+     * every one. So the question is whether any active super admin remains
+     * outside the selection.
+     *
+     * @param  iterable<int, self>  $users
+     */
+    public static function selectionAccessLossBlockedReason(iterable $users, ?self $actor, string $action): ?string
+    {
+        $users = collect($users);
+
+        if ($actor !== null && $users->contains(fn (self $user): bool => $user->is($actor))) {
+            return "You cannot {$action} your own account. Deselect it and try again.";
+        }
+
+        $selectsASuperAdmin = $users->contains(fn (self $user): bool => $user->hasRole('super_admin'));
+
+        if ($selectsASuperAdmin && ! static::query()
+            ->active()
+            ->role('super_admin')
+            ->whereKeyNot($users->map(fn (self $user) => $user->getKey())->all())
+            ->exists()) {
+            return "This selection includes every remaining active super admin — you cannot {$action} all of them. Keep at least one active super admin.";
+        }
+
+        return null;
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         // Any role grants entry, not a fixed list: a super admin can create
