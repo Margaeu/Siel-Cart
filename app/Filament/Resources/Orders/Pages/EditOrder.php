@@ -76,8 +76,17 @@ class EditOrder extends EditRecord
                         'The reserved items were released.',
                     );
                 }),
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
+            // Deleting is not cancelling. Neither action returns stock -- only
+            // the move to `cancelled` does (Order::RESTOCKING_STATUSES) -- and
+            // neither emails the customer, so both modals say so: an admin
+            // "removing" a pending order would otherwise strand its reserved
+            // units for good.
+            DeleteAction::make()
+                ->modalHeading(fn (Order $record): string => "Delete order {$record->order_number}?")
+                ->modalDescription('The order is hidden from the order lists and from the customer\'s order history, and can be restored later (filter the order list by "Deleted records"). Deleting does not cancel it: reserved items are not returned to stock and the customer is not emailed. To release the items, cancel the order instead.'),
+            ForceDeleteAction::make()
+                ->modalHeading(fn (Order $record): string => "Permanently delete order {$record->order_number}?")
+                ->modalDescription('The order, its items and its status history are erased for good and drop out of sales figures. This cannot be undone and is not the same as cancelling. Restore and cancel the order instead if it only needs to be voided.'),
         ];
     }
 }

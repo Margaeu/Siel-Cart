@@ -23,6 +23,7 @@ use Filament\Tables;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
 class OrdersTable
@@ -222,8 +223,14 @@ class OrdersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    // Same warnings as EditOrder's header actions: deleting is
+                    // not cancelling, and force-deleting erases the order.
+                    DeleteBulkAction::make()
+                        ->modalHeading(fn (Collection $records): string => 'Delete '.$records->count().' '.str('order')->plural($records->count()).'?')
+                        ->modalDescription(fn (Collection $records): string => 'Orders '.$records->pluck('order_number')->implode(', ').' will be hidden from the order lists and from the customers\' order histories, and can be restored later (filter by "Deleted records"). Deleting does not cancel them: reserved items are not returned to stock and no one is emailed.'),
+                    ForceDeleteBulkAction::make()
+                        ->modalHeading(fn (Collection $records): string => 'Permanently delete '.$records->count().' '.str('order')->plural($records->count()).'?')
+                        ->modalDescription(fn (Collection $records): string => 'Orders '.$records->pluck('order_number')->implode(', ').' and their items and status history will be erased for good and drop out of sales figures. This cannot be undone.'),
                     RestoreBulkAction::make(),
                 ]),
             ]);

@@ -10,6 +10,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class BannersTable
 {
@@ -60,7 +61,11 @@ class BannersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // Hard delete, like EditBanner's: say so, and offer the
+                    // reversible alternative.
+                    DeleteBulkAction::make()
+                        ->modalHeading(fn (Collection $records): string => 'Delete '.$records->count().' '.str('banner')->plural($records->count()).'?')
+                        ->modalDescription('They are removed from the homepage carousel immediately and cannot be restored. To take a banner down for now, turn off "Active" instead.'),
                 ]),
             ]);
     }

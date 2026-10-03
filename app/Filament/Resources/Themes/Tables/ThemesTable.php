@@ -13,6 +13,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class ThemesTable
 {
@@ -62,7 +63,27 @@ class ThemesTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    // All or nothing, like EditTheme's delete: a selection that
+                    // includes the active theme deletes none of them, rather
+                    // than dropping the storefront to the fallback palette.
+                    DeleteBulkAction::make()
+                        ->modalHeading(fn (Collection $records): string => 'Delete '.$records->count().' '.str('theme')->plural($records->count()).'?')
+                        ->modalDescription(fn (Collection $records): string => 'These themes are removed for good and cannot be restored: '.$records->pluck('name')->implode(', ').'.')
+                        ->before(function (DeleteBulkAction $action, Collection $records): void {
+                            $active = $records->firstWhere('is_active', true);
+
+                            if ($active === null) {
+                                return;
+                            }
+
+                            Notification::make()
+                                ->title('No themes were deleted')
+                                ->body("\"{$active->name}\" is the active theme. Activate a different theme first, then delete this one.")
+                                ->danger()
+                                ->send();
+
+                            $action->cancel();
+                        }),
                 ]),
             ]);
     }
