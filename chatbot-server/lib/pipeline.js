@@ -19,7 +19,7 @@ import {
     normalizeForMatching
 } from './store-knowledge.js';
 import { CatalogUnavailableError } from './catalog.js';
-import { AVAILABILITY_PATTERN, buildAvailabilityReply, matchAvailabilityProducts } from './availability.js';
+import { AVAILABILITY_PATTERN, asksQuantity, buildAvailabilityReply, matchAvailabilityProducts } from './availability.js';
 import {
     BEST_SELLER_PATTERN,
     CHEAPEST_PATTERN,
@@ -214,7 +214,7 @@ export async function handleChat(request, deps) {
     // is shown on each product's page" is true of every question about stock and
     // answers none of them. Any OTHER policy the message touched ("...and do you
     // deliver?") is still answered, ahead of the stock answer.
-    const availabilityAsked = AVAILABILITY_PATTERN.test(msgLower) && !isIrrelevantQuery(message)
+    const availabilityAsked = (AVAILABILITY_PATTERN.test(msgLower) || asksQuantity(msgLower)) && !isIrrelevantQuery(message)
         ? matchAvailabilityProducts(msgLower, shop)
         : { products: [] };
 

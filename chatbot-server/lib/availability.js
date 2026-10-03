@@ -14,6 +14,14 @@ import { itemGroupsAsked, wordMatcher } from './vocabulary.js';
 // product search and keeps the recommendation list.
 export const AVAILABILITY_PATTERN = /\b(in stock|out of stock|sold out|stocks?|available|availability|still (?:have|got)|sizes?|meron pa|mayroon pa|may stock|ubos(?: na)?)\b/i;
 
+// "How many hoodies are left?" asks for the number itself. Without it the reply
+// only names a count once it is low ("only 3 left"), which answers "is it in
+// stock" and leaves the shopper who asked for a quantity with none. "How many
+// sizes/colours" is about the choices, not the units, so it is excluded.
+export const QUANTITY_PATTERN = /\b(?:how many(?!\s+(?:sizes?|colou?rs?|options?|variants?|designs?|kinds?|types?|products?|items?)\b)|how much (?:stock|is left|are left|left)|quantit(?:y|ies)|ilan|(?:stocks?|units?|pieces?|pcs|pairs?) (?:left|remaining)|number of (?:stocks?|units?|pieces?))\b/i;
+
+export const asksQuantity = (message) => QUANTITY_PATTERN.test(message);
+
 const MAX_PRODUCTS = 5;
 const MAX_CHIPS = 4;
 
@@ -149,6 +157,7 @@ const priceOf = (d, options = d.options.filter(o => o.stock > 0)) => {
 
 const link = (d, text) => (d.slug ? `[${text}](/product/${encodeURIComponent(d.slug)})` : text);
 const listOf = (options, extra = '') => options.map(o => `${o.label}${extra}`).join(', ');
+const totalStock = (d) => d.options.reduce((sum, o) => sum + Math.max(0, o.stock), 0);
 const kindOf = (labels) => (labels.every(isSize) ? 'size' : 'option');
 
 function chipsFor(word, options, skip = new Set()) {
@@ -185,14 +194,16 @@ export function buildAvailabilityReply(message, matched, rows) {
         : [];
     const askedLabels = new Set(requested.map(o => o.label.toLowerCase()));
 
+    const counts = asksQuantity(message);
+
     let reply;
     if (sizesAsked.length > 0 && askedLabels.size === 0 && withOptions.length > 0) {
         // Sizes were named but this item has no such option at all.
         reply = noSuchOption(sizesAsked[0], withOptions, matched.word);
     } else {
         reply = askedLabels.size > 0
-            ? answerForOption(requested, askedLabels, described, matched.word)
-            : answerForItem(described, matched.word);
+            ? answerForOption(requested, askedLabels, described, matched.word, counts)
+            : answerForItem(described, matched.word, counts);
     }
 
     // Only the first few matches are checked; say so rather than let a longer
@@ -206,7 +217,7 @@ There are ${matched.more} more matching products: see the full [catalog](/produc
 
 // "Is the hoodie in stock?": which of the matching products have anything, and
 // what is left on each shelf.
-function answerForItem(described, word) {
+function answerForItem(described, word, counts = false) {
     const inStock = described.filter(d => d.inStock);
     const soldOut = described.filter(d => !d.inStock);
     const soldOutLine = soldOut.length > 0
@@ -225,20 +236,35 @@ function answerForItem(described, word) {
         // Each option on its own nested line under the name, in the order the
         // admin set, so the shopper reads down the sizes instead of along a sentence.
         const sub = d.options.map(o => (o.stock > 0
-            ? `  - ${o.label}${o.stock <= 5 ? ` · only ${o.stock} left` : ''}`
+            ? `  - ${o.label}${counts ? ` · ${o.stock} left` : o.stock <= 5 ? ` · only ${o.stock} left` : ''}`
             : `  - ${o.label} · sold out`));
-        const low = d.options.length === 0 && d.lowStock > 0 && d.lowStock <= 5 ? ` — only ${d.lowStock} left` : '';
+        const units = d.options.length === 0 ? d.lowStock : totalStock(d);
+        const low = d.options.length === 0 && d.lowStock > 0 && (counts || d.lowStock <= 5)
+            ? ` — ${counts ? '' : 'only '}${d.lowStock} left`
+            : '';
+        // A variable product's total is stated on its own line, so the per-size
+        // numbers beneath it do not have to be added up by the shopper.
+        const total = counts && d.options.length > 1 ? ` — ${units} left in total` : '';
 
-        return [`- ${link(d, text)}${low}`, ...sub].join('\n');
+        return [`- ${link(d, text)}${low}${total}`, ...sub].join('\n');
     });
 
     const live = inStock.flatMap(d => d.options);
     const kind = kindOf(live.filter(o => o.stock > 0).map(o => o.label));
 
-    const heading = inStock.length === 1
-        ? `Yes, **${inStock[0].name}** is in stock.`
-        : `Yes, we have ${word}${/s$/.test(word) ? '' : 's'} in stock.${live.length > 0 ? ` Availability depends on the ${kind === 'size' ? 'design and size' : 'design and option'}:` : ''}`;
-    const ask = live.some(o => o.stock > 0) ? `\n\nWhich ${kind} are you looking for?` : '';
+    let heading;
+    if (counts && inStock.length === 1) {
+        const d = inStock[0];
+        const units = d.options.length === 0 ? d.lowStock : totalStock(d);
+        heading = `**${d.name}** has **${units}** ${units === 1 ? 'unit' : 'units'} left in stock${d.options.length > 1 ? ', across all sizes and options' : ''}.`;
+    } else if (counts) {
+        heading = `Here's how many ${word}${/s$/.test(word) ? '' : 's'} we have left:`;
+    } else {
+        heading = inStock.length === 1
+            ? `Yes, **${inStock[0].name}** is in stock.`
+            : `Yes, we have ${word}${/s$/.test(word) ? '' : 's'} in stock.${live.length > 0 ? ` Availability depends on the ${kind === 'size' ? 'design and size' : 'design and option'}:` : ''}`;
+    }
+    const ask = !counts && live.some(o => o.stock > 0) ? `\n\nWhich ${kind} are you looking for?` : '';
 
     return {
         response: [heading, lines.join('\n'), soldOutLine].filter(Boolean).join('\n\n') + ask,
@@ -248,7 +274,7 @@ function answerForItem(described, word) {
 
 // "Is the hoodie available in Large?": the answer is about that option, per
 // product, and says what IS left when it is not there.
-function answerForOption(requested, askedLabels, described, word) {
+function answerForOption(requested, askedLabels, described, word, counts = false) {
     const asked = [...new Map(requested.map(o => [o.label.toLowerCase(), o.label])).values()];
     const askedText = joinList(asked.map(l => `**${l}**`));
 
@@ -268,6 +294,9 @@ function answerForOption(requested, askedLabels, described, word) {
     const rest = (d) => d.options.filter(o => o.stock > 0 && !askedLabels.has(o.label.toLowerCase()));
 
     const lines = available.map(({ d, live }) => {
+        if (counts) {
+            return `- ${link(d, `${d.name} – ${priceOf(d, live)}`)} — ${live.map(o => `${o.label}: ${o.stock} left`).join(', ')}`;
+        }
         const low = live.filter(o => o.stock <= 5).map(o => `only ${o.stock} left`);
         return `- ${link(d, `${d.name} – ${priceOf(d, live)}`)} — ${listOf(live)} in stock${low.length ? ` · ${low[0]}` : ''}`;
     });

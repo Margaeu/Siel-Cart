@@ -152,6 +152,7 @@ Settings, never as an uploaded `.env` file.
 | `CLOUDFLARE_R2_BUCKET`, `CLOUDFLARE_R2_ENDPOINT`, `CLOUDFLARE_R2_PUBLIC_URL` | see R2 below |
 | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | your SMTP provider (see Mail below) |
 | `CHATBOT_URL` | the Railway chatbot's public HTTPS URL ending in `/api/chat` (see "AI chatbot on Railway") |
+| `CHATBOT_SERVICE_TOKEN` | shared secret, identical to the chatbot's own; optional, but unset means the chatbot is open to anyone (see `docs/security-hardening.md` §1 for the order to set it in) |
 | `RUN_MIGRATIONS_ON_STARTUP` | `false` (see first deployment) |
 
 **`APP_KEY`** — generate it once (`php artisan key:generate --show`) and never
@@ -248,8 +249,9 @@ browser → POST /api/chat (Azure, Laravel ChatController)
   The start command is `npm start` (`node server.js`); Railway supplies `PORT`
   and the server listens on it (default 3000 only when unset).
 - Generate a public domain for the service (Settings → Networking). The
-  chatbot has a single route, `POST /api/chat`, and no health route, so the
-  URL to use is `https://<service>.up.railway.app/api/chat`.
+  URL to use is `https://<service>.up.railway.app/api/chat`. The service also
+  answers `GET /health` (liveness, touches nothing, suitable as Railway's
+  health check path) and `GET /health/ready` (database ping, token required).
 - Set these as **Railway variables on that service**. The chatbot never reads
   the Laravel app's settings or `.env`; see `chatbot-server/.env.example`.
 
@@ -258,6 +260,8 @@ browser → POST /api/chat (Azure, Laravel ChatController)
 | `OPENROUTER_API_KEY` | the OpenRouter key |
 | `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | the **same Aiven MySQL** the Laravel app uses, so recommendations reflect the real catalog (`DB_USER` / `DB_NAME` are accepted aliases) |
 | `MYSQL_ATTR_SSL_CA` | optional; only to override the committed `chatbot-server/certs/aiven-ca.pem` |
+| `CHATBOT_SERVICE_TOKEN` | the same secret as the Azure app's; requests without it get `401`. Unset = open, with a `SECURITY:` warning at boot. Set it on Azure **first** (`docs/security-hardening.md` §1) |
+| `CHATBOT_RATE_LIMIT_PER_MINUTE` | optional ceiling on authenticated requests (default 120) |
 
 **Wiring it to Azure**
 
@@ -330,6 +334,8 @@ change the seeded password straight away. Do **not** run the full
   `startup.sh: 'php artisan <command>' failed ...; continuing without that
   cache.` after that command's error, and the app still starts.
 - `https://<app>/up` returns 200 when Laravel boots;
+  `https://<app>/health/ready` returns 200 when the database answers (503
+  otherwise, without a session or any chatbot call), and
   `https://<app>/products` confirms database-backed pages render.
 
 ## Rolling back

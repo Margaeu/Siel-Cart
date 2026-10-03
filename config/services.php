@@ -27,10 +27,13 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-    
+
     'chatbot' => [
-    'url' => env('CHATBOT_URL', 'http://127.0.0.1:3000/api/chat'),
-],
+        'url' => env('CHATBOT_URL', 'http://127.0.0.1:3000/api/chat'),
+        // Shared secret sent as a Bearer token; the chatbot service checks it
+        // against its own CHATBOT_SERVICE_TOKEN. Empty = not enforced.
+        'token' => env('CHATBOT_SERVICE_TOKEN'),
+    ],
 
     'slack' => [
         'notifications' => [

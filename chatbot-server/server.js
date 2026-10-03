@@ -4,24 +4,27 @@ dotenv.config();
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import express from 'express';
-import cors from 'cors';
 import OpenAI from 'openai';
 import mysql from 'mysql2/promise';
 
+import { createApp } from './lib/app.js';
 import { createCatalog } from './lib/catalog.js';
-import { createLlm, Deadline, REQUEST_BUDGET_MS } from './lib/llm.js';
-import { handleChatSafely, readConversationContext } from './lib/pipeline.js';
+import { rateLimitFromEnv, resolveServiceToken } from './lib/http-guard.js';
+import { createLlm } from './lib/llm.js';
 
 // The matching, retrieval and grounding rules live in ./lib so they can be
-// tested without a socket, a database or an API key (see ./tests). This file is
-// only the wiring: process configuration, the connection pool, and the route.
+// tested without a socket, a database or an API key (see ./tests), and so do
+// the routes and the request guards (./lib/app.js, ./lib/http-guard.js). This
+// file is only the wiring: process configuration and the connection pool.
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+// Who may call /api/chat. See resolveServiceToken for why a missing token is a
+// warning rather than a refusal to start.
+const { token: serviceToken, warning: tokenWarning } = resolveServiceToken();
+if (tokenWarning) {
+    console.warn(tokenWarning);
+}
 
 // 1. Initialize OpenRouter Client
 const openrouter = new OpenAI({
@@ -98,24 +101,12 @@ if (!hasApiKey) {
 }
 const llm = hasApiKey ? createLlm({ client: openrouter }) : null;
 
-app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
-
-    if (!message) {
-        return res.status(400).json({ error: 'Message is required.' });
-    }
-
-    const { shown, lastQuery } = readConversationContext(req.body);
-
-    // One budget for the whole request, shared by reading the question and
-    // writing the answer. ChatController allows 60 seconds; finishing inside
-    // REQUEST_BUDGET_MS means a slow provider still gets our own grounded reply
-    // out rather than tripping Laravel's timeout.
-    const deadline = new Deadline(REQUEST_BUDGET_MS);
-
-    const reply = await handleChatSafely({ message, shown, lastQuery }, { catalog, llm, deadline });
-
-    return res.json(reply);
+const app = createApp({
+    catalog,
+    llm,
+    serviceToken,
+    pingDatabase: () => dbPool.query('SELECT 1'),
+    rateLimitPerMinute: rateLimitFromEnv(),
 });
 
 const PORT = process.env.PORT || 3000;

@@ -50,6 +50,30 @@ test('"is the hoodie in stock?" says what is in stock, per product, and asks whi
     assert.equal(reply.modelCalls, 0, 'stock is read from the database, not asked of a model');
 });
 
+test('"how many are left?" states the number for every size, not only the low ones', async () => {
+    const reply = await ask('How many stock left is the hoodie?');
+
+    assert.match(reply.response, /^Here's how many hoodies we have left:/);
+    assert.match(reply.response, /CLSU Athletes Hoodie[^\n]*— 4 left in total\n  - Small · sold out\n  - Medium · 3 left\n  - Large · 1 left/);
+    assert.match(reply.response, /Honor Hoodie[^\n]*— 9 left in total\n  - Small · sold out\n  - Large · 9 left/);
+    assert.doesNotMatch(reply.response, /Which size are you looking for\?/);
+    assert.equal(reply.modelCalls, 0);
+});
+
+test('"how many" about one size or one product answers with that count', async () => {
+    const size = await ask('How many large hoodies are left?');
+    assert.match(size.response, /CLSU Athletes Hoodie[^\n]*— Large: 1 left/);
+    assert.match(size.response, /Honor Hoodie[^\n]*— Large: 9 left/);
+
+    const one = await ask('how many honor hoodie do you have?');
+    assert.match(one.response, /^\*\*Honor Hoodie\*\* has \*\*9\*\* units left in stock/);
+});
+
+test('"how many sizes" is a question about choices, so it keeps the plain size list', async () => {
+    const reply = await ask('How many sizes does the hoodie come in?');
+    assert.doesNotMatch(reply.response, /left in total/);
+});
+
 test('the size chips are complete questions that route back to the same answer', async () => {
     const first = await ask('Is the hoodie in stock?');
     assert.deepEqual(first.chips, ['Is the hoodie available in Medium?', 'Is the hoodie available in Large?']);
